@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginWithInvalidCredentials, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithInvalidCredentials, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 
@@ -43,5 +43,25 @@ test.describe('Home Page Launch', () => {
         expect(result.isMobileErrorDisplayed).toBe(true);
         expect(result.errorMessage).toBe(data.expectedErrorMessage);
         expect(result.isOTPPageVisible).toBe(false);
+    });
+
+    test('IW3-T1869: Verify the UI/UX of the Welcome to iWant screen for PH region', async ({ page }) => {
+        const data = testCaseData['tc-auth-005-welcome-ui'];
+        const result = await verifyWelcomeScreenUI(page, {
+            expectedHeading: data.expectedHeading,
+            expectedSubheading: data.expectedSubheading,
+        });
+
+        expect(result.isHeadingVisible).toBe(true);
+        expect(result.headingText).toBe(data.expectedHeading);
+        expect(result.isSubheadingVisible).toBe(true);
+        expect(result.subheadingText).toContain(data.expectedSubheading);
+        expect(result.isEmailFieldVisible).toBe(true);
+        expect(result.isPasswordFieldVisible).toBe(true);
+        expect(result.isContinueButtonVisible).toBe(true);
+        expect(result.isLoginWithFacebookVisible).toBe(true);
+        expect(result.isLoginWithTVProviderVisible).toBe(true);
+        expect(result.isNewHereLinkVisible).toBe(true);
+        expect(result.isCreateAccountLinkVisible).toBe(true);
     });
 });

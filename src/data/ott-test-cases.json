@@ -14,5 +14,9 @@
     "tc-auth-004-forgot-password-mobile": {
         "mobileNumber": "976543210",
         "expectedErrorMessage": "Please enter a valid email to continue."
+    },
+    "tc-auth-005-welcome-ui": {
+        "expectedHeading": "Welcome to iWant",
+        "expectedSubheading": "Home of Filipino Stories"
     }
 }

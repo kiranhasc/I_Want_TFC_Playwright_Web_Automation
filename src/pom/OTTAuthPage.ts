@@ -15,8 +15,14 @@ export class OTTAuthPage {
     private readonly forgotPasswordHeading: PageElement;
     private readonly verifyOTPHeading: PageElement;
     private readonly errorMessage: PageElement;
+    private readonly emailErrorMessage: PageElement;
+    private readonly welcomeHeading: PageElement;
+    private readonly welcomeSubheading: PageElement;
+    private readonly loginWithFacebookButton: PageElement;
+    private readonly loginWithTVProviderButton: PageElement;
+    private readonly newHereLink: PageElement;
+    private readonly createAccountLink: PageElement;
     private readonly cookieConfirmButton: PageElement;
-    private readonly emailErrorMessage: PageElement; 
 
     constructor(page: Page) {
         this.page = page;
@@ -33,7 +39,13 @@ export class OTTAuthPage {
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
         this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
-        this.emailErrorMessage = { selector: 'form', text:'Please enter a valid email to continue.'};
+        this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
+        this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
+        this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
+        this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
+        this.loginWithTVProviderButton = { selector: 'button:has-text("Login with TV Provider")' };
+        this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")'};
+        this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]'};
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
     }
 
@@ -113,6 +125,54 @@ export class OTTAuthPage {
 
     async getErrorMessage(): Promise<string> {
         return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
+    }
+
+    async isWelcomeHeadingVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.welcomeHeading, 10000);
+    }
+
+    async getWelcomeHeadingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.welcomeHeading, 10000);
+    }
+
+    async isEmailFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.emailField, 10000);
+    }
+
+    async isPasswordFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.passwordField, 10000);
+    }
+
+    async isContinueButtonVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.continueButton, 10000);
+    }
+
+    async isWelcomeSubheadingVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.welcomeSubheading, 10000);
+    }
+
+    async getWelcomeSubheadingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.welcomeSubheading, 10000);
+    }
+
+    async isLoginWithFacebookVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.loginWithFacebookButton, 10000);
+    }
+
+    async isLoginWithTVProviderVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.loginWithTVProviderButton, 10000);
+    }
+
+    async isNewHereLinkVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.newHereLink, 10000);
+    }
+
+    async isCreateAccountLinkVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountLink, 10000);
+    }
+
+    async scrollToBottomLinks(): Promise<void> {
+        await this.page.locator(this.createAccountLink.selector).scrollIntoViewIfNeeded();
     }
 
     async isErrorMessageVisible(): Promise<boolean> {

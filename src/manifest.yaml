@@ -47,3 +47,15 @@
     - "IW3-T1864"
   dependsOn:
     - "navigate-forgot-password"
+
+- id: "verify-welcome-screen-ui"
+  name: "Verify welcome screen UI for PH region"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyWelcomeScreenUI"
+  tags:
+    - auth
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T1869"
+  dependsOn: []

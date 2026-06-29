@@ -7,13 +7,10 @@ This test plan covers validation of application launch behavior for the OTT plat
 ## Test Scenarios
 
 ### 1. Happy Path - Home Page Launch Validation
-
 **Seed:** `tests/seed.spec.ts`
 
 #### 1.1. IW3-T1859: Verify the message displayed on entering invalid credentials during login.
-
 **File:** `tests/home/home-page-launch.spec.ts`
-
 **Steps:**
 1. Open the browser.
 2. Enter the URL(https://iwanttfc.com/)
@@ -26,11 +23,8 @@ This test plan covers validation of application launch behavior for the OTT plat
    * expect "Your login credentials are incorrect" error message     should be displayed. 
 
 #### 1.2. IW3-T1860 Verify the navigation on tapping "Forgot Password?" option.
-
 **File:** `tests/home/home-page-launch.spec.ts`
-
 **Steps:**
-
 1. Open the browser.
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
@@ -39,9 +33,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    * expect "Confirm Email Address" page should be displayed
 
 #### 1.3. IW3-T1861 Verify the navigation on entering "Email" and tapping on "Proceed" button on the "Forgot Password?" screen.
-
 **File:** ``tests/home/home-page-launch.spec.ts`
-
 **Steps:**
 1. Open the browser.
 2. Enter the URL(https://iwanttfc.com/)
@@ -52,9 +44,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 7. User should be navigated to "Verify OTP" screen.
 
 #### 1.4. IW3-T1864 Verify the message displayed on entering the mobile number on "Forgot Password?" screen.
-
 **File:** ``tests/home/home-page-launch.spec.ts`
-
 **Steps:**
 1. Open the browser.
 2. Enter the URL(https://iwanttfc.com/)
@@ -63,6 +53,24 @@ This test plan covers validation of application launch behavior for the OTT plat
 5. In Email field enter mobile number as 9876543210
 6. Tap on "Proceed" CTA.
 7. User should be able to see "Please enter a valid email continue." error message
+
+
+#### 1.4. IW3-T1869 Verify the UI/UX of the "Welcome to iWant" screen for PH region.
+**File:** ``tests/home/home-page-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   * expect "Welcome to iWant" and "Home of Filipino Feels" should be displayed
+   * expect "Email" field should be displayed.
+   * expect "Password" field should be displayed.
+   * expect "Continue" button should be displayed.
+   * expect "Login with Facebook" button should be displayed.
+   * expect "Login with TV Provider" button should be displayed.
+4. Scroll down 
+   * expect "New here?" link should be displayed.
+   * expect "Create Account" link should be displayed.
+   
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 
 **File:** `tests/home/create-account-navigation.spec.ts`

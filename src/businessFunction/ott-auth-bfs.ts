@@ -41,6 +41,25 @@ export interface SubmitForgotPasswordMobileOutput {
     isOTPPageVisible: boolean;
 }
 
+export interface VerifyWelcomeScreenInput {
+    expectedHeading: string;
+    expectedSubheading: string;
+}
+
+export interface VerifyWelcomeScreenOutput {
+    isHeadingVisible: boolean;
+    headingText: string;
+    isSubheadingVisible: boolean;
+    subheadingText: string;
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    isContinueButtonVisible: boolean;
+    isLoginWithFacebookVisible: boolean;
+    isLoginWithTVProviderVisible: boolean;
+    isNewHereLinkVisible: boolean;
+    isCreateAccountLinkVisible: boolean;
+}
+
 export async function loginWithInvalidCredentials(page: any, input: InvalidLoginInput): Promise<InvalidLoginOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting invalid login flow');
@@ -52,7 +71,7 @@ export async function loginWithInvalidCredentials(page: any, input: InvalidLogin
     await authPage.clickPasswordField();
     await authPage.enterPassword(input.password);
     await authPage.clickContinue();
-    
+
     const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
     logger.assertion('Invalid login error displayed', !!errorMessage);
 
@@ -143,5 +162,50 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
         isMobileErrorDisplayed: isErrorDisplayed,
         errorMessage,
         isOTPPageVisible,
+    };
+}
+
+export async function verifyWelcomeScreenUI(page: any, input: VerifyWelcomeScreenInput): Promise<VerifyWelcomeScreenOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting welcome screen UI validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+
+    const isHeadingVisible = await authPage.isWelcomeHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getWelcomeHeadingText() : '';
+    const isSubheadingVisible = await authPage.isWelcomeSubheadingVisible();
+    const subheadingText = isSubheadingVisible ? await authPage.getWelcomeSubheadingText() : '';
+    const isEmailFieldVisible = await authPage.isEmailFieldVisible();
+    const isPasswordFieldVisible = await authPage.isPasswordFieldVisible();
+    const isContinueButtonVisible = await authPage.isContinueButtonVisible();
+    const isLoginWithFacebookVisible = await authPage.isLoginWithFacebookVisible();
+    const isLoginWithTVProviderVisible = await authPage.isLoginWithTVProviderVisible();
+    await authPage.scrollToBottomLinks();
+    const isNewHereLinkVisible = await authPage.isNewHereLinkVisible();
+    const isCreateAccountLinkVisible = await authPage.isCreateAccountLinkVisible();
+
+    logger.assertion('Welcome heading visible', isHeadingVisible);
+    logger.assertion('Welcome subheading visible', isSubheadingVisible);
+    logger.assertion('Email field visible', isEmailFieldVisible);
+    logger.assertion('Password field visible', isPasswordFieldVisible);
+    logger.assertion('Continue button visible', isContinueButtonVisible);
+    logger.assertion('Login with Facebook visible', isLoginWithFacebookVisible);
+    logger.assertion('Login with TV Provider visible', isLoginWithTVProviderVisible);
+    logger.assertion('New here link visible', isNewHereLinkVisible);
+    logger.assertion('Create Account link visible', isCreateAccountLinkVisible);
+
+    return {
+        isHeadingVisible,
+        headingText,
+        isSubheadingVisible,
+        subheadingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isContinueButtonVisible,
+        isLoginWithFacebookVisible,
+        isLoginWithTVProviderVisible,
+        isNewHereLinkVisible,
+        isCreateAccountLinkVisible,
     };
 }

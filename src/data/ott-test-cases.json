@@ -1,0 +1,18 @@
+{
+    "tc-auth-001-invalid-credentials": {
+        "email": "abcd@gmail.com",
+        "password": "Hello@123",
+        "expectedErrorMessage": "Your login credentials are incorrect"
+    },
+    "tc-auth-002-forgot-password": {
+        "expectedHeading": "Confirm Email Address"
+    },
+    "tc-auth-003-forgot-password-proceed": {
+        "email": "abcd@gmail.com",
+        "expectedOTPHeading": "Verify OTP"
+    },
+    "tc-auth-004-forgot-password-mobile": {
+        "mobileNumber": "976543210",
+        "expectedErrorMessage": "Please enter a valid email to continue."
+    }
+}

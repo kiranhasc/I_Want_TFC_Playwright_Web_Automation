@@ -1,0 +1,49 @@
+- id: "login-invalid-credentials"
+  name: "Login with invalid credentials"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "loginWithInvalidCredentials"
+  tags:
+    - auth
+    - negative
+    - smoke
+  testCases:
+    - "IW3-T1859"
+  dependsOn: []
+
+- id: "navigate-forgot-password"
+  name: "Navigate to Forgot Password page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToForgotPassword"
+  tags:
+    - auth
+    - navigation
+    - smoke
+  testCases:
+    - "IW3-T1860"
+  dependsOn: []
+
+- id: "submit-forgot-password-email"
+  name: "Submit Forgot Password email and navigate to OTP verification"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitForgotPasswordEmail"
+  tags:
+    - auth
+    - navigation
+    - smoke
+  testCases:
+    - "IW3-T1861"
+  dependsOn:
+    - "navigate-forgot-password"
+
+- id: "submit-forgot-password-mobile"
+  name: "Submit Forgot Password mobile number and verify error message"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitForgotPasswordMobileNumber"
+  tags:
+    - auth
+    - negative
+    - smoke
+  testCases:
+    - "IW3-T1864"
+  dependsOn:
+    - "navigate-forgot-password"

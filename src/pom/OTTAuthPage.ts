@@ -11,6 +11,11 @@ export class OTTAuthPage {
     private readonly passwordField: PageElement;
     private readonly continueButton: PageElement;
     private readonly proceedButton: PageElement;
+    private readonly tvProviderLoginOption: PageElement;
+    private readonly providerFrontierOption: PageElement;
+    private readonly providerEmailField: PageElement;
+    private readonly providerPasswordField: PageElement;
+    private readonly providerSignInButton: PageElement;
     private readonly forgotPasswordLink: PageElement;
     private readonly forgotPasswordHeading: PageElement;
     private readonly verifyOTPHeading: PageElement;
@@ -23,16 +28,39 @@ export class OTTAuthPage {
     private readonly newHereLink: PageElement;
     private readonly createAccountLink: PageElement;
     private readonly cookieConfirmButton: PageElement;
+    private readonly homeTab: PageElement;
+    private readonly loadingIndicator: PageElement;
+    private readonly moviesTab: PageElement;
+    private readonly showsTab: PageElement;
+    private readonly myWatchlistTab: PageElement;
+    private readonly gmaTab: PageElement;
+    private readonly searchBar: PageElement;
+    private readonly searchBarIcon: PageElement;
+    private readonly accountIcon: PageElement;
+    private readonly signOutOption: PageElement;
+    private readonly continueWatchingRail: PageElement;
+    private readonly trendingMoviesRail: PageElement;
+    private readonly trendingShowsRail: PageElement;
+    private readonly myWatchlistRail: PageElement;
+    private readonly topStreamedRail: PageElement;
+    private readonly profileLink: PageElement;
+    private readonly createAccountLinkFromHome: PageElement;
+    private readonly createAccountHeading: PageElement;
+    private readonly createAccountEmailField: PageElement;
+    private readonly createAccountPasswordField: PageElement;
+    private readonly termsCheckbox: PageElement;
+    private readonly marketingCheckbox: PageElement;
+    private readonly createAccountContinueButton: PageElement;
+    private readonly alreadyHaveAccountText: PageElement;
+    private readonly createAccountLoginLink: PageElement;
+    private readonly emptyCredentialsErrorMessage: PageElement;
+
 
     constructor(page: Page) {
         this.page = page;
         this.pageUtils = new PageUtils(page);
-        this.emailField = {
-            selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]',
-        };
-        this.passwordField = {
-            selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]',
-        };
+        this.emailField = { selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]', };
+        this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]', };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
@@ -44,9 +72,40 @@ export class OTTAuthPage {
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
         this.loginWithTVProviderButton = { selector: 'button:has-text("Login with TV Provider")' };
-        this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")'};
-        this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]'};
+        this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
+        this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
+        this.homeTab = { text: 'Home', selector: 'nav >> text=Home' };
+        this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
+        this.moviesTab = { selector: 'p:text-is("Movies")' };
+        this.showsTab = { text: 'Shows', selector: 'nav >> text=Shows' };
+        this.myWatchlistTab = { text: 'My Watchlist', selector: 'nav >> text=My Watchlist' };
+        this.gmaTab = { selector: 'div#gma' };
+        this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
+        this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
+        this.accountIcon = { selector: 'img[alt="account"]' };
+        this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
+        this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
+        this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
+        this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
+        this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
+        this.tvProviderLoginOption = {  selector: 'role=button[name="Login with TV Provider"]' };
+        this.providerFrontierOption = {  selector: 'role=button[name="Frontier, a Verizon Company"]' };
+        this.providerEmailField = { selector: 'role=textbox[name="Username"]' };
+        this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
+        this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
+        this.profileLink = { selector: 'role=img[name="account"]' };
+        this.createAccountLinkFromHome = { role: 'link', text: 'Create Account', selector: 'a:has-text("Create Account")' };
+        this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
+        this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
+        this.createAccountPasswordField = { selector: 'input[name="userPassword"]' };
+        this.termsCheckbox = { selector: 'label:has-text("I agree to the Terms and")' };
+        this.marketingCheckbox = { selector: 'label:has-text("I agree to receive marketing")'};
+        this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
+        this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
+        this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
+        this.emptyCredentialsErrorMessage = { selector: 'text=/Email is required/i' };
+        this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
     }
 
     async navigate(): Promise<void> {
@@ -127,6 +186,10 @@ export class OTTAuthPage {
         return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
     }
 
+    async getEmptyCredentialsErrorMessage(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.emptyCredentialsErrorMessage, 10000);
+    }
+
     async isWelcomeHeadingVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.welcomeHeading, 10000);
     }
@@ -167,6 +230,15 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.newHereLink, 10000);
     }
 
+    async openCreateAccountFlow(): Promise<void> {
+        logger.step('Opening create account flow');
+        await this.pageUtils.safeClick(this.createAccountLinkFromHome);
+    }
+
+    async isCreateAccountHeadingVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountHeading, 10000);
+    }
+
     async isCreateAccountLinkVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.createAccountLink, 10000);
     }
@@ -175,7 +247,162 @@ export class OTTAuthPage {
         await this.page.locator(this.createAccountLink.selector).scrollIntoViewIfNeeded();
     }
 
+    async isHomeTabVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async waitForLoadingToDisappear(timeout: number = 15000): Promise<void> {
+        try {
+            await this.pageUtils.waitForElementToDisappear(this.loadingIndicator, timeout);
+        } catch {
+            // ignore if not present
+        }
+    }
+
     async isErrorMessageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.emailErrorMessage, 10000);
+    }
+
+    async clickMoviesTab(): Promise<void> {
+        logger.elementInteraction('click', 'Movies tab');
+        await this.pageUtils.safeClick(this.moviesTab);
+    }
+
+    async clickShowsTab(): Promise<void> {
+        logger.elementInteraction('click', 'Shows tab');
+        await this.pageUtils.safeClick(this.showsTab);
+    }
+
+    async clickMyWatchlistTab(): Promise<void> {
+        logger.elementInteraction('click', 'My Watchlist tab');
+        await this.pageUtils.safeClick(this.myWatchlistTab);
+    }
+
+    async clickGMATab(): Promise<void> {
+        logger.elementInteraction('click', 'GMA tab');
+        await this.pageUtils.safeClick(this.gmaTab);
+    }
+
+    async isContinueWatchingRailVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.continueWatchingRail, 10000);
+    }
+
+    async isTrendingMoviesRailVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.trendingMoviesRail, 10000);
+    }
+
+    async isTrendingShowsRailVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.trendingShowsRail, 10000);
+    }
+
+    async isMyWatchlistRailVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.myWatchlistRail, 10000);
+    }
+
+    async isTopStreamedRailVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.topStreamedRail, 10000);
+    }
+
+    async clickSearchBar(): Promise<void> {
+        logger.elementInteraction('click', 'Search bar');
+        await this.pageUtils.safeClick(this.searchBarIcon);
+    }
+
+    async getSearchBarPlaceholder(): Promise<string> {
+        const locator = this.page.locator(this.searchBar.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.getAttribute('placeholder')) || '';
+    }
+
+    async clickAccountIcon(): Promise<void> {
+        logger.elementInteraction('click', 'Account icon');
+        await this.pageUtils.safeClick(this.accountIcon);
+    }
+
+    async isSignOutOptionVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.signOutOption, 10000);
+    }
+
+     async clickLoginWithTVProvider(): Promise<void> {
+        logger.elementInteraction('click', 'Login with TV Provider option');
+        await this.pageUtils.safeClick(this.tvProviderLoginOption);
+    }
+
+    async selectTVProvider(providerName: string): Promise<void> {
+        logger.elementInteraction('click', `${providerName} provider option`);
+        const providerLocator = this.page.getByRole('button', { name: providerName }).first();
+        await providerLocator.waitFor({ state: 'visible', timeout: 20000 });
+        await providerLocator.click();
+    }
+
+        async login(email: string, password: string): Promise<void> {
+        logger.step('Performing login with provided credentials');
+        await this.clickEmailField();
+        await this.enterEmail(email);
+        await this.clickPasswordField();
+        await this.enterPassword(password);
+        await this.clickContinue();
+        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
+            logger.debug('Page did not reach networkidle after login');
+        });
+    }
+    async enterProviderEmail(email: string): Promise<void> {
+        logger.elementInteraction('type', 'TV Provider email field');
+        await this.pageUtils.safeType(this.providerEmailField, email);
+    }
+
+    async enterProviderPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'TV Provider password field');
+        await this.pageUtils.safeType(this.providerPasswordField, password);
+    }
+
+    async clickProviderSignIn(): Promise<void> {
+        logger.elementInteraction('click', 'Sign in button for TV Provider');
+        await this.pageUtils.safeClick(this.providerSignInButton);
+    }
+
+    async isLoginSuccessful(): Promise<boolean> {
+        const profileVisible = await this.pageUtils.isVisible(this.profileLink, 5000);
+        if (profileVisible) {
+            return true;
+        }
+
+        const homeTabVisible = await this.pageUtils.isVisible(
+            {  selector: 'text="Home"' },
+            5000
+        );
+        return homeTabVisible;
+    }
+
+    async getCreateAccountHeadingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.createAccountHeading, 10000);
+    }
+
+    async isCreateAccountEmailFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountEmailField, 10000);
+    }
+
+    async isCreateAccountPasswordFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountPasswordField, 10000);
+    }
+
+    async isTermsCheckboxVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.termsCheckbox, 10000);
+    }
+
+    async isMarketingCheckboxVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.marketingCheckbox, 10000);
+    }
+
+    async isCreateAccountContinueButtonVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountContinueButton, 10000);
+    }
+
+    async isAlreadyHaveAccountTextVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.alreadyHaveAccountText, 10000);
+    }
+
+    async isCreateAccountLoginLinkVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountLoginLink, 10000);
     }
 }

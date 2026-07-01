@@ -19,6 +19,9 @@ This workflow enforces a **3-Layer Architecture** with strict guardrails:
   - BFs: No Playwright imports, only call Page Objects.
   - POs: Can use Playwright and `src/utils/*`.
 - **Environment Configuration**: Use `.env` for base URL selection. `TEST_ENV=dev|qa|prod` should point to env-specific URL keys, and Page Objects should read the URL from shared config utilities rather than hardcoding it.
+- **Credential Configuration**: Authentication credentials for positive and negative login scenarios must come from `.env` using keys such as `VALID_LOGIN_EMAIL`, `VALID_LOGIN_PASSWORD`, `INVALID_LOGIN_EMAIL`, and `INVALID_LOGIN_PASSWORD`. Test data files and test code should not hard-code credentials when env values are available.
+- **Data-Driven Flow Selection**: Login and other business-flow scenarios should be driven by test data entries such as `mode`, `scenario`, or `flowType` from the spec/test-data file. Business functions should receive that value from the test layer instead of embedding hard-coded flow strings like `'invalid'` inside the implementation.
+- **Required Pattern**: The test file should pass the flow selector from the data file into the business function, and the business function should normalize that selector internally. Example pattern: `loginWithInvalidCredentials(page, { mode: data.mode })` where `data.mode` comes from the JSON test-case file and the BF handles the normalization.
 - **Utility Reuse**: Page Objects must reuse existing helpers in `src/utils/*` wherever applicable. If a reusable helper does not already exist, the agent must ask for permission and a utility creation plan before generating or updating the page class.
 - **Logging**: Use the existing `src/utils/logger.ts` singleton for step, action, page navigation, and assertion logging in Page Objects and Business Functions.
 - **Naming**: BF names use `verbNoun` or `nounAction` format (e.g., `loginToOTT`, `searchForContent`).
@@ -37,7 +40,7 @@ This prompt guides you through a complete 7-step QA workflow using AI Agents and
 ## 📖 STEP 1: Read and Analyze Test Cases
 **Prompt**
 ```
-I need to start a new testing workflow for an OTT Application based on test cases. Please read all test cases from the file: test-cases/ott-test-cases.md
+I need to start a new testing workflow for an OTT Application based on test cases. Please read all test cases from the file: specs/demo-ott-test-plan.md
  
 For each test case, extract and document:
  
@@ -83,7 +86,7 @@ Create a comprehensive summary that includes:
 ```
  
 **Expected Output**
-- Complete analysis of all test cases from test-cases/ott-test-cases.md
+- Complete analysis of all test cases from specs/demo-ott-test-plan.md
 - Test cases organized by Subscription Tier (Free, Basic, Premium, Premium Plus)
 - Test cases organized by Priority (P0, P1, P2)
 - Test case dependency mapping
@@ -105,7 +108,7 @@ Before creating specifications, review the guardrail architecture:
 - Read: src/manifest.yaml to understand existing Business Functions
 - Read: Naming conventions for Business Functions (verbNoun format)
  
-For each test case from test-cases/ott-test-cases.md, perform the following:
+For each test case from specs/demo-ott-test-plan.md, perform the following:
  
 1. Test Case to Business Function Mapping:
    - Identify which Business Functions are required to execute the test case
@@ -583,7 +586,7 @@ GENERATION STEPS:
    - Assert using BF return values ONLY
   - NO Playwright direct usage
   - NO PAGE OBJECTS or waits
-   - Create a test() block in the spec file referenced by test-cases/ott-test-cases.md
+   - Create a test() block in the spec file referenced by specs/demo-ott-test-plan.md
    - Do not instantiate Page Object classes directly within test scripts. Use Business Functions to interact with Page Objects and rely on their return values for validations and assertions.
  
 2. If Business Functions missing → emit GAP details (don't generate test code yet)
@@ -812,7 +815,7 @@ This **OTT Application QA Workflow (Test Case Centric)** provides:
 ---
  
 **To Begin Test Case Automation:**
-1. Start with STEP 1 prompt providing test-cases/ott-test-cases.md
+1. Start with STEP 1 prompt providing specs/demo-ott-test-plan.md
 2. Follow through all 5 steps in sequence
 3. Each test case becomes a test() block with TC_ID
 4. Commit final automation to your OTT repository

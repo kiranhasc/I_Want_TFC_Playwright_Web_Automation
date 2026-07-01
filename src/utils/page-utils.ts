@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { PageElement } from '../../src/types/index.ts';
+import { logger } from './logger.ts';
 
 /**
  * Enhanced page utilities for common UI interactions
@@ -24,6 +25,7 @@ export class PageUtils {
     await locator.waitFor({ state: 'visible', timeout });
     await locator.waitFor({ state: 'attached', timeout });
     await locator.click({ timeout });
+    logger.info(`Clicked on element : ${element.selector || element.text || element.testId}`);
   }
 
   /**
@@ -34,6 +36,7 @@ export class PageUtils {
     await locator.waitFor({ state: 'visible', timeout });
     await locator.clear();
     await locator.fill(text);
+    logger.info(`Typed ${text} into element : ${element.selector || element.text || element.testId}`);
   }
 
   /**

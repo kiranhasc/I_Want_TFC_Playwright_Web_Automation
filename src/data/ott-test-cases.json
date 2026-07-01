@@ -1,7 +1,6 @@
 {
     "tc-auth-001-invalid-credentials": {
-        "email": "abcd@gmail.com",
-        "password": "Hello@123",
+        "mode": "invalid",
         "expectedErrorMessage": "Your login credentials are incorrect"
     },
     "tc-auth-002-forgot-password": {
@@ -18,5 +17,36 @@
     "tc-auth-005-welcome-ui": {
         "expectedHeading": "Welcome to iWant",
         "expectedSubheading": "Home of Filipino Stories"
+    },
+    "tc-auth-006-valid-login": {
+        "mode": "valid"
+    },
+    "tc-auth-007-navigate-tabs": {
+        "mode": "valid",
+        "expectedSearchPlaceholder": "Search by title, actor, genre..."
+    },
+    "tc-auth-005-tv-provider-login": {
+        "providerName": "Frontier, a Verizon Company",
+        "mode": "provider"
+    },
+    "tc-disc-001-show-details-navigation": {
+        "mode": "valid",
+        "expectedYear": "2026",
+        "expectedGenre": "Action"
+    },
+     "tc-auth-006-create-account-ui": {
+        "expectedHeading": "Create an account",
+        "expectedEmailLabel": "Email Address",
+        "expectedPasswordLabel": "Password",
+        "expectedTermsText": "I agree to the Terms and Conditions and Privacy Policy",
+        "expectedMarketingText": "I agree to receive marketing communication (until I Unsubscribe)",
+        "expectedContinueLabel": "Continue",
+        "expectedLoginPrompt": "Already Have an Account?",
+        "expectedLoginLinkText": "Login"
+    },
+    "tc-auth-007-empty-credentials": {
+        "email": "",
+        "password": "",
+        "expectedErrorMessage": "Email is required"
     }
 }

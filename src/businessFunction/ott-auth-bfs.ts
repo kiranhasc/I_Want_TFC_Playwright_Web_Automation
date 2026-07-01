@@ -1,14 +1,33 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { logger } from '../utils/logger';
+import { config } from '../utils/config-manager';
 
 export interface InvalidLoginInput {
-    email: string;
-    password: string;
+    email?: string;
+    password?: string;
+    mode?: string;
+}
+
+export interface TVProviderLoginInput {
+    email?: string;
+    password?: string;
+    providerName: string;
+    mode?: string;
 }
 
 export interface InvalidLoginOutput {
     isLoggedIn: boolean;
     errorMessage: string;
+}
+
+// export interface TVProviderLoginInput {
+//     providerName: string;
+//     providerUsername: string;
+//     providerPassword: string;
+// }
+
+export interface TVProviderLoginOutput {
+    isLoggedIn: boolean;
 }
 
 export interface ForgotPasswordInput {
@@ -60,24 +79,221 @@ export interface VerifyWelcomeScreenOutput {
     isCreateAccountLinkVisible: boolean;
 }
 
-export async function loginWithInvalidCredentials(page: any, input: InvalidLoginInput): Promise<InvalidLoginOutput> {
+// function normalizeLoginMode(mode?: string): 'invalid' | 'valid' {
+//     return mode === 'valid' ? 'valid' : 'invalid';
+// }
+
+function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' {
+    if (mode === 'valid') {
+        return 'valid';
+    }
+    if (mode === 'provider') {
+        return 'provider';
+    }
+    return 'invalid';
+}
+
+export interface VerifyCreateAccountScreenInput {
+    expectedHeading: string;
+    expectedEmailLabel: string;
+    expectedPasswordLabel: string;
+    expectedTermsText: string;
+    expectedMarketingText: string;
+    expectedContinueLabel: string;
+    expectedLoginPrompt: string;
+    expectedLoginLinkText: string;
+}
+
+export interface VerifyCreateAccountScreenOutput {
+    isHeadingVisible: boolean;
+    headingText: string;
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    isTermsCheckboxVisible: boolean;
+    isMarketingCheckboxVisible: boolean;
+    isContinueButtonVisible: boolean;
+    isAlreadyHaveAccountTextVisible: boolean;
+    isLoginLinkVisible: boolean;
+}
+
+export interface EmptyCredentialsInput {
+    email: string;
+    password: string;
+    expectedErrorMessage?: string;
+}
+
+export interface EmptyCredentialsOutput {
+    isErrorDisplayed: boolean;
+    errorMessage: string;
+}
+
+// function resolveLoginCredentials(input: Partial<InvalidLoginInput>, mode: 'invalid' | 'valid' = 'invalid') {
+//     const prefix = mode === 'valid' ? 'VALID_LOGIN_' : 'INVALID_LOGIN_' : 'PROVIDER_';
+//     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
+//     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
+//     return { email, password };
+// }
+
+function resolveLoginCredentials(
+  input: Partial<InvalidLoginInput>,
+  mode: 'invalid' | 'valid' | 'provider' = 'invalid'
+) {
+  const prefix =
+    mode === 'valid'
+      ? 'VALID_LOGIN_'
+      : mode === 'provider'
+      ? 'PROVIDER_'
+      : 'INVALID_LOGIN_';
+
+  const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
+  const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
+
+  return { email, password };
+}
+
+export async function loginWithInvalidCredentials(page: any, input?: Partial<InvalidLoginInput>): Promise<InvalidLoginOutput> {
     const authPage = new OTTAuthPage(page);
-    logger.step('Starting invalid login flow');
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
+    logger.assertion('Invalid login error displayed', !!errorMessage);
+    return {
+        isLoggedIn: false,
+        errorMessage,
+    };
+}
+
+export interface LoginToOTTOutput {
+    isLoggedIn: boolean;
+    homeTabVisible: boolean;
+}
+export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    logger.step('Starting TV Provider login flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickLoginWithTVProvider();
+    await authPage.selectTVProvider(input.providerName);
+    await authPage.clickContinue();
+    await authPage.enterProviderEmail(credentials.email);
+    await authPage.enterProviderPassword(credentials.password);
+    await authPage.clickProviderSignIn();
+
+    const isLoggedIn = await authPage.isLoginSuccessful();
+    logger.assertion('TV Provider login successful', isLoggedIn);
+
+    return { isLoggedIn };
+}
+export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after login', homeVisible);
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
+}
+
+export interface NavigateTabsInput {
+    mode?: string;
+    expectedSearchPlaceholder?: string;
+}
+
+export interface NavigateTabsOutput {
+    isLoggedIn: boolean;
+    homeRailVisible: boolean;
+    moviesRailVisible: boolean;
+    showsRailVisible: boolean;
+    watchlistRailVisible: boolean;
+    gmaRailVisible: boolean;
+    searchBarPlaceholder: string;
+    searchBarPlaceholderMatches: boolean;
+    signOutOptionVisible: boolean;
+}
+
+export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateTabsInput>): Promise<NavigateTabsOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const expectedSearchPlaceholder = (input?.expectedSearchPlaceholder ?? '').trim();
+    logger.step(`Starting valid login flow for tab navigation`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
 
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();
-    await authPage.enterEmail(input.email);
+    await authPage.enterEmail(credentials.email);
     await authPage.clickPasswordField();
-    await authPage.enterPassword(input.password);
+    await authPage.enterPassword(credentials.password);
     await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
 
-    const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
-    logger.assertion('Invalid login error displayed', !!errorMessage);
+    const homeRailVisible = await authPage.isContinueWatchingRailVisible();
+    logger.assertion('Home tab rail active', homeRailVisible);
+
+    await authPage.clickMoviesTab();
+    const moviesRailVisible = await authPage.isTrendingMoviesRailVisible();
+    logger.assertion('Movies tab rail active', moviesRailVisible);
+
+    await authPage.clickShowsTab();
+    const showsRailVisible = await authPage.isTrendingShowsRailVisible();
+    logger.assertion('Shows tab rail active', showsRailVisible);
+
+    await authPage.clickMyWatchlistTab();
+    const watchlistRailVisible = await authPage.isMyWatchlistRailVisible();
+    logger.assertion('Watchlist tab rail active', watchlistRailVisible);
+
+    await authPage.clickGMATab();
+    const gmaRailVisible = await authPage.isTopStreamedRailVisible();
+    logger.assertion('GMA tab rail active', gmaRailVisible);
+
+    await authPage.clickSearchBar();
+
+    const searchBarPlaceholder = await authPage.getSearchBarPlaceholder();
+    const normalizePlaceholderText = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const normalizedActual = normalizePlaceholderText(searchBarPlaceholder);
+    const normalizedExpected = normalizePlaceholderText(expectedSearchPlaceholder);
+    const searchBarPlaceholderMatches = normalizedExpected
+        ? normalizedActual.includes(normalizedExpected)
+        : normalizedActual.includes('search');
+    logger.assertion('Search bar placeholder visible', searchBarPlaceholder.length > 0);
+
+    await authPage.clickAccountIcon();
+    const signOutOptionVisible = await authPage.isSignOutOptionVisible();
+    logger.assertion('Sign Out option visible', signOutOptionVisible);
 
     return {
-        isLoggedIn: false,
-        errorMessage,
+        isLoggedIn: homeRailVisible,
+        homeRailVisible,
+        moviesRailVisible,
+        showsRailVisible,
+        watchlistRailVisible,
+        gmaRailVisible,
+        searchBarPlaceholder,
+        searchBarPlaceholderMatches,
+        signOutOptionVisible,
     };
 }
 
@@ -209,3 +425,66 @@ export async function verifyWelcomeScreenUI(page: any, input: VerifyWelcomeScree
         isCreateAccountLinkVisible,
     };
 }
+export async function verifyCreateAccountScreenUI(page: any, input: VerifyCreateAccountScreenInput): Promise<VerifyCreateAccountScreenOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting create account screen UI validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible();
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    const isAlreadyHaveAccountTextVisible = await authPage.isAlreadyHaveAccountTextVisible();
+    const isLoginLinkVisible = await authPage.isCreateAccountLoginLinkVisible();
+
+    logger.assertion('Create account heading visible', isHeadingVisible);
+    logger.assertion('Email field visible on create account screen', isEmailFieldVisible);
+    logger.assertion('Password field visible on create account screen', isPasswordFieldVisible);
+    logger.assertion('Terms checkbox visible', isTermsCheckboxVisible);
+    logger.assertion('Marketing checkbox visible', isMarketingCheckboxVisible);
+    logger.assertion('Continue button visible on create account screen', isContinueButtonVisible);
+    logger.assertion('Already have account text visible', isAlreadyHaveAccountTextVisible);
+    logger.assertion('Login link visible', isLoginLinkVisible);
+
+    return {
+        isHeadingVisible,
+        headingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isTermsCheckboxVisible,
+        isMarketingCheckboxVisible,
+        isContinueButtonVisible,
+        isAlreadyHaveAccountTextVisible,
+        isLoginLinkVisible,
+    };
+}
+
+export async function submitEmptyCredentials(page: any, input: EmptyCredentialsInput): Promise<EmptyCredentialsOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting empty credentials validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(input.password);
+    await authPage.clickContinue();
+    const errorMessage = await authPage.getEmptyCredentialsErrorMessage();
+    const isErrorDisplayed = !!errorMessage;
+    logger.assertion('Empty credential error displayed', isErrorDisplayed);
+    if (input.expectedErrorMessage) {
+        logger.assertion('Empty credential error matches expected', errorMessage === input.expectedErrorMessage);
+    }
+    return {
+        isErrorDisplayed,
+        errorMessage,
+    };
+}
+ 

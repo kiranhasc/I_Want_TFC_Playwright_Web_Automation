@@ -70,6 +70,73 @@ This test plan covers validation of application launch behavior for the OTT plat
 4. Scroll down 
    * expect "New here?" link should be displayed.
    * expect "Create Account" link should be displayed.
+
+#### 1.5. IW3-T1870 Verify user is able to login with valid credentials.
+**File:** ``tests/home/home-page-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. Wait until "Loading.." disappered
+   * expect "Home" Tab should be displayed
+
+#### 1.6. IW3-T1880 Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons.
+**File:** ``tests/home/home-page-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. When user is on "Home" tab
+   * expect "Continue Watching" rail should be displayed
+6. When user is on "Movies" tab
+   * expect "Trending Movies Worldwide" rail should be displayed
+7. When user is on "Shows" tab
+   * expect "Trending Shows Worldwide" rail should be displayed
+8. When user is on "My Watchlist" tab
+   * expect "My Watchlist" rail should be displayed
+9. When user is on "GMA" tab
+   * expect "Top Streamed" rail should be displayed
+10. Click on Search bar
+   * expect the search bar should display inner text as "Search by title, actor, genre..."
+11.  Click on Account icon
+   * expect "Sign Out" option should be displayed
+
+### 1.7. IW3-T1867 Verify the "Login with TV Provider" functionality.
+ 
+**File:** `tests/home/landing-page-launch.spec.ts`
+ 
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on "Login with TV Provider" option
+5. Select the Frontier from available options and Click on Continue
+6. Input the TV Provider credentials (Ex: ftrfios1@frontier.com/Frontier1)
+6. Click on "Continue" CTA.
+   * User should be successfully landed on the "Home" screen.
+
+
+### 1.8. IW3-T1895 Verify the user navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
+ 
+**File:** ``tests/details/details-page-validation.spec.ts`
+ 
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Tap on "Shows" option from home page.
+9. Click on the first content from first rail
+   *expect User should navigate to the respective content Details Page
+   *expect validate the details page
+ 
+ 
    
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 

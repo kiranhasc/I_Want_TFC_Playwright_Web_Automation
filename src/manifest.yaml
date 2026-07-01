@@ -59,3 +59,63 @@
   testCases:
     - "IW3-T1869"
   dependsOn: []
+
+- id: "login-to-ott"
+  name: "Login to OTT with valid credentials"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "loginToOTT"
+  tags:
+    - auth
+    - positive
+    - smoke
+  testCases:
+    - "IW3-T1870"
+  dependsOn: []
+
+- id: "navigate-and-verify-tabs"
+  name: "Navigate and verify tabs with rail content"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateAndVerifyTabs"
+  tags:
+    - navigation
+    - positive
+    - ui
+  testCases:
+    - "IW3-T1867"
+  dependsOn: []
+ 
+- id: "navigate-show-details-from-shows"
+  name: "Navigate to show details from Shows page"
+  path: "src/businessFunction/ott-discovery-bfs.ts"
+  export: "navigateToShowDetailsFromShowsPage"
+  tags:
+    - discovery
+    - navigation
+  testCases:
+    - "IW3-T1895"
+  dependsOn:
+    - "login-valid-credentials"
+   
+- id: "verify-create-account-screen-ui"
+  name: "Verify create account screen UI"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyCreateAccountScreenUI"
+  tags:
+    - auth
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T1849"
+  dependsOn: []
+ 
+- id: "submit-empty-credentials"
+  name: "Submit empty credentials and verify validation"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitEmptyCredentials"
+  tags:
+    - auth
+    - negative
+    - smoke
+  testCases:
+    - "IW3-T1856"
+  dependsOn: []

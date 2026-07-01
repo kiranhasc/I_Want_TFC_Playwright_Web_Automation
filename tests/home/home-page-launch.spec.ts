@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginWithInvalidCredentials, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithInvalidCredentials, loginToOTT, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 
@@ -7,8 +7,7 @@ test.describe('Home Page Launch', () => {
     test('IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
         const data = testCaseData['tc-auth-001-invalid-credentials'];
         const result = await loginWithInvalidCredentials(page, {
-            email: data.email,
-            password: data.password,
+            mode: data.mode
         });
 
         expect(result.isLoggedIn).toBe(false);
@@ -63,5 +62,31 @@ test.describe('Home Page Launch', () => {
         expect(result.isLoginWithTVProviderVisible).toBe(true);
         expect(result.isNewHereLinkVisible).toBe(true);
         expect(result.isCreateAccountLinkVisible).toBe(true);
+    });
+
+    test('IW3-T1870: Verify user is able to login with valid credentials', async ({ page }) => {
+        const data = testCaseData['tc-auth-006-valid-login'];
+        const result = await loginToOTT(page, { mode: data.mode });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeTabVisible).toBe(true);
+    });
+
+    test('IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
+        const data = testCaseData['tc-auth-007-navigate-tabs'];
+        const result = await navigateAndVerifyTabs(page, {
+            mode: data.mode,
+            expectedSearchPlaceholder: data.expectedSearchPlaceholder,
+        });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeRailVisible).toBe(true);
+        expect(result.moviesRailVisible).toBe(true);
+        expect(result.showsRailVisible).toBe(true);
+        expect(result.watchlistRailVisible).toBe(true);
+        expect(result.gmaRailVisible).toBe(true);
+        expect(result.searchBarPlaceholderMatches).toBe(true);
+        expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
+        expect(result.signOutOptionVisible).toBe(true);
     });
 });

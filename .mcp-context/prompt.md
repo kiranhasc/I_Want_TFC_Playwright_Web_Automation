@@ -1,37 +1,3 @@
-# OTT Application End to End QA Workflow - Test Case Centric
- 
-## Guardrailed Architecture Overview
- 
-This workflow enforces a **3-Layer Architecture** with strict guardrails:
- 
-### 🏗️ **Three Layers**
-1. **Tests Layer**: Orchestrate flows by calling Business Functions only. No selectors, no waits, no DOM queries. Assert via Business Function return values.
-2. **Business Functions (BF) Layer**: Express intent; compose Page Objects; expose typed inputs/outputs; **no Playwright usage, no selectors**.
-3. **Page Objects (PO) Layer**: Own selectors, waits, retries; may reuse `src/utils/*` helpers; expose semantic methods (e.g., `searchForContent(query)`).
- 
-### 📋 **Key Guardrails**
-- **Manifest Strict Rule**: `src/manifest.yaml` MUST list every Business Function with `id`, `name`, `path`, `export`, `tags`, and `dependsOn`.
-  - No Business Function should be added to the codebase without a corresponding manifest entry.
-  - No manifest entry should refer to a missing or deleted export.
-- **Manifests**: `src/manifest.yaml` lists all Business Functions with `id`, `name`, `path`, `export`, `tags`, `dependsOn`.
-- **ESLint Enforcement**:
-  - Tests: Only `test`/`expect` imports, no Playwright, no DOM queries.
-  - BFs: No Playwright imports, only call Page Objects.
-  - POs: Can use Playwright and `src/utils/*`.
-- **Environment Configuration**: Use `.env` for base URL selection. `TEST_ENV=dev|qa|prod` should point to env-specific URL keys, and Page Objects should read the URL from shared config utilities rather than hardcoding it.
-- **Credential Configuration**: Authentication credentials for positive and negative login scenarios must come from `.env` using keys such as `VALID_LOGIN_EMAIL`, `VALID_LOGIN_PASSWORD`, `INVALID_LOGIN_EMAIL`, and `INVALID_LOGIN_PASSWORD`. Test data files and test code should not hard-code credentials when env values are available.
-- **Data-Driven Flow Selection**: Login and other business-flow scenarios should be driven by test data entries such as `mode`, `scenario`, or `flowType` from the spec/test-data file. Business functions should receive that value from the test layer instead of embedding hard-coded flow strings like `'invalid'` inside the implementation.
-- **Required Pattern**: The test file should pass the flow selector from the data file into the business function, and the business function should normalize that selector internally. Example pattern: `loginWithInvalidCredentials(page, { mode: data.mode })` where `data.mode` comes from the JSON test-case file and the BF handles the normalization.
-- **Utility Reuse**: Page Objects must reuse existing helpers in `src/utils/*` wherever applicable. If a reusable helper does not already exist, the agent must ask for permission and a utility creation plan before generating or updating the page class.
-- **Logging**: Use the existing `src/utils/logger.ts` singleton for step, action, page navigation, and assertion logging in Page Objects and Business Functions.
-- **Naming**: BF names use `verbNoun` or `nounAction` format (e.g., `loginToOTT`, `searchForContent`).
-- **Test Case Integrity Rule**: Do not modify test case steps, expected results, assertions, or test data definitions unless the owner explicitly requests a change. If the current test case appears incorrect, ambiguous, or infeasible, the agent must stop and ask the owner for clarification or approval before changing anything.
-- **Prompt Workflow**:
-  - **REUSE**: Map test cases to existing BFs. If all covered → generate test + JSON patch.
-  - **GAP**: If BFs missing → create BF + PO needs + manifest patch + data keys.
- 
----
- 
 ## Workflow Overview
 This prompt guides you through a complete 7-step QA workflow using AI Agents and MCP Servers for executing test cases on OTT (Over-The-Top) applications from test case definition until automation code is committed to the repository.
  
@@ -162,30 +128,9 @@ For each test case from specs/demo-ott-test-plan.md, perform the following:
 6. Save automation specifications as: specs/ott-test-specifications.md
  
 Structure each specification as:
-```
-### Test Case: TC_AUTH_001 - Login with Premium User Credentials
-- **Feature Area**: Authentication
-- **Priority**: P0
-- **Subscription Tier**: Premium
-- **Test Type**: Functional / Smoke
-- **Test Scope**: Happy Path
- 
-#### Business Functions Required:
-1. loginToOTT
-   - Input: email, password
-   - Output: isLoggedIn, userPlan, username
-   - Assertion: isLoggedIn === true, userPlan === 'premium'
- 
- 
-#### Execution Order:
-1. Call loginToOTT with premium user credentials
-2. Verify isLoggedIn is true
-3. Verify userPlan is 'premium'
-4. Verify username is displayed
- 
-#### BF Gap Analysis:
-- loginToOTT: EXISTS in manifest (path: businessFunction/ott-auth-bfs, export: loginToOTT)
-```
+
+> 📌 See `skills/authentication.skill.md` for the TC_AUTH_001 specification format example.
+
  
 7. Aggregate findings:
    - All test cases mapped to Business Functions (existing or new)
@@ -228,11 +173,7 @@ Then execute each test case:
    - Take screenshots at key points
  
 2. OTT-Specific Test Case Execution:
-   - Authentication Test Cases:
-     * Verify login succeeds with correct credentials
-     * Verify logout clears session
-     * Verify multi-device login respects device limits
-     * Verify session timeout behavior
+   - Authentication Test Cases: see `skills/authentication.skill.md`
    - Playback Test Cases:
      * Verify video plays immediately (within 3 seconds startup)
      * Verify quality selection shows only options available for user's plan
@@ -339,168 +280,32 @@ CRITICAL: Review materials BEFORE generation:
 ### ❌ WHAT IS STRICTLY FORBIDDEN
 
 #### 1. **Hardcoded Locators in Test Files**
-```
-❌ FORBIDDEN - Hardcoded selector in test
-test('TC_AUTH_001 - Login', async ({ page }) => {
-  await page.click('button[data-testid="login"]');  // ❌ HARDCODED LOCATOR
-  await page.fill('input[placeholder="Email"]', 'user@test.com');  // ❌ HARDCODED LOCATOR
-});
-```
-**Rule**: All locators MUST be defined in Page Objects, NOT in test files.
-
+> 📌 See `skills/locator.skill.md`
 #### 2. **Inline Playwright in Test Files**
-```
-❌ FORBIDDEN - Playwright usage in test
-test('TC_PLAY_001 - Play Content', async ({ page }) => {
-  await page.goto('/playback');  // ❌ INLINE NAVIGATION
-  await page.waitForSelector('[data-testid="video"]');  // ❌ INLINE WAIT
-  const quality = await page.getAttribute('[data-quality]', 'value');  // ❌ INLINE DOM QUERY
-});
-```
-**Rule**: Test files MUST only call Business Functions. No Playwright direct usage allowed.
-
+> 📌 See `skills/playwright.skill.md`
 #### 3. **Hardcoded Business Functions Logic in Test Files**
-```
-❌ FORBIDDEN - Logic that should be in BF
-test('TC_WATCH_001 - Add to Watchlist', async ({ page }) => {
-  const watchlistButton = await page.$('[data-testid="watchlist-btn"]');
-  await watchlistButton.click();
-  await page.waitForFunction(
-    () => document.querySelector('[data-testid="watchlist-btn"]').classList.contains('active'),
-    { timeout: 5000 }
-  );
-  const isAdded = await page.evaluate(() => {
-    return document.querySelector('[data-watchlist-count]').textContent === '1';
-  });
-});
-```
-**Rule**: All interaction logic MUST be in Business Functions, which compose Page Objects.
-
+> 📌 See `skills/coding-standards.skill.md`
 #### 4. **Duplicate Locator Definitions in Page Objects**
-```
-❌ FORBIDDEN - Redefining same locator in multiple methods
-// In OTTAuthPage.ts
-const loginButton = page.getByRole('button', { name: 'Login' });
-
-// In OTTAuthPage.ts again (for same element)
-const submitButton = page.getByRole('button', { name: 'Login' });  // ❌ DUPLICATE
-```
-**Rule**: Define each locator ONCE at the class top. Reuse across all methods.
-
+> 📌 See `skills/locator.skill.md`
 #### 5. **Magic Strings and Hardcoded Values in Test Files**
-```
-❌ FORBIDDEN - Magic values in test
-test('TC_PLAY_002 - Change Quality', async ({ page }) => {
-  const result = await changeQualityBF(page, '1080p');  // ❌ HARDCODED VALUE
-  await page.waitForTimeout(3000);  // ❌ MAGIC TIMEOUT
-  expect(result).toBe(true);
-});
-```
-**Rule**: All test data MUST come from src/data/*.json. All timeouts MUST be in Page Objects.
-
-#### 6. **Playwright Imports in Test Files (Except test/expect)**
-```
-❌ FORBIDDEN - Playwright imports in tests
-import { test, expect } from '@playwright/test';
-import { Page } from '@playwright/test';  // ❌ FORBIDDEN
-import { locator } from '@playwright/test';  // ❌ FORBIDDEN
-```
-**Rule**: Test files MUST only import `{ test, expect }` from Playwright. Nothing else.
-
-#### 7. **Playwright Imports in Business Functions**
-```
-❌ FORBIDDEN - Playwright in BF
-import { Page } from '@playwright/test';  // ❌ NOT ALLOWED
-
-export async function loginToOTT(page: Page, input: LoginInput) {
-  await page.click('[selector]');  // ❌ INLINE PLAYWRIGHT
-}
-```
-**Rule**: Business Functions MUST NOT import or use Playwright directly. Only compose Page Objects.
-
-#### 8. **DOM Queries and Evaluations in Tests**
-```
-❌ FORBIDDEN - DOM manipulation in tests
-test('TC_SUB_001 - View Plan', async ({ page }) => {
-  const planName = await page.evaluate(() => {
-    return document.querySelector('[data-plan]').textContent;  // ❌ INLINE EVAL
-  });
-});
-```
-**Rule**: All DOM queries and evaluations MUST be in Page Objects with semantic methods.
-
-#### 9. **Waits and Timeouts in Tests**
-```
-❌ FORBIDDEN - Waits in test files
-test('TC_PLAY_003 - Seek Video', async ({ page }) => {
-  await page.waitForSelector('[data-video]');  // ❌ WAIT IN TEST
-  await page.waitForTimeout(2000);  // ❌ TIMEOUT IN TEST
-  await page.waitForFunction(() => isVideoReady());  // ❌ WAIT FUNCTION IN TEST
-});
-```
-**Rule**: All waits and timeouts MUST be in Page Objects. Tests MUST NOT have any waits.
+> 📌 See `skills/coding-standards.skill.md`
+#### 6. **Playwright Imports in Test Files (Except test/expect)** / #### 7. **Playwright Imports in Business Functions**
+> 📌 See `skills/playwright.skill.md`
+#### 8. **DOM Queries and Evaluations in Tests** / #### 9. **Waits and Timeouts in Tests**
+> 📌 See `skills/coding-standards.skill.md`
 
 #### 10. **Reusing Selectors Without PO Abstraction**
-```
-❌ FORBIDDEN - Selector reuse without abstraction
-// In multiple test files
-const selector = '[data-testid="login-btn"]';
-await page.click(selector);
-
-// In another test file
-const selector = '[data-testid="login-btn"]';  // ❌ DUPLICATION
-await page.click(selector);
-```
-**Rule**: Selectors MUST be defined ONCE in Page Objects. Tests MUST NOT contain any selectors.
-
----
-
+> 📌 See `skills/locator.skill.md`
 ### ✅ ENFORCEMENT CHECKLIST (Before Code Generation)
-
-- [ ] ALL locators will be defined in Page Objects at class top
-- [ ] ALL locators will use Playwright-recommended methods (getByRole, getByLabel, getByTestId, getByText)
-- [ ] NO hardcoded selectors in test files
-- [ ] NO inline Playwright in test files
-- [ ] NO Playwright imports in test files (except test/expect)
-- [ ] NO Playwright imports in Business Functions
-- [ ] ALL test logic will be in Business Functions
-- [ ] ALL selectors will be in Page Objects
-- [ ] ALL assertions will use Business Function return values
-- [ ] ALL test data will come from src/data/*.json
-- [ ] NO duplicate locator definitions
-- [ ] NO magic strings or hardcoded values in tests
-- [ ] NO waits, timeouts, or DOM queries in tests
-
----
+> 📌 See `skills/coding-standards.skill.md`
 
 ## THE 3-LAYER ARCHITECTURE (MUST FOLLOW):
  
 🔷 LAYER 1 - TEST FILES (tests/ott-app/*.spec.ts):
-- Each test case becomes a test() block
-- File organization: Group test cases by feature area
-  * tests/ott-app/authentication.spec.ts (TC_AUTH_*)
-  * tests/ott-app/playback.spec.ts (TC_PLAY_*)
-  * tests/ott-app/discovery.spec.ts (TC_DISC_*)
-  * tests/ott-app/watchlist.spec.ts (TC_WATCH_*)
-  * tests/ott-app/subscription.spec.ts (TC_SUB_*)
-- ONLY import: { test, expect }
-- Test function named after test case: test('TC_AUTH_001 - Login with Premium User', async ({ page }) => {})
-- Call Business Functions in order specified in test specification
-- Assert using BF return values ONLY
-- NO Playwright direct usage
-- NO PAGE OBJECTS or waits
-- NO DOM queries
-- Example:
-  * test('TC_AUTH_001 - Login with Premium User', async ({ page }) => {
-  *   const testData = testCaseData['tc-auth-001-premium-user'];
-  *   const result = await loginToOTT(page, { email: testData.email, password: testData.password });
-  *   expect(result.isLoggedIn).toBe(true);
-  *   expect(result.userPlan).toBe('premium');
-  * });
- 
+> 📌 Assertion strategy details: see `skills/assertions.skill.md`
 🔷 LAYER 2 - BUSINESS FUNCTIONS (src/businessFunction/ott-bfs.ts):
 - Business Functions required for test cases:
-  * Authentication: loginToOTT, logoutFromOTT, registerUser, validateMultiDeviceLogin
+  * Authentication: see `skills/authentication.skill.md`
   * Discovery: searchForContent, browseByGenre, getRecommendations, filterContent
   * Playback: playContent, changeQuality, selectSubtitle, seekToTime, skipIntro, verifyQualityLimit
   * Watchlist: addToWatchlist, removeFromWatchlist, viewWatchlist, verifyWatchlistSync, getContinueWatching
@@ -521,52 +326,7 @@ await page.click(selector);
   * }
  
 🔷 LAYER 3 - PAGE OBJECTS (src/pom/OTTAppPage.ts):
-- Page Objects organized by feature area:
-  * OTTAuthPage.ts - Login, logout, registration
-  * OTTPlaybackPage.ts - Playback controls, quality, subtitles
-  * OTTSearchPage.ts - Search, filter, browse
-  * OTTWatchlistPage.ts - Watchlist, continue watching
-  * OTTSubscriptionPage.ts - Subscription, billing
-  * OTTProfilePage.ts - Profile, settings, parental controls
-- Own all selectors, waits, retries
-- Implement semantic methods required by test case BFs
-- Use Playwright directly
-- DO not hardcode the locators within the function.
-- Keep all locators at the top of the page object and define them using Playwright-recommended locators such as getByRole(), getByText(), getByLabel(), and getByTestId(). Reuse these locators through functions wherever they are needed instead of redefining them.
-- Example:
-constructor(page: Page) {
-    this.page = page;
-    this.loginButton = page.getByRole('button', { name: 'Login' });
-    this.welcomeText = page.getByText('Welcome', { exact: true });
-    this.emailField = page.getByLabel('Email');
-    this.submitButton = page.getByTestId('submit-button');
-  }
-  async clickLogin() {
-    await this.loginButton.click();
-  }
-  async clickWelcome() {
-    await this.welcomeText.click();
-  }
-  async enterEmail(email: string) {
-    await this.emailField.fill(email);
-  }
-  async clickSubmit() {
-    await this.submitButton.click();
-  }
-- If a Playwright-recommended locator is not available or reliable, use: CSS selectors (locator()), XPath selectors
-- Use the below-mentioned examples as the least-priority locators.
-- Example:
-  * async changeQuality(newQuality: string): Promise<void> {
-  *   await this.page.click('[data-testid="quality-button"]');
-  *   await this.page.click(`[data-testid="quality-${newQuality}"]`);
-  *   // Wait for quality change to take effect
-  *   await this.page.waitForFunction(
-  *     () => getCurrentQuality() === newQuality,
-  *     { timeout: 5000 }
-  *   );
-  * }
-- Handle timeouts for video loading, quality changes, etc.
- 
+> 📌 See `skills/page-object.skill.md` (Page Object layer rules) and `skills/locator.skill.md` (locator-specific guidance)
 MANIFEST FOR TEST CASE AUTOMATION:
 - Update src/manifest.yaml with all required BFs
 - Format: { id: "tc-auth-001", name: "Login to OTT - Premium User", ... }

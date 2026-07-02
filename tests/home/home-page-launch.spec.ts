@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginWithInvalidCredentials, loginToOTT, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithInvalidCredentials, loginToOTT, loginWithMobileNumber, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 
@@ -42,6 +42,16 @@ test.describe('Home Page Launch', () => {
         expect(result.isMobileErrorDisplayed).toBe(true);
         expect(result.errorMessage).toBe(data.expectedErrorMessage);
         expect(result.isOTPPageVisible).toBe(false);
+    });
+
+    test.only('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {
+        const data = testCaseData['tc-auth-008-mobile-login'];
+        const result = await loginWithMobileNumber(page, {
+            mode: data.mode
+        });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeTabVisible).toBe(true);
     });
 
     test('IW3-T1869: Verify the UI/UX of the Welcome to iWant screen for PH region', async ({ page }) => {

@@ -5,6 +5,8 @@ import { config } from '../utils/config-manager';
 export interface InvalidLoginInput {
     email?: string;
     password?: string;
+    mobileNumberContryCode?: string;
+    mobileNumber?: string;
     mode?: string;
 }
 
@@ -83,12 +85,15 @@ export interface VerifyWelcomeScreenOutput {
 //     return mode === 'valid' ? 'valid' : 'invalid';
 // }
 
-function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' {
+function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' {
     if (mode === 'valid') {
         return 'valid';
     }
     if (mode === 'provider') {
         return 'provider';
+    }
+    if (mode === 'mobile') {
+        return 'mobile'
     }
     return 'invalid';
 }
@@ -126,29 +131,28 @@ export interface EmptyCredentialsOutput {
     isErrorDisplayed: boolean;
     errorMessage: string;
 }
-
-// function resolveLoginCredentials(input: Partial<InvalidLoginInput>, mode: 'invalid' | 'valid' = 'invalid') {
-//     const prefix = mode === 'valid' ? 'VALID_LOGIN_' : 'INVALID_LOGIN_' : 'PROVIDER_';
-//     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
-//     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
-//     return { email, password };
-// }
+// MOBILE_LOGIN_COUNTRY_CODE=63
+// MOBILE_LOGIN_MOBILE_NUMBER=9178039002
 
 function resolveLoginCredentials(
-  input: Partial<InvalidLoginInput>,
-  mode: 'invalid' | 'valid' | 'provider' = 'invalid'
+    input: Partial<InvalidLoginInput>,
+    mode: 'invalid' | 'valid' | 'provider'  | 'mobile' = 'invalid'
 ) {
-  const prefix =
-    mode === 'valid'
-      ? 'VALID_LOGIN_'
-      : mode === 'provider'
-      ? 'PROVIDER_'
-      : 'INVALID_LOGIN_';
+    const prefix =
+        mode === 'valid'
+            ? 'VALID_LOGIN_'
+            : mode === 'provider'
+                ? 'PROVIDER_' 
+            : mode === 'mobile'
+                ? 'MOBILE_LOGIN_'
+            :'INVALID_LOGIN_';
 
-  const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
-  const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
+    const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
+    const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
+    const mobileNumberContryCode = String(config.get(`${prefix}COUNTRYCODE`, input.mobileNumberContryCode ?? '')).trim();
+    const mobileNumber = String(config.get(`${prefix}MOBILENUMBER`, input.mobileNumber ?? '')).trim();
 
-  return { email, password };
+    return { email, password , mobileNumberContryCode,  mobileNumber};
 }
 
 export async function loginWithInvalidCredentials(page: any, input?: Partial<InvalidLoginInput>): Promise<InvalidLoginOutput> {
@@ -175,6 +179,44 @@ export interface LoginToOTTOutput {
     isLoggedIn: boolean;
     homeTabVisible: boolean;
 }
+
+export interface MobileLoginInput {
+    mobileNumberContryCode?: string;
+    mobileNumber?: string;
+    password?: string;
+    mode?: string;
+}
+
+export interface MobileLoginOutput {
+    isLoggedIn: boolean;
+    homeTabVisible: boolean;
+}
+
+export async function loginWithMobileNumber(page: any, input?: Partial<MobileLoginInput>): Promise<MobileLoginOutput> {
+   const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { mobileNumberContryCode: '', mobileNumber: '', password: '' }, mode);
+    logger.step('Starting mobile number login flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickUseMobileNumberLink();
+    await authPage.selectCountryCode(input?.mobileNumberContryCode ?? '');
+    await authPage.enterMobileNumber(input?.mobileNumber ?? '');
+    await authPage.enterMobilePassword(input?.password ?? '');
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after mobile login', homeVisible);
+
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
+}
+
 export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -487,4 +529,4 @@ export async function submitEmptyCredentials(page: any, input: EmptyCredentialsI
         errorMessage,
     };
 }
- 
+

@@ -34,7 +34,7 @@
         "expectedYear": "2026",
         "expectedGenre": "Action"
     },
-     "tc-auth-006-create-account-ui": {
+    "tc-auth-006-create-account-ui": {
         "expectedHeading": "Create an account",
         "expectedEmailLabel": "Email Address",
         "expectedPasswordLabel": "Password",
@@ -48,5 +48,8 @@
         "email": "",
         "password": "",
         "expectedErrorMessage": "Email is required"
+    },
+    "tc-auth-008-mobile-login":{
+        "mode": "mobile"
     }
 }

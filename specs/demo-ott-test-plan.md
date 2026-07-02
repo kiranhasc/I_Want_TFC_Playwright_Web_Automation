@@ -136,6 +136,19 @@ This test plan covers validation of application launch behavior for the OTT plat
    *expect User should navigate to the respective content Details Page
    *expect validate the details page
  
+ ### 1.9. IW3-T1865 Verify the mobile number login functionality.
+ 
+**File:** ``tests/home/home-page-launch.spec.ts`
+ 
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on "Click here to use mobile number" link.
+5. Select the country code as "63"
+6. Enter the mobile number and password (Ex: 63| 9178039002/Password123!)
+7. Click on "Continue" CTA.
+   *expect : User should be able to login with mobile number and navigated to "Home" screen.
  
    
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"

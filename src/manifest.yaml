@@ -72,6 +72,18 @@
     - "IW3-T1870"
   dependsOn: []
 
+- id: "login-with-mobile-number"
+  name: "Login with mobile number"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "loginWithMobileNumber"
+  tags:
+    - auth
+    - positive
+    - smoke
+  testCases:
+    - "IW3-T1865"
+  dependsOn: []
+
 - id: "navigate-and-verify-tabs"
   name: "Navigate and verify tabs with rail content"
   path: "src/businessFunction/ott-auth-bfs.ts"

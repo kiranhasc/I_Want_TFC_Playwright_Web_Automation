@@ -54,6 +54,11 @@ export class OTTAuthPage {
     private readonly alreadyHaveAccountText: PageElement;
     private readonly createAccountLoginLink: PageElement;
     private readonly emptyCredentialsErrorMessage: PageElement;
+    private readonly useMobileNumberLink: PageElement;
+    private readonly countryCodeDropdown: PageElement;
+    private readonly countryCodeOption: PageElement;
+    private readonly mobileNumberField: PageElement;
+    private readonly mobilePasswordField: PageElement;
 
 
     constructor(page: Page) {
@@ -89,8 +94,8 @@ export class OTTAuthPage {
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
-        this.tvProviderLoginOption = {  selector: 'role=button[name="Login with TV Provider"]' };
-        this.providerFrontierOption = {  selector: 'role=button[name="Frontier, a Verizon Company"]' };
+        this.tvProviderLoginOption = { selector: 'role=button[name="Login with TV Provider"]' };
+        this.providerFrontierOption = { selector: 'role=button[name="Frontier, a Verizon Company"]' };
         this.providerEmailField = { selector: 'role=textbox[name="Username"]' };
         this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
         this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
@@ -100,12 +105,17 @@ export class OTTAuthPage {
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
         this.createAccountPasswordField = { selector: 'input[name="userPassword"]' };
         this.termsCheckbox = { selector: 'label:has-text("I agree to the Terms and")' };
-        this.marketingCheckbox = { selector: 'label:has-text("I agree to receive marketing")'};
+        this.marketingCheckbox = { selector: 'label:has-text("I agree to receive marketing")' };
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
         this.emptyCredentialsErrorMessage = { selector: 'text=/Email is required/i' };
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
+        this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]'};
+        this.countryCodeDropdown = { selector: 'select, [role="combobox"]' };
+        this.countryCodeOption = { selector: 'text=63' };
+        this.mobileNumberField = { selector: '#userMobile, input[type="tel"], input[name*="phone"], input[name*="mobile"]' };
+        this.mobilePasswordField = { selector: 'input[placeholder*="Password"], input[type="password"], input[name*="password"]' };
     }
 
     async navigate(): Promise<void> {
@@ -150,6 +160,29 @@ export class OTTAuthPage {
     async clickContinue(): Promise<void> {
         logger.elementInteraction('click', 'Continue button');
         await this.pageUtils.safeClick(this.continueButton);
+    }
+
+    async clickUseMobileNumberLink(): Promise<void> {
+        logger.elementInteraction('click', 'Use mobile number link');
+        await this.pageUtils.safeClick(this.useMobileNumberLink);
+    }
+
+    async selectCountryCode(countryCode: string): Promise<void> {
+        logger.elementInteraction('select', `country code ${countryCode}`);
+        const countrySelector = this.page.locator(this.countryCodeDropdown.selector).first();
+        if (await countrySelector.count()) {
+            await countrySelector.selectOption({ label: countryCode }).catch(() => countrySelector.selectOption({ value: countryCode }));
+        }
+    }
+
+    async enterMobileNumber(mobileNumber: string): Promise<void> {
+        logger.elementInteraction('type', 'mobile number field');
+        await this.pageUtils.safeType(this.mobileNumberField, mobileNumber);
+    }
+
+    async enterMobilePassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'mobile password field');
+        await this.pageUtils.safeType(this.mobilePasswordField, password);
     }
 
     async clickForgotPassword(): Promise<void> {
@@ -323,7 +356,7 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.signOutOption, 10000);
     }
 
-     async clickLoginWithTVProvider(): Promise<void> {
+    async clickLoginWithTVProvider(): Promise<void> {
         logger.elementInteraction('click', 'Login with TV Provider option');
         await this.pageUtils.safeClick(this.tvProviderLoginOption);
     }
@@ -335,7 +368,7 @@ export class OTTAuthPage {
         await providerLocator.click();
     }
 
-        async login(email: string, password: string): Promise<void> {
+    async login(email: string, password: string): Promise<void> {
         logger.step('Performing login with provided credentials');
         await this.clickEmailField();
         await this.enterEmail(email);
@@ -368,7 +401,7 @@ export class OTTAuthPage {
         }
 
         const homeTabVisible = await this.pageUtils.isVisible(
-            {  selector: 'text="Home"' },
+            { selector: 'text="Home"' },
             5000
         );
         return homeTabVisible;

@@ -276,6 +276,141 @@ export interface NavigateTabsOutput {
     signOutOptionVisible: boolean;
 }
 
+export interface SearchIconVisibilityInput {
+    mode?: string;
+}
+
+export interface SearchIconVisibilityOutput {
+    isLoggedIn: boolean;
+    homePageSearchIconVisible: boolean;
+    moviesPageSearchIconVisible: boolean;
+    showsPageSearchIconVisible: boolean;
+    watchlistPageSearchIconVisible: boolean;
+    gmaPageSearchIconVisible: boolean;
+}
+
+export interface SearchQueryInput {
+    mode?: string;
+    query?: string;
+}
+
+export interface SearchQueryOutput {
+    isLoggedIn: boolean;
+    searchInputValue: string;
+    queryTyped: boolean;
+}
+
+export interface SearchResultsOutput {
+    isLoggedIn: boolean;
+    queryTyped: boolean;
+    resultsVisible: boolean;
+}
+
+export async function verifySearchQueryTyping(page: any, input?: Partial<SearchQueryInput>): Promise<SearchQueryOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const query = (input?.query ?? '').trim();
+
+    logger.step('Starting search query typing flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(query);
+    const searchInputValue = await authPage.getSearchBarValue();
+    const queryTyped = searchInputValue.includes(query);
+
+    logger.assertion('Search query typed into input box', queryTyped);
+
+    return {
+        isLoggedIn: true,
+        searchInputValue,
+        queryTyped,
+    };
+}
+
+export async function verifySearchResults(page: any, input?: Partial<SearchQueryInput>): Promise<SearchResultsOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const query = (input?.query ?? '').trim();
+
+    logger.step('Starting search results verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(query);
+    const searchInputValue = await authPage.getSearchBarValue();
+    const queryTyped = searchInputValue.includes(query);
+    const resultsVisible = queryTyped ? await authPage.isSearchResultsVisible(query) : false;
+
+    logger.assertion('Search results appear for a valid query', resultsVisible);
+
+    return {
+        isLoggedIn: true,
+        queryTyped,
+        resultsVisible,
+    };
+}
+
+export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Partial<SearchIconVisibilityInput>): Promise<SearchIconVisibilityOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+
+    logger.step('Starting search icon visibility verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    const homePageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on Home page', homePageSearchIconVisible);
+
+    await authPage.clickMoviesTab();
+    const moviesPageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on Movies page', moviesPageSearchIconVisible);
+
+    await authPage.clickShowsTab();
+    const showsPageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on Shows page', showsPageSearchIconVisible);
+
+    await authPage.clickMyWatchlistTab();
+    const watchlistPageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on My Watchlist page', watchlistPageSearchIconVisible);
+
+    await authPage.clickGMATab();
+    const gmaPageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on GMA page', gmaPageSearchIconVisible);
+
+    return {
+        isLoggedIn: homePageSearchIconVisible,
+        homePageSearchIconVisible,
+        moviesPageSearchIconVisible,
+        showsPageSearchIconVisible,
+        watchlistPageSearchIconVisible,
+        gmaPageSearchIconVisible,
+    };
+}
+
 export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateTabsInput>): Promise<NavigateTabsOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);

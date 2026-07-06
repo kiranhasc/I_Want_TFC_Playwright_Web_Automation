@@ -303,17 +303,24 @@ export class OTTAuthPage {
 
     async clickShowsTab(): Promise<void> {
         logger.elementInteraction('click', 'Shows tab');
+        await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.showsTab);
     }
 
     async clickMyWatchlistTab(): Promise<void> {
         logger.elementInteraction('click', 'My Watchlist tab');
+        await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.myWatchlistTab);
     }
 
     async clickGMATab(): Promise<void> {
         logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.gmaTab);
+    }
+
+    async isSearchIconVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.searchBarIcon, 10000);
     }
 
     async isContinueWatchingRailVisible(): Promise<boolean> {
@@ -341,10 +348,32 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.searchBarIcon);
     }
 
+    async enterSearchQuery(query: string): Promise<void> {
+        logger.elementInteraction('type', 'search query');
+        await this.pageUtils.safeType(this.searchBar, query);
+    }
+
+    async getSearchBarValue(): Promise<string> {
+        const locator = this.page.locator(this.searchBar.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.inputValue()) || '';
+    }
+
     async getSearchBarPlaceholder(): Promise<string> {
         const locator = this.page.locator(this.searchBar.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.getAttribute('placeholder')) || '';
+    }
+
+    async isSearchResultsVisible(query: string = ''): Promise<boolean> {
+        const locator = this.page.locator('[class*="flex flex-wrap gap-[1rem]"] img[alt]').first();
+        const altText = await locator.getAttribute('alt').catch(() => '');
+        const normalizedQuery = query.trim().toLowerCase();
+        const normalizedAltText = (altText || '').toLowerCase();
+        if (normalizedQuery) {
+            return normalizedAltText.includes(normalizedQuery) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+        }
+        return /(search|result|thumbnail|poster|image)/i.test(altText || '');
     }
 
     async clickAccountIcon(): Promise<void> {

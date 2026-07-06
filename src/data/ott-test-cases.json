@@ -51,5 +51,16 @@
     },
     "tc-auth-008-mobile-login":{
         "mode": "mobile"
+    },
+    "tc-nav-001-search-icon": {
+        "mode": "valid"
+    },
+    "tc-nav-002-search-query": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
+    "tc-nav-003-search-results": {
+        "mode": "valid",
+        "query": "Abandoned"
     }
 }

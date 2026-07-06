@@ -16,3 +16,10 @@
 - Business Function: loginWithMobileNumber
 - Inputs: MOBILE_LOGIN_COUNTRY_CODE, MOBILE_LOGIN_MOBILE_NUMBER, MOBILE_LOGIN_PASSWORD
 - Assertions: isLoggedIn === true, homeTabVisible === true
+
+## Navigation Test Specifications
+
+### TC_NAV_001 - Search icon visibility on all navigation pages
+- Business Function: verifySearchIconVisibilityOnAllPages
+- Inputs: VALID_LOGIN_EMAIL, VALID_LOGIN_PASSWORD
+- Assertions: homePageSearchIconVisible === true, moviesPageSearchIconVisible === true, showsPageSearchIconVisible === true, watchlistPageSearchIconVisible === true, gmaPageSearchIconVisible === true

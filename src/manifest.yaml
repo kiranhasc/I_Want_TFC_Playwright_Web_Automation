@@ -95,6 +95,19 @@
   testCases:
     - "IW3-T1867"
   dependsOn: []
+
+- id: "verify-search-icon-visibility"
+  name: "Verify search icon visibility on navigation pages"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchIconVisibilityOnAllPages"
+  tags:
+    - navigation
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2060"
+  dependsOn:
+    - "login-to-ott"
  
 - id: "navigate-show-details-from-shows"
   name: "Navigate to show details from Shows page"

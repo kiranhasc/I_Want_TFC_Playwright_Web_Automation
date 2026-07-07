@@ -107,6 +107,18 @@
   testCases:
     - "IW3-T1865"
   dependsOn: []
+
+- id: "verify-live-playback-pause-resume"
+  name: "Verify live playback pause and resume controls"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLivePlaybackPauseResume"
+  tags:
+    - playback
+    - live-tv
+    - positive
+  testCases:
+    - "IW3-T2010"
+  dependsOn: []
  
 - id: "navigate-show-details-from-shows"
   name: "Navigate to show details from Shows page"

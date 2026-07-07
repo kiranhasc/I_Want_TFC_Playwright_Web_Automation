@@ -1,0 +1,20 @@
+[    3131ms] [LOG] GPTScript useEffect @ https://www.iwanttfc.com/_next/static/chunks/app/layout-ad3d00192d383cdb.js:0
+[    3152ms] [LOG] [CACHE] Cached value returned for key: geoLocation @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    3153ms] [LOG] [CACHE] Cached value returned for key: errorMessages @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    3154ms] [LOG] Starting Firebase Remote Config initialization... @ https://www.iwanttfc.com/_next/static/chunks/app/layout-ad3d00192d383cdb.js:0
+[    3159ms] [LOG] [CACHE] Cached value returned for key: appLaunchDetails @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    3296ms] [LOG] [CACHE] Background refresh completed for key: errorMessages @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    3447ms] [WARNING] [GPT] PubAdsService.disableInitialLoad is deprecated, use googletag.setConfig({disableInitialLoad: ...}) instead.
+https://goo.gle/gpt-message#170 @ https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202606290101/pubads_impl.js:18
+[    4325ms] [LOG] [CACHE] Background refresh completed for key: appLaunchDetails @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    4664ms] [LOG] Branch initialization successful @ https://www.iwanttfc.com/_next/static/chunks/101-a38eccde57b9a2ff.js:0
+[    4673ms] [LOG] Branch fingerprint:  1602622520722340396 @ https://www.iwanttfc.com/_next/static/chunks/101-a38eccde57b9a2ff.js:0
+[    4811ms] [LOG] [CACHE] Background refresh completed for key: geoLocation @ https://www.iwanttfc.com/_next/static/chunks/458-be681efbcba2c109.js:0
+[    5914ms] [ERROR] Amplitude Logger [Error]: Failed to fetch @ https://www.iwanttfc.com/_next/static/chunks/942-030ed45ad4a920f7.js:0
+[    5916ms] [WARNING] Amplitude Logger [Warn]: {code: 0, error: "Status 'failed' provided for 4 events"} @ https://www.iwanttfc.com/_next/static/chunks/112-0781633d43cad2c5.js:0
+[    6750ms] [LOG] redirectUrl https://www.iwanttfc.com/ @ https://www.iwanttfc.com/login/static/js/main.18a3d8ef.js:1
+[    6763ms] [LOG] V: 1.0.6 @ https://www.iwanttfc.com/login/static/js/main.18a3d8ef.js:1
+[    6808ms] [ERROR] Error: <svg> attribute width: Expected length, "md". @ https://www.iwanttfc.com/login/static/js/main.18a3d8ef.js:1
+[    6809ms] [ERROR] Error: <svg> attribute height: Expected length, "md". @ https://www.iwanttfc.com/login/static/js/main.18a3d8ef.js:1
+[    6809ms] [ERROR] Error: <svg> attribute viewBox: Expected number, "0 0 md md". @ https://www.iwanttfc.com/login/static/js/main.18a3d8ef.js:1
+[    7080ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/:0

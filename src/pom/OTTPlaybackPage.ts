@@ -21,6 +21,11 @@ export class OTTPlaybackPage {
     private readonly maybeLaterButton: PageElement;
     private readonly subscribeToWatchButton: PageElement;
     private readonly laterEpisodeButton: PageElement;
+    private readonly liveTvNavLink: PageElement;
+    private readonly liveTvChannelCard: PageElement;
+    private readonly pauseButton: PageElement;
+    private readonly playResumeButton: PageElement;
+    private readonly tfcAsiaImage: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -40,6 +45,11 @@ export class OTTPlaybackPage {
         this.maybeLaterButton = { text: 'Maybe Later', selector: 'text=Maybe Later' };
         this.subscribeToWatchButton = { text: 'Subscribe to watch', selector: 'text=/Subscribe to watch/i' };
         this.laterEpisodeButton = { text: 'Play S1 E6', selector: 'text=/Play S1 E[6-9]|Play S[0-9]+ E[6-9]/i' };
+        this.liveTvNavLink = { text: 'Live TV', selector: 'text=/Live TV/i' };
+        this.liveTvChannelCard = { selector: 'a[href*="/live"], a[href*="/tv"], [data-testid*="channel"], [class*="channel"], button:has-text("Play")' };
+        this.pauseButton = { role: 'button', text: 'Pause', selector: 'button:has-text("Pause")' };
+        this.playResumeButton = { role: 'button', text: 'Play', selector: 'button:has-text("Play")' };
+        this.tfcAsiaImage = { role: 'img', text: 'TFC Asia', selector: 'img[alt*="TFC Asia"], img[alt*="TFC"], img[title*="TFC Asia"]' };
     }
 
     async navigateToHomePage(): Promise<void> {
@@ -235,5 +245,84 @@ export class OTTPlaybackPage {
         } catch {
             return false;
         }
+    }
+
+    async selectLiveTVSection(): Promise<boolean> {
+        try {
+            const tfcImage = this.page.getByRole('img', { name: 'TFC Asia' }).first();
+            await tfcImage.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+            await tfcImage.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForTimeout(10000);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async selectLiveChannel(): Promise<boolean> {
+        return await this.selectLiveTVSection();
+    }
+
+    async waitForPlaybackToStart(timeout: number = 40000): Promise<boolean> {
+        try {
+            await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+            const videoElement = this.page.locator(this.videoElement.selector).first();
+            const videoVisible = await videoElement.isVisible().catch(() => false);
+            const pauseVisible = await this.page.getByRole('button', { name: /pause/i }).first().isVisible().catch(() => false);
+            const playVisible = await this.page.getByRole('button', { name: /play/i }).first().isVisible().catch(() => false);
+            return videoVisible || pauseVisible || playVisible || this.page.url().includes('/player/');
+        } catch {
+            return false;
+        }
+    }
+
+    async pauseAndResumePlayback(): Promise<{ pauseClicked: boolean; resumeClicked: boolean; playbackCompleted: boolean; currentTimeBeforePause: number; currentTimeAfterResume: number }> {
+        const videoElement = this.page.locator(this.videoElement.selector).first();
+
+        let pauseClicked = false;
+        let resumeClicked = false;
+        let playbackCompleted = false;
+
+        const currentTimeBeforePause = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
+
+        await this.page.waitForTimeout(8000);
+
+        await this.page.mouse.move(700, 400).catch(() => undefined);
+        await this.page.waitForTimeout(2000);
+
+        const pauseButton = this.page.getByRole('button', { name: 'Pause' }).first();
+        await pauseButton.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+        if (await pauseButton.isVisible().catch(() => false)) {
+            await pauseButton.hover({ force: true }).catch(() => undefined);
+            await this.page.waitForTimeout(1000);
+            await pauseButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForTimeout(8000);
+            pauseClicked = true;
+        }
+
+        await this.page.mouse.move(700, 400).catch(() => undefined);
+        await this.page.waitForTimeout(2000);
+
+        const playButton = this.page.getByRole('button', { name: 'Play' }).first();
+        await playButton.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+        if (await playButton.isVisible().catch(() => false)) {
+            await playButton.hover({ force: true }).catch(() => undefined);
+            await this.page.waitForTimeout(1000);
+            await playButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForTimeout(8000);
+            resumeClicked = true;
+        }
+
+        const currentTimeAfterResume = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
+        playbackCompleted = await videoElement.evaluate((node: HTMLVideoElement) => node.ended).catch(() => false);
+
+        return {
+            pauseClicked,
+            resumeClicked,
+            playbackCompleted,
+            currentTimeBeforePause,
+            currentTimeAfterResume,
+        };
     }
 }

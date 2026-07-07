@@ -213,6 +213,41 @@ This test plan covers validation of application launch behavior for the OTT plat
    - **Expect** The following action buttons should be displayed:
      - **"Maybe Later"**
      - **"Subscribe to Watch"**
+
+### IW3-T2010 Verify that the pause and resume buttons function correctly during live playback.
+
+# File: `tests/live-tv/live-tv.spec.ts`
+
+## Steps
+
+1. Open the browser.
+2. Enter the URL (https://uat.iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Live TV** section.
+5. Select and play any live TV channel.
+6. Verify the playback.
+7. Tap the **Pause** button.
+8. Verify that the live stream is paused.
+9. Tap the **Play/Resume** button.
+10. Observe the playback.
+    - **Expect:** Tapping the **Pause** button should pause the live playback, and tapping the **Play/Resume** button should continue the stream from the current live position.
+
+### IW3-T2030	Verify that the user is able to initiate video playback directly from the 'My Watchlist' page by selecting any listed content.
+
+**File:** `tests/watchlist/watchlist-play-content.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to the **My Watchlist** page.
+5. Select any content from the watchlist.
+6. Click the **Play** or **Resume** button on the content details page.
+7. Observe the player screen.
+   - **Expect** The user should be successfully redirected to the player screen, and the selected content should start playing successfully.
+
+
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 
 **File:** `tests/home/create-account-navigation.spec.ts`

@@ -60,5 +60,12 @@
     "tc-play-001-free-asset-playback": {
         "email": "kaditi5739@cadebek.com",
         "password": "Hello@world1"
+    },
+    "tc-play-002-premium-content-gate": {
+        "email": "kaditi5739@cadebek.com",
+        "password": "Hello@world1",
+        "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedSubscribeText": "Subscribe to watch"
     }
 }

@@ -42,3 +42,57 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
         playbackStarted,
     };
 }
+
+export interface VerifyPremiumContentGateInput {
+    email?: string;
+    password?: string;
+    expectedMessage?: string;
+    expectedMaybeLaterText?: string;
+    expectedSubscribeText?: string;
+}
+
+export interface VerifyPremiumContentGateOutput {
+    playAttempted: boolean;
+    premiumGateDisplayed: boolean;
+    gateMessage: string;
+    maybeLaterVisible: boolean;
+    subscribeToWatchVisible: boolean;
+}
+
+export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumContentGateInput): Promise<VerifyPremiumContentGateOutput> {
+    const playbackPage = new OTTPlaybackPage(page);
+    const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || '';
+    const password = input?.password || process.env.FREE_USER_LOGIN_PASSWORD || '';
+
+    logger.step('Starting premium content gate validation flow');
+    await playbackPage.loginWithFreeUser(email, password);
+
+    const isLoggedIn = await playbackPage.isHomeScreenReady();
+    logger.assertion('Free user loaded the home screen for premium content gate check', isLoggedIn);
+
+    const premiumContentSelected = await playbackPage.clickFirstPremiumContentCard();
+    logger.assertion('Premium content card selected', premiumContentSelected);
+
+    const laterEpisodeSelected = await playbackPage.clickLaterEpisodeFromPremiumContent();
+    logger.assertion('Later episode selected for premium content', laterEpisodeSelected);
+
+    const playAttempted = laterEpisodeSelected;
+    logger.assertion('Attempted playback on premium content', playAttempted);
+
+    const premiumGateDisplayed = await playbackPage.isPremiumContentGateVisible();
+    const gateMessage = premiumGateDisplayed ? await playbackPage.getPremiumGateMessageText() : '';
+    const maybeLaterVisible = await playbackPage.isMaybeLaterVisible();
+    const subscribeToWatchVisible = await playbackPage.isSubscribeToWatchVisible();
+
+    logger.assertion('Premium content gate displayed', premiumGateDisplayed);
+    logger.assertion('Maybe Later action visible', maybeLaterVisible);
+    logger.assertion('Subscribe to watch action visible', subscribeToWatchVisible);
+
+    return {
+        playAttempted,
+        premiumGateDisplayed,
+        gateMessage,
+        maybeLaterVisible,
+        subscribeToWatchVisible,
+    };
+}

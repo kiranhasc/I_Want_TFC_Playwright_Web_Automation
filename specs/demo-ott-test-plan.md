@@ -172,12 +172,47 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 1. **Precondition:** User should not have watched any content.
 2. Open the browser.
-3. Enter the URL (https://uat.iwanttfc.com/).
+3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page after successful login.
 6. Observe the available content trays on the Home page.
    * **Expect** The **"Continue Watching"** tray **should not be displayed** for a logged-in user with no watch history.
 
+### 1.12. IW3-T1960 Verify that movie content gets removed from CW tray post completely watching the same content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have partially watched a movie so that it appears in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://uat.iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Select the partially watched movie from the **Continue Watching** tray.
+7. Click the **Play** button to resume playback.
+8. Watch the movie until playback is completed.
+9. Return to the **Home** page
+10. Osbserve the **Continue Watching** tray.
+   - **Expect:** Once the movie has been watched completely, it should be removed from the **Continue Watching** tray.
+
+### 1.13. IW3-T2025 Verify the message displayed when user try to play premium content.
+
+**File:** `tests/playback/premium-content.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to any **premium** movie or show.
+5. Click the **Play** button to attempt playback.
+6. Observe the player screen.
+   - **Expect** A subscription prompt should be displayed with the message:
+     > **"A valid subscription is required to view this content. Please subscribe or renew your plan."**
+   - **Expect** The following action buttons should be displayed:
+     - **"Maybe Later"**
+     - **"Subscribe to Watch"**
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 
 **File:** `tests/home/create-account-navigation.spec.ts`

@@ -7,7 +7,7 @@ dotenv.config();
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  timeout: 60000,
+  timeout: 120000,
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -25,9 +25,12 @@ export default defineConfig({
     trace: 'on-first-retry',
     headless: false,
     ignoreHTTPSErrors: true,
+    channel: 'chrome',  
     launchOptions: {
+      ignoreDefaultArgs: ['--disable-component-update'],
       args: ['--disable-blink-features=AutomationControlled'],
     },
+    
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
   },

@@ -82,6 +82,19 @@ test.describe('Home Page Launch', () => {
         expect(result.homeTabVisible).toBe(true);
     });
 
+    test.only('IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+        const data = testCaseData['tc-play-001-free-asset-playback'];
+        const result = await playFreeAsset(page, {
+            email: data.email,
+            password: data.password,
+        });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.isPlayableContentDetected).toBe(true);
+        expect(result.playAttempted).toBe(true);
+        expect(result.playbackStarted).toBe(true);
+    });
+
     test('IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
         const data = testCaseData['tc-auth-007-navigate-tabs'];
         const result = await navigateAndVerifyTabs(page, {

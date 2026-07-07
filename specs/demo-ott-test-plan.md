@@ -150,7 +150,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 7. Click on "Continue" CTA.
    *expect : User should be able to login with mobile number and navigated to "Home" screen.
  
-#### 1.10. IW3-T1865 Verify the content starts playing on tapping the "Play" button for a free asset.
+#### 1.10. IW3-T1871 Verify the content starts playing on tapping the "Play" button for a free asset.
 
 **File:** `tests/home/home-page-launch.spec.ts`
 
@@ -159,9 +159,9 @@ This test plan covers validation of application launch behavior for the OTT plat
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 4. Login with free user credentials.
-5. Select on any free movie or show displayed on the "Home/Movies/Shows" tab.
+5. Click on any free movie or show displayed on the homepage.
 6. Click on the "Play" button.
-7. Observe the playback screen.
+7. Observe the playback screen for 10s.
    * expect the content should start playing successfully on tapping the "Play" button.
 
 ### 1.11. IW3-T1931 Verify the Continue Watching tray for the loggedin user who has not watched any content.

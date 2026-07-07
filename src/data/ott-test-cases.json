@@ -56,5 +56,9 @@
     "tc-auth-009-continue-watching-no-history": {
         "mode": "valid",
         "expectedContinueWatchingVisible": false
+    },
+    "tc-play-001-free-asset-playback": {
+        "email": "kaditi5739@cadebek.com",
+        "password": "Hello@world1"
     }
 }

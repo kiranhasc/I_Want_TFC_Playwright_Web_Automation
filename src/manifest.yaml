@@ -95,6 +95,18 @@
   testCases:
     - "IW3-T1867"
   dependsOn: []
+
+- id: "play-free-asset"
+  name: "Play a free asset for a free user"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playFreeAsset"
+  tags:
+    - playback
+    - positive
+    - free
+  testCases:
+    - "IW3-T1865"
+  dependsOn: []
  
 - id: "navigate-show-details-from-shows"
   name: "Navigate to show details from Shows page"

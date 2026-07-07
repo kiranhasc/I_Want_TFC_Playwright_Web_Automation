@@ -339,6 +339,93 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
     };
 }
 
+export interface VerifyContinueWatchingInput {
+    mode?: string;
+}
+
+export interface VerifyContinueWatchingOutput {
+    isContinueWatchingVisible: boolean;
+    continueWatchingItemsCount?: number;
+    continueWatchingItemsDetails?: Array<{ title: string; hasProgress: boolean }>;
+}
+
+export async function verifyContinueWatchingAbsent(page: any, input?: VerifyContinueWatchingInput): Promise<VerifyContinueWatchingOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting login flow for Continue Watching absence validation');
+    // Prefer explicit input credentials, then UNWATCHED env vars, then resolveLoginCredentials
+    const envEmail = process.env.UNWATCHED_LOGIN_EMAIL;
+    const envPassword = process.env.UNWATCHED_LOGIN_PASSWORD;
+    const providedEmail = (input as any)?.email || envEmail || '';
+    const providedPassword = (input as any)?.password || envPassword || '';
+    const credentials = providedEmail && providedPassword
+        ? { email: providedEmail, password: providedPassword }
+        : resolveLoginCredentials(input ?? {}, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    const isVisible = await authPage.isContinueWatchingRailVisible();
+    const itemsCount = await authPage.getContinueWatchingItemsCount().catch(() => 0);
+    const itemsDetails = await authPage.getContinueWatchingItemsDetails().catch(() => []);
+
+    logger.assertion('Continue Watching rail presence', isVisible);
+    logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
+
+    if (itemsCount > 0) {
+        const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
+        logger.assertion('All continue-watching items have progress indicators', allHaveProgress);
+    }
+
+    return { isContinueWatchingVisible: isVisible, continueWatchingItemsCount: itemsCount, continueWatchingItemsDetails: itemsDetails };
+}
+
+export interface ValidateContinueWatchingOutput {
+    isValid: boolean;
+    itemsCount: number;
+    itemsDetails?: Array<{ title: string; hasProgress: boolean }>;
+    reason?: string;
+}
+
+/**
+ * Validates Continue Watching for a user who should have no watch history.
+ * - If zero items: valid
+ * - If items exist: each item must have a non-empty title and a progress indicator
+ */
+export async function validateContinueWatchingForNoHistory(page: any, input?: VerifyContinueWatchingInput): Promise<ValidateContinueWatchingOutput> {
+    const result = await verifyContinueWatchingAbsent(page, input);
+    const count = result.continueWatchingItemsCount ?? 0;
+    const details = result.continueWatchingItemsDetails ?? [];
+    //add await network stable 
+    if (count === 0) {
+        logger.assertion('No Continue Watching items present', true);
+        return { isValid: true, itemsCount: 0, itemsDetails: [] };
+    }
+
+    if (details.length === 0) {
+        logger.assertion('Continue Watching items present but details not found', false);
+        return { isValid: false, itemsCount: count, itemsDetails: details, reason: 'items present but details missing' };
+    }
+
+    for (const item of details) {
+        const hasTitle = !!(item.title && item.title.trim().length > 0);
+        const hasProgress = !!item.hasProgress;
+        logger.assertion(`Item "${item.title}" has title`, hasTitle);
+        logger.assertion(`Item "${item.title}" has progress indicator`, hasProgress);
+        if (!hasTitle || !hasProgress) {
+            return { isValid: false, itemsCount: count, itemsDetails: details, reason: 'one or more items missing title or progress' };
+        }
+    }
+
+    return { isValid: true, itemsCount: count, itemsDetails: details };
+}
+
 export async function navigateToForgotPassword(page: any, input?: ForgotPasswordInput): Promise<ForgotPasswordOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting Forgot Password navigation flow');

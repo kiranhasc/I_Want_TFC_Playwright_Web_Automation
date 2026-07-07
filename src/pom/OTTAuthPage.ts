@@ -320,6 +320,64 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.continueWatchingRail, 10000);
     }
 
+    async getContinueWatchingItemsCount(): Promise<number> {
+        const header = this.page.locator('text=Continue Watching').first();
+        if (!await header.count()) return 0;
+        const container = header.locator('xpath=following-sibling::*').first();
+        if (!await container.count()) return 0;
+        // Count likely content item elements (images as proxy)
+        const images = container.locator('img');
+        const count = await images.count();
+        return count;
+    }
+
+    async getContinueWatchingItemsDetails(): Promise<Array<{ title: string; hasProgress: boolean }>> {
+        const header = this.page.locator('text=Continue Watching').first();
+        if (!await header.count()) return [];
+        const container = header.locator('xpath=following-sibling::*').first();
+        if (!await container.count()) return [];
+
+        const images = container.locator('img');
+        const count = await images.count();
+        const details: Array<{ title: string; hasProgress: boolean }> = [];
+
+        for (let i = 0; i < count; i++) {
+            const img = images.nth(i);
+            const alt = (await img.getAttribute('alt')) || '';
+
+            // Determine a nearby progress indicator or recently_added marker
+            const ancestor = img.locator('xpath=ancestor::div[1]');
+            const progressSelectors = [
+                '.progress',
+                '[aria-label*="progress"]',
+                '[class*="recent"]',
+                '[class*="progress"]',
+                'img[alt*="recently"]',
+                'img[src*="recently"]'
+            ];
+
+            let hasProgress = false;
+            for (const sel of progressSelectors) {
+                try {
+                    const found = ancestor.locator(sel);
+                    if (await found.count()) { hasProgress = true; break; }
+                } catch {
+                    // ignore selector errors
+                }
+            }
+
+            // Fallback: check for any text like 'Resume' or '%' near the image
+            if (!hasProgress) {
+                const nearbyText = ancestor.locator('xpath=.//*[contains(text(),"Resume") or contains(text(),"resumo") or contains(text(),"%")]');
+                if (await nearbyText.count()) hasProgress = true;
+            }
+
+            details.push({ title: alt.trim(), hasProgress });
+        }
+
+        return details;
+    }
+
     async isTrendingMoviesRailVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.trendingMoviesRail, 10000);
     }

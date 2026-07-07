@@ -44,7 +44,7 @@ test.describe('Home Page Launch', () => {
         expect(result.isOTPPageVisible).toBe(false);
     });
 
-    test.only('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {
+    test('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {
         const data = testCaseData['tc-auth-008-mobile-login'];
         const result = await loginWithMobileNumber(page, {
             mode: data.mode

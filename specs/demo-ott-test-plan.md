@@ -150,7 +150,34 @@ This test plan covers validation of application launch behavior for the OTT plat
 7. Click on "Continue" CTA.
    *expect : User should be able to login with mobile number and navigated to "Home" screen.
  
-   
+#### 1.10. IW3-T1865 Verify the content starts playing on tapping the "Play" button for a free asset.
+
+**File:** `tests/home/home-page-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with free user credentials.
+5. Select on any free movie or show displayed on the "Home/Movies/Shows" tab.
+6. Click on the "Play" button.
+7. Observe the playback screen.
+   * expect the content should start playing successfully on tapping the "Play" button.
+
+### 1.11. IW3-T1931 Verify the Continue Watching tray for the loggedin user who has not watched any content.
+
+**File:** `tests/home/continue-watching-no-watch-history.spec.ts`
+
+**Steps**
+
+1. **Precondition:** User should not have watched any content.
+2. Open the browser.
+3. Enter the URL (https://uat.iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page after successful login.
+6. Observe the available content trays on the Home page.
+   * **Expect** The **"Continue Watching"** tray **should not be displayed** for a logged-in user with no watch history.
+
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 
 **File:** `tests/home/create-account-navigation.spec.ts`

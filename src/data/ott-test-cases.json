@@ -52,4 +52,9 @@
     "tc-auth-008-mobile-login":{
         "mode": "mobile"
     }
+    ,
+    "tc-auth-009-continue-watching-no-history": {
+        "mode": "valid",
+        "expectedContinueWatchingVisible": false
+    }
 }

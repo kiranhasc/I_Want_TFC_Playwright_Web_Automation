@@ -119,6 +119,43 @@
   testCases:
     - "IW3-T2010"
   dependsOn: []
+
+- id: "play-content-from-watchlist"
+  name: "Play a selected content item from the watchlist"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playContentFromWatchlist"
+  tags:
+    - playback
+    - watchlist
+    - positive
+  testCases:
+    - "IW3-T2030"
+  dependsOn: []
+
+- id: "verify-subscribe-to-watch-carousel-message"
+  name: "Verify subscribe-to-watch CTA message from carousel on Home, Shows, Movies, and GMA"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubscribeToWatchCarouselMessage"
+  tags:
+    - playback
+    - subscription
+    - positive
+  testCases:
+    - "IW3-T2032"
+    - "IW3-T2035"
+  dependsOn: []
+
+- id: "verify-continue-watching-tray-ui"
+  name: "Verify the Continue Watching tray UI and content cards"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyContinueWatchingTrayUI"
+  tags:
+    - auth
+    - ui
+    - continue-watching
+  testCases:
+    - "IW3-T1932"
+  dependsOn: []
  
 - id: "navigate-show-details-from-shows"
   name: "Navigate to show details from Shows page"

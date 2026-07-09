@@ -11,6 +11,9 @@ export class OTTPlaybackPage {
     private readonly passwordField: PageElement;
     private readonly continueButton: PageElement;
     private readonly homeTab: PageElement;
+    private readonly showsTab: PageElement;
+    private readonly moviesTab: PageElement;
+    private readonly gmaTab: PageElement;
     private readonly homeScreenContent: PageElement;
     private readonly contentCard: PageElement;
     private readonly playButton: PageElement;
@@ -26,6 +29,11 @@ export class OTTPlaybackPage {
     private readonly pauseButton: PageElement;
     private readonly playResumeButton: PageElement;
     private readonly tfcAsiaImage: PageElement;
+    private readonly watchlistNavLink: PageElement;
+    private readonly watchlistContentItem: PageElement;
+    private readonly watchlistPlayButton: PageElement;
+    private readonly paidContentBadge: PageElement;
+    private readonly subscribePromptText: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -35,6 +43,9 @@ export class OTTPlaybackPage {
         this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.homeTab = { text: 'Home', selector: 'nav >> text=Home' };
+        this.showsTab = { text: 'Shows', selector: 'nav >> text=Shows' };
+        this.moviesTab = { text: 'Movies', selector: 'nav >> text=Movies' };
+        this.gmaTab = { text: 'GMA', selector: 'nav >> text=GMA' };
         this.homeScreenContent = { selector: 'main >> text=/Stream the best Filipino movies|Continue Watching/' };
         this.contentCard = { selector: 'a[href*="/player/"], [data-testid*="content"], [data-testid*="card"], .thumbnail, .poster, [class*="poster"], [class*="thumbnail"]' };
         this.playButton = { text: 'Play', selector: 'button:has-text("Play"), a:has-text("Play"), [aria-label*="Play"]' };
@@ -50,11 +61,39 @@ export class OTTPlaybackPage {
         this.pauseButton = { role: 'button', text: 'Pause', selector: 'button:has-text("Pause")' };
         this.playResumeButton = { role: 'button', text: 'Play', selector: 'button:has-text("Play")' };
         this.tfcAsiaImage = { role: 'img', text: 'TFC Asia', selector: 'img[alt*="TFC Asia"], img[alt*="TFC"], img[title*="TFC Asia"]' };
+        this.watchlistNavLink = { text: 'My Watchlist', selector: 'text=/My Watchlist|Watchlist/i' };
+        this.watchlistContentItem = { selector: 'a[href*="/player/"], a[href*="/detail"], [data-testid*="watchlist"], [class*="watchlist"] a, [class*="poster"], [class*="thumbnail"]' };
+        this.watchlistPlayButton = { selector: 'button:has-text("Play"), button:has-text("Resume"), a:has-text("Play"), a:has-text("Resume"), [aria-label*="Play"], [aria-label*="Resume"]' };
+        this.paidContentBadge = { selector: 'img[alt*="paid"], [alt*="paid"], [data-testid*="paid"]' };
+        this.subscribePromptText = { selector: 'text=/Subscribe to watch|Subscribe to Watch/i' };
     }
 
     async navigateToHomePage(): Promise<void> {
         await this.page.goto('https://www.iwanttfc.com/');
         await this.pageUtils.waitForPageLoad();
+    }
+
+    async navigateToTab(tabName: string): Promise<boolean> {
+        const tabMap: Record<string, PageElement> = {
+            Home: this.homeTab,
+            Shows: this.showsTab,
+            Movies: this.moviesTab,
+            GMA: this.gmaTab,
+        };
+
+        const targetTab = tabMap[tabName];
+        if (!targetTab) {
+            return false;
+        }
+
+        try {
+            await this.pageUtils.safeClick(targetTab, 15000);
+            await this.pageUtils.waitForNetworkIdle(60000);
+            await this.page.waitForTimeout(3000);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     async acceptCookieSettingsIfVisible(): Promise<void> {
@@ -131,44 +170,92 @@ export class OTTPlaybackPage {
     async clickFirstPremiumContentCard(): Promise<boolean> {
         const premiumLabels = this.page.getByText(/Subscribe to watch|Subscribe to Watch/i);
         const labelCount = await premiumLabels.count().catch(() => 0);
-        if (!labelCount) {
-            return false;
-        }
+        if (labelCount) {
+            const premiumLabel = premiumLabels.first();
+            const isVisible = await premiumLabel.isVisible().catch(() => false);
+            if (isVisible) {
+                const clicked = await premiumLabel.evaluate((node: HTMLElement) => {
+                    let current = node.parentElement;
+                    while (current) {
+                        const hasImage = current.querySelector('img');
+                        if (hasImage) {
+                            current.scrollIntoView({ block: 'center' });
+                            current.click();
+                            return true;
+                        }
+                        current = current.parentElement;
+                    }
+                    return false;
+                });
 
-        const targetIndex = Math.min(3, Math.max(0, labelCount - 1));
-        const premiumLabel = premiumLabels.nth(targetIndex);
-        const isVisible = await premiumLabel.isVisible().catch(() => false);
-        if (!isVisible) {
-            return false;
-        }
-
-        const clicked = await premiumLabel.evaluate((node: HTMLElement) => {
-            let current = node.parentElement;
-            while (current) {
-                const hasImage = current.querySelector('img');
-                if (hasImage) {
-                    current.scrollIntoView({ block: 'center' });
-                    current.click();
-                    return true;
-                }
-                current = current.parentElement;
+                await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+                await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+                await this.page.waitForTimeout(5000);
+                return clicked;
             }
-            return false;
-        });
+        }
 
+        const paidIndicators = this.page.locator(this.paidContentBadge.selector);
+        const paidCount = await paidIndicators.count().catch(() => 0);
+        if (paidCount) {
+            for (let index = 0; index < Math.min(5, paidCount); index += 1) {
+                const paidIndicator = paidIndicators.nth(index);
+                const isVisible = await paidIndicator.isVisible().catch(() => false);
+                if (!isVisible) {
+                    continue;
+                }
+
+                await paidIndicator.scrollIntoViewIfNeeded();
+                await paidIndicator.click({ force: true, timeout: 30000 }).catch(() => undefined);
+                await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+                await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+                await this.page.waitForTimeout(5000);
+                return true;
+            }
+        }
+
+        const fallbackCards = this.page.locator(this.contentCard.selector);
+        const cardCount = await fallbackCards.count().catch(() => 0);
+        if (!cardCount) {
+            return false;
+        }
+
+        const firstCard = fallbackCards.first();
+        await firstCard.scrollIntoViewIfNeeded();
+        await firstCard.click({ force: true, timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForTimeout(5000);
-        return clicked;
+        return true;
+    }
+
+    async clickSubscribeOrSubscribeToWatchButton(): Promise<boolean> {
+        const subscribeTargets = this.page.locator('button, a, [role="button"]').filter({ hasText: /subscribe/i });
+        const targetCount = await subscribeTargets.count().catch(() => 0);
+
+        for (let index = 0; index < Math.min(targetCount, 10); index += 1) {
+            const target = subscribeTargets.nth(index);
+            const targetVisible = await target.isVisible().catch(() => false);
+            if (!targetVisible) {
+                continue;
+            }
+
+            await target.scrollIntoViewIfNeeded();
+            await target.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(4000);
+            return true;
+        }
+
+        return false;
     }
 
     async clickLaterEpisodeFromPremiumContent(): Promise<boolean> {
-        // Prefer clicking the 5th episode item from the content detail episodes list
-        const episodeItems = this.page.locator('.episodes-list .episode-info, .episodes-list [data-testid*="episode"], .seasons-container .episode-info');
+        const episodeItems = this.page.locator('.episodes-list .episode-info, .episodes-list [data-testid*="episode"], .seasons-container .episode-info, .episodes-list li, [data-testid*="episode-item"]');
         const itemsCount = await episodeItems.count().catch(() => 0);
 
         if (itemsCount > 0) {
-            // targetIndex = 4 => 5th item (0-based)
             const targetIndex = Math.min(4, Math.max(0, itemsCount - 1));
             const item = episodeItems.nth(targetIndex);
             const itemVisible = await item.isVisible().catch(() => false);
@@ -176,15 +263,14 @@ export class OTTPlaybackPage {
                 return false;
             }
 
-            // try to click a clickable inside the item (image, button or anchor), otherwise click the item itself
             const clickable = item.locator('img, button, a, [role="button"]').first();
             const clickableVisible = await clickable.isVisible().catch(() => false);
             if (clickableVisible) {
                 await clickable.scrollIntoViewIfNeeded();
-                await clickable.click({ force: true });
+                await clickable.click({ force: true, timeout: 30000 }).catch(() => undefined);
             } else {
                 await item.scrollIntoViewIfNeeded();
-                await item.click({ force: true });
+                await item.click({ force: true, timeout: 30000 }).catch(() => undefined);
             }
 
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
@@ -193,7 +279,6 @@ export class OTTPlaybackPage {
             return true;
         }
 
-        // Fallback: try to find a Play Sx Ex (episode 5+) button and click it
         const episodeButton = this.page.getByText(/Play\s*S\d+\s*E([5-9]|[1-9]\d+)/i).first();
         const isVisible = await episodeButton.isVisible().catch(() => false);
         if (!isVisible) {
@@ -203,34 +288,123 @@ export class OTTPlaybackPage {
                 return false;
             }
 
-            await fallbackButton.click({ force: true });
+            await fallbackButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
             return true;
         }
 
-        await episodeButton.click({ force: true });
+        await episodeButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForTimeout(5000);
         return true;
     }
 
+    async clickHomePagePaidContentCard(): Promise<boolean> {
+        const paidBadges = this.page.locator('img[alt*="paid"], [alt*="paid"], [data-testid*="paid"], [class*="paid"]');
+        const paidCount = await paidBadges.count().catch(() => 0);
+
+        for (let index = 0; index < Math.min(paidCount, 8); index += 1) {
+            const badge = paidBadges.nth(index);
+            const badgeVisible = await badge.isVisible().catch(() => false);
+            if (!badgeVisible) {
+                continue;
+            }
+
+            const clicked = await badge.evaluate((node: HTMLElement) => {
+                let current = node.parentElement;
+                while (current) {
+                    const tagName = current.tagName.toLowerCase();
+                    const hasClickableRole = current.getAttribute('role') === 'button';
+                    const hasHref = !!current.getAttribute('href');
+                    if (tagName === 'a' || tagName === 'button' || hasClickableRole || hasHref) {
+                        current.scrollIntoView({ block: 'center' });
+                        current.click();
+                        return true;
+                    }
+                    current = current.parentElement;
+                }
+                node.scrollIntoView({ block: 'center' });
+                (node as HTMLElement).click();
+                return true;
+            });
+
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+            return clicked;
+        }
+
+        return false;
+    }
+
+    async tryHomePageContentForSubscribeCTA(): Promise<{ found: boolean; message: string; maybeLaterVisible: boolean; subscribeToWatchVisible: boolean; premiumGateVisible: boolean }> {
+        await this.pageUtils.waitForNetworkIdle(60000);
+
+        const paidIndicators = this.page.locator(this.paidContentBadge.selector);
+        const paidCount = await paidIndicators.count().catch(() => 0);
+
+        for (let index = 0; index < Math.min(paidCount, 6); index += 1) {
+            const paidIndicator = paidIndicators.nth(index);
+            const indicatorVisible = await paidIndicator.isVisible().catch(() => false);
+            if (!indicatorVisible) {
+                continue;
+            }
+
+            await paidIndicator.hover({ force: true }).catch(() => undefined);
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+            await this.pageUtils.waitForNetworkIdle(60000);
+            await this.page.waitForTimeout(3000);
+
+            const premiumGateVisible = await this.isPremiumContentGateVisible();
+            const maybeLaterVisible = await this.isMaybeLaterVisible();
+            const subscribeToWatchVisible = await this.isSubscribeToWatchVisible();
+            const message = premiumGateVisible ? await this.getPremiumGateMessageText() : (subscribeToWatchVisible ? 'Subscribe to watch' : '');
+
+            if (premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible) {
+                return {
+                    found: true,
+                    message,
+                    maybeLaterVisible,
+                    subscribeToWatchVisible,
+                    premiumGateVisible,
+                };
+            }
+        }
+
+        return {
+            found: false,
+            message: '',
+            maybeLaterVisible: false,
+            subscribeToWatchVisible: false,
+            premiumGateVisible: false,
+        };
+    }
+
     async isPremiumContentGateVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.premiumGateMessage, 20000);
+        const promptText = await this.page.locator('body').innerText().catch(() => '');
+        return promptText.toLowerCase().includes('a valid subscription is required to view this content') || await this.pageUtils.isVisible(this.premiumGateMessage, 20000);
     }
 
     async getPremiumGateMessageText(): Promise<string> {
+        const promptText = await this.page.locator('body').innerText().catch(() => '');
+        const match = promptText.match(/A valid subscription is required to view this content[^\n]*/i);
+        if (match) {
+            return match[0];
+        }
         return await this.pageUtils.getTextContent(this.premiumGateMessage, 20000);
     }
 
     async isMaybeLaterVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.maybeLaterButton, 10000);
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        return bodyText.toLowerCase().includes('maybe later') || await this.pageUtils.isVisible(this.maybeLaterButton, 10000);
     }
 
     async isSubscribeToWatchVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.subscribeToWatchButton, 10000);
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        return bodyText.toLowerCase().includes('subscribe to watch') || await this.pageUtils.isVisible(this.subscribeToWatchButton, 10000);
     }
 
     async isPlaybackStarted(): Promise<boolean> {
@@ -261,6 +435,62 @@ export class OTTPlaybackPage {
 
     async selectLiveChannel(): Promise<boolean> {
         return await this.selectLiveTVSection();
+    }
+
+    async navigateToWatchlistPage(): Promise<boolean> {
+        try {
+            const watchlistLink = this.page.getByText(/My Watchlist|Watchlist/i).first();
+            await watchlistLink.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+            await watchlistLink.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async selectFirstWatchlistContent(): Promise<boolean> {
+        try {
+            const watchlistContent = this.page.locator(this.watchlistContentItem.selector).first();
+            await watchlistContent.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+            await watchlistContent.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async clickWatchlistPlayOrResume(): Promise<boolean> {
+        try {
+            const playButton = this.page.locator(this.watchlistPlayButton.selector).first();
+            await playButton.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+            await playButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(8000);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async waitForWatchlistPlayback(): Promise<{ playbackStarted: boolean; playbackCompleted: boolean; currentTime: number; duration: number }> {
+        try {
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(8000);
+            const videoElement = this.page.locator(this.videoElement.selector).first();
+            const videoVisible = await videoElement.isVisible().catch(() => false);
+            const playerVisible = await this.page.locator(this.playerContainer.selector).first().isVisible().catch(() => false);
+            const currentTime = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
+            const duration = await videoElement.evaluate((node: HTMLVideoElement) => node.duration).catch(() => 0);
+            const playbackCompleted = await videoElement.evaluate((node: HTMLVideoElement) => node.ended).catch(() => false);
+            const playbackStarted = videoVisible || playerVisible || currentTime > 0 || duration > 0 || this.page.url().includes('/player/');
+            return { playbackStarted, playbackCompleted, currentTime, duration };
+        } catch {
+            return { playbackStarted: false, playbackCompleted: false, currentTime: 0, duration: 0 };
+        }
     }
 
     async waitForPlaybackToStart(timeout: number = 40000): Promise<boolean> {

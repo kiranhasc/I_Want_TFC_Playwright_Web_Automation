@@ -26,6 +26,10 @@ export default defineConfig({
     headless: false,
     ignoreHTTPSErrors: true,
     channel: 'chrome',  
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
     launchOptions: {
       ignoreDefaultArgs: ['--disable-component-update'],
       args: ['--disable-blink-features=AutomationControlled'],

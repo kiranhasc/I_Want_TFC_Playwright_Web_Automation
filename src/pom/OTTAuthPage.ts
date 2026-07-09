@@ -39,6 +39,12 @@ export class OTTAuthPage {
     private readonly accountIcon: PageElement;
     private readonly signOutOption: PageElement;
     private readonly continueWatchingRail: PageElement;
+    private readonly continueWatchingTrayTitle: PageElement;
+    private readonly continueWatchingTrayContainer: PageElement;
+    private readonly continueWatchingTrayItem: PageElement;
+    private readonly continueWatchingTrayThumbnail: PageElement;
+    private readonly continueWatchingTrayProgressIndicator: PageElement;
+    private readonly continueWatchingRemoveButton: PageElement;
     private readonly trendingMoviesRail: PageElement;
     private readonly trendingShowsRail: PageElement;
     private readonly myWatchlistRail: PageElement;
@@ -91,6 +97,12 @@ export class OTTAuthPage {
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
         this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
+        this.continueWatchingTrayTitle = { text: 'Continue Watching', selector: 'text=Continue Watching' };
+        this.continueWatchingTrayContainer = { selector: 'text=Continue Watching >> xpath=following-sibling::*' };
+        this.continueWatchingTrayItem = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img' };
+        this.continueWatchingTrayThumbnail = { selector: 'img' };
+        this.continueWatchingTrayProgressIndicator = { selector: '[class*=progress], [aria-label*=progress], [data-testid*=progress], [class*=resume]' };
+        this.continueWatchingRemoveButton = { selector: 'img[alt="remove-from-cw"], img[alt*="remove"], [aria-label*="remove"], [title*="remove"], [data-testid*="remove"]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
@@ -139,21 +151,25 @@ export class OTTAuthPage {
 
     async clickEmailField(): Promise<void> {
         logger.elementInteraction('click', 'email field');
+        await this.page.locator(this.emailField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeClick(this.emailField);
     }
 
     async enterEmail(email: string): Promise<void> {
         logger.elementInteraction('type', 'email field');
+        await this.page.locator(this.emailField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeType(this.emailField, email);
     }
 
     async clickPasswordField(): Promise<void> {
         logger.elementInteraction('click', 'password field');
+        await this.page.locator(this.passwordField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeClick(this.passwordField);
     }
 
     async enterPassword(password: string): Promise<void> {
         logger.elementInteraction('type', 'password field');
+        await this.page.locator(this.passwordField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeType(this.passwordField, password);
     }
 
@@ -318,6 +334,145 @@ export class OTTAuthPage {
 
     async isContinueWatchingRailVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.continueWatchingRail, 10000);
+    }
+
+    private getContinueWatchingTitleLocator() {
+        return this.page.locator('text=Continue Watching').first();
+    }
+
+    private getContinueWatchingRailLocator() {
+        return this.getContinueWatchingTitleLocator().locator('xpath=ancestor::div[contains(@class, "rail")][1]').first();
+    }
+
+    private getContinueWatchingArrowLocator(direction: 'left' | 'right') {
+        const positionClass = direction === 'right' ? 'right-0' : 'left-0';
+        const selector = `xpath=ancestor::div[contains(@class, "rail")][1]//div[contains(@class, "pointer-events-auto") and contains(@class, "absolute") and contains(@class, "bottom-[15rem]") and contains(@class, "${positionClass}") and contains(@class, "z-10")]//img[@alt="arrow-right"]`;
+        return this.getContinueWatchingTitleLocator().locator(selector).first();
+    }
+
+    async ensureContinueWatchingTrayInView(timeout: number = 30000): Promise<boolean> {
+        await this.pageUtils.waitForNetworkIdle(timeout);
+        const title = this.getContinueWatchingTitleLocator();
+        if (!await title.count()) {
+            return false;
+        }
+
+        await title.waitFor({ state: 'visible', timeout });
+        await title.scrollIntoViewIfNeeded();
+        await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
+
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return false;
+        }
+
+        await section.scrollIntoViewIfNeeded();
+        await section.waitFor({ state: 'visible', timeout });
+        return true;
+    }
+
+    async waitForContinueWatchingTrayToBeReady(timeout: number = 30000): Promise<void> {
+        await this.ensureContinueWatchingTrayInView(timeout);
+    }
+
+    async scrollContinueWatchingTray(direction: 'left' | 'right', timeout: number = 30000): Promise<boolean> {
+        const isInView = await this.ensureContinueWatchingTrayInView(timeout);
+        if (!isInView) {
+            return false;
+        }
+
+        const section = this.getContinueWatchingRailLocator();
+        const boundingBox = await section.boundingBox();
+        if (!boundingBox) {
+            return false;
+        }
+
+        const hoverX = direction === 'right' ? boundingBox.x + boundingBox.width - 30 : boundingBox.x + 30;
+        const hoverY = boundingBox.y + boundingBox.height / 2;
+
+        await this.page.mouse.move(hoverX, hoverY);
+        await this.page.waitForTimeout(500);
+
+        const arrowLocator = this.getContinueWatchingArrowLocator(direction);
+        const arrowVisible = await arrowLocator.isVisible().catch(() => false);
+        if (!arrowVisible) {
+            return false;
+        }
+
+        await arrowLocator.hover({ timeout: 5000 }).catch(() => undefined);
+        await arrowLocator.click({ timeout: 5000 }).catch(() => undefined);
+        await this.page.waitForTimeout(1000);
+        await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
+
+        return true;
+    }
+
+    async isContinueWatchingTrayTitleVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.continueWatchingTrayTitle, 10000);
+    }
+
+    async getContinueWatchingTraySection(): Promise<any> {
+        return this.getContinueWatchingRailLocator();
+    }
+
+    async removeFirstContinueWatchingItem(): Promise<{ clicked: boolean; confirmationVisible: boolean }> {
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return { clicked: false, confirmationVisible: false };
+        }
+
+        const card = section.locator('img[alt]:not([alt="arrow-right"])').first();
+        if (!await card.count()) {
+            return { clicked: false, confirmationVisible: false };
+        }
+
+        await card.hover({ timeout: 20000 }).catch(() => undefined);
+        await this.page.waitForTimeout(2000);
+
+        const removeButton = section.locator(this.continueWatchingRemoveButton.selector).first();
+        await removeButton.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
+        const buttonVisible = await removeButton.isVisible().catch(() => false);
+        if (!buttonVisible) {
+            return { clicked: false, confirmationVisible: false };
+        }
+
+        await removeButton.click({ timeout: 20000 }).catch(() => undefined);
+        await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+        await this.page.waitForTimeout(3000);
+
+        const confirmationLocator = this.page.getByText(/removed/i).first();
+        const confirmationVisible = await confirmationLocator.isVisible().catch(() => false);
+        return { clicked: true, confirmationVisible };
+    }
+
+    async getContinueWatchingTrayItemCount(): Promise<number> {
+        const title = this.getContinueWatchingTitleLocator();
+        if (!await title.count()) return 0;
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) return 0;
+        return await section.locator('img[alt]:not([alt="arrow-right"])').count();
+    }
+
+    async getContinueWatchingTrayItemDetails(): Promise<Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }>> {
+        const title = this.getContinueWatchingTitleLocator();
+        if (!await title.count()) return [];
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) return [];
+
+        const cards = section.locator('img[alt]:not([alt="arrow-right"])');
+        const count = await cards.count();
+        const details: Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }> = [];
+
+        for (let i = 0; i < count; i++) {
+            const card = cards.nth(i);
+            const alt = (await card.getAttribute('alt')) || '';
+            const text = (await card.textContent()) || '';
+            const hasThumbnail = !!alt || (await card.getAttribute('src')) !== null;
+            const hasProgress = /progress|resume|%/i.test(text) || (await card.locator('[class*="progress"], [aria-label*="progress"], [data-testid*="progress"]').count()) > 0;
+            details.push({ title: alt.trim() || text.trim(), hasThumbnail, hasProgress });
+        }
+
+        return details;
     }
 
     async getContinueWatchingItemsCount(): Promise<number> {

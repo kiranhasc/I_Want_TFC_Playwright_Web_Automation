@@ -61,6 +61,24 @@ export interface VerifyPremiumContentGateOutput {
     subscribeToWatchVisible: boolean;
 }
 
+export interface VerifySubscribeToWatchCarouselMessageInput {
+    email?: string;
+    password?: string;
+    expectedMessage?: string;
+    expectedMaybeLaterText?: string;
+    expectedSubscribeText?: string;
+}
+
+export interface VerifySubscribeToWatchCarouselMessageOutput {
+    loginSuccessful: boolean;
+    carouselChecked: boolean;
+    promptObserved: boolean;
+    message: string;
+    maybeLaterVisible: boolean;
+    subscribeToWatchVisible: boolean;
+    playbackStarted: boolean;
+}
+
 export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumContentGateInput): Promise<VerifyPremiumContentGateOutput> {
     const playbackPage = new OTTPlaybackPage(page);
     const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || '';
@@ -156,5 +174,101 @@ export async function verifyLivePlaybackPauseResume(page: any, input?: VerifyLiv
         currentTimeAfterResume: pauseResumeState.currentTimeAfterResume,
         playbackCompleted: pauseResumeState.playbackCompleted,
         pauseResumeWorked,
+    };
+}
+
+export async function verifySubscribeToWatchCarouselMessage(page: any, input?: VerifySubscribeToWatchCarouselMessageInput): Promise<VerifySubscribeToWatchCarouselMessageOutput> {
+    const playbackPage = new OTTPlaybackPage(page);
+    const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || process.env.VALID_LOGIN_EMAIL || '';
+    const password = input?.password || process.env.FREE_USER_LOGIN_PASSWORD || process.env.VALID_LOGIN_PASSWORD || '';
+
+    logger.step('Starting subscribe-to-watch home-page CTA validation flow');
+    await playbackPage.loginWithFreeUser(email, password);
+
+    const loginSuccessful = await playbackPage.isHomeScreenReady();
+    logger.assertion('User loaded the home screen for the CTA check', loginSuccessful);
+
+    let carouselChecked = false;
+    let promptObserved = false;
+    let message = '';
+    let maybeLaterVisible = false;
+    let subscribeToWatchVisible = false;
+    let playbackStarted = false;
+
+    const homePageResult = await playbackPage.tryHomePageContentForSubscribeCTA();
+    carouselChecked = homePageResult.found;
+    promptObserved = homePageResult.premiumGateVisible || homePageResult.maybeLaterVisible || homePageResult.subscribeToWatchVisible;
+    message = homePageResult.message;
+    maybeLaterVisible = homePageResult.maybeLaterVisible;
+    subscribeToWatchVisible = homePageResult.subscribeToWatchVisible;
+    playbackStarted = await playbackPage.isPlaybackStarted();
+
+    console.log('homePageCTACheck', { carouselChecked, promptObserved, maybeLaterVisible, subscribeToWatchVisible, message, playbackStarted });
+    logger.assertion('Home-page subscribe CTA surfaced the premium gate prompt', promptObserved);
+
+    return {
+        loginSuccessful,
+        carouselChecked,
+        promptObserved,
+        message,
+        maybeLaterVisible,
+        subscribeToWatchVisible,
+        playbackStarted,
+    };
+}
+
+export interface PlayContentFromWatchlistInput {
+    email?: string;
+    password?: string;
+}
+
+export interface PlayContentFromWatchlistOutput {
+    isLoggedIn: boolean;
+    watchlistOpened: boolean;
+    contentSelected: boolean;
+    playClicked: boolean;
+    playbackStarted: boolean;
+    playbackCompleted: boolean;
+    contentPlayed: boolean;
+    currentTime: number;
+    duration: number;
+}
+
+export async function playContentFromWatchlist(page: any, input?: PlayContentFromWatchlistInput): Promise<PlayContentFromWatchlistOutput> {
+    const playbackPage = new OTTPlaybackPage(page);
+    const email = input?.email || process.env.VALID_LOGIN_EMAIL || process.env.FREE_USER_LOGIN_EMAIL || '';
+    const password = input?.password || process.env.VALID_LOGIN_PASSWORD || process.env.FREE_USER_LOGIN_PASSWORD || '';
+
+    logger.step('Starting watchlist playback validation flow');
+    await playbackPage.loginWithFreeUser(email, password);
+
+    const isLoggedIn = await playbackPage.isHomeScreenReady();
+    logger.assertion('User loaded the home screen before watchlist playback', isLoggedIn);
+
+    const watchlistOpened = await playbackPage.navigateToWatchlistPage();
+    logger.assertion('Watchlist page opened', watchlistOpened);
+
+    const contentSelected = await playbackPage.selectFirstWatchlistContent();
+    logger.assertion('Watchlist content selected', contentSelected);
+
+    const playClicked = await playbackPage.clickWatchlistPlayOrResume();
+    logger.assertion('Play or resume action clicked from watchlist content', playClicked);
+
+    const playbackState = await playbackPage.waitForWatchlistPlayback();
+    logger.assertion('Playback started from watchlist content', playbackState.playbackStarted);
+
+    const contentPlayed = playbackState.playbackStarted && (playbackState.playbackCompleted || playbackState.currentTime > 0 || playbackState.duration > 0);
+    logger.assertion('Watchlist playback content played', contentPlayed);
+
+    return {
+        isLoggedIn,
+        watchlistOpened,
+        contentSelected,
+        playClicked,
+        playbackStarted: playbackState.playbackStarted,
+        playbackCompleted: playbackState.playbackCompleted,
+        contentPlayed,
+        currentTime: playbackState.currentTime,
+        duration: playbackState.duration,
     };
 }

@@ -349,6 +349,206 @@ export interface VerifyContinueWatchingOutput {
     continueWatchingItemsDetails?: Array<{ title: string; hasProgress: boolean }>;
 }
 
+export interface VerifyContinueWatchingTrayUIInput {
+    email?: string;
+    password?: string;
+    mode?: string;
+}
+
+export interface VerifyContinueWatchingTrayUIOutput {
+    isValid: boolean;
+    isTitleVisible: boolean;
+    itemCount: number;
+    itemDetails: Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }>;
+    reason?: string;
+}
+
+export interface VerifyContinueWatchingTrayScrollOutput {
+    isValid: boolean;
+    isTitleVisible: boolean;
+    itemCount: number;
+    itemDetails: Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }>;
+    reason?: string;
+}
+
+export interface VerifyContinueWatchingRemoveItemOutput {
+    isValid: boolean;
+    initialItemCount: number;
+    finalItemCount: number;
+    confirmationVisible: boolean;
+    reason?: string;
+}
+
+export async function verifyContinueWatchingTrayUI(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingTrayUIOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Continue Watching tray UI validation');
+
+    const envEmail = process.env.VALID_LOGIN_EMAIL;
+    const envPassword = process.env.VALID_LOGIN_PASSWORD;
+    const providedEmail = (input as any)?.email || envEmail || '';
+    const providedPassword = (input as any)?.password || envPassword || '';
+    const credentials = providedEmail && providedPassword
+        ? { email: providedEmail, password: providedPassword }
+        : resolveLoginCredentials(input ?? {}, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+
+    const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+    const itemCount = await authPage.getContinueWatchingTrayItemCount();
+    const itemDetails = await authPage.getContinueWatchingTrayItemDetails();
+    const hasCards = itemCount > 0;
+    const hasTitles = itemDetails.some((item) => !!item.title);
+    const hasThumbnails = itemDetails.some((item) => item.hasThumbnail);
+    const hasProgress = itemDetails.some((item) => item.hasProgress);
+    const isValid = isTitleVisible && hasCards && hasTitles && hasThumbnails;
+
+    logger.assertion('Continue Watching tray title visible', isTitleVisible);
+    logger.assertion('Continue Watching tray cards visible', hasCards);
+    logger.assertion('Continue Watching tray item titles present', hasTitles);
+    logger.assertion('Continue Watching tray item thumbnails present', hasThumbnails);
+    logger.assertion('Continue Watching tray progress indicators present', hasProgress || hasCards);
+
+    return {
+        isValid,
+        isTitleVisible,
+        itemCount,
+        itemDetails,
+        reason: isValid ? undefined : 'Continue Watching tray UI expectations were not met',
+    };
+}
+
+export async function verifyContinueWatchingTrayScroll(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingTrayScrollOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Continue Watching tray scroll validation');
+
+    const envEmail = process.env.VALID_LOGIN_EMAIL;
+    const envPassword = process.env.VALID_LOGIN_PASSWORD;
+    const providedEmail = (input as any)?.email || envEmail || '';
+    const providedPassword = (input as any)?.password || envPassword || '';
+    const credentials = providedEmail && providedPassword
+        ? { email: providedEmail, password: providedPassword }
+        : resolveLoginCredentials(input ?? {}, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+
+    const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+    if (!isTitleVisible) {
+        return {
+            isValid: false,
+            isTitleVisible: false,
+            itemCount: 0,
+            itemDetails: [],
+            reason: 'Continue Watching tray title is not visible after scrolling into view',
+        };
+    }
+
+    const trayInView = await authPage.ensureContinueWatchingTrayInView();
+    if (!trayInView) {
+        return {
+            isValid: false,
+            isTitleVisible,
+            itemCount: 0,
+            itemDetails: [],
+            reason: 'Continue Watching tray could not be brought into view',
+        };
+    }
+
+    const itemCountBeforeScroll = await authPage.getContinueWatchingTrayItemCount();
+    const itemDetailsBeforeScroll = await authPage.getContinueWatchingTrayItemDetails();
+
+    const rightScrollWorked = await authPage.scrollContinueWatchingTray('right');
+    const leftScrollWorked = await authPage.scrollContinueWatchingTray('left');
+    const itemCountAfterScroll = await authPage.getContinueWatchingTrayItemCount();
+    const itemDetailsAfterScroll = await authPage.getContinueWatchingTrayItemDetails();
+    const hasScrollableContent = isTitleVisible && itemCountBeforeScroll > 0 && itemCountAfterScroll >= itemCountBeforeScroll;
+    const hasVisibleCards = itemDetailsBeforeScroll.some((item) => item.hasThumbnail) || itemDetailsAfterScroll.some((item) => item.hasThumbnail);
+    const isValid = Boolean(isTitleVisible && hasScrollableContent && hasVisibleCards && rightScrollWorked && leftScrollWorked);
+
+    logger.assertion('Continue Watching tray title visible', isTitleVisible);
+    logger.assertion('Continue Watching tray has cards before scroll', itemCountBeforeScroll > 0);
+    logger.assertion('Continue Watching tray scroll interaction completed', isValid);
+
+    return {
+        isValid,
+        isTitleVisible,
+        itemCount: itemCountAfterScroll,
+        itemDetails: itemDetailsAfterScroll,
+        reason: isValid ? undefined : 'Continue Watching tray did not scroll as expected',
+    };
+}
+
+export async function verifyContinueWatchingRemoveItem(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingRemoveItemOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Continue Watching remove-item validation');
+
+    const envEmail = process.env.VALID_LOGIN_EMAIL;
+    const envPassword = process.env.VALID_LOGIN_PASSWORD;
+    const providedEmail = (input as any)?.email || envEmail || '';
+    const providedPassword = (input as any)?.password || envPassword || '';
+    const credentials = providedEmail && providedPassword
+        ? { email: providedEmail, password: providedPassword }
+        : resolveLoginCredentials(input ?? {}, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+
+    const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+    if (!isTitleVisible) {
+        return { isValid: false, initialItemCount: 0, finalItemCount: 0, reason: 'Continue Watching tray title is not visible' };
+    }
+
+    const initialItemCount = await authPage.getContinueWatchingTrayItemCount();
+    if (initialItemCount <= 0) {
+        return { isValid: false, initialItemCount: 0, finalItemCount: 0, reason: 'No items available to remove from Continue Watching tray' };
+    }
+
+    const removeResult = await authPage.removeFirstContinueWatchingItem();
+    if (!removeResult.clicked) {
+        return { isValid: false, initialItemCount, finalItemCount: initialItemCount, confirmationVisible: false, reason: 'Unable to remove the first Continue Watching item' };
+    }
+
+    await authPage.waitForContinueWatchingTrayToBeReady();
+    const finalItemCount = await authPage.getContinueWatchingTrayItemCount();
+    const isValid = removeResult.confirmationVisible;
+
+    logger.assertion('Continue Watching removal confirmation shown', removeResult.confirmationVisible);
+    logger.assertion('Continue Watching item removed', isValid);
+
+    return {
+        isValid,
+        initialItemCount,
+        finalItemCount,
+        confirmationVisible: removeResult.confirmationVisible,
+        reason: isValid ? undefined : 'The selected item was not removed from the Continue Watching tray or the confirmation popup was not shown',
+    };
+}
+
 export async function verifyContinueWatchingAbsent(page: any, input?: VerifyContinueWatchingInput): Promise<VerifyContinueWatchingOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);

@@ -353,6 +353,11 @@ export class OTTAuthPage {
         await this.pageUtils.safeType(this.searchBar, query);
     }
 
+    async submitSearchQuery(): Promise<void> {
+        logger.elementInteraction('press', 'Enter key');
+        await this.page.keyboard.press('Enter');
+    }
+      
     async getSearchBarValue(): Promise<string> {
         const locator = this.page.locator(this.searchBar.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });

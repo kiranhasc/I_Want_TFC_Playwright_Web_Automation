@@ -144,3 +144,307 @@
   testCases:
     - "IW3-T1856"
   dependsOn: []
+ 
+- id: "verify-free-user-subscribe-flow"
+  name: "Verify free user subscribe flow lands on subscription page"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifyFreeUserSubscribeFlow"
+  tags:
+    - subscription
+    - positive
+  testCases:
+    - "IW3-T1905"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "open-content-and-play"
+  name: "Open content from details page and verify player screen"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "openContentAndPlay"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1967"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-playback-resume"
+  name: "Verify playback starts post tapping on Play/Resume CTA"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlaybackResumeFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1907"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-smooth-playback"
+  name: "Verify video playback starts successfully and plays smoothly without interruption"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySmoothPlaybackFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1968"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-seek-bar-drag"
+  name: "Verify dragging the seek bar updates playback position"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySeekBarDragFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1999"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-browser-seek-bar"
+  name: "Verify seek bar behaves correctly across supported browsers"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyBrowserSeekBarFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2000"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-player-controls"
+  name: "Verify player controls appear when the screen is tapped during playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlayerControlsFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2002"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-fullscreen-button"
+  name: "Verify fullscreen icon is displayed on the player screen"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyFullscreenButtonVisibilityFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1980"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-fullscreen-functionality"
+  name: "Verify tapping the fullscreen icon activates fullscreen and playback continues"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyFullscreenFunctionalityFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1987"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-landscape-player-ui"
+  name: "Verify player screen UI displays all controls in fullscreen mode"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLandscapePlayerUIFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1988"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-playback-timestamp-format"
+  name: "Verify playback timestamp is displayed in HH:MM:SS format for long-duration content"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlaybackTimestampFormatFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1978"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-playback-short-duration-timestamp-format"
+  name: "Verify playback timestamp is displayed in MM:SS format for short-duration content"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlaybackShortDurationTimestampFormatFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1979"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-selection"
+  name: "Verify user can select available subtitle during playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitleSelectionFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1981"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-persistence"
+  name: "Verify selected subtitle persists when moving to the next episode"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitlePersistenceFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1982"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-carry-over"
+  name: "Verify selected subtitle carries to another content when available"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitleCarryOverFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1983"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-default-off"
+  name: "Verify subtitles are set to Off by default"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitleDefaultOffFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1984"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-display"
+  name: "Verify selected subtitles are displayed on the player screen"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitleDisplayFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1985"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-subtitle-synchronization"
+  name: "Verify subtitles remain visible during seek operations"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubtitleSynchronizationFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1986"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-pre-roll-ad-playback"
+  name: "Verify pre-roll ad plays automatically before main content starts"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPreRollAdPlaybackFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2013"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-pause-ad-playback"
+  name: "Verify pause ad appears on player screen during pause state"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPauseAdPlaybackFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T3978"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-pause-playback"
+  name: "Verify video playback pauses immediately when pause is triggered"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPausePlaybackFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1974"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-forward-backward-buttons"
+  name: "Verify forward and backward buttons function correctly when playback is paused"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPauseforwardBackwardButtonsFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1977"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-seek-forward-backward-buttons"
+  name: "Verify 10-second forward and backward buttons change playback position"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyforwardBackwardButtonsFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1976"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-live-playback-go-live"
+  name: "Verify live playback begins on tapping the Live CTA"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLivePlaybackGoLiveFlow"
+  tags:
+    - playback
+    - live-stream
+    - positive
+  testCases:
+    - "IW3-T2012"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-live-stream-seek-restriction"
+  name: "Verify user cannot seek in a true live stream"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLiveStreamSeekRestrictionFlow"
+  tags:
+    - playback
+    - live-stream
+    - positive
+  testCases:
+    - "IW3-T2008"
+  dependsOn:
+    - "login-to-ott"

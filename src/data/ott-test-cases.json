@@ -62,5 +62,152 @@
     "tc-nav-003-search-results": {
         "mode": "valid",
         "query": "Abandoned"
+    },
+    "tc-sub-001-free-subscribe": {
+        "mode": "freeUser",
+        "query": "Karnal"
+    },
+    "tc-sub-004-resume-playback": {
+        "mode": "valid",
+        "query": "The Secrets of Hotel 88",
+        "expectedTitle": "The Secrets of Hotel 88",
+        "expectedEpisode": "The Secrets of Hotel 88"
+    },
+    "tc-sub-003-play-content": {
+        "mode": "valid",
+        "query": "A family affair",
+        "expectedTitle": "A Family AffairS1 E1 · The",
+        "expectedEpisode": "A Family AffairS1 E1 · The"
+    },
+    "tc-sub-005-smooth-playback": {
+        "mode": "valid",
+        "query": "The Blood Sisters",
+        "expectedTitle": "The Blood SistersS1 E1 ·",
+        "expectedEpisode": "The Blood SistersS1 E1 ·"
+    },
+    "tc-sub-006-seek-bar-drag": {
+        "mode": "valid",
+        "query": "A love to last",
+        "expectedTitle": "A Love To LastS1 E1 · Episode",
+        "expectedEpisode": "A Love To LastS1 E1 · Episode",
+        "seekPercent": 0.35
+    },
+    "tc-sub-007-live-stream-seek-restriction": {
+        "mode": "valid",
+        "channelName": "TFC Asia"
+    },
+    "tc-sub-008-browser-seek-bar": {
+        "mode": "valid",
+        "query": "I am your daughter",
+        "expectedTitle": "I Am Your DaughterS1 E1",
+        "expectedEpisode": "I Am Your DaughterS1 E1",
+        "seekPercent": 0.35
+    },
+    "tc-sub-009-player-controls": {
+        "mode": "valid",
+        "query": "A love to last",
+        "expectedTitle": "A Love To LastS1 E1 · Episode",
+        "expectedEpisode": "A Love To LastS1 E1 · Episode"
+    },
+    "tc-sub-010-go-live-playback": {
+        "mode": "valid",
+        "channelName": "TFC Asia"
+    },
+    "tc-sub-011-pre-roll-ad": {
+        "mode": "freeUser",
+        "query": "Eva Fonda",
+        "expectedTitle": "Eva Fonda",
+        "expectedEpisode": "Eva Fonda"
+    },
+    "tc-sub-012-pause-ad": {
+        "mode": "freeUser",
+        "query": "Eva Fonda",
+        "expectedTitle": "Eva Fonda",
+        "expectedEpisode": "Eva Fonda"
+    },
+    "tc-sub-013-pause-playback": {
+        "mode": "valid",
+        "query": "Tatlong Bituin sa Hilaga",
+        "expectedTitle": "Tatlong Bituin sa Hilaga",
+        "expectedEpisode": "Tatlong Bituin sa Hilaga"
+    },
+    "tc-sub-014-pause-resume": {
+        "mode": "valid",
+        "query": "Nurse the dead",
+        "expectedTitle": "Nurse The Dead",
+        "expectedEpisode": "Nurse The Dead"
+    },
+    "tc-sub-015-pause-seek-buttons": {
+        "mode": "valid",
+        "query": "Anak",
+        "expectedTitle": "Anak",
+        "expectedEpisode": "Anak"
+    },
+    "tc-sub-016-fullscreen-icon": {
+        "mode": "valid",
+        "query": "Momay",
+        "expectedTitle": "Momay",
+        "expectedEpisode": "Momay"
+    },
+    "tc-sub-025-fullscreen-functionality": {
+        "mode": "valid",
+        "query": "Ang Panday",
+        "expectedTitle": "Ang Panday",
+        "expectedEpisode": "Ang Panday"
+    },
+    "tc-sub-026-landscape-player-ui": {
+        "mode": "valid",
+        "query": "we will survive",
+        "expectedTitle": "We Will Survive",
+        "expectedEpisode": "We Will Survive"
+    },
+    "tc-sub-017-timestamp-format": {
+        "mode": "valid",
+        "query": "captain barbell",
+        "expectedTitle": "Captain Barbell",
+        "expectedEpisode": "Captain Barbell"
+    },
+    "tc-sub-018-short-duration-timestamp-format": {
+        "mode": "valid",
+        "query": "captain barbell",
+        "expectedTitle": "Captain Barbell",
+        "expectedEpisode": "Captain Barbell"
+    },
+    "tc-sub-019-subtitle-selection": {
+        "mode": "valid",
+        "query": "Sin Island",
+        "expectedTitle": "Sin Island",
+        "expectedEpisode": "Sin Island"
+    },
+    "tc-sub-020-subtitle-next-episode": {
+        "mode": "valid",
+        "query": "Blood vs duty",
+        "expectedTitle": "Blood vs Duty",
+        "expectedEpisode": "Blood vs Duty"
+    },
+    "tc-sub-021-subtitle-carry-over": {
+        "mode": "valid",
+        "query": "Miss behave",
+        "secondQuery": "will you fake marry me",
+        "expectedTitle": "Miss behave",
+        "expectedEpisode": "Miss behave"
+    },
+    "tc-sub-022-subtitle-default-off": {
+        "mode": "valid",
+        "query": "fractured",
+        "expectedTitle": "Fractured",
+        "expectedEpisode": "Fractured"
+    },
+    "tc-sub-023-subtitle-display": {
+        "mode": "valid",
+        "query": "doble kara",
+        "expectedTitle": "Doble Kara",
+        "expectedEpisode": "Doble Kara"
+    },
+    "tc-sub-024-subtitle-synchronization": {
+        "mode": "valid",
+        "query": "All of me",
+        "expectedTitle": "All of me",
+        "expectedEpisode": "All of me"
     }
 }

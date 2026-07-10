@@ -5,7 +5,7 @@ const email = process.env.VALID_LOGIN_EMAIL || 'abhilash584@gmail.com';
 const password = process.env.VALID_LOGIN_PASSWORD || 'Test1234';
 
 test.describe('Playback - Watchlist', () => {
-    test('High - IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
+    test('@High - IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
         const result = await playContentFromWatchlist(page, {
             email,
             password,

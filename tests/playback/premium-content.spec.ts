@@ -40,7 +40,7 @@ test.describe('Playback - Premium content gate', () => {
         expect(result.message.toLowerCase()).toContain((data?.expectedSubscribeText || 'subscribe to watch').toLowerCase());
     });
 
-        test('High - IW3-T2035: Verify the message displayed on "Subscribe to watch" CTA from Home/Shows/Movies/GMA tabs from "Carousel"', async ({ page }) => {
+        test('@High - IW3-T2035: Verify the message displayed on "Subscribe to watch" CTA from Home/Shows/Movies/GMA tabs from "Carousel"', async ({ page }) => {
         const data = testCaseData['tc-sub-001-carousel-subscribe-cta'];
 
         const result = await verifySubscribeToWatchCarouselMessage(page, {

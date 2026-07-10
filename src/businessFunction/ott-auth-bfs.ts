@@ -341,6 +341,8 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
 
 export interface VerifyContinueWatchingInput {
     mode?: string;
+    email?: string;
+    password?: string;
 }
 
 export interface VerifyContinueWatchingOutput {
@@ -528,12 +530,12 @@ export async function verifyContinueWatchingRemoveItem(page: any, input?: Verify
 
     const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
     if (!isTitleVisible) {
-        return { isValid: false, initialItemCount: 0, finalItemCount: 0, reason: 'Continue Watching tray title is not visible' };
+        return { isValid: false, initialItemCount: 0, confirmationVisible: false, finalItemCount: 0, reason: 'Continue Watching tray title is not visible' };
     }
 
     const initialItemCount = await authPage.getContinueWatchingTrayItemCount();
     if (initialItemCount <= 0) {
-        return { isValid: false, initialItemCount: 0, finalItemCount: 0, reason: 'No items available to remove from Continue Watching tray' };
+        return { isValid: false, initialItemCount: 0, confirmationVisible: false, finalItemCount: 0, reason: 'No items available to remove from Continue Watching tray' };
     }
 
     const removeResult = await authPage.removeFirstContinueWatchingItem();

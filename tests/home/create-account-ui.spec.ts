@@ -31,7 +31,7 @@ test.describe('Account creation UI', () => {
 });
 
 test.describe('Authentication validation', () => {
-    test('Low - IW3-T1856: Verify error message is displayed when email and password fields are left empty', async ({ page }) => {
+    test('@Low - IW3-T1856: Verify error message is displayed when email and password fields are left empty', async ({ page }) => {
         const data = testCaseData['tc-auth-007-empty-credentials'];
         const result = await submitEmptyCredentials(page, {
             email: data.email,

@@ -34,6 +34,7 @@ export class OTTPlaybackPage {
     private readonly watchlistPlayButton: PageElement;
     private readonly paidContentBadge: PageElement;
     private readonly subscribePromptText: PageElement;
+    private readonly seekBar: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -66,6 +67,7 @@ export class OTTPlaybackPage {
         this.watchlistPlayButton = { selector: 'button:has-text("Play"), button:has-text("Resume"), a:has-text("Play"), a:has-text("Resume"), [aria-label*="Play"], [aria-label*="Resume"]' };
         this.paidContentBadge = { selector: 'img[alt*="paid"], [alt*="paid"], [data-testid*="paid"]' };
         this.subscribePromptText = { selector: 'text=/Subscribe to watch|Subscribe to Watch/i' };
+        this.seekBar = { selector: '.player-progress-indicator' };
     }
 
     async navigateToHomePage(): Promise<void> {
@@ -555,4 +557,24 @@ export class OTTPlaybackPage {
             currentTimeAfterResume,
         };
     }
+    async dragSeekBarToPosition(targetPercent: number): Promise<void> {
+        const seekBar = this.page.locator(this.seekBar.selector).first();
+        await seekBar.waitFor({ state: 'visible', timeout: 15000 });
+        const box = await seekBar.boundingBox();
+    
+        if (!box) {
+        return;
+        }
+    
+        const startX = box.x + box.width * 0.2;
+        const startY = box.y + box.height / 2;
+        const endX = box.x + box.width * Math.min(Math.max(targetPercent, 0.05), 0.95);
+        const endY = startY;
+    
+        await this.page.mouse.move(startX, startY);
+        await this.page.mouse.down();
+        await this.page.mouse.move(endX, endY, { steps: 8 });
+        await this.page.mouse.up();
+  }
+ 
 }

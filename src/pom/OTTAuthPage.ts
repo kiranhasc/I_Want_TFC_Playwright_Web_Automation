@@ -45,6 +45,10 @@ export class OTTAuthPage {
     private readonly continueWatchingTrayThumbnail: PageElement;
     private readonly continueWatchingTrayProgressIndicator: PageElement;
     private readonly continueWatchingRemoveButton: PageElement;
+    private readonly continueWatchingItemLink: PageElement;
+    private readonly continueWatchingItemTitle: PageElement;
+    private readonly resumeButton: PageElement;
+    private readonly seekBar: PageElement;
     private readonly trendingMoviesRail: PageElement;
     private readonly trendingShowsRail: PageElement;
     private readonly myWatchlistRail: PageElement;
@@ -103,6 +107,10 @@ export class OTTAuthPage {
         this.continueWatchingTrayThumbnail = { selector: 'img' };
         this.continueWatchingTrayProgressIndicator = { selector: '[class*=progress], [aria-label*=progress], [data-testid*=progress], [class*=resume]' };
         this.continueWatchingRemoveButton = { selector: 'img[alt="remove-from-cw"], img[alt*="remove"], [aria-label*="remove"], [title*="remove"], [data-testid*="remove"]' };
+        this.continueWatchingItemLink = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> a, text=Continue Watching >> xpath=following-sibling::* >> button, text=Continue Watching >> xpath=following-sibling::* >> [role="button"]' };
+        this.continueWatchingItemTitle = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img[alt]' };
+        this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
+        this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
@@ -473,6 +481,161 @@ export class OTTAuthPage {
         }
 
         return details;
+    }
+
+    private parseDurationMinutes(text: string): number {
+        const normalizedText = text.toLowerCase();
+        const hoursMatch = normalizedText.match(/(\d+)\s*(h|hr|hrs|hour|hours)/);
+        const minutesMatch = normalizedText.match(/(\d+)\s*(m|min|mins|minute|minutes)/);
+        const hours = hoursMatch ? parseInt(hoursMatch[1], 10) * 60 : 0;
+        const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+        return hours + minutes;
+    }
+
+    async getExplicitMovieContinueWatchingItem(): Promise<{ title: string; locator: any } | null> {
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return null;
+        }
+
+        const cards = section.locator('img[alt]:not([alt="arrow-right"])');
+        const count = await cards.count().catch(() => 0);
+        const preferredMovieTitles = ['ang panday', 'bagong buwan', 'abandoned', 'unang bastardo', 'odd encounter', 'collatz conjecture'];
+        const excludedPatterns = [
+            /\bepisode\b/i,
+            /\bseason\b/i,
+            /\bseries\b/i,
+            /\bshow\b/i,
+            /\btv\b/i,
+            /\blive\b/i,
+            /\bchannel\b/i,
+            /\bnews\b/i,
+            /\bsports\b/i,
+            /new_episode|next_episode|recently_added|early_access|top_10|paid/i,
+        ];
+
+        for (let index = 0; index < count; index += 1) {
+            const card = cards.nth(index);
+            const alt = ((await card.getAttribute('alt')) || '').trim();
+            const text = ((await card.locator('xpath=ancestor::div[1]').textContent()) || '').trim();
+            const combined = `${alt} ${text}`.toLowerCase();
+            const isExcluded = excludedPatterns.some((pattern) => pattern.test(combined));
+            const hasMeaningfulTitle = alt.length > 2 && !/^\d+$/.test(alt);
+            const isPreferredMovie = preferredMovieTitles.some((title) => combined.includes(title));
+
+            if (!hasMeaningfulTitle || isExcluded) {
+                continue;
+            }
+
+            await card.scrollIntoViewIfNeeded();
+            await card.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+
+            const pageText = `${(await this.page.locator('body').innerText()).toLowerCase()} ${(await this.page.title()).toLowerCase()}`;
+            const durationMinutes = this.parseDurationMinutes(pageText);
+            const looksLikeMovie = isPreferredMovie
+                && durationMinutes >= 60
+                && !/\bepisode\b|\bseason\b|\bseries\b|\bshow\b|\bs1\b|\bs2\b|\bep\b/i.test(pageText);
+
+            await this.page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+
+            if (looksLikeMovie) {
+                logger.step(`Selected explicit movie candidate from Continue Watching: ${alt}`);
+                return { title: alt, locator: card };
+            }
+        }
+
+        return null;
+    }
+
+    async isContinueWatchingItemVisible(title: string): Promise<boolean> {
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return false;
+        }
+
+        const normalizedTitle = title.toLowerCase();
+        const items = section.locator('img[alt]').filter({ hasNotText: '' });
+        const count = await items.count().catch(() => 0);
+        for (let index = 0; index < count; index += 1) {
+            const item = items.nth(index);
+            const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
+            if (alt.includes(normalizedTitle)) {
+                return await item.isVisible().catch(() => false);
+            }
+        }
+
+        const candidate = section.locator(`img[alt*="${title}"]`).first();
+        return await candidate.isVisible().catch(() => false);
+    }
+
+    async openContinueWatchingItemAndStartPlayback(title: string): Promise<boolean> {
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return false;
+        }
+
+        const normalizedTitle = title.toLowerCase();
+        const candidates = section.locator('img[alt]').filter({ hasNotText: '' });
+        const count = await candidates.count().catch(() => 0);
+        let clicked = false;
+
+        for (let index = 0; index < count; index += 1) {
+            const item = candidates.nth(index);
+            const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
+            if (!alt.includes(normalizedTitle)) {
+                continue;
+            }
+
+            await item.scrollIntoViewIfNeeded();
+            await item.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(5000);
+
+            const actionTarget = this.page.getByText(/Resume|Play/i).first();
+            const actionVisible = await actionTarget.isVisible().catch(() => false);
+            if (actionVisible) {
+                await actionTarget.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            }
+
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(8000);
+            clicked = true;
+            break;
+        }
+
+        return clicked;
+    }
+
+    async finishPlaybackFromCurrentItem(): Promise<boolean> {
+        const video = this.page.locator('video').first();
+        const videoVisible = await video.isVisible().catch(() => false);
+        if (!videoVisible) {
+            await this.page.waitForTimeout(10000);
+            return false;
+        }
+
+        const duration = await video.evaluate((node: HTMLVideoElement) => node.duration).catch(() => 0);
+        if (duration > 0) {
+            await video.evaluate((node: HTMLVideoElement) => {
+                if (node.duration > 0) {
+                    node.currentTime = Math.max(0, node.duration - 1);
+                }
+            }).catch(() => undefined);
+        }
+
+        await this.page.waitForTimeout(15000);
+        await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+        const ended = await video.evaluate((node: HTMLVideoElement) => node.ended).catch(() => false);
+        return ended || duration > 0;
+    }
+
+    async navigateHome(): Promise<void> {
+        await this.page.goto('https://www.iwanttfc.com/');
+        await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+        await this.page.waitForTimeout(5000);
     }
 
     async getContinueWatchingItemsCount(): Promise<number> {

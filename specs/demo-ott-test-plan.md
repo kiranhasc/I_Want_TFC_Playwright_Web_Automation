@@ -331,7 +331,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 8. Observe the **Continue Watching** tray.
    - **Expect:** The selected content should be removed from the **Continue Watching** tray.
 
-### 1.21. IW3-T1937 Verify that "Resume" CTA turns to "Play" button and retains to default season number and episode number on removing the content from CW tray.
+### 1.21. T1937IW3- Verify that "Resume" CTA turns to "Play" button and retains to default season number and episode number on removing the content from CW tray.
 
 **File:** `tests/home/continue-watching.spec.ts`
 
@@ -348,6 +348,25 @@ This test plan covers validation of application launch behavior for the OTT plat
 9. Observe the playback action and episode information.
     - **Expect:** The **"Resume"** button should be replaced with the **"Play"** button.
     - **Expect:** The series should revert to the **default season and episode** instead of the previously watched episode.
+
+### 1.22. IW3-T1960 Verify that movie content gets removed from CW tray post completely watching the same content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched movie available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Select the partially watched movie from the **Continue Watching** tray.
+7. Click the **Resume** button to continue playback.
+8. Drag the seekbar at the end and let the movie finish.
+9. Return to the **Home** page.
+10. Observe the **Continue Watching** tray.
+    - **Expect:** The completed movie should no longer be displayed in the **Continue Watching** tray.
+
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 

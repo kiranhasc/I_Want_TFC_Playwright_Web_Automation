@@ -379,6 +379,14 @@ export interface VerifyContinueWatchingRemoveItemOutput {
     reason?: string;
 }
 
+export interface VerifyContinueWatchingRemovalAfterPlaybackOutput {
+    isValid: boolean;
+    initiallyVisible: boolean;
+    finallyVisible: boolean;
+    removedItemTitle: string;
+    reason?: string;
+}
+
 export async function verifyContinueWatchingTrayUI(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingTrayUIOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -546,6 +554,73 @@ export async function verifyContinueWatchingRemoveItem(page: any, input?: Verify
         finalItemCount,
         confirmationVisible: removeResult.confirmationVisible,
         reason: isValid ? undefined : 'The selected item was not removed from the Continue Watching tray or the confirmation popup was not shown',
+    };
+}
+
+export async function verifyContinueWatchingRemovalAfterPlayback(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingRemovalAfterPlaybackOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Continue Watching removal after playback validation');
+
+    const envEmail = process.env.VALID_LOGIN_EMAIL;
+    const envPassword = process.env.VALID_LOGIN_PASSWORD;
+    const providedEmail = (input as any)?.email || envEmail || '';
+    const providedPassword = (input as any)?.password || envPassword || '';
+    const credentials = providedEmail && providedPassword
+        ? { email: providedEmail, password: providedPassword }
+        : resolveLoginCredentials(input ?? {}, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+
+    const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+    if (!isTitleVisible) {
+        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle: '', reason: 'Continue Watching tray title is not visible' };
+    }
+
+    const explicitMovieItem = await authPage.getExplicitMovieContinueWatchingItem();
+    if (!explicitMovieItem?.title) {
+        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle: '', reason: 'No movie content was available in the Continue Watching tray to validate removal' };
+    }
+
+    const removedItemTitle = explicitMovieItem.title;
+    const initialVisibility = await authPage.isContinueWatchingItemVisible(removedItemTitle);
+    if (!initialVisibility) {
+        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle, reason: 'The selected Continue Watching item was not visible before playback' };
+    }
+
+    const playbackStarted = await authPage.openContinueWatchingItemAndStartPlayback(removedItemTitle);
+    if (!playbackStarted) {
+        return { isValid: false, initiallyVisible: true, finallyVisible: false, removedItemTitle, reason: 'The selected Continue Watching item could not be opened for playback' };
+    }
+
+    const playbackCompleted = await authPage.finishPlaybackFromCurrentItem();
+    if (!playbackCompleted) {
+        return { isValid: false, initiallyVisible: true, finallyVisible: false, removedItemTitle, reason: 'The selected content did not reach the completion state' };
+    }
+
+    await authPage.navigateHome();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+
+    const finalVisibility = await authPage.isContinueWatchingItemVisible(removedItemTitle);
+    const isValid = initialVisibility && !finalVisibility;
+
+    logger.assertion('Continue Watching item visible before playback', initialVisibility);
+    logger.assertion('Continue Watching item removed after playback completion', !finalVisibility);
+
+    return {
+        isValid,
+        initiallyVisible: initialVisibility,
+        finallyVisible: finalVisibility,
+        removedItemTitle,
+        reason: isValid ? undefined : 'The selected item remained in the Continue Watching tray after playback completion',
     };
 }
 

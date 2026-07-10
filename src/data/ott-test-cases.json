@@ -66,6 +66,9 @@
     "tc-auth-012-continue-watching-remove-item": {
         "mode": "valid"
     },
+    "tc-auth-013-continue-watching-removal-after-playback": {
+        "mode": "valid"
+    },
     "tc-play-001-free-asset-playback": {
         "email": "kaditi5739@cadebek.com",
         "password": "Hello@world1"

@@ -70,34 +70,22 @@
         "mode": "valid"
     },
     "tc-play-001-free-asset-playback": {
-        "email": "kaditi5739@cadebek.com",
-        "password": "Hello@world1"
     },
     "tc-play-002-premium-content-gate": {
-        "email": "kaditi5739@cadebek.com",
-        "password": "Hello@world1",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
     },
     "tc-live-001-pause-resume-live-playback": {
-        "email": "abhilash584@gmail.com",
-        "password": "Test1234"
     },
     "tc-watch-001-play-from-watchlist": {
-        "email": "abhilash584@gmail.com",
-        "password": "Test1234"
     },
     "tc-sub-001-carousel-subscribe-cta": {
-        "email": "kaditi5739@cadebek.com",
-        "password": "Hello@world1",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
     },
     "tc-sub-002-premium-carousel-subscribe-cta": {
-        "email": "kaditi5739@cadebek.com",
-        "password": "Hello@world1",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"

@@ -26,8 +26,8 @@ test.describe('Playback - Premium content gate', () => {
         const data = testCaseData['tc-sub-002-premium-carousel-subscribe-cta'];
 
         const result = await verifySubscribeToWatchCarouselMessage(page, {
-            email: process.env.FREE_USER_LOGIN_EMAIL || data?.email,
-            password: process.env.FREE_USER_LOGIN_PASSWORD || data?.password,
+            email: process.env.FREE_USER_LOGIN_EMAIL,
+            password: process.env.FREE_USER_LOGIN_PASSWORD,
             expectedMessage: data?.expectedMessage,
             expectedMaybeLaterText: data?.expectedMaybeLaterText,
             expectedSubscribeText: data?.expectedSubscribeText,
@@ -44,8 +44,8 @@ test.describe('Playback - Premium content gate', () => {
         const data = testCaseData['tc-sub-001-carousel-subscribe-cta'];
 
         const result = await verifySubscribeToWatchCarouselMessage(page, {
-            email: process.env.FREE_USER_LOGIN_EMAIL || data.email,
-            password: process.env.FREE_USER_LOGIN_PASSWORD || data.password,
+            email: process.env.FREE_USER_LOGIN_EMAIL,
+            password: process.env.FREE_USER_LOGIN_PASSWORD,
             expectedMessage: data.expectedMessage,
             expectedMaybeLaterText: data.expectedMaybeLaterText,
             expectedSubscribeText: data.expectedSubscribeText,

@@ -87,7 +87,7 @@ export interface VerifyWelcomeScreenOutput {
 //     return mode === 'valid' ? 'valid' : 'invalid';
 // }
 
-function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' {
+function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' {
     if (mode === 'valid') {
         return 'valid';
     }
@@ -96,6 +96,9 @@ function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | '
     }
     if (mode === 'mobile') {
         return 'mobile'
+    }
+    if (mode === 'freeUser') {
+        return 'freeUser';
     }
     return 'invalid';
 }
@@ -138,7 +141,7 @@ export interface EmptyCredentialsOutput {
 
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
-    mode: 'invalid' | 'valid' | 'provider'  | 'mobile' = 'invalid'
+    mode: 'invalid' | 'valid' | 'provider'  | 'mobile'  | 'freeUser' = 'invalid'
 ) {
     const prefix =
         mode === 'valid'
@@ -147,6 +150,8 @@ function resolveLoginCredentials(
                 ? 'PROVIDER_' 
             : mode === 'mobile'
                 ? 'MOBILE_LOGIN_'
+            : mode === 'freeUser'
+                ? 'FREE_USER_'
             :'INVALID_LOGIN_';
 
     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();

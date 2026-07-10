@@ -22,3 +22,5 @@
 - Inputs: VALID_LOGIN_EMAIL, VALID_LOGIN_PASSWORD (via `mode: valid`)
 - Assertions: isContinueWatchingVisible === false
 - Test data key: `tc-auth-009-continue-watching-no-history` in `src/data/ott-test-cases.json`
+
+

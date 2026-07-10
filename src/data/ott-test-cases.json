@@ -51,6 +51,68 @@
     },
     "tc-auth-008-mobile-login":{
         "mode": "mobile"
+    },
+    "tc-nav-001-search-icon": {
+        "mode": "valid"
+    },
+    "tc-nav-002-search-query": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
+    "tc-nav-003-search-results": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
+    "tc-settings-001-parental-controls": {
+        "mode": "valid"
+    },
+    "tc-settings-002-parental-toggle-disabled": {
+        "mode": "valid"
+    },
+    "tc-settings-003-parental-password-field": {
+        "mode": "valid"
+    },
+    "tc-settings-004-parental-pin-submission": {
+        "mode": "valid",
+        "expectedPinSetupMessage": "Set an account owner PIN"
+    },
+    "tc-settings-005-parental-password-visibility": {
+        "mode": "valid",
+        "expectedEyeIconVisible": true,
+        "expectedPasswordVisible": true
+    },
+    "tc-settings-006-parental-invalid-password": {
+        "mode": "valid",
+        "invalidPassword": "wrongpassword123",
+        "expectedErrorMessage": "Invalid credentials. Please try again."
+    }
+    ,
+    "tc-settings-007-parental-pin-4digit": {
+        "mode": "valid"
+    },
+    "tc-settings-008-parental-pin-numeric-only": {
+        "mode": "valid"
+    },
+    "tc-settings-009-parental-pin-success-message": {
+        "mode": "valid",
+        "pin": "1234",
+        "expectedSuccessHeader": "Parental Controls Updated",
+        "expectedSuccessDetails": "Your changes to the parental controls have been saved successfully."
+    },
+    "tc-settings-010-parental-pin-prompt-on-playback": {
+        "mode": "valid",
+        "pin": "1234",
+        "expectedParentalPinPromptText": "Enter the PIN to Access"
+    },
+    "tc-settings-011-parental-pin-invalid-playback": {
+        "mode": "valid",
+        "pin": "1234",
+        "invalidPin": "0000",
+        "expectedParentalPinPromptText": "Enter the PIN to Access",
+        "expectedInvalidPinErrorText": "Invalid Pin"
+    },
+    "tc-settings-012-parental-pin-toggle-disabled-after-password": {
+        "mode": "valid"
     }
     ,
     "tc-auth-009-continue-watching-no-history": {

@@ -11,6 +11,11 @@ export class OTTDetailsPage {
   private readonly firstShowContentCard: PageElement;
   private readonly showDetailsHeading: PageElement;
   private readonly contentMetadata: PageElement;
+  private readonly resumeButton: PageElement;
+  private readonly parentalPinPlaybackPrompt: PageElement;
+  private readonly parentalPinEntryInputs: PageElement;
+  private readonly parentalPinValidateButton: PageElement;
+  private readonly parentalPinInvalidErrorMessage: PageElement;
   private readonly cookieConfirmButton: PageElement;
 
   constructor(page: Page) {
@@ -20,6 +25,11 @@ export class OTTDetailsPage {
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image'};
     this.showDetailsHeading = { selector: 'main h1'};
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]'};
+    this.resumeButton = { selector: 'p:has-text("Resume")' };
+    this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
+    this.parentalPinEntryInputs = { selector: 'input[id^="parental-pin-input-"]' };
+    this.parentalPinValidateButton = { selector: 'button:has-text("Submit"), button:has-text("Continue")' };
+    this.parentalPinInvalidErrorMessage = { selector: 'text=/Invalid Pin/i' };
     this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")'};
   }
 
@@ -122,5 +132,37 @@ export class OTTDetailsPage {
       logger.debug('Error getting content metadata text', error);
       return '';
     }
+  }
+
+  async isParentalPinPlaybackPromptVisible(): Promise<boolean> {
+    return await this.pageUtils.isVisible(this.parentalPinPlaybackPrompt, 10000);
+  }
+
+  async getParentalPinPlaybackPromptText(): Promise<string> {
+    return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
+  }
+
+  async enterParentalPlaybackPin(pin: string): Promise<void> {
+    logger.elementInteraction('type', 'Parental playback PIN input');
+    const inputs = this.page.locator(this.parentalPinEntryInputs.selector);
+    const digits = (pin || '').split('');
+
+    for (let index = 0; index < digits.length; index++) {
+      const input = inputs.nth(index);
+      await input.waitFor({ state: 'visible', timeout: 10000 });
+      await input.fill(digits[index]);
+    }
+  }
+  async isParentalPinInvalidErrorVisible(): Promise<boolean> {
+    return await this.pageUtils.isVisible(this.parentalPinInvalidErrorMessage, 10000);
+  }
+
+  async getParentalPinInvalidErrorText(): Promise<string> {
+    return await this.pageUtils.getTextContent(this.parentalPinInvalidErrorMessage, 10000);
+  }
+
+  async clickResumeButton(): Promise<void> {
+    logger.elementInteraction('click', 'Resume button');
+    await this.pageUtils.safeClick(this.resumeButton);
   }
 }

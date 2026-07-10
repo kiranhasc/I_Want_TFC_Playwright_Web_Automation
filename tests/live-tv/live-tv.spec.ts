@@ -1,14 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { verifyLivePlaybackPauseResume } from '../../src/businessFunction/ott-playback-bfs';
 
-const email = process.env.VALID_LOGIN_EMAIL || 'abhilash584@gmail.com';
-const password = process.env.VALID_LOGIN_PASSWORD || 'Test1234';
-
 test.describe('Live TV Pause / Resume Playback', () => {
     test('@High - IW3-T2010: Verify that the pause and resume buttons function correctly during live playback', async ({ page }) => {
         const result = await verifyLivePlaybackPauseResume(page, {
-            email,
-            password,
+            email: process.env.VALID_LOGIN_EMAIL,
+            password: process.env.VALID_LOGIN_PASSWORD,
         });
 
         expect(result.isLoggedIn).toBeTruthy();

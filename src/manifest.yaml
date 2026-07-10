@@ -96,6 +96,78 @@
     - "IW3-T1867"
   dependsOn: []
 
+- id: "play-free-asset"
+  name: "Play a free asset for a free user"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playFreeAsset"
+  tags:
+    - playback
+    - positive
+    - free
+  testCases:
+    - "IW3-T1865"
+  dependsOn: []
+
+- id: "verify-live-playback-pause-resume"
+  name: "Verify live playback pause and resume controls"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLivePlaybackPauseResume"
+  tags:
+    - playback
+    - live-tv
+    - positive
+  testCases:
+    - "IW3-T2010"
+  dependsOn: []
+
+- id: "play-content-from-watchlist"
+  name: "Play a selected content item from the watchlist"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playContentFromWatchlist"
+  tags:
+    - playback
+    - watchlist
+    - positive
+  testCases:
+    - "IW3-T2030"
+  dependsOn: []
+
+- id: "verify-subscribe-to-watch-carousel-message"
+  name: "Verify subscribe-to-watch CTA message from carousel on Home, Shows, Movies, and GMA"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubscribeToWatchCarouselMessage"
+  tags:
+    - playback
+    - subscription
+    - positive
+  testCases:
+    - "IW3-T2032"
+    - "IW3-T2035"
+  dependsOn: []
+
+- id: "verify-continue-watching-tray-ui"
+  name: "Verify the Continue Watching tray UI and content cards"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyContinueWatchingTrayUI"
+  tags:
+    - auth
+    - ui
+    - continue-watching
+  testCases:
+    - "IW3-T1932"
+  dependsOn: []
+
+- id: "verify-continue-watching-removal-after-playback"
+  name: "Verify a watched movie is removed from the Continue Watching tray"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyContinueWatchingRemovalAfterPlayback"
+  tags:
+    - auth
+    - playback
+    - continue-watching
+  testCases:
+    - "IW3-T1960"
+  dependsOn: []
 - id: "verify-search-icon-visibility"
   name: "Verify search icon visibility on navigation pages"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -108,6 +180,151 @@
     - "IW3-T2060"
   dependsOn:
     - "login-to-ott"
+
+- id: "verify-parental-controls-visibility"
+  name: "Verify parental controls visibility in Settings"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinOptionVisibility"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2094"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-toggle-disabled"
+  name: "Verify parental PIN toggle is disabled by default"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinToggleState"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2095"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-password-field"
+  name: "Verify parental PIN password field appears on toggle click"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinPasswordField"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2097"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "submit-parental-pin-password"
+  name: "Submit parental PIN password and verify setup message"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitParentalPinPassword"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2098"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-password-visibility"
+  name: "Verify parental PIN password visibility toggle functionality"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinPasswordVisibility"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2099"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-invalid-password-error"
+  name: "Verify parental PIN invalid password error message"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinInvalidPasswordError"
+  tags:
+    - settings
+    - negative
+    - validation
+  testCases:
+    - "IW3-T2100"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-4digit-input"
+  name: "Verify parental PIN 4-digit numeric input boxes appear"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinFourDigitInput"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2101"
+    - "IW3-T2102"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-save-success"
+  name: "Verify parental PIN save success message appears after setup"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinSaveSuccess"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2103"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "submit-parental-pin-password"
+  name: "Submit parental PIN password and verify setup message and toggle disable state"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitParentalPinPassword"
+  tags:
+    - settings
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2098"
+    - "IW3-T2105"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-parental-pin-playback-prompt"
+  name: "Verify parental PIN prompt appears when playing content after setup"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinPromptOnContentPlayback"
+  tags:
+    - settings
+    - playback
+    - ui
+  testCases:
+    - "IW3-T2104"
+  dependsOn:
+    - "verify-parental-pin-save-success"
+
+- id: "verify-parental-pin-invalid-playback-prompt"
+  name: "Verify invalid parental PIN error appears during playback"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyParentalPinInvalidPlaybackPrompt"
+  tags:
+    - settings
+    - playback
+    - negative
+  testCases:
+    - "IW3-T2108"
+  dependsOn:
+    - "verify-parental-pin-save-success"
  
 - id: "navigate-show-details-from-shows"
   name: "Navigate to show details from Shows page"

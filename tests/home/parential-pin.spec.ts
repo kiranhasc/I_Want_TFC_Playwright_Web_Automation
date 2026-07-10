@@ -147,7 +147,7 @@ test.describe('Parental controls', () => {
       expect(result.parentalPinInvalidErrorText).toContain(data.expectedInvalidPinErrorText);
     });
 
-    test.only('@High - IW3-T2105 : Verify parental PIN toggle gets disabled after entering the password', async ({ page }) => {
+    test('@High - IW3-T2105 : Verify parental PIN toggle gets disabled after entering the password', async ({ page }) => {
         const data = testCaseData['tc-settings-012-parental-pin-toggle-disabled-after-password'];
         const result = await submitParentalPinPassword(page, {
         mode: data.mode,

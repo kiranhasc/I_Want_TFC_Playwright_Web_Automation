@@ -1,6 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { PageElement } from '../../src/types/index.ts';
-import { logger } from './logger.ts';
+import { PageElement } from '../../src/types/index';
+import { logger } from './logger';
 
 /**
  * Enhanced page utilities for common UI interactions

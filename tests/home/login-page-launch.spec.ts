@@ -1,9 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { verifyCreateAccountScreenUI, enterCreateAccountEmailOnly, submitCreateAccountInvalidCredentials } from '../../src/businessFunction/ott-auth-bfs';
-import testCaseData from '../../src/data/ott-test-cases.json';
-import { submitEmptyCredentials } from '../../src/businessFunction/ott-auth-bfs';
-//
-//import { test, expect } from '@playwright/test';
 import {
     verifyWelcomeScreenUI,
     loginWithInvalidCredentials,
@@ -12,87 +7,7 @@ import {
     submitUnregisteredUserLogin,
     verifyPasswordVisibilityToggle,
 } from '../../src/businessFunction/ott-auth-bfs';
-//import testCaseData from '../../src/data/ott-test-cases.json';
-
-test.describe('Account creation UI', () => {
-    test(' @low IW3-T1849: Verify the UI/UX of the Create an account screen' , async ({ page }) => {
-        const data = testCaseData['tc-auth-006-create-account-ui'];
-        const result = await verifyCreateAccountScreenUI(page, {
-            expectedHeading: data.expectedHeading,
-            expectedEmailLabel: data.expectedEmailLabel,
-            expectedPasswordLabel: data.expectedPasswordLabel,
-            expectedTermsText: data.expectedTermsText,
-            expectedMarketingText: data.expectedMarketingText,
-            expectedContinueLabel: data.expectedContinueLabel,
-            expectedLoginPrompt: data.expectedLoginPrompt,
-            expectedLoginLinkText: data.expectedLoginLinkText,
-        });
-
-        expect(result.isHeadingVisible).toBe(true);
-        expect(result.headingText).toContain(data.expectedHeading);
-        expect(result.isEmailFieldVisible).toBe(true);
-        expect(result.isPasswordFieldVisible).toBe(true);
-        expect(result.isTermsCheckboxVisible).toBe(true);
-        expect(result.isMarketingCheckboxVisible).toBe(true);
-        expect(result.isContinueButtonVisible).toBe(true);
-        expect(result.isAlreadyHaveAccountTextVisible).toBe(true);
-        expect(result.isLoginLinkVisible).toBe(true);
-    
-    });
-
-    test(' @high IW3-T1848: Verify the navigation on tapping of Create Account', async ({ page }) => {
-        const data = testCaseData['tc-auth-006-create-account-ui'];
-        const result = await verifyCreateAccountScreenUI(page, {
-            expectedHeading: data.expectedHeading,
-            expectedEmailLabel: data.expectedEmailLabel,
-            expectedPasswordLabel: data.expectedPasswordLabel,
-            expectedTermsText: data.expectedTermsText,
-            expectedMarketingText: data.expectedMarketingText,
-            expectedContinueLabel: data.expectedContinueLabel,
-            expectedLoginPrompt: data.expectedLoginPrompt,
-            expectedLoginLinkText: data.expectedLoginLinkText,
-        });
-
-        expect(result.isHeadingVisible).toBe(true);
-        expect(result.headingText).toContain(data.expectedHeading);
-    });
-
-    test(' @high IW3-T1850: Verify the functionality of entering email id in the "Let\'s Get Started" screen', async ({ page }) => {
-        const data = testCaseData['tc-auth-011-create-account-credentials'];
-        const result = await enterCreateAccountEmailOnly(page, {
-            email: data.email,
-        });
-
-        expect(result.isEmailFieldVisible).toBe(true);
-        expect(result.emailFieldValue).toBe(data.email);
-    });
-
-    test(' @low IW3-T1855: Verify the error message on entering invalid email/phone number and password on the Email text field on Get Started screen', async ({ page }) => {
-        const data = testCaseData['tc-auth-012-create-account-invalid-credentials'];
-        const result = await submitCreateAccountInvalidCredentials(page, {
-            email: data.email,
-            password: data.password,
-            expectedErrorMessage: data.expectedErrorMessage,
-        });
-
-        expect(result.isErrorDisplayed).toBe(true);
-        expect(result.errorMessage).toContain(data.expectedErrorMessage);
-    });
-});
-
-test.describe('Authentication validation', () => {
-    test(' @low IW3-T1856: Verify error message is displayed when email and password fields are left empty', async ({ page }) => {
-        const data = testCaseData['tc-auth-007-empty-credentials'];
-        const result = await submitEmptyCredentials(page, {
-            email: data.email,
-            password: data.password,
-            expectedErrorMessage: data.expectedErrorMessage,
-        });
-
-        expect(result.isErrorDisplayed).toBe(true);
-        expect(result.errorMessage).toContain(data.expectedErrorMessage);
-    });
-});
+import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Login Page Launch', () => {
     test(' @high IW3-T1846: Verify that user navigates to "Welcome to iWant" screen on entering the URL from Non-PH region', async ({ page }) => {
@@ -197,4 +112,3 @@ test.describe('Login Page Launch', () => {
         // expect(finalPasswordType).toBe('password');
     });
 });
-

@@ -96,6 +96,78 @@
     - "IW3-T1867"
   dependsOn: []
 
+- id: "play-free-asset"
+  name: "Play a free asset for a free user"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playFreeAsset"
+  tags:
+    - playback
+    - positive
+    - free
+  testCases:
+    - "IW3-T1865"
+  dependsOn: []
+
+- id: "verify-live-playback-pause-resume"
+  name: "Verify live playback pause and resume controls"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLivePlaybackPauseResume"
+  tags:
+    - playback
+    - live-tv
+    - positive
+  testCases:
+    - "IW3-T2010"
+  dependsOn: []
+
+- id: "play-content-from-watchlist"
+  name: "Play a selected content item from the watchlist"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "playContentFromWatchlist"
+  tags:
+    - playback
+    - watchlist
+    - positive
+  testCases:
+    - "IW3-T2030"
+  dependsOn: []
+
+- id: "verify-subscribe-to-watch-carousel-message"
+  name: "Verify subscribe-to-watch CTA message from carousel on Home, Shows, Movies, and GMA"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubscribeToWatchCarouselMessage"
+  tags:
+    - playback
+    - subscription
+    - positive
+  testCases:
+    - "IW3-T2032"
+    - "IW3-T2035"
+  dependsOn: []
+
+- id: "verify-continue-watching-tray-ui"
+  name: "Verify the Continue Watching tray UI and content cards"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyContinueWatchingTrayUI"
+  tags:
+    - auth
+    - ui
+    - continue-watching
+  testCases:
+    - "IW3-T1932"
+  dependsOn: []
+
+- id: "verify-continue-watching-removal-after-playback"
+  name: "Verify a watched movie is removed from the Continue Watching tray"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyContinueWatchingRemovalAfterPlayback"
+  tags:
+    - auth
+    - playback
+    - continue-watching
+  testCases:
+    - "IW3-T1960"
+  dependsOn: []
 - id: "verify-search-icon-visibility"
   name: "Verify search icon visibility on navigation pages"
   path: "src/businessFunction/ott-auth-bfs.ts"

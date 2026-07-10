@@ -114,4 +114,42 @@
     "tc-settings-012-parental-pin-toggle-disabled-after-password": {
         "mode": "valid"
     }
+    ,
+    "tc-auth-009-continue-watching-no-history": {
+        "mode": "valid",
+        "expectedContinueWatchingVisible": false
+    },
+    "tc-auth-010-continue-watching-tray-ui": {
+        "mode": "valid"
+    },
+    "tc-auth-011-continue-watching-tray-scroll": {
+        "mode": "valid"
+    },
+    "tc-auth-012-continue-watching-remove-item": {
+        "mode": "valid"
+    },
+    "tc-auth-013-continue-watching-removal-after-playback": {
+        "mode": "valid"
+    },
+    "tc-play-001-free-asset-playback": {
+    },
+    "tc-play-002-premium-content-gate": {
+        "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedSubscribeText": "Subscribe to watch"
+    },
+    "tc-live-001-pause-resume-live-playback": {
+    },
+    "tc-watch-001-play-from-watchlist": {
+    },
+    "tc-sub-001-carousel-subscribe-cta": {
+        "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedSubscribeText": "Subscribe to watch"
+    },
+    "tc-sub-002-premium-carousel-subscribe-cta": {
+        "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedSubscribeText": "Subscribe to watch"
+    }
 }

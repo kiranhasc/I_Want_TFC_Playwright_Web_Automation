@@ -48,6 +48,18 @@
   dependsOn:
     - "navigate-forgot-password"
 
+- id: "verify-welcome-screen-navigation"
+  name: "Verify welcome screen navigation for Non-PH region"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyWelcomeScreenUI"
+  tags:
+    - auth
+    - navigation
+    - smoke
+  testCases:
+    - "IW3-T1846"
+  dependsOn: []
+
 - id: "verify-welcome-screen-ui"
   name: "Verify welcome screen UI for PH region"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -83,6 +95,94 @@
   testCases:
     - "IW3-T1865"
   dependsOn: []
+
+- id: "logout-from-ott"
+  name: "Logout from OTT after Synacor login"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "logoutFromOTT"
+  tags:
+    - auth
+    - logout
+    - smoke
+  testCases:
+    - "IW3-T3663"
+  dependsOn: []
+
+- id: "verify-synacor-profile-edit-restriction"
+  name: "Verify Synacor profile edit restriction"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySynacorProfileEditRestriction"
+  tags:
+    - auth
+    - profile
+    - smoke
+  testCases:
+    - "IW3-T3664"
+  dependsOn: []
+
+- id: "login-with-tv-provider-credentials"
+  name: "Login with TV provider credentials"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "loginWithTVProvider"
+  tags:
+    - auth
+    - positive
+    - smoke
+  testCases:
+    - "IW3-T3657"
+  dependsOn: []
+
+- id: "verify-support-and-policy-links"
+  name: "Verify support and policy links"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySupportAndPolicyLinks"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T1888"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-and-conditions-section"
+  name: "Navigate to a section on the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4333"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-introduction-section"
+  name: "Navigate to a section from the Introduction page on Terms and Conditions"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4339"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-terms-page-section"
+  name: "Navigate to a section from the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4341"
+  dependsOn:
+    - "login-to-ott"
 
 - id: "navigate-and-verify-tabs"
   name: "Navigate and verify tabs with rail content"
@@ -338,6 +438,72 @@
   dependsOn:
     - "login-valid-credentials"
    
+- id: "play-episode-from-details"
+  name: "Play episode from details page"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "playEpisodeFromDetailsPage"
+  tags:
+    - discovery
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1921"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-intro-marker"
+  name: "Verify skip intro marker during playback"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifySkipIntroMarkerDuringPlayback"
+  tags:
+    - playback
+    - skip-intro
+    - positive
+  testCases:
+    - "IW3-T2112"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-recap-marker"
+  name: "Verify skip recap marker during playback"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifySkipRecapMarkerDuringPlayback"
+  tags:
+    - playback
+    - skip-recap
+    - positive
+  testCases:
+    - "IW3-T2114"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "remove-from-continue-watching"
+  name: "Remove from Continue Watching tray"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "removeFromContinueWatching"
+  tags:
+    - playback
+    - continue-watching
+    - positive
+  testCases:
+    - "IW3-T1936"
+  dependsOn:
+    - "login-to-ott"
+    - "navigate-show-details-from-shows"
+
+- id: "verify-subscribe-to-watch-cta"
+  name: "Verify subscribe to watch CTA on premium content"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifySubscribeToWatchCTA"
+  tags:
+    - subscription
+    - premium
+    - positive
+  testCases:
+    - "IW3-T2033"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-create-account-screen-ui"
   name: "Verify create account screen UI"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -349,7 +515,123 @@
   testCases:
     - "IW3-T1849"
   dependsOn: []
+
+- id: "verify-account-and-subscription-details"
+  name: "Verify account and subscription details in profile"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyAccountAndSubscriptionDetails"
+  tags:
+    - auth
+    - profile
+    - subscription
+    - positive
+  testCases:
+    - "IW3-T3658"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "validate-edit-profile-name-fields"
+  name: "Validate first name and last name fields in edit profile"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "validateEditProfileNameFields"
+  tags:
+    - auth
+    - profile
+    - validation
+    - negative
+  testCases:
+    - "1.11"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-guest-watchlist-navigation"
+  name: "Verify guest watchlist navigation from a free asset"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "verifyGuestWatchlistNavigationFromFreeAsset"
+  tags:
+    - watchlist
+    - guest
+    - ph-region
+    - negative
+  testCases:
+    - "IW3-T1872"
+  dependsOn: []
+
+- id: "verify-live-content-watchlist-absence"
+  name: "Verify Add to Watchlist option is not displayed for live content"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "verifyLiveContentWatchlistAbsence"
+  tags:
+    - watchlist
+    - live
+    - negative
+  testCases:
+    - "IW3-T2047"
+  dependsOn: []
+
+- id: "verify-guest-search-navigation"
+  name: "Verify guest search navigation from a free asset"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyGuestSearchNavigationFromFreeAsset"
+  tags:
+    - discovery
+    - guest
+    - ph-region
+    - positive
+  testCases:
+    - "IW3-T1876"
+  dependsOn: []
+
+- id: "verify-guest-subscribe-navigation"
+  name: "Verify guest subscribe CTA navigation from a free asset"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifyGuestSubscribeNavigationFromFreeAsset"
+  tags:
+    - subscription
+    - guest
+    - ph-region
+    - negative
+  testCases:
+    - "1.14"
+  dependsOn: []
+
+- id: "manage-watchlist-item"
+  name: "Add and remove watchlist item"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "manageWatchlistItem"
+  tags:
+    - watchlist
+    - positive
+  testCases:
+    - "IW3-T3659"
+  dependsOn:
+    - "login-to-ott"
  
+- id: "verify-create-account-navigation"
+  name: "Verify navigation to Create Account screen"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyCreateAccountScreenUI"
+  tags:
+    - auth
+    - navigation
+    - smoke
+  testCases:
+    - "IW3-T1848"
+  dependsOn: []
+ 
+- id: "enter-create-account-credentials"
+  name: "Enter credentials on Create Account screen"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "enterCreateAccountCredentials"
+  tags:
+    - auth
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T1850"
+  dependsOn:
+    - "verify-create-account-navigation"
+
 - id: "submit-empty-credentials"
   name: "Submit empty credentials and verify validation"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -360,6 +642,69 @@
     - smoke
   testCases:
     - "IW3-T1856"
+  dependsOn: []
+
+- id: "search-from-terms-page"
+  name: "Search from the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "searchFromTermsPage"
+  tags:
+    - auth
+    - navigation
+    - search
+  testCases:
+    - "IW3-T4337"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-terms-page-details"
+  name: "Verify page details on the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyTermsPageDetails"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4334"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-tag"
+  name: "Verify Early Access tag displayed on On Air content thumbnail"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessTag"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3667"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-vpn-playback-restriction"
+  name: "Verify VPN playback restriction prevents playback and shows an error message"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyVPNPlaybackRestriction"
+  tags:
+    - auth
+    - vpn
+    - negative
+    - smoke
+  testCases:
+    - "IW3-T4699"
+  dependsOn:
+    - "login-to-ott"
+- id: "submit-unregistered-user-login"
+  name: "Submit unregistered user login and verify error"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "submitUnregisteredUserLogin"
+  tags:
+    - auth
+    - negative
+  testCases:
+    - "IW3-T1857"
   dependsOn: []
  
 - id: "verify-free-user-subscribe-flow"

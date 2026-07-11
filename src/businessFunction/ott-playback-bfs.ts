@@ -98,6 +98,8 @@ export interface VerifyBrowserSeekBarFlowOutput {
   playbackPositionChanged: boolean;
 }
 
+
+
 export interface VerifyPlayerControlsOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;

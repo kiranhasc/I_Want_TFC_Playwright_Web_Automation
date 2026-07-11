@@ -1,6 +1,8 @@
 {
     "tc-auth-001-invalid-credentials": {
         "mode": "invalid",
+        "email": "abcd@gmail.com",
+        "password": "Hello@123",
         "expectedErrorMessage": "Your login credentials are incorrect"
     },
     "tc-auth-002-forgot-password": {
@@ -34,12 +36,21 @@
         "expectedYear": "2026",
         "expectedGenre": "Action"
     },
+    "tc-disc-002-episode-playback": {
+        "mode": "valid",
+        "searchTerm": "The Blood Sisters"
+    },
+    "tc-disc-003-remove-continue-watching": {
+        "mode": "valid",
+        "searchTerm": "The Blood Sisters",
+        "contentTitle": "The Blood Sisters"
+    },
     "tc-auth-006-create-account-ui": {
         "expectedHeading": "Create an account",
         "expectedEmailLabel": "Email Address",
         "expectedPasswordLabel": "Password",
         "expectedTermsText": "I agree to the Terms and Conditions and Privacy Policy",
-        "expectedMarketingText": "I agree to receive marketing communication (until I Unsubscribe)",
+        "expectedMarketingText": "I agree to receive marketing communications (until I unsubscribe).",
         "expectedContinueLabel": "Continue",
         "expectedLoginPrompt": "Already Have an Account?",
         "expectedLoginLinkText": "Login"
@@ -49,8 +60,162 @@
         "password": "",
         "expectedErrorMessage": "Email is required"
     },
-    "tc-auth-008-mobile-login":{
+    "tc-auth-008-mobile-login": {
         "mode": "mobile"
+    },
+    "tc-auth-009-help-support-links": {
+        "mode": "valid",
+        "expectedHelpAndSupportHeading": "How can we help you today?",
+        "expectedTermsHeading": "Welcome to the ABS-CBN’s terms & conditions.",
+        "expectedPrivacyHeading": "Welcome to the ABS-CBN’s privacy notice.",
+        "expectedCookieHeading": "iWant Cookie Policy"
+    },
+    "tc-auth-010-terms-navigation": {
+        "mode": "valid",
+        "sectionLinkText": "For customers in the Philippines",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-the-philippines",
+        "expectedHeading": "Customers in the Philippines"
+    },
+    "tc-auth-011-terms-search": {
+        "mode": "valid",
+        "searchQuery": "For the customers in the Philippines",
+        "expectedResultsPresent": true
+    },
+    "tc-auth-012-terms-page-details": {
+        "mode": "valid",
+        "sectionLinkText": "The Data We Collect About You",
+        "subModuleName": "privacy-notice",
+        "expectedUrlPart": "the-data-we-collect-about-you",
+        "expectedHeading": "THE DATA WE COLLECT ABOUT YOU"
+    },
+    "tc-auth-014-terms-introduction": {
+        "mode": "valid",
+        "sectionLinkText": "For customers in Canada",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-canada",
+        "expectedHeading": "Customers in the Canada"
+    },
+    "tc-auth-015-terms-page-links": {
+        "mode": "valid",
+        "sectionLinkText": "Customers in the Japan and South Korea",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-japan-and-south-korea",
+        "expectedHeading": "Customers in the Japan and South Korea"
+    },
+    "tc-auth-016-synacor-logout": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-017-synacor-profile-edit-restriction": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-018-synacor-provider-login": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-019-vpn-playback-restriction": {
+        "mode": "valid",
+        "searchQuery": "Incognito",
+        "expectedVPNErrorMessage": "We detected that you’re using a VPN or proxy. Please disable it and try again."
+    },
+    "tc-discovery-001-early-access": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue" : "early_access"
+    },
+    "tc-auth-009-welcome-screen-navigation": {
+        "expectedHeading": "Welcome to iWant",
+        "expectedSubheading": "Home of Filipino Stories"
+    },
+    "tc-auth-010-welcome-screen-ui": {
+        "expectedHeading": "Welcome to iWant",
+        "expectedSubheading": "Home of Filipino Stories"
+    },
+    "tc-auth-011-create-account-credentials": {
+        "email": "testuser@example.com",
+        "password": "Password123!"
+    },
+    "tc-auth-012-create-account-invalid-credentials": {
+        "email": "invalid-email",
+        "password": "invalidPass1",
+        "expectedErrorMessage": "Invalid email address"
+    },
+    "tc-auth-013-unregistered-user-login": {
+        "email": "newusernotregistered@example.com",
+        "password": "NewUser123!",
+        "expectedErrorMessage": "Your login credentials are incorrect"
+    },
+    "tc-auth-014-password-visibility-toggle": {
+        "email": "abcd@gmail.com",
+        "password": "Password123!"
+    },
+    "tc-disc-004-skip-intro": {
+        "mode": "valid",
+        "searchTerm": "Lavender Fields"
+    },
+    "tc-disc-005-skip-recap": {
+        "mode": "valid",
+        "searchTerm": "Incognito"
+    },
+    "tc-sub-001-subscribe-to-watch": {
+        "mode": "freeUser",
+        "searchTerm": "Karnal"
+    },
+    "tc-sub-002-upgrade-plan": {
+        "mode": "freeUser"
+    },
+    "tc-auth-015-account-subscriptions": {
+        "mode": "tvUser",
+        "providerName": "Frontier, a Verizon Company",
+        "expectedSectionName": "Account",
+        "expectedSubscriptionText": "Subscription"
+    },
+    "tc-auth-016-watchlist-management": {
+        "mode": "tvUser",
+        "providerName": "Frontier, a Verizon Company",
+        "searchTerm": "Nurse The Dead"
+    },
+    "tc-auth-017-ph-region-guest-watchlist": {
+        "expectedHeading": "Welcome to iWant"
+    },
+    "tc-auth-018-live-content-watchlist-absence": {
+        "liveContentName": "DZMM Teleradyo",
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "expectedHeading": "Welcome to iWant"
+    },
+    "tc-auth-020-free-tag-watchlist": {
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "searchTerm": "My Illegal Wife",
+        "contentTitle": "My Illegal Wife"
+    },
+    "tc-auth-021-add-free-watchlist": {
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "searchTerm": "I Am Your Daughter",
+        "contentTitle": "I Am Your Daughter"
+    },
+    "tc-auth-022-remove-free-watchlist": {
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "searchTerm": "A Moment in Time",
+        "contentTitle": "A Moment in Time"
+    },
+    "tc-auth-018-ph-region-guest-search": {
+        "searchTerm": "Lavender Fields",
+        "expectedTitle": "Lavender Fields"
+    },
+    "tc-auth-019-ph-region-guest-subscribe": {
+        "expectedHeading": "Welcome to iWant"
+    },
+    "tc-auth-017-edit-profile-name-validation": {
+        "mode": "valid",
+        "firstName": "Abhilash123",
+        "lastName": "Test456"
     },
     "tc-nav-001-search-icon": {
         "mode": "valid"

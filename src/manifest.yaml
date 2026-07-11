@@ -84,6 +84,94 @@
     - "IW3-T1865"
   dependsOn: []
 
+- id: "logout-from-ott"
+  name: "Logout from OTT after Synacor login"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "logoutFromOTT"
+  tags:
+    - auth
+    - logout
+    - smoke
+  testCases:
+    - "IW3-T3663"
+  dependsOn: []
+
+- id: "verify-synacor-profile-edit-restriction"
+  name: "Verify Synacor profile edit restriction"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySynacorProfileEditRestriction"
+  tags:
+    - auth
+    - profile
+    - smoke
+  testCases:
+    - "IW3-T3664"
+  dependsOn: []
+
+- id: "login-with-tv-provider-credentials"
+  name: "Login with TV provider credentials"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "loginWithTVProvider"
+  tags:
+    - auth
+    - positive
+    - smoke
+  testCases:
+    - "IW3-T3657"
+  dependsOn: []
+
+- id: "verify-support-and-policy-links"
+  name: "Verify support and policy links"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySupportAndPolicyLinks"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T1888"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-and-conditions-section"
+  name: "Navigate to a section on the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4333"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-introduction-section"
+  name: "Navigate to a section from the Introduction page on Terms and Conditions"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4339"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-terms-terms-page-section"
+  name: "Navigate to a section from the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "navigateToTermsAndConditionsSection"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4341"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "navigate-and-verify-tabs"
   name: "Navigate and verify tabs with rail content"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -131,3 +219,56 @@
   testCases:
     - "IW3-T1856"
   dependsOn: []
+
+- id: "search-from-terms-page"
+  name: "Search from the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "searchFromTermsPage"
+  tags:
+    - auth
+    - navigation
+    - search
+  testCases:
+    - "IW3-T4337"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-terms-page-details"
+  name: "Verify page details on the Terms and Conditions page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyTermsPageDetails"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4334"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-tag"
+  name: "Verify Early Access tag displayed on On Air content thumbnail"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessTag"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3667"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-vpn-playback-restriction"
+  name: "Verify VPN playback restriction prevents playback and shows an error message"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyVPNPlaybackRestriction"
+  tags:
+    - auth
+    - vpn
+    - negative
+    - smoke
+  testCases:
+    - "IW3-T4699"
+  dependsOn:
+    - "login-to-ott"

@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { verifyAccountAndSubscriptionDetails, validateEditProfileNameFields } from '../../src/businessFunction/ott-auth-bfs';
+import { manageWatchlistItem } from '../../src/businessFunction/ott-watchlist-bfs';
+import { verifyAccountAndSubscriptionDetails } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
-test.setTimeout(120000);
 test.describe('Profile and account details', () => {
-  test('@high IW3-T3658: Verify the user is able see the Account & subscriptions details in My Space/Profile sections', async ({ page }) => {
+  test('@High IW3-T3658: Verify the user is able see the Account & subscriptions details in My Space/Profile sections', async ({ page }) => {
     const data = testCaseData['tc-auth-015-account-subscriptions'];
-    
     const result = await verifyAccountAndSubscriptionDetails(page, {
       mode: data.mode,
       providerName: data.providerName,
@@ -20,17 +19,17 @@ test.describe('Profile and account details', () => {
     expect(result.accountDetailsText).toContain(data.expectedSubscriptionText);
   });
 
-  test(' @medium IW3-T4024 Verify the validation of first name and last name fields inside the Edit Profile screen', async ({ page }) => {
-    const data = testCaseData['tc-auth-017-edit-profile-name-validation'];
-    const result = await validateEditProfileNameFields(page, {
+  
+  test('@High IW3-T3659: Verify the user is able to add/remove any contents to the My watchlist page using Add/Remove from watchlist', async ({ page }) => {
+    const data = testCaseData['tc-auth-016-watchlist-management'];
+    const result = await manageWatchlistItem(page, {
       mode: data.mode,
-      firstName: data.firstName,
-      lastName: data.lastName,
+      providerName: data.providerName,
+      searchTerm: data.searchTerm,
     });
-
-    //expect(result.isEditProfileScreenVisible).toBe(true);
-    expect(result.isFirstNameFieldVisible).toBe(true);
-    expect(result.isLastNameFieldVisible).toBe(true);
-    expect(result.isValidationErrorDisplayed).toBe(true);
+    expect(result.isAddedToWatchlist).toBe(true);
+    expect(result.addToastText).toContain('Added to watchlist');
+    expect(result.isRemovedFromWatchlist).toBe(true);
+    expect(result.removeToastText).toContain('Removed from watchlist');
   });
 });

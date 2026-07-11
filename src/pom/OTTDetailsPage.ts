@@ -38,7 +38,6 @@ export class OTTDetailsPage {
   private readonly dzmmTeleradyoItem: PageElement;
   private readonly watchlistContentCard: PageElement;
   private readonly freeTagBadge: PageElement;
-  //private readonly tryAgainCta: PageElement;
   private readonly loginCta: PageElement;
 
   constructor(page: Page) {
@@ -67,22 +66,14 @@ export class OTTDetailsPage {
     this.addToWatchlistButton = { selector: '#watchlist div' };
     this.removeFromWatchlistButton = { selector: '#watchlist div' };
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
-    //this.cinemaOnePhSection = { selector: 'text=Cinema One PH' };
     this.cinemaOnePhSection = {selector: 'img[alt="Cinema One PH"]'};
     this.liveChannelsTray = { text: 'Live Channels', selector: 'text=Live Channels' };
     this.dzmmTeleradyoItem = { text: 'DZMM Teleradyo', selector: 'text=DZMM Teleradyo' };
     this.watchlistContentCard = { selector: 'img[alt="My Illegal Wife"]' };
     this.freeTagBadge = { selector: 'img[alt="free"]' };
-    //this.tryAgainCta = { selector: '#retry div' };
     this.loginCta = { selector: '#login div' };
-    //this.clickEpisodeTwo={selector: 'text= Arrival' }
     this.skipIntroMarker = { selector: 'button:has-text("Skip Intro"), [data-testid*="skip-intro"], [aria-label*="Skip Intro"]' };
     this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"]' };
-    //    this.plansPageHeading = { selector: '[role="heading"][aria-label="Page title"]',text: 'Plans & Payment'};
-    //this.plansPageHeading = { role: 'Page title', text: 'Plans & Payment', selector: 'h1:has-text("Plans & Payment"), h2:has-text("Plans & Payment"), text=Plans & Payment' };
-    //this.plansPageHeading = { selector: 'Page title' , text: 'Plans & Payment' };
-    //await expect(page.getByLabel('Page title')).toContainText('Plans & Payment');
-
   }
 
   async navigate(): Promise<void> {
@@ -90,21 +81,8 @@ export class OTTDetailsPage {
     logger.pageNavigation(baseUrl);
     await this.page.goto(baseUrl);
     await this.pageUtils.waitForPageLoad();
-    // Give the home page a brief moment to stabilise before interacting
     await this.page.waitForTimeout(7000);
   }
-
-  // async acceptCookieSettingsIfVisible(): Promise<void> {
-  //   try {
-  //     const isVisible = await this.pageUtils.isVisible(this.cookieConfirmButton, 2000);
-  //     if (isVisible) {
-  //       logger.step('Accepting cookie settings popup');
-  //       await this.pageUtils.safeClick(this.cookieConfirmButton);
-  //     }
-  //   } catch (error) {
-  //     logger.debug('Cookie confirmation button not visible', error);
-  //   }
-  // }
 
   async clickShowsSection(): Promise<void> {
     logger.elementInteraction('click', 'Shows section link');
@@ -166,7 +144,6 @@ export class OTTDetailsPage {
       logger.debug('clickFirstEpisodeCard failed', err);
       return;
     }
-    // proceed with non-fatal waits only if page remains open
     try {
       if (this.page.isClosed()) return;
       await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 });
@@ -228,7 +205,6 @@ export class OTTDetailsPage {
       const watchlistIcon = this.page.locator('#watchlist div').first();
       await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 });
       await watchlistIcon.click({ timeout: 15000 });
-      //await this.page.waitForTimeout(5000);
     } catch (error) {
       logger.debug(`Hover content thumbnail and click remove watchlist icon failed for ${contentTitle}`, error);
     }
@@ -245,8 +221,6 @@ export class OTTDetailsPage {
   async hoverAMomentInTimeThumbnailAndClickRemoveWatchlistIcon(): Promise<void> {
     await this.hoverContentThumbnailAndClickRemoveWatchlistIcon('A Moment in Time');
   }
-
-//addedd
 async removeFromWatchlist(): Promise<void> {
     logger.elementInteraction('click', 'Remove from Watchlist');
     try {
@@ -328,17 +302,6 @@ async removeFromWatchlist(): Promise<void> {
       return false;
     }
   }
-
-  // async clickTryAgainCta(): Promise<void> {
-  //   logger.elementInteraction('click', 'Try Again CTA');
-  //   try {
-  //     const locator = this.page.locator(this.tryAgainCta.selector).first();
-  //     await locator.waitFor({ state: 'visible', timeout: 10000 });
-  //     await locator.click({ timeout: 10000 });
-  //   } catch (error) {
-  //     logger.debug('Try Again CTA click failed', error);
-  //   }
-  // }
 
   async clickLoginCta(): Promise<void> {
     logger.elementInteraction('click', 'Login CTA');
@@ -567,7 +530,6 @@ async removeFromWatchlist(): Promise<void> {
       try {
         await episodeCard.waitFor({ state: 'visible', timeout: 15000 });
       } catch {
-        // ignore wait failures and attempt to read text if possible
       }
       const text = (await episodeCard.textContent()) || '';
       return text.replace(/\s+/g, ' ').trim();
@@ -627,8 +589,6 @@ async removeFromWatchlist(): Promise<void> {
     }
   }
 
-
-
 async validateAddedToWatchlistPopup(): Promise<string> {
   logger.elementInteraction('verify', 'Added to Watchlist popup');
 
@@ -645,7 +605,7 @@ async validateAddedToWatchlistPopup(): Promise<string> {
         return text.trim();
       }
     } catch {
-      // continue to the next candidate
+    
     }
   }
 
@@ -719,9 +679,6 @@ async addToWatchlistAndGetToast(): Promise<string> {
       return false;
     }
   }
-
-  
-
   async getPlaybackEpisodeTitleText(): Promise<string> {
   const locator = await this.page.getByText('backThe Blood SistersS1 E1 · Episode').first();
 
@@ -781,7 +738,6 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isContentMetadataVisible(): Promise<boolean> {
     try {
-      // Use chain locators for metadata
       const mainElement = this.page.locator('main');
       const metadataLocator = mainElement.locator('[class*="metadata relative flex items"]').first();
       await metadataLocator.waitFor({ state: 'visible', timeout: 10000 });
@@ -793,7 +749,6 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async getContentDescriptionText(): Promise<string> {
     try {
-      // Use chain locators for metadata description
       const mainElement = this.page.locator('main');
       const metadataLocator = mainElement.locator('[class*="metadata relative flex items"]').first();
       await metadataLocator.waitFor({ state: 'visible', timeout: 10000 });

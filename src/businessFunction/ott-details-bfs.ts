@@ -25,11 +25,9 @@ export async function navigateToShowDetailsFromShowsPage(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting navigation to show details from Shows page');
-
   await authPage.acceptCookieSettingsIfVisible();
   await detailsPage.clickShowsSection();
   await detailsPage.clickFirstShowContent();
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const showDetailsHeading = isDetailsPageVisible
     ? await detailsPage.getShowDetailsHeadingText()
@@ -111,14 +109,13 @@ console.log(" Title", expectedTitle);
   const isSearchInputPopulated = enteredSearchText.toLowerCase().includes(searchTerm.toLowerCase());
   await authPage.submitSearch();
   await detailsPage.clickFirstSearchResult();
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const headingText = isDetailsPageVisible ? await detailsPage.getShowDetailsHeadingText() : '';
   const titleMatchesSearchTerm = headingText.toLowerCase().includes(expectedTitle.toLowerCase()) || headingText.toLowerCase().includes(searchTerm.toLowerCase());
-console.log("  serarched text", enteredSearchText);
-console.log("  Details page", isDetailsPageVisible);
-console.log(" Heading text in detail page", headingText);
-console.log(" Title", titleMatchesSearchTerm);
+  console.log("  serarched text", enteredSearchText);
+  console.log("  Details page", isDetailsPageVisible);
+  console.log(" Heading text in detail page", headingText);
+  console.log(" Title", titleMatchesSearchTerm);
   logger.assertion('Search input accepts guest search term', isSearchInputPopulated);
   logger.assertion('Details page visible after guest search', isDetailsPageVisible);
 
@@ -280,7 +277,7 @@ export async function verifySkipRecapMarkerDuringPlayback(
 
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
-    await detailsPage.clickPlayButton();
+    await detailsPage.clickEpisodeTwo();
     await page.waitForTimeout(3000);
   }
 

@@ -45,19 +45,13 @@ export async function verifyGuestWatchlistNavigationFromFreeAsset(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting guest watchlist navigation validation flow');
-
   await authPage.navigate();
-  //await authPage.acceptCookieSettingsIfVisible();
-  //await detailsPage.clickFirstShowContent();
   await detailsPage.clickWatchlistIcon();
-
   const isLoginScreenVisible = await authPage.isWelcomeHeadingVisible();
   const headingText = isLoginScreenVisible ? await authPage.getWelcomeHeadingText() : '';
   const isEmailFieldVisible = await authPage.isEmailFieldVisible();
   const isPasswordFieldVisible = await authPage.isPasswordFieldVisible();
-
   logger.assertion('Login screen visible after guest watchlist action', isLoginScreenVisible);
-
   return {
     isLoginScreenVisible,
     headingText,
@@ -79,22 +73,16 @@ export async function manageWatchlistItem(
   await authPage.clickLoginWithTVProvider();
   await authPage.selectTVProvider(input?.providerName ?? 'Frontier, a Verizon Company');
   await authPage.clickContinue();
-  //await authPage.clickProviderUsernameField();
   await authPage.enterProviderEmail('ftrfios1@frontier.com');
- // await authPage.clickProviderPasswordField();
   await authPage.enterProviderPassword('Frontier1');
   await authPage.clickProviderSignIn();
-  //await authPage.waitForLoadingPage(10);
-
   await authPage.clickSearchBar();
   await authPage.enterSearchText(input?.searchTerm ?? 'Nurse The Dead');
   await authPage.submitSearch();
   await detailsPage.clickFirstSearchResult();
-
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const isAddedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Add to Watchlist toast displayed', isAddedToWatchlist);
-
   const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
   const isRemovedFromWatchlist = removeToastText.toLowerCase().includes('removed');
   logger.assertion('Remove from Watchlist toast displayed', isRemovedFromWatchlist);
@@ -135,7 +123,7 @@ export async function verifyLiveContentWatchlistAbsence(
     await detailsPage.openLiveChannelsTray();
     await detailsPage.clickLiveContentByName(input?.liveContentName ?? 'DZMM Teleradyo');
   }
-
+  
   const isLiveIconVisible = await detailsPage.isLiveIconVisible();
   const isAddToWatchlistButtonVisible = await detailsPage.isAddToWatchlistButtonVisible();
 

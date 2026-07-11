@@ -78,9 +78,7 @@ export class OTTAuthPage {
         this.pageUtils = new PageUtils(page);
         this.emailField = { selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]', };
         this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]', };
-        this.passwordVisibilityToggle = {
-            selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")',
-        };
+        this.passwordVisibilityToggle = {selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")',};
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
@@ -115,8 +113,8 @@ export class OTTAuthPage {
         this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
         this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
         this.profileLink = { selector: 'role=img[name="account"]' };
-        this.profileSectionTextElement = { selector: 'text=/Account/i' };
-        this.accountDetailsTextElement = { selector: 'text=/Subscription/i' };
+        this.profileSectionTextElement = { selector: 'text=Account' };
+        this.accountDetailsTextElement = { selector: 'text=Subscription' };
         this.createAccountLinkFromHome = { role: 'link', text: 'Create Account', selector: 'a:has-text("Create Account")' };
         this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
@@ -245,20 +243,8 @@ export class OTTAuthPage {
         return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
     }
 
-    // async isPasswordVisibilityToggleVisible(): Promise<boolean> {
-    //     try {
-    //         const eyeIcon = this.page.locator('.absolute.top-\\[8px\\] > svg > path:nth-child(2)');
-    //         await eyeIcon.waitFor({ state: 'visible', timeout: 10000 });
-    //         return true;
-    //     } catch {
-    //         return false;
-    //     }
-    // }
-
     async clickPasswordVisibilityToggle(): Promise<void> {
         logger.elementInteraction('click', 'Password visibility toggle eye icon');
-        
-        // Click the eye icon (password visibility toggle) using SVG path selector
         const eyeIcon = this.page.locator('.absolute.top-\\[8px\\] > svg > path:nth-child(2)');
         await eyeIcon.waitFor({ state: 'visible', timeout: 10000 });
         await eyeIcon.click({ timeout: 10000 });
@@ -339,7 +325,7 @@ export class OTTAuthPage {
         try {
             await this.pageUtils.waitForElementToDisappear(this.loadingIndicator, timeout);
         } catch {
-            // ignore if not present
+            
         }
     }
 
@@ -389,8 +375,6 @@ export class OTTAuthPage {
 
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
-
-        // 1) Prefer role-based button (robust against layout changes)
         try {
             const searchBtn = this.page.getByRole('button', { name: /search/i }).first();
             if (await searchBtn.count()) {
@@ -401,24 +385,18 @@ export class OTTAuthPage {
         } catch (err) {
             logger.debug('Role-based search button click failed', err);
         }
-
-        // 2) Try the existing image/icon selector
         try {
             await this.pageUtils.safeClick(this.searchBarIcon);
             return;
         } catch (err) {
             logger.debug('Search icon click failed', err);
         }
-
-        // 3) Fallback: focus / click the search input directly
         try {
             await this.pageUtils.safeClick(this.searchBar);
             return;
         } catch (err) {
             logger.debug('Search input click failed, using direct locator', err);
         }
-
-        // Final fallback: direct locator click with longer wait
         const input = this.page.locator(this.searchBar.selector).first();
         await input.waitFor({ state: 'visible', timeout: 10000 });
         await input.click();
@@ -568,7 +546,6 @@ export class OTTAuthPage {
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         await locator.check({ force: true });
     }
-//Updaed
     async isMarketingCheckboxVisible(expectedMarketingText: string): Promise<boolean> {
         const isLabelVisible = await this.pageUtils.isVisible(this.marketingCheckbox, 10000);
         if (!isLabelVisible) {

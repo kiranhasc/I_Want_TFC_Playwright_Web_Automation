@@ -163,4 +163,23 @@ test.describe('Home Page Launch', () => {
         expect(result.sectionPageVisible).toBe(true);
         expect(result.currentUrl).toContain(data.expectedUrlPart);
     });
+
+    test('IW3-T1870: Verify user is able to login with valid credentials', async ({ page }) => {
+       const data = testCaseData['tc-auth-006-valid-login'];
+       const result = await loginToOTT(page, { mode: data.mode });
+       expect(result.isLoggedIn).toBe(true);
+       expect(result.homeTabVisible).toBe(true);
+   });
+
+   test('@High - IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+       const data = testCaseData['tc-play-001-free-asset-playback'];
+       const result = await playFreeAsset(page, {
+           email: process.env.VALID_LOGIN_EMAIL,
+           password: process.env.VALID_LOGIN_PASSWORD
+       });
+       expect(result.isLoggedIn).toBe(true);
+       expect(result.isPlayableContentDetected).toBe(true);
+       expect(result.playAttempted).toBe(true);
+       expect(result.playbackStarted).toBe(true);
+   });
 });

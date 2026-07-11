@@ -13,8 +13,8 @@ export class PageUtils {
    * Wait for page to be fully loaded
    */
   async waitForPageLoad(timeout: number = 30000): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout });
-    await this.page.waitForLoadState('domcontentloaded', { timeout });
+    await this.page.waitForLoadState('domcontentloaded', { timeout }).catch(() => undefined);
+    await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
   }
 
   /**
@@ -141,7 +141,7 @@ export class PageUtils {
    * Wait for network requests to complete
    */
   async waitForNetworkIdle(timeout: number = 30000): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout });
+    await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
   }
 
   /**

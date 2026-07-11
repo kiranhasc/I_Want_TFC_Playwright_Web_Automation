@@ -22,6 +22,12 @@ export interface InvalidLoginOutput {
     errorMessage: string;
 }
 
+// export interface TVProviderLoginInput {
+//     providerName: string;
+//     providerUsername: string;
+//     providerPassword: string;
+// }
+
 export interface TVProviderLoginOutput {
     isLoggedIn: boolean;
 }
@@ -74,6 +80,10 @@ export interface VerifyWelcomeScreenOutput {
     isNewHereLinkVisible: boolean;
     isCreateAccountLinkVisible: boolean;
 }
+
+// function normalizeLoginMode(mode?: string): 'invalid' | 'valid~' {
+//     return mode === 'valid' ? 'valid' : 'invalid';
+// }
 
 function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' {
     if (mode === 'valid') {
@@ -133,6 +143,8 @@ export interface EmptyCredentialsOutput {
     isErrorDisplayed: boolean;
     errorMessage: string;
 }
+// MOBILE_LOGIN_COUNTRY_CODE=63
+// MOBILE_LOGIN_MOBILE_NUMBER=9178039002
 
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
@@ -441,11 +453,14 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickForgotPassword();
+
     const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
     logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
+
     await authPage.clickEmailField();
     await authPage.enterEmail(input.mobileNumber);
     await authPage.clickProceed();
+
     const isErrorDisplayed = await authPage.isErrorMessageVisible();
     const errorMessage = isErrorDisplayed ? await authPage.getErrorMessage() : '';
     const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
@@ -683,16 +698,16 @@ export async function verifyAccountAndSubscriptionDetails(
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
 
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickLoginWithTVProvider();
-    await authPage.selectTVProvider(input?.providerName ?? 'credentials');
-    await authPage.clickContinue();
-    await authPage.enterProviderEmail('ftrfios1@frontier.com');
-    await authPage.enterProviderPassword('Frontier1');
-    await authPage.clickProviderSignIn();
-    await authPage.waitForLoadingToDisappear();
-    await authPage.openProfileSettings();
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickLoginWithTVProvider();
+  await authPage.selectTVProvider(input?.providerName ?? 'credentials');
+  await authPage.clickContinue();
+  await authPage.enterProviderEmail('ftrfios1@frontier.com');
+  await authPage.enterProviderPassword('Frontier1');
+  await authPage.clickProviderSignIn();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.openProfileSettings();
 
     const profileSectionText = await authPage.getProfileSectionText();
     const accountDetailsText = await authPage.getAccountDetailsText();
@@ -776,26 +791,35 @@ export async function validateEditProfileNameFields(
         validationErrorText,
     };
 }
+
 export async function verifyPasswordVisibilityToggle(
     page: any,
     input: VerifyPasswordVisibilityToggleInput
 ): Promise<VerifyPasswordVisibilityToggleOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting password visibility toggle validation flow');
+
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();
     await authPage.enterEmail(input.email);
     await authPage.clickPasswordField();
     await authPage.enterPassword(input.password);
+
     const initialPasswordType = await authPage.getPasswordFieldType();
+
     logger.step('Clicking password visibility toggle button');
     await authPage.clickPasswordVisibilityToggle();
+
     const afterTogglePasswordType = await authPage.getPasswordFieldType();
+    
+    // Verify password text is visible by checking if password field is now type="text"
     const passwordField = page.locator('input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]').first();
     const isPasswordTextVisible = await passwordField.count() > 0;
+
     logger.assertion('Password field type changes after toggle', initialPasswordType !== afterTogglePasswordType);
     logger.assertion('Password text is visible after toggle', isPasswordTextVisible);
+
     return {
         isToggleVisible: true,
         initialPasswordType,
@@ -803,9 +827,11 @@ export async function verifyPasswordVisibilityToggle(
         isPasswordTextVisible,
     };
 }
+
 export async function submitEmptyCredentials(page: any, input: EmptyCredentialsInput): Promise<EmptyCredentialsOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting empty credentials validation flow');
+
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();

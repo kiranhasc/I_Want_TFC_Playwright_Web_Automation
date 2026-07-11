@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { verifyCreateAccountScreenUI, enterCreateAccountEmailOnly, submitCreateAccountInvalidCredentials, validateEditProfileNameFields } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { submitEmptyCredentials } from '../../src/businessFunction/ott-auth-bfs';
-import {verifyWelcomeScreenUI,loginWithInvalidCredentials,submitForgotPasswordMobileNumber,loginWithMobileNumber,submitUnregisteredUserLogin,verifyPasswordVisibilityToggle,} from '../../src/businessFunction/ott-auth-bfs';
+import {verifyWelcomeScreenUI,loginWithInvalidCredentials,submitForgotPasswordMobileNumber,loginWithMobileNumber,submitUnregisteredUserLogin,verifyPasswordVisibilityToggle} from '../../src/businessFunction/ott-auth-bfs';
 
 test.describe('Account creation UI', () => {
     test('@Low IW3-T1849: Verify the UI/UX of the Create an account screen', async ({ page }) => {
@@ -177,4 +177,3 @@ test('@Medium IW3-T4024 Verify the validation of first name and last name fields
     expect(result.isLastNameFieldVisible).toBe(true);
     expect(result.isValidationErrorDisplayed).toBe(true);
   });
-

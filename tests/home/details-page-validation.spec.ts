@@ -4,7 +4,7 @@ import { navigateToShowDetailsFromShowsPage } from '../../src/businessFunction/o
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Shows content details navigation', () => {
-  test('IW3-T1895: Verify the user navigates to content details page post tapping on Show contents from Shows page', async ({ page }) => {
+  test('@High - IW3-T1895: Verify the user navigates to content details page post tapping on Show contents from Shows page', async ({ page }) => {
     const data = testCaseData['tc-disc-001-show-details-navigation'];
     const loginResult = await loginToOTT(page, {
       mode: data.mode

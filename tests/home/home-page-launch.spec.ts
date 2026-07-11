@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { loginWithInvalidCredentials, loginToOTT, loginWithMobileNumber, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs } from '../../src/businessFunction/ott-auth-bfs';
+import { playFreeAsset } from '../../src/businessFunction/ott-playback-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 
 test.describe('Home Page Launch', () => {
-    test('IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
+    test('@Low - IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
         const data = testCaseData['tc-auth-001-invalid-credentials'];
         const result = await loginWithInvalidCredentials(page, {
             mode: data.mode
@@ -14,14 +15,14 @@ test.describe('Home Page Launch', () => {
         expect(result.errorMessage).toBe(data.expectedErrorMessage);
     });
 
-    test('IW3-T1860: Verify the navigation on tapping Forgot Password? option', async ({ page }) => {
+    test('@High - IW3-T1860: Verify the navigation on tapping Forgot Password? option', async ({ page }) => {
         const data = testCaseData['tc-auth-002-forgot-password'];
         const result = await navigateToForgotPassword(page, { expectedHeading: data.expectedHeading });
         expect(result.isVisible).toBe(true);
         expect(result.headingText).toBe(data.expectedHeading);
     });
 
-    test('IW3-T1861: Verify the navigation on entering Email and tapping Proceed button on the Forgot Password? screen', async ({ page }) => {
+    test('@Medium - IW3-T1861: Verify the navigation on entering Email and tapping Proceed button on the Forgot Password? screen', async ({ page }) => {
         const data = testCaseData['tc-auth-003-forgot-password-proceed'];
         const result = await submitForgotPasswordEmail(page, {
             email: data.email,
@@ -32,7 +33,7 @@ test.describe('Home Page Launch', () => {
         expect(result.otpHeadingText).toBe(data.expectedOTPHeading);
     });
 
-    test('IW3-T1864: Verify the message displayed on entering the mobile number on Forgot Password? screen', async ({ page }) => {
+    test('@Medium - IW3-T1864: Verify the message displayed on entering the mobile number on Forgot Password? screen', async ({ page }) => {
         const data = testCaseData['tc-auth-004-forgot-password-mobile'];
         const result = await submitForgotPasswordMobileNumber(page, {
             mobileNumber: data.mobileNumber,
@@ -54,7 +55,7 @@ test.describe('Home Page Launch', () => {
         expect(result.homeTabVisible).toBe(true);
     });
 
-    test('IW3-T1869: Verify the UI/UX of the Welcome to iWant screen for PH region', async ({ page }) => {
+    test('@Medium - IW3-T1869: Verify the UI/UX of the Welcome to iWant screen for PH region', async ({ page }) => {
         const data = testCaseData['tc-auth-005-welcome-ui'];
         const result = await verifyWelcomeScreenUI(page, {
             expectedHeading: data.expectedHeading,
@@ -81,7 +82,20 @@ test.describe('Home Page Launch', () => {
         expect(result.homeTabVisible).toBe(true);
     });
 
-    test('IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
+    test('@High - IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+        const data = testCaseData['tc-play-001-free-asset-playback'];
+        const result = await playFreeAsset(page, {
+            email: process.env.VALID_LOGIN_EMAIL,
+            password: process.env.VALID_LOGIN_PASSWORD
+        });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.isPlayableContentDetected).toBe(true);
+        expect(result.playAttempted).toBe(true);
+        expect(result.playbackStarted).toBe(true);
+    });
+
+    test('@Medium - IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
         const data = testCaseData['tc-auth-007-navigate-tabs'];
         const result = await navigateAndVerifyTabs(page, {
             mode: data.mode,

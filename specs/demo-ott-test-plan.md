@@ -71,16 +71,6 @@ This test plan covers validation of application launch behavior for the OTT plat
       * expect "New here?" link should be displayed.
       * expect "Create Account" link should be displayed.
 
-<!-- #### 10.5. IW3-T1890 Verify user is able to login with valid credentials.
-**File:** ``tests/home/home-page-launch.spec.ts`
-**Steps:**
-   1. Open the browser.
-   2. Enter the URL
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   4. Login with valid Email and Password
-   5. Wait until "Loading.." disappered
-      * expect "Home" Tab should be displayed -->
-
 #### 10.5. IW3-T1880 Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons.
 **File:** ``tests/home/home-page-launch.spec.ts`
 **Steps:**

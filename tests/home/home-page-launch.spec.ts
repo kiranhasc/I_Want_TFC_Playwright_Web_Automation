@@ -69,13 +69,6 @@ test.describe('Home Page Launch', () => {
         expect(result.isCreateAccountLinkVisible).toBe(true);
     });
 
-    // test('@Low @IW3-T1890: Verify user is able to login with valid credentials', async ({ page }) => {
-    //     const data = testCaseData['tc-auth-006-valid-login'];
-    //     const result = await loginToOTT(page, { mode: data.mode });
-    //     expect(result.isLoggedIn).toBe(true);
-    //     expect(result.homeTabVisible).toBe(true);
-    // });
-
     test('@Medium IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
         const data = testCaseData['tc-auth-007-navigate-tabs'];
         const result = await navigateAndVerifyTabs(page, {

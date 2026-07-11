@@ -1,6 +1,6 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTSettingsPage } from '../pom/OTTSettingsPage';
-import { OTTDetailsPage } from '../pom/OTTDetailsPage.ts';
+import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 
@@ -23,12 +23,6 @@ export interface InvalidLoginOutput {
     isLoggedIn: boolean;
     errorMessage: string;
 }
-
-// export interface TVProviderLoginInput {
-//     providerName: string;
-//     providerUsername: string;
-//     providerPassword: string;
-// }
 
 export interface TVProviderLoginOutput {
     isLoggedIn: boolean;
@@ -126,6 +120,18 @@ export interface VerifyCreateAccountScreenOutput {
     isLoginLinkVisible: boolean;
 }
 
+export interface EnterCreateAccountCredentialsInput {
+    email: string;
+    password: string;
+}
+
+export interface EnterCreateAccountCredentialsOutput {
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    emailFieldValue: string;
+    passwordFieldValue: string;
+}
+
 export interface EmptyCredentialsInput {
     email: string;
     password: string;
@@ -136,8 +142,6 @@ export interface EmptyCredentialsOutput {
     isErrorDisplayed: boolean;
     errorMessage: string;
 }
-// MOBILE_LOGIN_COUNTRY_CODE=63
-// MOBILE_LOGIN_MOBILE_NUMBER=9178039002
 
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
@@ -178,6 +182,49 @@ export async function loginWithInvalidCredentials(page: any, input?: Partial<Inv
     logger.assertion('Invalid login error displayed', !!errorMessage);
     return {
         isLoggedIn: false,
+        errorMessage,
+    };
+}
+
+export interface SubmitUnregisteredUserLoginInput {
+    email: string;
+    password: string;
+    expectedErrorMessage?: string;
+}
+
+export interface SubmitUnregisteredUserLoginOutput {
+    isErrorDisplayed: boolean;
+    errorMessage: string;
+}
+
+export async function submitUnregisteredUserLogin(
+    page: any,
+    input: SubmitUnregisteredUserLoginInput
+): Promise<SubmitUnregisteredUserLoginOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting unregistered user login validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(input.password);
+    await authPage.clickContinue();
+
+    const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
+    const isErrorDisplayed = !!errorMessage;
+    logger.assertion('Unregistered user login error displayed', isErrorDisplayed);
+
+    if (input.expectedErrorMessage) {
+        logger.assertion(
+            'Unregistered user login error matches expected',
+            errorMessage.includes(input.expectedErrorMessage)
+        );
+    }
+
+    return {
+        isErrorDisplayed,
         errorMessage,
     };
 }
@@ -416,6 +463,34 @@ export async function verifyParentalPinOptionVisibility(page: any, input?: Parti
     return {
         isLoggedIn: true,
         parentalControlsVisible,
+    };
+}
+
+export async function verifyPasswordVisibilityToggle(
+    page: any,
+    input: VerifyPasswordVisibilityToggleInput
+): Promise<VerifyPasswordVisibilityToggleOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting password visibility toggle validation flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(input.password);
+    const initialPasswordType = await authPage.getPasswordFieldType();
+    logger.step('Clicking password visibility toggle button');
+    await authPage.clickPasswordVisibilityToggle();
+    const afterTogglePasswordType = await authPage.getPasswordFieldType();
+    const passwordField = page.locator('input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]').first();
+    const isPasswordTextVisible = await passwordField.count() > 0;
+    logger.assertion('Password field type changes after toggle', initialPasswordType !== afterTogglePasswordType);
+    logger.assertion('Password text is visible after toggle', isPasswordTextVisible);
+    return {
+        isToggleVisible: true,
+        initialPasswordType,
+        afterTogglePasswordType,
+        isPasswordTextVisible,
     };
 }
 
@@ -1018,14 +1093,11 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickForgotPassword();
-
     const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
     logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
-
     await authPage.clickEmailField();
     await authPage.enterEmail(input.mobileNumber);
     await authPage.clickProceed();
-
     const isErrorDisplayed = await authPage.isErrorMessageVisible();
     const errorMessage = isErrorDisplayed ? await authPage.getErrorMessage() : '';
     const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
@@ -1100,10 +1172,14 @@ export async function verifyCreateAccountScreenUI(page: any, input: VerifyCreate
     const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
     const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
     const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
-    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible();
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    console.log('isTermsCheckboxVisible', isTermsCheckboxVisible);
+    console.log('isMarketingCheckboxVisible', isMarketingCheckboxVisible);
     const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
     const isAlreadyHaveAccountTextVisible = await authPage.isAlreadyHaveAccountTextVisible();
     const isLoginLinkVisible = await authPage.isCreateAccountLoginLinkVisible();
+    console.log('isAlreadyHaveAccountTextVisible', isAlreadyHaveAccountTextVisible);
+    console.log('isLoginLinkVisible', isLoginLinkVisible);
 
     logger.assertion('Create account heading visible', isHeadingVisible);
     logger.assertion('Email field visible on create account screen', isEmailFieldVisible);
@@ -1124,6 +1200,232 @@ export async function verifyCreateAccountScreenUI(page: any, input: VerifyCreate
         isContinueButtonVisible,
         isAlreadyHaveAccountTextVisible,
         isLoginLinkVisible,
+    };
+}
+
+export async function enterCreateAccountCredentials(page: any, input: EnterCreateAccountCredentialsInput): Promise<EnterCreateAccountCredentialsOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting create account credentials entry flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password);
+
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    const emailFieldValue = await authPage.getCreateAccountEmailValue();
+    const passwordFieldValue = await authPage.getCreateAccountPasswordValue();
+
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+    logger.assertion('Create account password field visible', isPasswordFieldVisible);
+
+    return {
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        emailFieldValue,
+        passwordFieldValue,
+    };
+}
+
+export interface EnterCreateAccountEmailOnlyInput {
+    email: string;
+}
+
+export interface EnterCreateAccountEmailOnlyOutput {
+    isEmailFieldVisible: boolean;
+    emailFieldValue: string;
+}
+
+export async function enterCreateAccountEmailOnly(page: any, input: EnterCreateAccountEmailOnlyInput): Promise<EnterCreateAccountEmailOnlyOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting create account email-only entry flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    await authPage.enterCreateAccountEmail(input.email);
+
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    const emailFieldValue = await authPage.getCreateAccountEmailValue();
+
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+
+    return {
+        isEmailFieldVisible,
+        emailFieldValue,
+    };
+}
+
+export interface SubmitCreateAccountInvalidCredentialsInput {
+    email: string;
+    password: string;
+    expectedErrorMessage?: string;
+}
+
+export interface SubmitCreateAccountInvalidCredentialsOutput {
+    isErrorDisplayed: boolean;
+    errorMessage: string;
+}
+
+export async function submitCreateAccountInvalidCredentials(
+    page: any,
+    input: SubmitCreateAccountInvalidCredentialsInput
+): Promise<SubmitCreateAccountInvalidCredentialsOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting create account invalid credentials validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password);
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.clickCreateAccountContinue();
+    const errorMessage = await authPage.getErrorMessage();
+    const isErrorDisplayed = !!errorMessage;
+    logger.assertion('Create account invalid credentials error displayed', isErrorDisplayed);
+    if (input.expectedErrorMessage) {
+        logger.assertion(
+            'Create account invalid credentials error matches expected',
+            errorMessage.includes(input.expectedErrorMessage)
+        );
+    }
+
+    return {
+        isErrorDisplayed,
+        errorMessage,
+    };
+}
+
+export interface VerifyPasswordVisibilityToggleInput {
+    email: string;
+    password: string;
+}
+
+export interface VerifyPasswordVisibilityToggleOutput {
+    isToggleVisible: boolean;
+    initialPasswordType: string;
+    afterTogglePasswordType: string;
+    isPasswordTextVisible: boolean;
+}
+
+export interface VerifyAccountAndSubscriptionDetailsInput {
+    mode?: string;
+    providerName?: string;
+    expectedSectionName?: string;
+    expectedSubscriptionText?: string;
+}
+
+export interface VerifyAccountAndSubscriptionDetailsOutput {
+    isProfileSectionVisible: boolean;
+    isAccountAndSubscriptionDetailsVisible: boolean;
+    profileSectionText: string;
+    accountDetailsText: string;
+}
+
+export async function verifyAccountAndSubscriptionDetails(
+    page: any,
+    input?: Partial<VerifyAccountAndSubscriptionDetailsInput>
+): Promise<VerifyAccountAndSubscriptionDetailsOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting account and subscription details verification flow');
+
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickLoginWithTVProvider();
+    await authPage.selectTVProvider(input?.providerName ?? 'credentials');
+    await authPage.clickContinue();
+    await authPage.enterProviderEmail('ftrfios1@frontier.com');
+    await authPage.enterProviderPassword('Frontier1');
+    await authPage.clickProviderSignIn();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.openProfileSettings();
+
+    const profileSectionText = await authPage.getProfileSectionText();
+    const accountDetailsText = await authPage.getAccountDetailsText();
+    const expectedSectionName = (input?.expectedSectionName ?? '').trim().toLowerCase();
+    const expectedSubscriptionText = (input?.expectedSubscriptionText ?? '').trim().toLowerCase();
+    const isProfileSectionVisible = expectedSectionName
+        ? profileSectionText.toLowerCase().includes(expectedSectionName)
+        : profileSectionText.length > 0;
+    const isAccountAndSubscriptionDetailsVisible = expectedSubscriptionText
+        ? accountDetailsText.toLowerCase().includes(expectedSubscriptionText)
+        : accountDetailsText.length > 0;
+
+    logger.assertion('Profile section visible', isProfileSectionVisible);
+    logger.assertion('Account and subscription details visible', isAccountAndSubscriptionDetailsVisible);
+
+    return {
+        isProfileSectionVisible,
+        isAccountAndSubscriptionDetailsVisible,
+        profileSectionText,
+        accountDetailsText,
+    };
+}
+
+export interface ValidateEditProfileNameFieldsInput {
+    mode?: string;
+    firstName: string;
+    lastName: string;
+}
+
+export interface ValidateEditProfileNameFieldsOutput {
+    isEditProfileScreenVisible: boolean;
+    isFirstNameFieldVisible: boolean;
+    isLastNameFieldVisible: boolean;
+    isValidationErrorDisplayed: boolean;
+    validationErrorText: string;
+}
+
+export async function validateEditProfileNameFields(
+    page: any,
+    input: ValidateEditProfileNameFieldsInput
+): Promise<ValidateEditProfileNameFieldsOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting edit profile name validation flow');
+
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+
+    await authPage.openProfileSettings();
+    await authPage.openEditProfile();
+
+    const isEditProfileScreenVisible = await authPage.isEditProfileScreenVisible();
+    const isFirstNameFieldVisible = await authPage.isFirstNameFieldVisible();
+    const isLastNameFieldVisible = await authPage.isLastNameFieldVisible();
+
+    await authPage.enterFirstName(input.firstName);
+    await authPage.enterLastName(input.lastName);
+    await authPage.clickSaveProfile();
+
+    const isValidationErrorDisplayed = await authPage.isProfileValidationErrorVisible();
+    const validationErrorText = isValidationErrorDisplayed ? await authPage.getProfileValidationErrorText() : '';
+
+    logger.assertion('Edit profile screen visible', isEditProfileScreenVisible);
+    logger.assertion('First name field visible', isFirstNameFieldVisible);
+    logger.assertion('Last name field visible', isLastNameFieldVisible);
+    logger.assertion('Validation error displayed for invalid names', isValidationErrorDisplayed);
+
+    return {
+        isEditProfileScreenVisible,
+        isFirstNameFieldVisible,
+        isLastNameFieldVisible,
+        isValidationErrorDisplayed,
+        validationErrorText,
     };
 }
 
@@ -1759,7 +2061,6 @@ export async function verifyParentalPinInvalidPlaybackPrompt(page: any, input?: 
 export async function submitEmptyCredentials(page: any, input: EmptyCredentialsInput): Promise<EmptyCredentialsOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting empty credentials validation flow');
-
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();
@@ -1778,4 +2079,3 @@ export async function submitEmptyCredentials(page: any, input: EmptyCredentialsI
         errorMessage,
     };
 }
-

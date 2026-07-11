@@ -9,6 +9,7 @@ export class OTTAuthPage {
     private readonly pageUtils: PageUtils;
     private readonly emailField: PageElement;
     private readonly passwordField: PageElement;
+    private readonly passwordVisibilityToggle: PageElement;
     private readonly continueButton: PageElement;
     private readonly proceedButton: PageElement;
     private readonly tvProviderLoginOption: PageElement;
@@ -54,12 +55,15 @@ export class OTTAuthPage {
     private readonly myWatchlistRail: PageElement;
     private readonly topStreamedRail: PageElement;
     private readonly profileLink: PageElement;
+    private readonly profileSectionTextElement: PageElement;
+    private readonly accountDetailsTextElement: PageElement;
     private readonly createAccountLinkFromHome: PageElement;
     private readonly createAccountHeading: PageElement;
     private readonly createAccountEmailField: PageElement;
     private readonly createAccountPasswordField: PageElement;
     private readonly termsCheckbox: PageElement;
     private readonly marketingCheckbox: PageElement;
+    private readonly marketingCheckboxDescription: PageElement;
     private readonly createAccountContinueButton: PageElement;
     private readonly alreadyHaveAccountText: PageElement;
     private readonly createAccountLoginLink: PageElement;
@@ -69,6 +73,14 @@ export class OTTAuthPage {
     private readonly countryCodeOption: PageElement;
     private readonly mobileNumberField: PageElement;
     private readonly mobilePasswordField: PageElement;
+    private readonly accountAndSettingsLink: PageElement;
+    private readonly editProfileOption: PageElement;
+    private readonly editProfileHeading: PageElement;
+    private readonly firstNameField: PageElement;
+    private readonly lastNameField: PageElement;
+    private readonly profileSaveButton: PageElement;
+    private readonly firstNameValidationError: PageElement;
+    private readonly lastNameValidationError: PageElement;
 
 
     constructor(page: Page) {
@@ -76,13 +88,14 @@ export class OTTAuthPage {
         this.pageUtils = new PageUtils(page);
         this.emailField = { selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]', };
         this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]', };
+        this.passwordVisibilityToggle = {selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")',};
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
         this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
-        this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
+        this.emailErrorMessage = { selector: 'form', text: 'Invalid email address' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
@@ -120,12 +133,15 @@ export class OTTAuthPage {
         this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
         this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
         this.profileLink = { selector: 'role=img[name="account"]' };
+        this.profileSectionTextElement = { selector: 'text=Account' };
+        this.accountDetailsTextElement = { selector: 'text=Subscription' };
         this.createAccountLinkFromHome = { role: 'link', text: 'Create Account', selector: 'a:has-text("Create Account")' };
         this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
         this.createAccountPasswordField = { selector: 'input[name="userPassword"]' };
-        this.termsCheckbox = { selector: 'label:has-text("I agree to the Terms and")' };
-        this.marketingCheckbox = { selector: 'label:has-text("I agree to receive marketing")' };
+        this.termsCheckbox = { selector: 'input#cem' };
+        this.marketingCheckbox = { selector: 'text=I agree to receive marketing', text: 'I agree to receive marketing' };
+        this.marketingCheckboxDescription = { selector: 'form' };
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
@@ -136,6 +152,14 @@ export class OTTAuthPage {
         this.countryCodeOption = { selector: 'text=63' };
         this.mobileNumberField = { selector: '#userMobile, input[type="tel"], input[name*="phone"], input[name*="mobile"]' };
         this.mobilePasswordField = { selector: 'input[placeholder*="Password"], input[type="password"], input[name*="password"]' };
+        this.accountAndSettingsLink = { role: 'link', text: 'Account & Settings', selector: 'a:has-text("Account & Settings"), text=Account & Settings' };
+        this.editProfileOption = { role: 'button', text: 'Edit Profile', selector: 'button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
+        this.editProfileHeading = { role: 'heading', text: 'Edit Profile', selector: 'h1:has-text("Edit Profile"), h2:has-text("Edit Profile")' };
+        this.firstNameField = { selector: 'input[name*="first"], input[placeholder*="First Name"], input[placeholder*="First name"], input[aria-label*="First Name"]' };
+        this.lastNameField = { selector: 'input[name*="last"], input[placeholder*="Last Name"], input[placeholder*="Last name"], input[aria-label*="Last Name"]' };
+        this.profileSaveButton = { role: 'button', text: 'Save', selector: 'button:has-text("Save")' };
+        this.firstNameValidationError = { selector: '//*[@id="first name-helper-text"]' };
+        this.lastNameValidationError = { selector: '//*[@id="last name-helper-text"]' };
     }
 
     async navigate(): Promise<void> {
@@ -243,6 +267,19 @@ export class OTTAuthPage {
         return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
     }
 
+    async clickPasswordVisibilityToggle(): Promise<void> {
+        logger.elementInteraction('click', 'Password visibility toggle eye icon');
+        const eyeIcon = this.page.locator('.absolute.top-\\[8px\\] > svg > path:nth-child(2)');
+        await eyeIcon.waitFor({ state: 'visible', timeout: 10000 });
+        await eyeIcon.click({ timeout: 10000 });
+    }
+
+    async getPasswordFieldType(): Promise<string> {
+        const locator = this.page.locator(this.passwordField.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.getAttribute('type')) || '';
+    }
+
     async getEmptyCredentialsErrorMessage(): Promise<string> {
         return await this.pageUtils.getTextContent(this.emptyCredentialsErrorMessage, 10000);
     }
@@ -312,7 +349,7 @@ export class OTTAuthPage {
         try {
             await this.pageUtils.waitForElementToDisappear(this.loadingIndicator, timeout);
         } catch {
-            // ignore if not present
+            
         }
     }
 
@@ -721,7 +758,31 @@ export class OTTAuthPage {
 
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
-        await this.pageUtils.safeClick(this.searchBarIcon);
+        try {
+            const searchBtn = this.page.getByRole('button', { name: /search/i }).first();
+            if (await searchBtn.count()) {
+                await searchBtn.waitFor({ state: 'visible', timeout: 5000 });
+                await searchBtn.click();
+                return;
+            }
+        } catch (err) {
+            logger.debug('Role-based search button click failed', err);
+        }
+        try {
+            await this.pageUtils.safeClick(this.searchBarIcon);
+            return;
+        } catch (err) {
+            logger.debug('Search icon click failed', err);
+        }
+        try {
+            await this.pageUtils.safeClick(this.searchBar);
+            return;
+        } catch (err) {
+            logger.debug('Search input click failed, using direct locator', err);
+        }
+        const input = this.page.locator(this.searchBar.selector).first();
+        await input.waitFor({ state: 'visible', timeout: 10000 });
+        await input.click();
     }
 
     async enterSearchQuery(query: string): Promise<void> {
@@ -744,6 +805,17 @@ export class OTTAuthPage {
         const locator = this.page.locator(this.searchBar.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.getAttribute('placeholder')) || '';
+    }
+
+    async enterSearchText(text: string): Promise<void> {
+        logger.elementInteraction('type', 'Search input');
+        await this.pageUtils.safeType(this.searchBar, text);
+    }
+
+    async submitSearch(): Promise<void> {
+        logger.elementInteraction('submit', 'Search input');
+        await this.page.keyboard.press('Enter');
+        await this.page.waitForLoadState('networkidle');
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
@@ -829,12 +901,69 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.createAccountPasswordField, 10000);
     }
 
-    async isTermsCheckboxVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.termsCheckbox, 10000);
+    async clickCreateAccountContinue(): Promise<void> {
+        logger.elementInteraction('click', 'Create account Continue button');
+        await this.pageUtils.safeClick(this.createAccountContinueButton);
     }
 
-    async isMarketingCheckboxVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.marketingCheckbox, 10000);
+    async enterCreateAccountEmail(email: string): Promise<void> {
+        logger.elementInteraction('type', 'Create account email field');
+        await this.pageUtils.safeType(this.createAccountEmailField, email);
+    }
+
+    async enterCreateAccountPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'Create account password field');
+        await this.pageUtils.safeType(this.createAccountPasswordField, password);
+    }
+
+    async getCreateAccountEmailValue(): Promise<string> {
+        const locator = this.page.locator(this.createAccountEmailField.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.inputValue()) || '';
+    }
+
+    async getCreateAccountPasswordValue(): Promise<string> {
+        const locator = this.page.locator(this.createAccountPasswordField.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.inputValue()) || '';
+    }
+
+    async isTermsCheckboxVisible(): Promise<boolean> {
+        const locator = this.page.getByRole('checkbox', { name: 'I agree to the Terms and' }).first();
+        try {
+            await locator.waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async isTermsCheckboxChecked(): Promise<boolean> {
+        const locator = this.page.getByRole('checkbox', { name: 'I agree to the Terms and' }).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return await locator.isChecked().catch(() => false);
+    }
+
+    async selectCreateAccountTermsCheckbox(): Promise<void> {
+        logger.elementInteraction('check', 'Create account terms checkbox');
+        const locator = this.page.getByRole('checkbox', { name: 'I agree to the Terms and' }).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        await locator.check({ force: true });
+    }
+    async isMarketingCheckboxVisible(expectedMarketingText: string): Promise<boolean> {
+        const isLabelVisible = await this.pageUtils.isVisible(this.marketingCheckbox, 10000);
+        if (!isLabelVisible) {
+            return false;
+        }
+
+        let formText = '';
+        try {
+            formText = await this.pageUtils.getTextContent(this.marketingCheckboxDescription, 10000);
+        } catch {
+            formText = '';
+        }
+
+        return formText.includes(expectedMarketingText);
     }
 
     async isCreateAccountContinueButtonVisible(): Promise<boolean> {
@@ -847,5 +976,73 @@ export class OTTAuthPage {
 
     async isCreateAccountLoginLinkVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.createAccountLoginLink, 10000);
+    }
+
+    async getProfileSectionText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.profileSectionTextElement, 10000);
+    }
+
+    async getAccountDetailsText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.accountDetailsTextElement, 10000);
+    }
+
+    async openProfileSettings(): Promise<void> {
+        logger.step('Opening profile settings');
+        await this.clickAccountIcon();
+        await this.page.getByText('Account & Settings').click();
+    }
+
+    async openEditProfile(): Promise<void> {
+        logger.step('Opening edit profile screen');
+        await this.page.getByRole('button', { name: 'Edit Profile' }).click();
+    }
+
+    async isEditProfileScreenVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.editProfileHeading, 10000);
+    }
+
+    async isFirstNameFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.firstNameField, 10000);
+    }
+
+    async isLastNameFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.lastNameField, 10000);
+    }
+
+    async enterFirstName(firstName: string): Promise<void> {
+        logger.elementInteraction('type', 'first name field');
+        await this.pageUtils.safeType(this.firstNameField, firstName);
+    }
+
+    async enterLastName(lastName: string): Promise<void> {
+        logger.elementInteraction('type', 'last name field');
+        await this.pageUtils.safeType(this.lastNameField, lastName);
+    }
+
+    async clickSaveProfile(): Promise<void> {
+        logger.elementInteraction('click', 'Save profile button');
+        await this.pageUtils.safeClick(this.profileSaveButton);
+    }
+
+    async isProfileValidationErrorVisible(): Promise<boolean> {
+        const firstNameErrorVisible = await this.pageUtils.isVisible(this.firstNameValidationError, 5000).catch(() => false);
+        const lastNameErrorVisible = await this.pageUtils.isVisible(this.lastNameValidationError, 5000).catch(() => false);
+        if (firstNameErrorVisible || lastNameErrorVisible) {
+            return true;
+        }
+
+        const helperText = await this.page.locator('text=/alphabetic|letters|only/i').first().count().catch(() => 0);
+        return helperText > 0;
+    }
+
+    async getProfileValidationErrorText(): Promise<string> {
+        const firstNameErrorText = await this.pageUtils.getTextContent(this.firstNameValidationError, 5000).catch(() => '');
+        const lastNameErrorText = await this.pageUtils.getTextContent(this.lastNameValidationError, 5000).catch(() => '');
+        if (firstNameErrorText || lastNameErrorText) {
+            return [firstNameErrorText, lastNameErrorText].filter(Boolean).join(' | ');
+        }
+
+        const fallbackText = await this.page.locator('text=/alphabetic|letters|only/i').first().textContent().catch(() => '');
+        return fallbackText || '';
     }
 }

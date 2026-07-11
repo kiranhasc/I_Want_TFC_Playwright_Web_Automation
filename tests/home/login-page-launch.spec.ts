@@ -82,9 +82,6 @@ test.describe('Login Page Launch', () => {
     test('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {
         const data = testCaseData['tc-auth-008-mobile-login'];
         const result = await loginWithMobileNumber(page, {
-            mobileNumberContryCode: data.mobileNumberContryCode,
-            mobileNumber: data.mobileNumber,
-            password: data.password,
             mode: 'mobile',
         });
 

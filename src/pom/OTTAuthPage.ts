@@ -5,7 +5,7 @@ import { config } from '../utils/config-manager';
 import { logger } from '../utils/logger';
 
 export class OTTAuthPage {
-    private readonly page: Page;
+    private page: Page;
     private readonly pageUtils: PageUtils;
     private readonly emailField: PageElement;
     private readonly passwordField: PageElement;
@@ -39,6 +39,8 @@ export class OTTAuthPage {
     private readonly searchBarIcon: PageElement;
     private readonly accountIcon: PageElement;
     private readonly signOutOption: PageElement;
+    private readonly accountAndSettingsOption: PageElement;
+    private readonly editProfileButton: PageElement;
     private readonly continueWatchingRail: PageElement;
     private readonly continueWatchingTrayTitle: PageElement;
     private readonly continueWatchingTrayContainer: PageElement;
@@ -73,6 +75,11 @@ export class OTTAuthPage {
     private readonly countryCodeOption: PageElement;
     private readonly mobileNumberField: PageElement;
     private readonly mobilePasswordField: PageElement;
+    private readonly helpAndSupportLink: PageElement;
+    private readonly termsAndConditionsLink: PageElement;
+    private readonly privacyPolicyLink: PageElement;
+    private readonly cookiePolicyLink: PageElement;
+    private readonly pageHeading: PageElement;
     private readonly accountAndSettingsLink: PageElement;
     private readonly editProfileOption: PageElement;
     private readonly editProfileHeading: PageElement;
@@ -103,16 +110,18 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { text: 'Home', selector: 'nav >> text=Home' };
+        this.homeTab = { text: 'Home', selector: 'div#home' };
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
-        this.moviesTab = { selector: 'p:text-is("Movies")' };
-        this.showsTab = { text: 'Shows', selector: 'nav >> text=Shows' };
-        this.myWatchlistTab = { text: 'My Watchlist', selector: 'nav >> text=My Watchlist' };
+        this.moviesTab = { selector: 'div#movies' };
+        this.showsTab = { text: 'Shows', selector: 'div#shows' };
+        this.myWatchlistTab = { text: 'My Watchlist', selector: 'div#my_watchlist' };
         this.gmaTab = { selector: 'div#gma' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
+        this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
+        this.editProfileButton = { selector: 'text=Edit Profile, button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
         this.continueWatchingTrayTitle = { text: 'Continue Watching', selector: 'text=Continue Watching' };
         this.continueWatchingTrayContainer = { selector: 'text=Continue Watching >> xpath=following-sibling::*' };
@@ -147,11 +156,16 @@ export class OTTAuthPage {
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
         this.emptyCredentialsErrorMessage = { selector: 'text=/Email is required/i' };
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
-        this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]'};
+        this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]' };
         this.countryCodeDropdown = { selector: 'select, [role="combobox"]' };
         this.countryCodeOption = { selector: 'text=63' };
         this.mobileNumberField = { selector: '#userMobile, input[type="tel"], input[name*="phone"], input[name*="mobile"]' };
         this.mobilePasswordField = { selector: 'input[placeholder*="Password"], input[type="password"], input[name*="password"]' };
+        this.helpAndSupportLink = { role: 'link', text: 'Help and Support', selector: 'a:has-text("Help and Support")' };
+        this.termsAndConditionsLink = { role: 'link', text: 'Terms and Conditions', selector: 'a:has-text("Terms and Conditions")' };
+        this.privacyPolicyLink = { role: 'link', text: 'Privacy Policy', selector: 'a:has-text("Privacy Policy")' };
+        this.cookiePolicyLink = { role: 'link', text: 'Cookie Policy', selector: 'a:has-text("Cookie Policy")' };
+        this.pageHeading = { selector: 'h1, h2, [role="heading"]' };
         this.accountAndSettingsLink = { role: 'link', text: 'Account & Settings', selector: 'a:has-text("Account & Settings"), text=Account & Settings' };
         this.editProfileOption = { role: 'button', text: 'Edit Profile', selector: 'button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.editProfileHeading = { role: 'heading', text: 'Edit Profile', selector: 'h1:has-text("Edit Profile"), h2:has-text("Edit Profile")' };
@@ -341,8 +355,27 @@ export class OTTAuthPage {
         await this.page.locator(this.createAccountLink.selector).scrollIntoViewIfNeeded();
     }
 
+    async isLoginFormVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.emailField, 10000);
+    }
+
+    async isSupportLinksVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.helpAndSupportLink, 10000)
+            && await this.pageUtils.isVisible(this.termsAndConditionsLink, 10000)
+            && await this.pageUtils.isVisible(this.privacyPolicyLink, 10000)
+            && await this.pageUtils.isVisible(this.cookiePolicyLink, 10000);
+    }
+
+    async scrollToSupportLinks(): Promise<void> {
+        await this.page.locator(this.helpAndSupportLink.selector).first().scrollIntoViewIfNeeded();
+    }
+
     async isHomeTabVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async isMoviesTabVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.moviesTab, 10000);
     }
 
     async waitForLoadingToDisappear(timeout: number = 15000): Promise<void> {
@@ -360,6 +393,215 @@ export class OTTAuthPage {
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
         await this.pageUtils.safeClick(this.moviesTab);
+    }
+
+    async openHelpAndSupportPage(expectedHeading?: string): Promise<boolean> {
+        logger.elementInteraction('click', 'Help and Support link');
+        return await this.openLinkInNewTab(this.helpAndSupportLink, expectedHeading);
+    }
+
+    async openTermsPage(expectedHeading?: string): Promise<boolean> {
+        logger.elementInteraction('click', 'Terms and Conditions link');
+        return await this.openLinkInNewTab(this.termsAndConditionsLink, expectedHeading, false);
+    }
+
+    async openTermsPageAndStayOpen(expectedHeading?: string): Promise<boolean> {
+        logger.elementInteraction('click', 'Terms and Conditions link');
+        return await this.openLinkInNewTab(this.termsAndConditionsLink, expectedHeading, true);
+    }
+
+    async openTermsPageAndNavigateToSection(sectionLinkText: string, submoduleName: string, expectedHeading?: string, expectedUrlPart?: string): Promise<boolean> {
+        logger.step(`Opening Terms page and navigating to section: ${sectionLinkText}`);
+
+        try {
+            const popupPromise = this.page.context().waitForEvent('page', { timeout: 8000 });
+            await this.pageUtils.safeClick(this.termsAndConditionsLink);
+
+            const popup = await popupPromise.catch(() => undefined);
+            if (!popup || popup.url() === 'about:blank') {
+                logger.warn('No popup detected');
+                return false;
+            }
+
+            await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
+
+            // Navigate directly to the section URL
+            if (expectedUrlPart) {
+                const baseUrl = popup.url().split('/legal/')[0] + `/legal/${submoduleName}/`;
+                const sectionUrl = baseUrl + expectedUrlPart + '/';
+
+                await popup.goto(sectionUrl, { waitUntil: 'domcontentloaded' });
+
+                const urlMatches = popup.url().toLowerCase().includes(expectedUrlPart.toLowerCase());
+                const headingVisible = await this.isPageHeadingVisibleOnPage(popup, expectedHeading);
+
+
+                this.page = popup;
+                return headingVisible && urlMatches;
+            }
+
+            return false;
+        } catch (error) {
+            logger.warn(`Failed to navigate to Terms section: ${error}`);
+            return false;
+        }
+    }
+
+    async openPrivacyPage(expectedHeading?: string): Promise<boolean> {
+        logger.elementInteraction('click', 'Privacy Policy link');
+        return await this.openLinkInNewTab(this.privacyPolicyLink, expectedHeading);
+    }
+
+    async openCookiePolicyPage(expectedHeading?: string): Promise<boolean> {
+        logger.elementInteraction('click', 'Cookie Policy link');
+        return await this.openLinkInNewTab(this.cookiePolicyLink, expectedHeading);
+    }
+
+    async openTermsSectionFromLeftNavigation(sectionLinkText: string, expectedHeading?: string, expectedUrlPart?: string): Promise<boolean> {
+        try {
+            logger.step(`Navigating to Terms section: ${sectionLinkText}`);
+            await this.page.waitForTimeout(3000);
+            const sectionLink = this.page.locator(`a:has-text("${sectionLinkText}")`).first();
+            const count = await sectionLink.waitFor({ state: 'attached', timeout: 10000 }).then(() => 1).catch(() => 0);
+            if (!count) {
+                logger.warn(`Section link not found in DOM: ${sectionLinkText}`);
+                return false;
+            }
+            logger.step(`Found section link in DOM, waiting before click`);
+            await this.page.waitForTimeout(1500);
+            if (this.page.isClosed()) {
+                logger.warn('Page was closed before clicking section link');
+                return false;
+            }
+            await sectionLink.scrollIntoViewIfNeeded().catch(() => {
+                logger.warn('Could not scroll link into view, proceeding anyway');
+            });
+            logger.step(`Clicking section link with force`);
+            await sectionLink.click({ force: true, timeout: 10000 });
+            logger.step(`Waiting for page load after section link click`);
+            await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+            await this.page.waitForTimeout(3000);
+            const currentUrl = this.page.url().toLowerCase();
+            const urlMatches = !!expectedUrlPart && currentUrl.includes(expectedUrlPart.toLowerCase());
+            const headingVisible = await this.isPageHeadingVisibleOnPage(this.page, expectedHeading);
+            logger.step(`Section navigation result - URL matches: ${urlMatches}, Heading visible: ${headingVisible}`);
+            return headingVisible || urlMatches;
+        } catch (error) {
+            logger.warn(`Failed to navigate to Terms section: ${error}`);
+            return false;
+        }
+    }
+
+    getCurrentUrl(): string {
+        return this.page.url();
+    }
+
+    private async openLinkInNewTab(link: PageElement, expectedHeading?: string, keepPageOpen: boolean = false): Promise<boolean> {
+        const mainPage = this.page;
+        const initialUrl = mainPage.url();
+
+        try {
+            const popupPromise = this.page.context().waitForEvent('page', { timeout: 8000 });
+            await this.pageUtils.safeClick(link);
+            await mainPage.waitForTimeout(1000);
+
+            const popup = await popupPromise.catch(() => undefined);
+            if (popup && popup.url() !== 'about:blank') {
+                logger.step(`Popup detected: ${popup.url()}`);
+                await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
+                await popup.waitForURL((url) => {
+                    const currentUrl = url.toString();
+                    return !!currentUrl && currentUrl !== 'about:blank' && !currentUrl.startsWith('about:');
+                }, { timeout: 15000 }).catch(() => undefined);
+                await popup.waitForTimeout(3000);
+
+                const headingVisible = await this.isPageHeadingVisibleOnPage(popup, expectedHeading);
+
+                if (keepPageOpen) {
+                    logger.step('Keeping popup open, switching context to new tab');
+                    this.page = popup;
+                    return headingVisible;
+                }
+
+                await popup.close().catch(() => undefined);
+                this.page = mainPage;
+                await mainPage.waitForLoadState('domcontentloaded');
+                return headingVisible;
+            }
+            logger.step('No popup detected, checking if URL changed in main page');
+            await mainPage.waitForURL((url) => {
+                const currentUrl = url.toString();
+                return !!currentUrl && currentUrl !== initialUrl && currentUrl !== 'about:blank' && !currentUrl.startsWith('about:');
+            }, { timeout: 15000 }).catch(() => undefined);
+            await mainPage.waitForLoadState('domcontentloaded').catch(() => undefined);
+            await mainPage.waitForTimeout(3000).catch(() => undefined);
+            return await this.isPageHeadingVisibleOnPage(mainPage, expectedHeading);
+        } catch (error) {
+            logger.warn(`Error in openLinkInNewTab: ${error}`);
+            await mainPage.waitForLoadState('domcontentloaded').catch(() => undefined);
+            await mainPage.waitForTimeout(3000).catch(() => undefined);
+            return await this.isPageHeadingVisibleOnPage(mainPage, expectedHeading);
+        }
+    }
+
+    async isPageHeadingVisible(expectedHeading?: string): Promise<boolean> {
+        return await this.isPageHeadingVisibleOnPage(this.page, expectedHeading);
+    }
+
+    async isPageHeadingVisibleOnPage(targetPage: Page, expectedHeading?: string): Promise<boolean> {
+        if (!expectedHeading) {
+            return false;
+        }
+        const normalizedHeading = expectedHeading.toLowerCase();
+        try {
+            const visibleHeading = await targetPage
+                .getByText(expectedHeading, { exact: true })
+                .first()
+                .isVisible()
+                .catch(() => false);
+            if (visibleHeading) {
+                return true;
+            }
+            const bodyText = await targetPage.locator('body').textContent().catch(() => '');
+            if (bodyText?.toLowerCase().includes(normalizedHeading)) {
+                return true;
+            }
+            const pageTitle = await targetPage.title().catch(() => '');
+            if (pageTitle.toLowerCase().includes(normalizedHeading)) {
+                return true;
+            }
+            return false;
+        } catch {
+            return false;
+        }
+    }
+
+    async goBack(): Promise<void> {
+        try {
+            await this.page.goBack();
+            await this.page.waitForLoadState('domcontentloaded');
+        } catch {
+            await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        }
+    }
+
+    async closeCurrentTabAndReturnToMain(): Promise<void> {
+        const pages = this.page.context().pages();
+        const mainPage = pages.find((candidate) => candidate !== this.page);
+
+        if (mainPage) {
+            try {
+                await this.page.close();
+                await mainPage.bringToFront();
+                await mainPage.waitForLoadState('domcontentloaded');
+                return;
+            } catch {
+                // fall back to the primary page
+            }
+        }
+
+        await this.page.bringToFront();
+        await this.page.waitForLoadState('domcontentloaded');
     }
 
     async clickShowsTab(): Promise<void> {
@@ -807,6 +1049,20 @@ export class OTTAuthPage {
         return (await locator.getAttribute('placeholder')) || '';
     }
 
+    async searchAndGetResults(query: string): Promise<boolean> {
+        logger.step(`Searching for: ${query}`);
+        const searchInput = this.page.locator(this.searchBar.selector).first();
+        await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await searchInput.fill(query);
+        await this.page.waitForTimeout(2000);
+        const searchResultsContainer = this.page.locator('[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3').count();
+        const resultsCount = await searchResultsContainer.catch(() => 0);
+        const pageHasContent = await this.page.locator('body').textContent();
+        const hasResults = pageHasContent && pageHasContent.toLowerCase().includes(query.toLowerCase());
+        logger.step(`Search completed - Results count: ${resultsCount}, Has query text: ${hasResults}`);
+        return hasResults || resultsCount > 0;
+    }
+    
     async enterSearchText(text: string): Promise<void> {
         logger.elementInteraction('type', 'Search input');
         await this.pageUtils.safeType(this.searchBar, text);
@@ -834,8 +1090,26 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.accountIcon);
     }
 
+    async clickSignOut(): Promise<void> {
+        logger.elementInteraction('click', 'Sign Out option');
+        await this.pageUtils.safeClick(this.signOutOption);
+    }
+
     async isSignOutOptionVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.signOutOption, 10000);
+    }
+
+    async isAccountAndSettingsVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.accountAndSettingsOption, 10000);
+    }
+
+    async clickAccountAndSettings(): Promise<void> {
+        logger.elementInteraction('click', 'Account & Settings option');
+        await this.pageUtils.safeClick(this.accountAndSettingsOption);
+    }
+
+    async isEditProfileButtonVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.editProfileButton, 10000);
     }
 
     async clickLoginWithTVProvider(): Promise<void> {
@@ -881,7 +1155,6 @@ export class OTTAuthPage {
         if (profileVisible) {
             return true;
         }
-
         const homeTabVisible = await this.pageUtils.isVisible(
             { selector: 'text="Home"' },
             5000

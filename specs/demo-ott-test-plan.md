@@ -9,7 +9,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 ### 1. Happy Path - Home Page Launch Validation
 **Seed:** `tests/seed.spec.ts`
 
-#### 1.1. IW3-T1859: Verify the message displayed on entering invalid credentials during login.
+#### 10.1. IW3-T1859: Verify the message displayed on entering invalid credentials during login.
 **File:** `tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -22,7 +22,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    7. Tap on "Continue" button.
       * expect "Your login credentials are incorrect" error message     should be displayed. 
 
-#### 1.2. IW3-T1860 Verify the navigation on tapping "Forgot Password?" option.
+#### 10.2. IW3-T1860 Verify the navigation on tapping "Forgot Password?" option.
 **File:** `tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -32,7 +32,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    5. User should be navigated to "Forgot Password?" screen.
       * expect "Confirm Email Address" page should be displayed
 
-#### 1.3. IW3-T1861 Verify the navigation on entering "Email" and tapping on "Proceed" button on the "Forgot Password?" screen.
+#### 10.3. IW3-T1861 Verify the navigation on entering "Email" and tapping on "Proceed" button on the "Forgot Password?" screen.
 **File:** ``tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -43,7 +43,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    6. Tap on "Proceed" CTA and observe.
    7. User should be navigated to "Verify OTP" screen.
 
-#### 1.4. IW3-T1864 Verify the message displayed on entering the mobile number on "Forgot Password?" screen.
+#### 10.4. IW3-T1864 Verify the message displayed on entering the mobile number on "Forgot Password?" screen.
 **File:** ``tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -55,7 +55,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    7. User should be able to see "Please enter a valid email continue." error message
 
 
-#### 1.4. IW3-T1869 Verify the UI/UX of the "Welcome to iWant" screen for PH region.
+#### 10.4. IW3-T1869 Verify the UI/UX of the "Welcome to iWant" screen for PH region.
 **File:** ``tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -71,19 +71,9 @@ This test plan covers validation of application launch behavior for the OTT plat
       * expect "New here?" link should be displayed.
       * expect "Create Account" link should be displayed.
 
-#### 1.5. IW3-T1870 Verify user is able to login with valid credentials.
+#### 10.5. IW3-T1880 Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons.
 **File:** ``tests/home/home-page-launch.spec.ts`
 **Steps:**
-   1. Open the browser.
-   2. Enter the URL
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   4. Login with valid Email and Password
-   5. Wait until "Loading.." disappered
-      * expect "Home" Tab should be displayed
-
-   #### 1.6. IW3-T1880 Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons.
-   **File:** ``tests/home/home-page-launch.spec.ts`
-   **Steps:**
    1. Open the browser.
    2. Enter the URL
    3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
@@ -103,10 +93,8 @@ This test plan covers validation of application launch behavior for the OTT plat
    11.  Click on Account icon
       * expect "Sign Out" option should be displayed
 
-### 1.7. IW3-T1867 Verify the "Login with TV Provider" functionality.
- 
+### 10.6. IW3-T1867 Verify the "Login with TV Provider" functionality.
 **File:** `tests/home/landing-page-launch.spec.ts`
- 
 **Steps:**
    1. Open the browser.
    2. Enter the URL(https://iwanttfc.com/)
@@ -117,11 +105,102 @@ This test plan covers validation of application launch behavior for the OTT plat
    6. Click on "Continue" CTA.
       * User should be successfully landed on the "Home" screen.
 
-
 ### 1.8. IW3-T1895 Verify the user navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
- 
 **File:** ``tests/details/details-page-validation.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   3. Click on Email field
+   4. Enter valid email as "abhilash584@gmail.com" in email field.
+   5. Click on Password field
+   6. Enter valid password as "Test1234" in password field
+   7. Tap on "Continue" button.
+   8. Tap on "Shows" option from home page.
+   9. Click on the first content from first rail
+      *expect User should navigate to the respective content Details Page
+      *expect validate the details page
  
+### 10.7. IW3-T1865 Verify the mobile number login functionality.
+**File:** `tests/home/home-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Click on "Click here to use mobile number" link.
+   5. Select the country code as "63"
+   6. Enter the mobile number and password (Ex: 63| 9178039002/Password123!)
+   7. Click on "Continue" CTA.
+      *expect:* User should be able to login with mobile number and navigated to "Home" screen.
+
+### 10.8. IW3-T4332 Verify that **Welcome to iWant**, **Terms and Conditions**, **Cookie Policy**, and **Privacy Policy** pages are displayed when the user taps their respective links
+**File:** `tests/home/home-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Help and Support** link.  
+      *expect:* User should be navigated to the **Welcome to iWant / Help and Support** page and the **page title** should be validated.
+   6. Navigate back to the previous page.
+   7. Tap the **Terms and Conditions** link.  
+      *expect:* User should be navigated to the **Terms and Conditions** page and the **page title** should be validated.
+   8. Navigate back to the previous page.
+   9. Tap the **Privacy Policy** link.  
+      *expect:* User should be navigated to the **Privacy Policy** page and the **page title** should be validated.
+   10. Navigate back to the previous page.
+   11. Tap the **Cookie Policy** link.  
+      *expect:* User should be navigated to the **Cookie Policy** page and the **page title** should be validated.
+   12. Verify that each link consistently opens the correct page and that the user can return to the previous page after viewing it.  
+      *expect:* The **Welcome to iWant / Help and Support**, **Terms and Conditions**, **Privacy Policy**, and **Cookie Policy** pages should be displayed successfully, and the **page title** should match the expected title for each page.
+
+### 10.9. IW3-T4333 Verify that the user can navigate to any section from the left navigation menu on the **Terms and Conditions** page
+**File:** `tests/home/home-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Terms and Conditions** link.  
+      *expect:* User should be navigated to the **Terms and Conditions** page and the **page title** should be validated.
+   6. Tap on **iWant Terms and Conditions** button from the left navigation menu 
+      *expect* link **For customers in the Philippines** should be diaplayed 
+   7. Tap on **Customers in the Philippines** link
+      *expect* **Customers in the Philippines** text should be displayed
+
+### 10.10. IW3-T4334 Verify that the corresponding page details are displayed when the user taps any link from the **Terms and Conditions** page
+**File:** `tests/home/home-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL.
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Terms and Conditions** link.  
+      *expect:* User should be navigated to the **Terms and Conditions** page.
+   6. Tap any link from the left navigation menu (e.g., **The Data We Collect About You**).
+   7. Verify that the corresponding section is displayed.  
+      *expect:* The page should navigate to the selected section, and the corresponding details should be displayed correctly.
+   8. Verify that the selected navigation link consistently displays the correct content.  
+      *expect:* The respective **Terms and Conditions** section and its details should be displayed successfully.
+
+### 10.11. IW3-T4337 Verify that the user is able to search any page via the search field from the **Terms and Conditions** page
+**File:** `tests/home/home-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL.
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Terms and Conditions** link.  
+   *expect:* User should be navigated to the **Terms and Conditions** page.
+   6. Tap the **Search Documentation** search field displayed at the top-right corner.
+   7. Enter a search query (e.g., **For the customers in the Philippines**).
+   8. Verify that the corresponding search results are displayed.  
+   *expect:* Search results relevant to the entered query should be displayed successfully.
+   9. Verify that the user is able to search for any page using the search field.  
+   *expect:* The user should be able to search any page via the search field, and the corresponding results should be displayed correctly.
+
+### 10.12. IW3-T4339 Verify that the respective page is displayed when the user taps any link in the **Introduction** page
+**File:** `tests/home/home-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
    2. Enter the URL(https://iwanttfc.com/)
@@ -366,15 +445,6 @@ This test plan covers validation of application launch behavior for the OTT plat
 9. Return to the **Home** page.
 10. Observe the **Continue Watching** tray.
     - **Expect:** The completed movie should no longer be displayed in the **Continue Watching** tray.
-=======
-   1. Open the browser.
-   2. Enter the URL(https://iwanttfc.com/)
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   4. Click on "Click here to use mobile number" link.
-   5. Select the country code as "63"
-   6. Enter the mobile number and password (Ex: 63| 9178039002/Password123!)
-   7. Click on "Continue" CTA.
-      *expect : User should be able to login with mobile number and navigated to "Home" screen.
 
 ### 7.1. IW3-T2060 VVerify the Search icon is visible in the top navigation bar on all pages (Home, Movies,Shows,My Watchlist, GMA)
 **File:** `tests/home/search.spec.ts`
@@ -1210,7 +1280,21 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 
 **File:** `tests/home/create-account-navigation.spec.ts`
 
+### 10.14. IW3-T3663 Verify Synacor user is able to logout from the application
+**File:** `tests/home/synacor-page-launch.spec.ts`
 **Steps:**
+   1. Open the browser.
+   2. Enter the URL
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Click on "Login with TV Provider" option
+   5. Select the Frontier from available options and Click on Continue
+   6. Input the TV Provider credentials (Ex: ftrfios1@frontier.com/Frontier1)
+   6. Click on "Continue" CTA.
+      **expect** User should be successfully landed on the "Home" screen.
+   7. Click on "Account" icon in the home page
+      **expect** Sign out popup should be displayed
+   8. Click on Sign out
+      **expect** "Welcome to iWant" page header should be displayed
 
 1. Launch application successfully
    * expect: Home page is displayed

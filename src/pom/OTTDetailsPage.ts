@@ -10,6 +10,9 @@ export class OTTDetailsPage {
   private readonly pageUtils: PageUtils;
   private readonly showsSectionLink: PageElement;
   private readonly firstShowContentCard: PageElement;
+  private readonly playButton: PageElement;
+  private readonly videoElement: PageElement;
+  private readonly vpnErrorMessage: PageElement;
   private readonly firstEpisodeCard: PageElement;
   private readonly videoPlayer: PageElement;
   private readonly episodeTitle: PageElement;
@@ -32,7 +35,6 @@ export class OTTDetailsPage {
   private readonly subscribeToWatchCta: PageElement;
   private readonly upgradePlanButton: PageElement;
   private readonly plansPageHeading: PageElement;
-  private readonly playButton: PageElement;
   private readonly skipIntroMarker: PageElement;
   private readonly skipRecapMarker: PageElement;
   private readonly addToWatchlistButton: PageElement;
@@ -69,6 +71,14 @@ export class OTTDetailsPage {
   constructor(page: Page) {
     this.page = page;
     this.pageUtils = new PageUtils(page);
+    this.showsSectionLink = { selector: 'nav >> text=Shows' };
+    this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
+    this.playButton = { selector: '#play' };
+    this.videoElement = { selector: 'video' };
+    this.vpnErrorMessage = { selector: 'h2:has-text("We detected that you’re using a VPN or proxy")'};
+    this.showDetailsHeading = { selector: 'main h1' };
+    this.contentMetadata = { selector: '[class*="metadata relative flex items"]' };
+    this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
     this.showsSectionLink = { selector: 'nav >> text=Shows'};
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image'};
     this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item'};
@@ -1058,11 +1068,32 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return true;
   }
 
+  async isVPNErrorMessageVisible(expectedMessage?: string): Promise<boolean> {
+    try {
+      const locator = expectedMessage
+        ? this.page.getByText(expectedMessage, { exact: true })
+        : this.page.locator(this.vpnErrorMessage.selector);
+      await locator.waitFor({ state: 'visible', timeout: 10000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getVPNErrorMessageText(): Promise<string> {
+    try {
+      const locator = this.page.locator(this.vpnErrorMessage.selector);
+      await locator.waitFor({ state: 'visible', timeout: 10000 });
+      return (await locator.textContent())?.trim() || '';
+    } catch {
+      return '';
+    }
+  }
+
   async isShowDetailsPageVisible(): Promise<boolean> {
     try {
       const mainElement = this.page.locator('main');
       await mainElement.waitFor({ state: 'visible', timeout: 10000 });
-
       const headingLocator = mainElement.locator('h1').first();
       await headingLocator.waitFor({ state: 'visible', timeout: 10000 });
       return true;

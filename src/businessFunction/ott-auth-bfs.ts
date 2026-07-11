@@ -3,6 +3,10 @@ import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import * as fs from 'fs';
+import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
+import { CollectionResponse } from '../utils/graphql/graphql-types';
 
 export interface InvalidLoginInput {
     email?: string;
@@ -10,6 +14,7 @@ export interface InvalidLoginInput {
     mobileNumberContryCode?: string;
     mobileNumber?: string;
     mode?: string;
+    networkConnection?:string
 }
 
 export interface TVProviderLoginInput {
@@ -26,6 +31,8 @@ export interface InvalidLoginOutput {
 
 export interface TVProviderLoginOutput {
     isLoggedIn: boolean;
+    homeTabVisible: boolean;
+    moviesTabVisible: boolean;
 }
 
 export interface ForgotPasswordInput {
@@ -75,6 +82,60 @@ export interface VerifyWelcomeScreenOutput {
     isLoginWithTVProviderVisible: boolean;
     isNewHereLinkVisible: boolean;
     isCreateAccountLinkVisible: boolean;
+}
+
+export interface VerifySupportAndPolicyLinksInput {
+    mode?: string;
+    expectedHelpAndSupportHeading?: string;
+    expectedTermsHeading?: string;
+    expectedPrivacyHeading?: string;
+    expectedCookieHeading?: string;
+}
+
+export interface VerifySupportAndPolicyLinksOutput {
+    isLoggedIn: boolean;
+    helpAndSupportPageVisible: boolean;
+    termsPageVisible: boolean;
+    privacyPageVisible: boolean;
+    cookiePageVisible: boolean;
+    allPagesAccessible: boolean;
+}
+
+export interface NavigateToTermsAndConditionsSectionInput {
+    mode?: string;
+    sectionLinkText: string;
+    subHeadingName: string
+    expectedUrlPart?: string;
+    expectedHeading?: string;
+}
+
+export interface NavigateToTermsAndConditionsSectionOutput {
+
+    sectionPageVisible: boolean;
+    currentUrl: string;
+}
+
+export interface SearchFromTermsPageInput {
+    mode?: string;
+    searchQuery: string;
+}
+
+export interface SearchFromTermsPageOutput {
+    searchResultsDisplayed: boolean;
+    currentUrl: string;
+}
+
+export interface VerifyTermsPageDetailsInput {
+    mode?: string;
+    sectionLinkText: string;
+    subHeadingName: string;
+    expectedUrlPart?: string;
+    expectedHeading?: string;
+}
+
+export interface VerifyTermsPageDetailsOutput {
+    pageDetailsVisible: boolean;
+    currentUrl: string;
 }
 
 // function normalizeLoginMode(mode?: string): 'invalid' | 'valid' {
@@ -163,7 +224,7 @@ function resolveLoginCredentials(
     const mobileNumberContryCode = String(config.get(`${prefix}COUNTRYCODE`, input.mobileNumberContryCode ?? '')).trim();
     const mobileNumber = String(config.get(`${prefix}MOBILENUMBER`, input.mobileNumber ?? '')).trim();
 
-    return { email, password , mobileNumberContryCode,  mobileNumber};
+    return { email, password, mobileNumberContryCode, mobileNumber };
 }
 
 export async function loginWithInvalidCredentials(page: any, input?: Partial<InvalidLoginInput>): Promise<InvalidLoginOutput> {
@@ -247,7 +308,7 @@ export interface MobileLoginOutput {
 }
 
 export async function loginWithMobileNumber(page: any, input?: Partial<MobileLoginInput>): Promise<MobileLoginOutput> {
-   const authPage = new OTTAuthPage(page);
+    const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} login flow`);
     const credentials = resolveLoginCredentials(input ?? { mobileNumberContryCode: '', mobileNumber: '', password: '' }, mode);
@@ -287,15 +348,19 @@ export async function loginWithTVProvider(page: any, input: TVProviderLoginInput
     await authPage.clickProviderSignIn();
 
     const isLoggedIn = await authPage.isLoginSuccessful();
+    const homeTabVisible = await authPage.isHomeTabVisible();
+    const moviesTabVisible = await authPage.isMoviesTabVisible();
     logger.assertion('TV Provider login successful', isLoggedIn);
+    logger.assertion('Home tab visible after TV provider login', homeTabVisible);
+    logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
 
-    return { isLoggedIn };
+    return { isLoggedIn, homeTabVisible, moviesTabVisible };
 }
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} login flow`);
-    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '',networkConnection:'' }, mode);
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();
@@ -328,6 +393,28 @@ export interface NavigateTabsOutput {
     searchBarPlaceholder: string;
     searchBarPlaceholderMatches: boolean;
     signOutOptionVisible: boolean;
+}
+
+export interface LogoutFromOTTInput {
+    providerName?: string;
+    mode?: string;
+}
+
+export interface LogoutFromOTTOutput {
+    isLoggedOut: boolean;
+    welcomeScreenVisible: boolean;
+}
+
+export interface VerifySynacorProfileEditRestrictionInput {
+    providerName?: string;
+    mode?: string;
+}
+
+export interface VerifySynacorProfileEditRestrictionOutput {
+    isLoggedIn: boolean;
+    accountSettingsVisible: boolean;
+    editProfileVisible: boolean;
+    isRestricted: boolean;
 }
 
 export interface SearchIconVisibilityInput {
@@ -667,6 +754,92 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
         searchBarPlaceholder,
         searchBarPlaceholderMatches,
         signOutOptionVisible,
+    };
+}
+
+export async function logoutFromOTT(page: any, input?: Partial<LogoutFromOTTInput>): Promise<LogoutFromOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} logout flow`);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickLoginWithTVProvider();
+    await authPage.selectTVProvider(input?.providerName ?? 'Frontier, a Verizon Company');
+    await authPage.clickContinue();
+
+    const credentials = resolveLoginCredentials({}, 'provider');
+    await authPage.enterProviderEmail(credentials.email);
+    await authPage.enterProviderPassword(credentials.password);
+    await authPage.clickProviderSignIn();
+
+    await authPage.waitForLoadingToDisappear();
+    const isLoggedIn = await authPage.isLoginSuccessful();
+    logger.assertion('User is logged in before logout', isLoggedIn);
+
+    if (!isLoggedIn) {
+        return { isLoggedOut: false, welcomeScreenVisible: false };
+    }
+
+    await authPage.clickAccountIcon();
+    await authPage.clickSignOut();
+    await authPage.waitForLoadingToDisappear();
+
+    const welcomeScreenVisible = await authPage.isWelcomeHeadingVisible();
+    logger.assertion('Welcome screen visible after logout', welcomeScreenVisible);
+
+    return {
+        isLoggedOut: welcomeScreenVisible,
+        welcomeScreenVisible,
+    };
+}
+
+export async function verifySynacorProfileEditRestriction(page: any, input?: Partial<VerifySynacorProfileEditRestrictionInput>): Promise<VerifySynacorProfileEditRestrictionOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} profile edit restriction flow`);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickLoginWithTVProvider();
+    await authPage.selectTVProvider(input?.providerName ?? 'Frontier, a Verizon Company');
+    await authPage.clickContinue();
+
+    const credentials = resolveLoginCredentials({}, 'provider');
+    await authPage.enterProviderEmail(credentials.email);
+    await authPage.enterProviderPassword(credentials.password);
+    await authPage.clickProviderSignIn();
+
+    await authPage.waitForLoadingToDisappear();
+    const isLoggedIn = await authPage.isLoginSuccessful();
+    logger.assertion('User is logged in before validating profile edit restriction', isLoggedIn);
+
+    if (!isLoggedIn) {
+        return {
+            isLoggedIn: false,
+            accountSettingsVisible: false,
+            editProfileVisible: false,
+            isRestricted: false,
+        };
+    }
+
+    await authPage.clickAccountIcon();
+    const accountSettingsVisible = await authPage.isAccountAndSettingsVisible();
+    logger.assertion('Account & Settings option visible', accountSettingsVisible);
+
+    let editProfileVisible = false;
+    if (accountSettingsVisible) {
+        await authPage.clickAccountAndSettings();
+        editProfileVisible = await authPage.isEditProfileButtonVisible();
+    }
+
+    logger.assertion('Edit Profile button not visible for Synacor user', !editProfileVisible);
+
+    return {
+        isLoggedIn,
+        accountSettingsVisible,
+        editProfileVisible,
+        isRestricted: !editProfileVisible,
     };
 }
 
@@ -1112,6 +1285,95 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
         isMobileErrorDisplayed: isErrorDisplayed,
         errorMessage,
         isOTPPageVisible,
+    };
+}
+
+export async function verifySupportAndPolicyLinks(page: any, input?: Partial<VerifySupportAndPolicyLinksInput>): Promise<VerifySupportAndPolicyLinksOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting support and policy links validation flow');
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+
+    const loginFormVisible = await authPage.isLoginFormVisible();
+    if (loginFormVisible) {
+        logger.step('Login form detected; attempting sign-in before validating links');
+        await authPage.clickEmailField();
+        await authPage.enterEmail(credentials.email);
+        await authPage.clickPasswordField();
+        await authPage.enterPassword(credentials.password);
+        await authPage.clickContinue();
+        await authPage.waitForLoadingToDisappear();
+    } else {
+        logger.step('Login form not present; validating footer links from the current landing page');
+    }
+
+    const supportLinksVisible = await authPage.isSupportLinksVisible();
+    if (!supportLinksVisible) {
+        await authPage.scrollToSupportLinks();
+    }
+
+    const homeVisible = await authPage.isHomeTabVisible();
+    const isLoggedIn = homeVisible || supportLinksVisible;
+    logger.assertion('Support links available for verification', supportLinksVisible);
+
+    const helpAndSupportPageVisible = await authPage.openHelpAndSupportPage(input?.expectedHelpAndSupportHeading);
+    await authPage.closeCurrentTabAndReturnToMain();
+
+    const termsPageVisible = await authPage.openTermsPage(input?.expectedTermsHeading);
+    await authPage.closeCurrentTabAndReturnToMain();
+
+    const privacyPageVisible = await authPage.openPrivacyPage(input?.expectedPrivacyHeading);
+    await authPage.closeCurrentTabAndReturnToMain();
+
+    const cookiePageVisible = await authPage.openCookiePolicyPage(input?.expectedCookieHeading);
+    await authPage.closeCurrentTabAndReturnToMain();
+
+    const allPagesAccessible = helpAndSupportPageVisible && termsPageVisible && privacyPageVisible && cookiePageVisible;
+    logger.assertion('Help, Terms, Privacy, and Cookie policy pages accessible', allPagesAccessible);
+
+    return {
+        isLoggedIn,
+        helpAndSupportPageVisible,
+        termsPageVisible,
+        privacyPageVisible,
+        cookiePageVisible,
+        allPagesAccessible,
+    };
+}
+
+export async function navigateToTermsAndConditionsSection(page: any, input: NavigateToTermsAndConditionsSectionInput): Promise<NavigateToTermsAndConditionsSectionOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Terms and Conditions section navigation flow');
+    const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+
+    const loginFormVisible = await authPage.isLoginFormVisible();
+    if (loginFormVisible) {
+        logger.step('Login form detected; attempting sign-in before validating the Terms page');
+        await authPage.clickEmailField();
+        await authPage.enterEmail(credentials.email);
+        await authPage.clickPasswordField();
+        await authPage.enterPassword(credentials.password);
+        await authPage.clickContinue();
+        await authPage.waitForLoadingToDisappear();
+    }
+
+    await authPage.scrollToSupportLinks();
+    const termsPageVisible = await authPage.openTermsPageAndNavigateToSection(input.sectionLinkText, input.subHeadingName, input.expectedHeading, input.expectedUrlPart);
+    const currentUrl = authPage.getCurrentUrl();
+
+    logger.assertion('Terms and Conditions page visible', termsPageVisible);
+    logger.assertion('Terms navigation section visible', termsPageVisible);
+
+    return {
+        sectionPageVisible: termsPageVisible,
+        currentUrl,
     };
 }
 
@@ -2077,5 +2339,115 @@ export async function submitEmptyCredentials(page: any, input: EmptyCredentialsI
     return {
         isErrorDisplayed,
         errorMessage,
+    };
+}
+
+export async function searchFromTermsPage(page: any, input: SearchFromTermsPageInput): Promise<SearchFromTermsPageOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting search from Terms and Conditions page flow');
+    const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+
+    const loginFormVisible = await authPage.isLoginFormVisible();
+    if (loginFormVisible) {
+        logger.step('Login form detected; attempting sign-in before accessing Terms page');
+        await authPage.clickEmailField();
+        await authPage.enterEmail(credentials.email);
+        await authPage.clickPasswordField();
+        await authPage.enterPassword(credentials.password);
+        await authPage.clickContinue();
+        await authPage.waitForLoadingToDisappear();
+    }
+
+    await authPage.scrollToSupportLinks();
+
+    // Get the popup for Terms page
+    const popupPromise = page.context().waitForEvent('page', { timeout: 8000 });
+    const termsLink = page.locator('a:has-text("Terms and Conditions")').first();
+    await termsLink.click();
+    await page.waitForTimeout(500);
+
+    const popup = await popupPromise.catch(() => undefined);
+    if (!popup || popup.url() === 'about:blank') {
+        logger.warn('No popup detected for Terms page');
+        return {
+            searchResultsDisplayed: false,
+            currentUrl: authPage.getCurrentUrl(),
+        };
+    }
+
+    logger.step(`Popup detected: ${popup.url()}`);
+    await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
+
+    // Try to find and interact with the search field
+    let searchPerformed = false;
+    try {
+        // Try multiple search field selectors
+        let searchInput = popup.locator('input[placeholder*="Search"]').first();
+        let isVisible = await searchInput.isVisible().catch(() => false);
+
+        if (!isVisible) {
+            searchInput = popup.locator('input[type="search"]').first();
+            isVisible = await searchInput.isVisible().catch(() => false);
+        }
+
+        if (!isVisible) {
+            searchInput = popup.locator('[data-testid*="search"]').first();
+            isVisible = await searchInput.isVisible().catch(() => false);
+        }
+
+        if (isVisible) {
+            logger.step(`Found search field, entering query: ${input.searchQuery}`);
+            await searchInput.fill(input.searchQuery);
+            await popup.waitForTimeout(1500);
+            searchPerformed = true;
+            logger.step('Search query entered successfully');
+        } else {
+            logger.warn('Search field not found or not visible');
+        }
+    } catch (error) {
+        logger.warn(`Error performing search: ${error}`);
+    }
+
+    logger.assertion('Search field accessible and query entered from Terms page', searchPerformed);
+
+    return {
+        searchResultsDisplayed: searchPerformed,
+        currentUrl: popup.url(),
+    };
+}
+
+export async function verifyTermsPageDetails(page: any, input: VerifyTermsPageDetailsInput): Promise<VerifyTermsPageDetailsOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Terms and Conditions page details verification flow');
+    const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+
+    const loginFormVisible = await authPage.isLoginFormVisible();
+    if (loginFormVisible) {
+        logger.step('Login form detected; attempting sign-in before accessing Terms page');
+        await authPage.clickEmailField();
+        await authPage.enterEmail(credentials.email);
+        await authPage.clickPasswordField();
+        await authPage.enterPassword(credentials.password);
+        await authPage.clickContinue();
+        await authPage.waitForLoadingToDisappear();
+    }
+
+    await authPage.scrollToSupportLinks();
+    const detailsPageVisible = await authPage.openTermsPageAndNavigateToSection(input.sectionLinkText, input.subHeadingName, input.expectedHeading, input.expectedUrlPart);
+    const currentUrl = authPage.getCurrentUrl();
+
+    logger.assertion('Terms page details visible', detailsPageVisible);
+
+    return {
+        pageDetailsVisible: detailsPageVisible,
+        currentUrl,
     };
 }

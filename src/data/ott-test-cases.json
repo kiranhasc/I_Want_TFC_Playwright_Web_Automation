@@ -60,11 +60,71 @@
         "password": "",
         "expectedErrorMessage": "Email is required"
     },
-    "tc-auth-008-mobile-login":{
-        "mode": "mobile",
-        "mobileNumberContryCode": "63",
-        "mobileNumber": "9178039002",
-        "password": "Password123!"
+    "tc-auth-008-mobile-login": {
+        "mode": "mobile"
+    },
+    "tc-auth-009-help-support-links": {
+        "mode": "valid",
+        "expectedHelpAndSupportHeading": "How can we help you today?",
+        "expectedTermsHeading": "Welcome to the ABS-CBN’s terms & conditions.",
+        "expectedPrivacyHeading": "Welcome to the ABS-CBN’s privacy notice.",
+        "expectedCookieHeading": "iWant Cookie Policy"
+    },
+    "tc-auth-010-terms-navigation": {
+        "mode": "valid",
+        "sectionLinkText": "For customers in the Philippines",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-the-philippines",
+        "expectedHeading": "Customers in the Philippines"
+    },
+    "tc-auth-011-terms-search": {
+        "mode": "valid",
+        "searchQuery": "For the customers in the Philippines",
+        "expectedResultsPresent": true
+    },
+    "tc-auth-012-terms-page-details": {
+        "mode": "valid",
+        "sectionLinkText": "The Data We Collect About You",
+        "subModuleName": "privacy-notice",
+        "expectedUrlPart": "the-data-we-collect-about-you",
+        "expectedHeading": "THE DATA WE COLLECT ABOUT YOU"
+    },
+    "tc-auth-014-terms-introduction": {
+        "mode": "valid",
+        "sectionLinkText": "For customers in Canada",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-canada",
+        "expectedHeading": "Customers in the Canada"
+    },
+    "tc-auth-015-terms-page-links": {
+        "mode": "valid",
+        "sectionLinkText": "Customers in the Japan and South Korea",
+        "subModuleName": "terms-and-conditions",
+        "expectedUrlPart": "for-customers-in-japan-and-south-korea",
+        "expectedHeading": "Customers in the Japan and South Korea"
+    },
+    "tc-auth-016-synacor-logout": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-017-synacor-profile-edit-restriction": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-018-synacor-provider-login": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-019-vpn-playback-restriction": {
+        "mode": "valid",
+        "searchQuery": "Incognito",
+        "expectedVPNErrorMessage": "We detected that you’re using a VPN or proxy. Please disable it and try again."
+    },
+    "tc-discovery-001-early-access": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue" : "early_access"
     },
     "tc-auth-009-welcome-screen-navigation": {
         "expectedHeading": "Welcome to iWant",

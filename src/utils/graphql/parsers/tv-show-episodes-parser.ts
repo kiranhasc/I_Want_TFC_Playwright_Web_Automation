@@ -1,5 +1,5 @@
 import { GraphQLResult } from '../graphql-helper';
-import { Episode, TVShowEpisodesResponse } from '../../graphql/graphql-types.ts';
+import { Episode, TVShowEpisodesResponse } from '../../graphql/graphql-types';
 
 export class TVShowEpisodesParser {
     constructor(

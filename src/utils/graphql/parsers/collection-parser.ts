@@ -1,5 +1,5 @@
 import { GraphQLResult } from '../graphql-helper';
-import { CollectionResponse, Rail, Asset } from '../../graphql/graphql-types.ts';
+import { CollectionResponse, Rail, Asset } from '../../graphql/graphql-types';
 
 export interface CollectionAssetResult {
     rail: any;

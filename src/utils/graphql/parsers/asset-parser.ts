@@ -1,5 +1,5 @@
 import { GraphQLResult } from '../graphql-helper';
-import { Asset } from '../../graphql/graphql-types.ts';
+import { Asset } from '../../graphql/graphql-types';
 
 export interface AssetResponse {
     data: {

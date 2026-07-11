@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { logger } from '../logger.ts';
+import { logger } from '../logger';
 export interface GraphQLResult<T> {
     request: any;
     response: T;

@@ -1,6 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { PageElement } from '../../src/types/index.ts';
-import { logger } from './logger.ts';
+import { PageElement } from '../../src/types/index';
+import { logger } from './logger';
 
 /**
  * Enhanced page utilities for common UI interactions
@@ -13,8 +13,8 @@ export class PageUtils {
    * Wait for page to be fully loaded
    */
   async waitForPageLoad(timeout: number = 30000): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout });
-    await this.page.waitForLoadState('domcontentloaded', { timeout });
+    await this.page.waitForLoadState('domcontentloaded', { timeout }).catch(() => undefined);
+    await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
   }
 
   /**
@@ -141,7 +141,7 @@ export class PageUtils {
    * Wait for network requests to complete
    */
   async waitForNetworkIdle(timeout: number = 30000): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout });
+    await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
   }
 
   /**

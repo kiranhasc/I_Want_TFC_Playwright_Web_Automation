@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 test.setTimeout(600_000);
-import { openContentAndPlay, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow  } from '../../src/businessFunction/ott-playback-bfs';
+import { openContentAndPlay, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyLivePlaybackPauseResume  } from '../../src/businessFunction/ott-playback-bfs';
 import testData from '../../src/data/ott-test-cases.json';
 
 const data = testData['tc-sub-003-play-content'] as Record<string, any>;
@@ -212,7 +212,21 @@ test.describe('Play Back', () => {
     expect(result.nextEpisodeSubtitleVisible).toBeTruthy();
   });
 
+  test('@High IW3-T2010: Verify that the pause and resume buttons function correctly during live playback', async ({ page }) => {
+        test.setTimeout(180000);
+        const result = await verifyLivePlaybackPauseResume(page, {
+            email: process.env.VALID_LOGIN_EMAIL,
+            password: process.env.VALID_LOGIN_PASSWORD,
+        });
 
+        expect(result.isLoggedIn).toBeTruthy();
+        expect(result.liveSectionSelected).toBeTruthy();
+        expect(result.channelSelected).toBeTruthy();
+        expect(result.playbackStarted).toBeTruthy();
+        expect(result.pauseResumeWorked).toBeTruthy();
+        expect(result.currentTimeBeforePause).toBeGreaterThanOrEqual(0);
+        expect(result.currentTimeAfterResume).toBeGreaterThanOrEqual(result.currentTimeBeforePause);
+    });
 
   test('@High - IW3-T2013 - pre-roll ad plays automatically before main content starts', async ({ page }) => {
     const result = await verifyPreRollAdPlaybackFlow(page, {

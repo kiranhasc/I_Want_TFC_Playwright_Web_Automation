@@ -688,7 +688,25 @@ This test plan covers validation of application launch behavior for the OTT plat
    12. Click Continue and parental pin id should be in Off Condition.
       * except Parental Pin toggle should be disabled post entering the password.
 
-
+### 8.13. IW3-T2109 Verify user is able to play any content if parental pin is turn off
+**File:** `tests/home/parential-pin.spec.ts`
+**Steps:**
+  1. Open the browser.
+   2. Enter the URL (https://uat.iwanttfc.com/).
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on "Account" icon.
+   6. Tap on Account and Settings.
+   7. Scroll down to the Parental Controls section.
+   8. If the toggle button is in On condition:
+      - Click on toggle Off button
+      - Enter the account password.
+      - Click Submit CTA.
+   9. If the toggle button is already in Off condition, proceed to the next step.
+   10. Navigate to the Home page.
+   11. Tap on any content under Continue Watching.
+   12. Play the content
+      * except The content should play directly without prompting for PIN
 
 #### 2.1. IW3-T1967 Verify that tapping the play button from the content detail page NFvigates the user to the player screen.
 

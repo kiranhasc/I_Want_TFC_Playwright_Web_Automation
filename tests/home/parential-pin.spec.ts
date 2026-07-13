@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { verifyParentalPinOptionVisibility, verifyParentalPinToggleState, verifyParentalPinPasswordField, submitParentalPinPassword, verifyParentalPinPasswordVisibility, verifyParentalPinInvalidPasswordError, verifyParentalPinFourDigitInput, verifyParentalPinSaveSuccess, verifyParentalPinPromptOnContentPlayback, verifyParentalPinInvalidPlaybackPrompt } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyParentalPinOptionVisibility, verifyParentalPinToggleState, verifyParentalPinPasswordField, submitParentalPinPassword, verifyParentalPinPasswordVisibility, verifyParentalPinInvalidPasswordError, verifyParentalPinFourDigitInput, verifyParentalPinSaveSuccess, verifyParentalPinPromptOnContentPlayback, verifyParentalPinInvalidPlaybackPrompt, disableParentalPin, verifyParentalPinPlaybackAllowedWhenDisabled } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Parental controls', () => {
@@ -97,7 +97,7 @@ test.describe('Parental controls', () => {
       expect(result.pinAcceptsNumericOnly).toBe(true);
     });
 
-    test('@Normal - IW3-T2103 : Verify success message is display when user setup the parental pin', async ({ page }) => {
+    test('@Medium - IW3-T2103 : Verify success message is display when user setup the parental pin', async ({ page }) => {
       const data = testCaseData['tc-settings-009-parental-pin-success-message'];
       const result = await verifyParentalPinSaveSuccess(page, {
         mode: data.mode,
@@ -149,13 +149,23 @@ test.describe('Parental controls', () => {
 
     test('@High - IW3-T2105 : Verify parental PIN toggle gets disabled after entering the password', async ({ page }) => {
         const data = testCaseData['tc-settings-012-parental-pin-toggle-disabled-after-password'];
-        const result = await submitParentalPinPassword(page, {
+        const result = await disableParentalPin(page, {
         mode: data.mode,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.parentalControlsVisible).toBe(true);
         expect(result.passwordSubmitted).toBe(true);
-        expect(result.pinSetupMessageVisible).toBe(true);
         expect(result.toggleDisabledAfterSubmission).toBe(true);
+    });
+    test('@High - IW3-T2109 : Verify user is able to play any content if parental pin is turned off', async ({ page }) => {
+      const data = testCaseData['tc-settings-013-parental-pin-off-allows-playback'];
+      const result = await verifyParentalPinPlaybackAllowedWhenDisabled(page, {
+        mode: data.mode,
+      });
+      expect(result.isLoggedIn).toBe(true);
+      expect(result.parentalControlsVisible).toBe(true);
+      expect(result.parentalPinEnabled).toBe(false);
+      expect(result.parentalPinPromptVisible).toBe(false);
+      expect(result.playbackStarted).toBe(true);
     });
 });

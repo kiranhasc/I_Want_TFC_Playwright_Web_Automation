@@ -627,7 +627,21 @@ export class OTTAuthPage {
     }
 
     async isContinueWatchingRailVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.continueWatchingRail, 10000);
+        try {
+            const locator = this.page.locator(this.continueWatchingRail.selector).first();
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+                if (await locator.isVisible().catch(() => false)) {
+                    return true;
+                }
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                await this.page.mouse.wheel(0, 600).catch(() => undefined);
+                await this.page.waitForTimeout(1000);
+            }
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     private getContinueWatchingTitleLocator() {

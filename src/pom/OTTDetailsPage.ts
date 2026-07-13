@@ -777,9 +777,9 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async clickResumeButton(): Promise<void> {
-    logger.elementInteraction('click', 'Pause button');
-    const resume = this.page.locator(this.pauseButton.selector).first();
-    await resume.waitFor({ state: 'visible', timeout: 10000 });
+    logger.elementInteraction('click', 'Resume button');
+    const resume = this.page.locator(this.resumeButton.selector).first();
+    await resume.waitFor({ state: 'visible', timeout: 15000 });
     await resume.click({ timeout: 10000 });
   }
 

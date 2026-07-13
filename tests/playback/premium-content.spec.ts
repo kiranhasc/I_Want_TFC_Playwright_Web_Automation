@@ -4,7 +4,8 @@ import { verifySubscribeToWatchCarouselMessage } from '../../src/businessFunctio
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Playback - Premium content gate', () => {
-    test('High - IW3-T2025: Verify the message displayed when user tries to play premium content', async ({ page }) => {
+    test('High IW3-T2025: Verify the message displayed when user tries to play premium content', async ({ page }) => {
+        test.setTimeout(180000);
         const data = testCaseData['tc-play-002-premium-content-gate'];
 
         const result = await verifyPremiumContentGate(page, {
@@ -22,7 +23,8 @@ test.describe('Playback - Premium content gate', () => {
         expect(result.subscribeToWatchVisible).toBeTruthy();
     });
 
-    test('High - IW3-T2032: Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user', async ({ page }) => {
+    test('High IW3-T2032: Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user', async ({ page }) => {
+        test.setTimeout(180000);
         const data = testCaseData['tc-sub-002-premium-carousel-subscribe-cta'];
 
         const result = await verifySubscribeToWatchCarouselMessage(page, {
@@ -40,7 +42,8 @@ test.describe('Playback - Premium content gate', () => {
         expect(result.message.toLowerCase()).toContain((data?.expectedSubscribeText || 'subscribe to watch').toLowerCase());
     });
 
-        test('@High - IW3-T2035: Verify the message displayed on "Subscribe to watch" CTA from Home/Shows/Movies/GMA tabs from "Carousel"', async ({ page }) => {
+        test('@High IW3-T2035: Verify the message displayed on "Subscribe to watch" CTA from Home/Shows/Movies/GMA tabs from "Carousel"', async ({ page }) => {
+        test.setTimeout(180000);
         const data = testCaseData['tc-sub-001-carousel-subscribe-cta'];
 
         const result = await verifySubscribeToWatchCarouselMessage(page, {

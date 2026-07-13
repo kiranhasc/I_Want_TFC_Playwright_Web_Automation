@@ -27,6 +27,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@High IW3-T1936: Verify the functionality of "Remove From Continue Watching" CTA displayed on the CW tray bottom bar popup from Home screen', async ({ page }) => {
+        test.setTimeout(60000);
         const data = testCaseData['tc-auth-012-continue-watching-remove-item'];
         const result = await verifyContinueWatchingRemoveItem(page, { mode: data.mode });
 

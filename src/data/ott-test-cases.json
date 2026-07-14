@@ -322,9 +322,45 @@
     },
     "tc-sub-026-landscape-player-ui": {
         "mode": "valid",
-        "query": "we will survive",
-        "expectedTitle": "We Will Survive",
-        "expectedEpisode": "We Will Survive"
+        "query": "Hey babe",
+        "expectedTitle": "Hey babe",
+        "expectedEpisode": "Hey babe"
+    },
+    "tc-sub-027-next-episode-cta": {
+        "mode": "valid",
+        "query": "Altar",
+        "expectedTitle": "Altar",
+        "expectedEpisode": "Altar"
+    },
+    "tc-sub-028-up-next-marker": {
+        "mode": "valid",
+        "query": "Ghosting",
+        "expectedTitle": "Ghosting",
+        "expectedEpisode": "Ghosting"
+    },
+    "tc-sub-029-back-button-navigation": {
+        "mode": "valid",
+        "query": "Ghosting",
+        "expectedTitle": "Ghosting",
+        "expectedEpisode": "Ghosting"
+    },
+    "tc-sub-030-player-controls-autodismiss": {
+        "mode": "valid",
+        "query": "ekstra",
+        "expectedTitle": "ekstra",
+        "expectedEpisode": "ekstra"
+    },
+    "tc-sub-031-player-controls-hover-dismiss": {
+        "mode": "valid",
+        "query": "Ma",
+        "expectedTitle": "Ma",
+        "expectedEpisode": "Ma"
+    },
+    "tc-sub-032-volume-button-control": {
+        "mode": "valid",
+        "query": "Ma",
+        "expectedTitle": "Ma",
+        "expectedEpisode": "Ma"
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",

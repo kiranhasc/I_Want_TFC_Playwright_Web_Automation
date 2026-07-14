@@ -268,6 +268,31 @@
   testCases:
     - "IW3-T1960"
   dependsOn: []
+
+- id: "verify-continue-watching-details-and-more"
+  name: "Verify Continue Watching details and more navigation"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingDetailsAndMoreNavigation"
+  tags:
+    - continue-watching
+    - navigation
+    - positive
+  testCases:
+    - "IW3-T1935"
+  dependsOn: []
+
+- id: "verify-continue-watching-across-tabs"
+  name: "Verify Continue Watching content after playback from different tabs"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingAcrossTabs"
+  tags:
+    - continue-watching
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1945"
+  dependsOn: []
+
 - id: "verify-search-icon-visibility"
   name: "Verify search icon visibility on navigation pages"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -373,6 +398,39 @@
     - "IW3-T2099"
   dependsOn:
     - "login-to-ott"
+
+- id: "verify-player-controls-autodismiss"
+  name: "Verify player controls auto-dismiss after inactivity"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlayerControlsAutoDismissFlow"
+  tags:
+    - playback
+    - ui
+  testCases:
+    - "IW3-T1997"
+  dependsOn: []
+
+- id: "verify-player-controls-hover-dismiss"
+  name: "Verify player controls dismissed when hovering while visible"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlayerControlsHoverDismissFlow"
+  tags:
+    - playback
+    - ui
+  testCases:
+    - "IW3-T1998"
+  dependsOn: []
+
+- id: "verify-volume-control"
+  name: "Verify user can adjust volume using volume button"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyVolumeControlFlow"
+  tags:
+    - playback
+    - ui
+  testCases:
+    - "IW3-T2005"
+  dependsOn: []
 
 - id: "verify-parental-pin-invalid-password-error"
   name: "Verify parental PIN invalid password error message"
@@ -878,6 +936,42 @@
     - positive
   testCases:
     - "IW3-T1988"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-next-episode-cta-visibility"
+  name: "Verify the Next Episode CTA appears under the seek bar when next episode exists"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyNextEpisodeCtaVisibilityFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1989"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-up-next-binge-marker"
+  name: "Verify the Up Next binge marker appears at the end of playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyUpNextBingeMarkerFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1990"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-back-button-navigation"
+  name: "Verify tapping the playback back button returns to the previous details screen"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyBackButtonNavigationFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1992"
   dependsOn:
     - "login-to-ott"
 

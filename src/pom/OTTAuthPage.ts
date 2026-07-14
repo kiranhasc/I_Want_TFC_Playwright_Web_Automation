@@ -100,9 +100,9 @@ export class OTTAuthPage {
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
-        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
+        this.verifyOTPHeading = { role: 'heading', text: 'Verify your identity', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
-        this.emailErrorMessage = { selector: 'form', text: 'Invalid email address' };
+        this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
@@ -142,8 +142,8 @@ export class OTTAuthPage {
         this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
         this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
         this.profileLink = { selector: 'role=img[name="account"]' };
-        this.profileSectionTextElement = { selector: 'text=Account' };
-        this.accountDetailsTextElement = { selector: 'text=Subscription' };
+        this.profileSectionTextElement = { selector: 'h1:has-text("Account"), h2:has-text("Account"), section:has-text("Account")' };
+        this.accountDetailsTextElement = { selector: 'h1:has-text("Subscription"), h2:has-text("Subscription"), h3:has-text("Subscription")' };
         this.createAccountLinkFromHome = { role: 'link', text: 'Create Account', selector: 'a:has-text("Create Account")' };
         this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
@@ -1079,7 +1079,7 @@ export class OTTAuthPage {
         logger.step(`Search completed - Results count: ${resultsCount}, Has query text: ${hasResults}`);
         return hasResults || resultsCount > 0;
     }
-    
+
     async enterSearchText(text: string): Promise<void> {
         logger.elementInteraction('type', 'Search input');
         await this.pageUtils.safeType(this.searchBar, text);
@@ -1284,7 +1284,7 @@ export class OTTAuthPage {
     }
 
     async isLoginSuccessful(): Promise<boolean> {
-        const profileVisible = await this.pageUtils.isVisible(this.profileLink, 5000);
+        const profileVisible = await this.pageUtils.isVisible(this.profileLink, 10000);
         if (profileVisible) {
             return true;
         }

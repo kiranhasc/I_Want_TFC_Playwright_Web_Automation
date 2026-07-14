@@ -90,21 +90,6 @@ test.describe('Play Back', () => {
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialVolume).toBeGreaterThanOrEqual(0);
     expect(result.adjustedVolume).toBeGreaterThanOrEqual(0);
-    // expect(result.muteToggled).toBeTruthy();
-  });
-
-  test.skip('@Medium IW3-T1998 - player controls dismissed when hovering while visible', async ({ page }) => {
-    const data = testData['tc-sub-031-player-controls-hover-dismiss'] as Record<string, any>;
-    const result = await verifyPlayerControlsHoverDismissFlow(page, {
-      query: data.query,
-      mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
-    });
-
-    expect(result.detailsVisible).toBeTruthy();
-    expect(result.controlsInitiallyVisible).toBeTruthy();
-    expect(result.controlsDismissedOnHover).toBeTruthy();
   });
 
   test('@High IW3-T2000 - seek bar behaves correctly across supported browsers', async ({ page }) => {
@@ -279,7 +264,6 @@ test.describe('Play Back', () => {
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
     });
-    //Assertions
       expect(result.isLoggedIn).toBeTruthy();
       expect(result.detailsVisible).toBeTruthy();
       expect(result.subtitleSelectionSuccessful).toBeTruthy();
@@ -345,8 +329,6 @@ test.describe('Play Back', () => {
     expect(result.seekBarVisible).toBeTruthy();
     expect(result.pausePlayVisible).toBeTruthy();
     expect(result.forwardRewindVisible).toBeTruthy();
-    // expect(result.nextEpisodeVisible).toBeTruthy();
-    // Conditional checks - may be true if visible, false if not available
     expect(typeof result.subtitleVisible).toBe('boolean');
     expect(typeof result.nextEpisodeVisible).toBe('boolean');
   });
@@ -365,20 +347,6 @@ test.describe('Play Back', () => {
     expect(typeof result.nextEpisodeVisible).toBe('boolean');
     expect(typeof result.nextEpisodeBelowSeekBar).toBe('boolean');
   });
-
-  // test('@Medium IW3-T1990 - Up Next binge marker appears at the end of playback', async ({ page }) => {
-  //   test.setTimeout(90000);
-  //   const data = testData['tc-sub-028-up-next-marker'] as Record<string, any>;
-  //   const result = await verifyUpNextBingeMarkerFlow(page, {
-  //     mode: data.mode,
-  //     query: data.query,
-  //     expectedTitle: data.expectedTitle,
-  //     expectedEpisode: data.expectedEpisode,
-  //   });
-
-  //   expect(result.detailsVisible).toBeTruthy();
-  //   expect(result.upNextMarkerVisible).toBeTruthy();
-  // });
 
   test('@Medium IW3-T1992 - tapping the playback back button returns to the previous details screen', async ({ page }) => {
     const data = testData['tc-sub-029-back-button-navigation'] as Record<string, any>;

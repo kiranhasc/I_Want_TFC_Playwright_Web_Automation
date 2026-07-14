@@ -84,22 +84,16 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickPlayButton();
-  // await detailsPage.waitForPlayback(3);
-  // await detailsPage.tapPlaybackScreen();
-
   const fullscreenVisible = await detailsPage.isFullscreenButtonVisible();
   await detailsPage.clickFullscreenButton();
   await detailsPage.waitForPlayback(2);
-
   const contentTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer(input?.expectedTitle);
   const initialPlaybackTime = await detailsPage.getPlaybackTimeText();
   await detailsPage.waitForPlayback(10);
   await detailsPage.tapPlaybackScreen();
   const updatedPlaybackTime = await detailsPage.getPlaybackTimeText();
   const playbackTimeProgressed = initialPlaybackTime !== updatedPlaybackTime;
-
   logger.assertion('Fullscreen button visible before interaction', fullscreenVisible);
   logger.assertion('Content title visible after entering fullscreen', contentTitleVisible);
   logger.assertion('Playback time progressed after waiting in fullscreen', playbackTimeProgressed);
@@ -173,11 +167,6 @@ export interface VerifySmoothPlaybackOutput {
 export interface VerifySeekBarDragOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
-  // playerVisible: boolean;
-  // contentTitleVisible: boolean;
-  // episodeNameVisible: boolean;
-  // seekBarVisible: boolean;
-  // playbackTimeVisible: boolean;
   playbackPositionChanged: boolean;
 }
 
@@ -324,7 +313,6 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
 
-  // search and open first content
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -335,15 +323,12 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
 
-  // Play then wait
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(20);
   const initialPlayed = true;
 
-  // Hover over the player screen, then click resume and wait
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickResumeButton();
-  // follow test steps: wait 10s after tapping resume to allow playback to start
   await detailsPage.waitForPlayback(1);
   const resumed = true;
 
@@ -441,21 +426,11 @@ export async function verifySeekBarDragFlow(page: any, input?: OpenContentAndPla
   const updatedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
   const playbackPositionChanged = initialPlaybackTime !== updatedPlaybackTime;
 
-  // logger.assertion('Player screen visible', playerVisible);
-  // logger.assertion('Content title visible on player screen', contentTitleVisible);
-  // logger.assertion('Episode name visible on player screen', episodeNameVisible);
-  // logger.assertion('Seek bar visible during seek drag', seekBarVisible);
-  // logger.assertion('Playback time visible during seek drag', playbackTimeVisible);
   logger.assertion('Playback position changed after dragging seek bar', playbackPositionChanged);
 
   return {
     isLoggedIn,
     detailsVisible,
-    // playerVisible,
-    // contentTitleVisible,
-    // episodeNameVisible,
-    // seekBarVisible,
-    // playbackTimeVisible,
     playbackPositionChanged,
   };
 }
@@ -590,13 +565,11 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
 
-  // show controls
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.waitForPlayback(1);
   const controlsInitiallyVisible = await detailsPage.isPauseButtonVisible();
   logger.assertion('Player controls visible after tapping playback screen', controlsInitiallyVisible);
 
-  // wait for inactivity period (>5s) to verify auto-dismiss
   await detailsPage.waitForPlayback(5);
   const controlsStillVisible = await detailsPage.isPauseButtonVisible();
   const controlsAutoDismissed = controlsInitiallyVisible && !controlsStillVisible;
@@ -1095,7 +1068,6 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   await detailsPage.tapPlaybackScreen();
 
   await detailsPage.clickSubtitleButton();
-  // await detailsPage.waitForPlayback(1);
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
 
   await detailsPage.clickNextEpisodeButton();
@@ -1198,8 +1170,6 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
 
   await detailsPage.clickSubtitleButton();
   await detailsPage.waitForPlayback(1);
-  // await detailsPage.dragSeekBarToPosition(0.2);
-  // await detailsPage.selectSubtitleLanguage();
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   console.log('Subtitle selection successful:', subtitleSelectionSuccessful);
   await detailsPage.waitForPlayback(1);
@@ -1243,7 +1213,6 @@ export interface VerifyPreRollAdPlaybackOutput {
   isLoggedIn: boolean;
   playerVisible: boolean;
   adVisible: boolean;
-  // mainContentVisible: boolean;
 }
 
 export interface VerifyPauseAdPlaybackOutput {
@@ -1285,19 +1254,14 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
   await detailsPage.waitForPlayback(90);
-  // await detailsPage.hoverPlaybackScreen();
-  // await detailsPage.clickPauseButton();
-  // const mainContentVisible = await detailsPage.isPlaybackTimeVisible();
 
   logger.assertion('Player screen visible for pre-roll ad flow', playerVisible);
   logger.assertion('Ad visible before main content starts', adVisible);
-  // logger.assertion('Main content playback visible after ad completes', mainContentVisible);
 
   return {
     isLoggedIn,
     playerVisible,
     adVisible,
-    // mainContentVisible,
   };
 }
 
@@ -1516,8 +1480,6 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(30);
   await detailsPage.hoverPlaybackScreen();
-  // await detailsPage.clickPauseButton();
-  // await detailsPage.waitForPlayback(2);
 
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();

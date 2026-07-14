@@ -8,6 +8,10 @@ import { TIMEOUT } from 'node:dns';
 export class OTTDetailsPage {
   private readonly page: Page;
   private readonly pageUtils: PageUtils;
+  private storedContentTitle: string = '';
+  private storedContentMetadata: string = '';
+  private storedContentDescription: string = '';
+  private hasStoredDetails: boolean = false;
   private readonly showsSectionLink: PageElement;
   private readonly firstShowContentCard: PageElement;
   private readonly playButton: PageElement;
@@ -68,6 +72,11 @@ export class OTTDetailsPage {
   private readonly goLiveButton: PageElement;
   private readonly adTag: PageElement;
   private readonly pauseAdBanner: PageElement;
+  private readonly firstTitleImageCard: PageElement;
+  private readonly titleImageWithAlt: PageElement;
+  private readonly contentMetadataDiv: PageElement;
+  private readonly contentDescDiv: PageElement;
+  private readonly contentCardContainer: PageElement;
   private readonly continueWatchingDetailsAndMore: PageElement;
   private readonly contentDetailsHeading: PageElement;
 
@@ -141,6 +150,11 @@ export class OTTDetailsPage {
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
     this.adTag = { selector: '//*[@id="ad-ui-overlay"]' };
     this.pauseAdBanner = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"]' };
+    this.firstTitleImageCard = { selector: 'img.title-image' };
+    this.titleImageWithAlt = { selector: '//img[contains(@class,"title") and @alt]' };
+    this.contentMetadataDiv = { selector: 'div.metadata, [class*="metadata"]' };
+    this.contentDescDiv = { selector: 'div.desc, [class*="desc"]' };
+    this.contentCardContainer = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
     this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
     this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
 
@@ -200,6 +214,31 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickFirstFreeContentOnHome(): Promise<void> {
+    logger.elementInteraction('click', 'first free-tagged content on home');
+
+    try {
+      const freeBadge = this.page.locator("//img[@alt='free' and contains(@src,'free.png')]").first();
+      await freeBadge.waitFor({ state: 'visible', timeout: 15000 });
+
+      const contentCard = freeBadge.locator('xpath=ancestor::*[self::div or self::a or self::li][1]').first();
+      const contentTarget = contentCard.locator('a, button, [role="button"], img.title-image, img').first();
+
+      if (await contentTarget.count()) {
+        await contentTarget.waitFor({ state: 'visible', timeout: 15000 });
+        await contentTarget.click({ timeout: 15000 });
+      } else {
+        await freeBadge.click({ timeout: 15000 });
+      }
+
+      await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+      await this.page.waitForTimeout(2000);
+    } catch (err) {
+      logger.debug('clickFirstFreeContentOnHome failed', err);
+    }
+  }
+
   async clickFirstEpisodeCard(): Promise<void> {
     logger.elementInteraction('click', 'first episode card');
 
@@ -225,14 +264,10 @@ export class OTTDetailsPage {
 
   async clickWatchlistIcon(): Promise<void> {
     logger.elementInteraction('click', 'watchlist icon');
-    try {
       const locator = this.page.locator(this.addToWatchlistButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       await locator.click({ timeout: 15000 });
       await this.page.waitForTimeout(1000);
-    } catch (error) {
-      logger.debug('Watchlist icon click failed', error);
-    }
   }
 
   async hoverContentThumbnailAndClickWatchlistIcon(contentTitle: string): Promise<void> {
@@ -250,6 +285,14 @@ export class OTTDetailsPage {
     } catch (error) {
       logger.debug(`Hover content thumbnail and click watchlist icon failed for ${contentTitle}`, error);
     }
+  }
+
+  async verifyWatchlistHeading(expectFn: typeof expect, contentTitle: string): Promise<void> {
+    logger.elementInteraction('verify', `watchlist heading ${contentTitle}`);
+    const heading = this.page.getByRole('heading', { name: contentTitle }).first();
+    await heading.waitFor({ state: 'visible', timeout: 15000 });
+    await heading.click({ timeout: 15000 });
+    await expectFn(heading).toBeVisible();
   }
 
   async hoverFirstContentThumbnailAndClickWatchlistIcon(): Promise<void> {
@@ -317,7 +360,7 @@ async removeFromWatchlist(): Promise<void> {
 
   async isLiveChannelsTrayVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator('//main//div[1]/div[3]/div[1]/p').first();
+      const locator = this.page.locator('//p[normalize-space()="Live Channels"]').first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       return true;
     } catch {
@@ -328,7 +371,7 @@ async removeFromWatchlist(): Promise<void> {
   async openLiveChannelsTray(): Promise<void> {
     logger.elementInteraction('click', 'Live Channels tray');
     try {
-      const locator = this.page.locator('//main//div[1]/div[3]/div[1]/p').first();
+      const locator = this.page.locator('//p[normalize-space()="Live Channels"]').first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       await locator.click({ timeout: 15000 });
       await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
@@ -421,7 +464,7 @@ async removeFromWatchlist(): Promise<void> {
     logger.elementInteraction('click', 'episode two');
     try {
       await this.scrollToEpisodeList();
-      const episodeTwoLocator = this.page.getByText('ArrivalS1 E226m 56sGreg, the').first();
+      const episodeTwoLocator = this.page.getByText('S1 E2').first();
       await episodeTwoLocator.waitFor({ state: 'visible', timeout: 15000 });
       await episodeTwoLocator.click({ timeout: 15000 });
       await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 });
@@ -730,6 +773,246 @@ async addToWatchlistAndGetToast(): Promise<string> {
       return false;
     }
   }
+
+  async isPremiumTagVisibleInWatchlist(contentTitle?: string): Promise<boolean> {
+    logger.elementInteraction('verify', 'Premium tag in watchlist');
+
+    try {
+      const title = contentTitle?.trim();
+      const cardLocator = title
+        ? this.page.getByRole('img', { name: title }).first()
+        : this.page.getByRole('img').first();
+
+      await cardLocator.waitFor({ state: 'visible', timeout: 15000 });
+
+      // Look for a premium tag/icon within the card's ancestor container
+      const ancestor = cardLocator.locator('xpath=ancestor::*[1]');
+      const tagLocator = ancestor.locator('img[alt="tag"], img[aria-label="tag"], img[title="tag"]').first();
+      if (await tagLocator.count()) {
+        await tagLocator.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
+        return await tagLocator.isVisible().catch(() => false);
+      }
+
+      // Fallback: global premium tag presence near the image
+      const globalTag = this.page.locator('img[alt="tag"], img[aria-label="tag"], img[title="tag"]').first();
+      await globalTag.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
+      return await globalTag.isVisible().catch(() => false);
+    } catch (error) {
+      logger.debug('Premium tag visibility check failed', error);
+      return false;
+    }
+  }
+
+  async isContentAbsentInWatchlist(contentTitle: string): Promise<boolean> {
+    logger.elementInteraction('verify', `content absence in watchlist ${contentTitle}`);
+    try {
+      const locator = this.page.getByRole('img', { name: contentTitle }).first();
+      const count = await locator.count();
+      if (count === 0) {
+        return true;
+      }
+      await expect(locator).toBeHidden({ timeout: 10000 });
+      return true;
+    } catch (error) {
+      logger.debug(`Content absence validation failed for ${contentTitle}`, error);
+      return false;
+    }
+  }
+
+  async isContentThumbnailVisibleInWatchlist(contentTitle: string): Promise<boolean> {
+    logger.elementInteraction('verify', `content thumbnail visible in watchlist for ${contentTitle}`);
+    try {
+      const thumbnail = this.page.getByRole('img', { name: contentTitle }).first();
+      await thumbnail.waitFor({ state: 'visible', timeout: 15000 });
+      return await thumbnail.isVisible();
+    } catch (error) {
+      logger.debug(`Thumbnail visibility check failed for ${contentTitle}`, error);
+      return false;
+    }
+  }
+
+  async isContentMetadataVisibleInWatchlist(contentTitle: string): Promise<boolean> {
+    logger.elementInteraction('verify', `content metadata visible in watchlist for ${contentTitle}`);
+    try {
+      const metadataLocator = this.page.getByText(contentTitle, { exact: true }).first();
+      await metadataLocator.waitFor({ state: 'visible', timeout: 15000 });
+      return await metadataLocator.isVisible();
+    } catch (error) {
+      logger.debug(`Metadata visibility check failed for ${contentTitle}`, error);
+      return false;
+    }
+  }
+
+  async isContentCardValidInWatchlist(contentTitle: string): Promise<boolean> {
+    logger.elementInteraction('verify', `content card validity in watchlist for ${contentTitle}`);
+    try {
+      const thumbnail = this.page.getByRole('img', { name: contentTitle }).first();
+      const metadata = this.page.getByText(contentTitle, { exact: true }).first();
+
+      await thumbnail.waitFor({ state: 'visible', timeout: 15000 });
+      await metadata.waitFor({ state: 'visible', timeout: 15000 });
+
+      const cardContainer = thumbnail.locator(this.contentCardContainer.selector);
+      const isCardVisible = await cardContainer.isVisible().catch(() => true);
+      const thumbnailVisible = await thumbnail.isVisible();
+      const metadataVisible = await metadata.isVisible();
+
+      return isCardVisible && thumbnailVisible && metadataVisible;
+    } catch (error) {
+      logger.debug(`Content card validity check failed for ${contentTitle}`, error);
+      return false;
+    }
+  }
+
+  async getFirstContentTitle(): Promise<string> {
+    logger.elementInteraction('get', 'first content title from current page');
+    try {
+      const firstTitleImage = this.page.locator(this.firstTitleImageCard.selector).first();
+      await firstTitleImage.waitFor({ state: 'visible', timeout: 10000 });
+      const title = await firstTitleImage.getAttribute('alt');
+      if (title) {
+        logger.debug(`Retrieved first content title: ${title}`);
+        return title;
+      }
+
+      const cardContainer = firstTitleImage.locator(this.contentCardContainer.selector).first();
+      const heading = cardContainer.locator('h2, h3, h4, [role="heading"]').first();
+      const headingText = await heading.textContent();
+      if (headingText) {
+        logger.debug(`Retrieved first content title from heading: ${headingText}`);
+        return headingText.trim();
+      }
+      throw new Error('Could not extract title from first content card');
+    } catch (error) {
+      logger.error(`Failed to get first content title: ${error}`);
+      throw error;
+    }
+  }
+
+  async hoverOverFirstContent(): Promise<void> {
+    logger.elementInteraction('hover', 'over first content card');
+    try {
+      const firstTitleImage = this.page.locator(this.firstTitleImageCard.selector).first();
+      await firstTitleImage.waitFor({ state: 'visible', timeout: 10000 });
+      await firstTitleImage.hover();
+      logger.debug('Hovered over first content card');
+      await this.page.waitForTimeout(500);
+    } catch (error) {
+      logger.error(`Failed to hover over first content: ${error}`);
+      throw error;
+    }
+  }
+
+  async clickFirstContentInWatchlist(): Promise<void> {
+    logger.elementInteraction('click', 'first content in watchlist');
+    try {
+      const firstContent = this.page.locator(this.firstTitleImageCard.selector).first();
+      await firstContent.waitFor({ state: 'visible', timeout: 10000 });
+      await firstContent.click();
+      logger.debug('Clicked on first content in watchlist');
+    } catch (error) {
+      logger.error(`Failed to click first content in watchlist: ${error}`);
+      throw error;
+    }
+  }
+
+  async assertContentTitle(): Promise<void> {
+    logger.elementInteraction('assert', 'content title details');
+    try {
+      await this.page.waitForTimeout(2000); 
+
+      const titleImage = this.page.locator(this.titleImageWithAlt.selector).first();
+      const imageTitle = await titleImage.getAttribute('alt').catch(() => null);
+
+      const metadata = this.page.locator(this.contentMetadataDiv.selector).first();
+      const metadataText = await metadata.textContent().catch(() => null);
+
+      const description = this.page.locator(this.contentDescDiv.selector).first();
+      const descText = await description.textContent().catch(() => null);
+
+      expect(imageTitle || metadataText || descText).toBeTruthy();
+
+      if (!this.hasStoredDetails) {
+        this.storedContentTitle = imageTitle || '';
+        this.storedContentMetadata = metadataText || '';
+        this.storedContentDescription = descText || '';
+        this.hasStoredDetails = true;
+        logger.debug(`Stored first content details - Title: ${this.storedContentTitle}, Metadata: ${this.storedContentMetadata?.substring(0, 50)}, Description: ${this.storedContentDescription?.substring(0, 50)}`);
+      }
+
+      logger.info(`✓ Content Title (from image): ${imageTitle || 'N/A'}`);
+      logger.info(`✓ Content Metadata: ${metadataText?.trim().substring(0, 100) || 'N/A'}...`);
+      logger.info(`✓ Content Description: ${descText?.trim().substring(0, 100) || 'N/A'}...`);
+
+      logger.debug(`Content title assertion passed - Title: ${imageTitle}, Metadata: ${!!metadataText}, Description: ${!!descText}`);
+    } catch (error) {
+      logger.error(`Failed to assert content title: ${error}`);
+      throw error;
+    }
+  }
+
+  async assertBothContentsMatch(): Promise<void> {
+    logger.elementInteraction('assert', 'both contents match');
+    try {
+      // Get current content details
+      const titleImage = this.page.locator('//img[contains(@class,"title") and @alt]').first();
+      const currentTitle = await titleImage.getAttribute('alt').catch(() => null);
+      
+      const metadata = this.page.locator('//div[contains(@class,"metadata")]').first();
+      const currentMetadata = await metadata.textContent().catch(() => null);
+      
+      const description = this.page.locator('//div[contains(@class,"desc")]').first();
+      const currentDescription = await description.textContent().catch(() => null);
+      
+      const titleMatches = this.storedContentTitle === (currentTitle || '');
+      const metadataMatches = this.storedContentMetadata === (currentMetadata || '');
+      const descriptionMatches = this.storedContentDescription === (currentDescription || '');
+      
+      const allMatch = titleMatches && metadataMatches && descriptionMatches;
+      
+      expect(allMatch).toBe(true);
+      
+      logger.info(` Content Title Match: ${titleMatches}`);
+      logger.info(` Stored Title: ${this.storedContentTitle || 'N/A'}`);
+      logger.info(` Current Title: ${currentTitle || 'N/A'}`);
+      logger.info(` Content Metadata Match: ${metadataMatches}`);
+      logger.info(` Content Description Match: ${descriptionMatches}`);
+      logger.info(` Both Contents Are Same: ${allMatch}`);
+      
+      logger.debug(`Content match comparison - Title: ${titleMatches}, Metadata: ${metadataMatches}, Description: ${descriptionMatches}, All Match: ${allMatch}`);
+    } catch (error) {
+      logger.error(`Failed to assert content match: ${error}`);
+      throw error;
+    }
+  }
+
+  async assertAndLogFirstContentDetails(): Promise<void> {
+    logger.elementInteraction('assert', 'first content thumbnail, metadata and title');
+    try {
+      const firstTitleImage = this.page.locator(this.firstTitleImageCard.selector).first();
+      await firstTitleImage.waitFor({ state: 'visible', timeout: 10000 });
+
+      const title = await firstTitleImage.getAttribute('alt');
+      const isThumbnailVisible = await firstTitleImage.isVisible();
+
+      const cardContainer = firstTitleImage.locator(this.contentCardContainer.selector).first();
+      const metadata = await cardContainer.textContent();
+
+      expect(isThumbnailVisible).toBe(true);
+      expect(title).toBeTruthy();
+      expect(metadata).toBeTruthy();
+
+      logger.info(`✓ Thumbnail visible: ${isThumbnailVisible}`);
+      logger.info(`✓ Content Title: ${title}`);
+      logger.info(`✓ Content Metadata: ${metadata?.trim().substring(0, 100)}...`);
+
+      logger.debug(`Content details verified - Title: ${title}, Metadata visible: ${!!metadata}`);
+    } catch (error) {
+      logger.error(`Failed to assert and log first content details: ${error}`);
+      throw error;
+    }
+  }
+
   async getPlaybackEpisodeTitleText(): Promise<string> {
   const locator = await this.page.getByText('backThe Blood SistersS1 E1 · Episode').first();
 

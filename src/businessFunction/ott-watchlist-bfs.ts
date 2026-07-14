@@ -38,6 +38,30 @@ export interface ManageWatchlistItemOutput {
   removeToastText: string;
 }
 
+export interface AddContentToWatchlistFromSearchPageInput {
+  mode?: string;
+  query?: string;
+}
+
+export interface AddContentToWatchlistFromSearchPageOutput {
+  isLoggedIn: boolean;
+  addedToWatchlist: boolean;
+  isVisibleInMyWatchlist: boolean;
+  toastText: string;
+}
+
+export interface RemoveContentFromWatchlistFromSearchPageInput {
+  mode?: string;
+  query?: string;
+}
+
+export interface RemoveContentFromWatchlistFromSearchPageOutput {
+  isLoggedIn: boolean;
+  removedFromWatchlist: boolean;
+  isVisibleInMyWatchlist: boolean;
+  toastText: string;
+}
+
 export async function verifyGuestWatchlistNavigationFromFreeAsset(
   page: any,
   input?: Partial<VerifyGuestWatchlistNavigationInput>
@@ -95,42 +119,98 @@ export async function manageWatchlistItem(
   };
 }
 
-export async function verifyLiveContentWatchlistAbsence(
+export async function addContentToWatchlistFromSearchPage(
   page: any,
-  input: Partial<VerifyLiveContentWatchlistAbsenceInput>
-): Promise<VerifyLiveContentWatchlistAbsenceOutput> {
+  input?: Partial<AddContentToWatchlistFromSearchPageInput>): Promise<AddContentToWatchlistFromSearchPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting search-page watchlist add flow');
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail('sanitycheck@yopmail.com');
+  await authPage.clickPasswordField();
+  await authPage.enterPassword('Test1234');
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(input?.query ?? 'Abandoned');
+  await authPage.submitSearchQuery();
+  const toastText = await detailsPage.hoverContentThumbnailAndClickWatchlistIcon(input?.query ?? 'Abandoned');
+  const addedToWatchlist = toastText.toLowerCase().includes('added');
+  await authPage.clickMyWatchlistTab();
+  const isVisibleInMyWatchlist = await detailsPage.isWatchlistItemVisible(input?.query ?? 'Abandoned');
+  logger.assertion('Content added to watchlist from search results', addedToWatchlist);
+  logger.assertion('Added content visible in My Watchlist', isVisibleInMyWatchlist);
+  return {
+    isLoggedIn: true,
+    addedToWatchlist,
+    isVisibleInMyWatchlist,
+    toastText,
+  };
+}
+
+export async function removeContentFromWatchlistFromSearchPage(page: any,input?: Partial<RemoveContentFromWatchlistFromSearchPageInput>): Promise<RemoveContentFromWatchlistFromSearchPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting search-page watchlist remove flow');
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail('sanitycheck@yopmail.com');
+  await authPage.clickPasswordField();
+  await authPage.enterPassword('Test1234');
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  const contentTitle = input?.query ;
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(contentTitle);
+  await authPage.submitSearchQuery();
+  const watchlistActionState = await detailsPage.getWatchlistActionState(contentTitle);
+  if (watchlistActionState === 'add') {
+    const addToastText = await detailsPage.hoverContentThumbnailAndClickWatchlistIcon(contentTitle);
+    logger.assertion('Content added before removal', addToastText.toLowerCase().includes('added'));
+  }
+  await detailsPage.hoverContentThumbnailAndClickRemoveWatchlistIcon(contentTitle);
+  const toastText = await detailsPage.validateRemovedFromWatchlistPopup();
+  const removedFromWatchlist = toastText.toLowerCase().includes('removed');
+  await authPage.clickMyWatchlistTab();
+  const isVisibleInMyWatchlist = await detailsPage.isWatchlistItemVisible(contentTitle);
+  logger.assertion('Content removed from watchlist from search results', removedFromWatchlist);
+  return {
+    isLoggedIn: true,
+    removedFromWatchlist,
+    isVisibleInMyWatchlist,
+    toastText,
+  };
+}
+
+export async function verifyLiveContentWatchlistAbsence(page: any,input: Partial<VerifyLiveContentWatchlistAbsenceInput>): Promise<VerifyLiveContentWatchlistAbsenceOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting live content watchlist absence validation flow');
-
   await authPage.navigate();
   await authPage.acceptCookieSettingsIfVisible();
-
   const email = input?.email;
   const password = input?.password;
   if (!email || !password) {
     throw new Error('Live content watchlist absence flow requires email and password from test data');
   }
-
   await authPage.clickEmailField();
   await authPage.enterEmail(email);
   await authPage.clickPasswordField();
   await authPage.enterPassword(password);
   await authPage.clickContinue();
-
   const isLiveChannelsTrayVisible = await detailsPage.isLiveChannelsTrayVisible();
   if (isLiveChannelsTrayVisible) {
     await detailsPage.openLiveChannelsTray();
     await detailsPage.clickLiveContentByName(input?.liveContentName ?? 'DZMM Teleradyo');
   }
-  
   const isLiveIconVisible = await detailsPage.isLiveIconVisible();
   const isAddToWatchlistButtonVisible = await detailsPage.isAddToWatchlistButtonVisible();
-
   logger.assertion('Live channels tray visible', isLiveChannelsTrayVisible);
   logger.assertion('Live icon visible after content selection', isLiveIconVisible);
   logger.assertion('Watchlist icon not visible for live content', !isAddToWatchlistButtonVisible);
-
   return {
     isLiveChannelsTrayVisible,
     isLiveContentVisible: isLiveIconVisible,

@@ -464,6 +464,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    9. When user is on "GMA" tab
       * expect Search icon should be visible in the top Navigation bar
 
+### 7.2. IW3-T2062 Verify that the user can type a search query in the input box
 **File:** `tests/home/search.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -474,6 +475,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    6. Type 'Abandoned' in search field 
       * expect Observe 'Abandoned' text should appear clearly in the input box
 
+### 7.3. IW3-T2064 Verify the search results are shown when a valid title is entered in the Search field
 **File:** `tests/home/search.spec.ts`
 **Steps:**
    1. Open the browser.
@@ -484,6 +486,69 @@ This test plan covers validation of application launch behavior for the OTT plat
    6. Type 'Abandoned' in search field 
    7. Observe the Search result
       * expect Observe 'Abandoned' related results should appear with thumbnails and labels
+
+### 7.4. IW3-T2058 Verify user is able to add content to My Watchlist via hover from search page
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Type any Movie/Show content name
+   7. Hover on Movie/Show content
+   8. Tap on add to watchlist icon
+      * expect Content should be added to my watchlist and "Added to Watchlist" toast message should be displayed
+
+### 7.5. IW3-T2059 Verify user is able to remove content from my watchlist via hover from search page
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Type any Movie/Show content name
+   7. Hover on Movie/Show content
+   8. Tap on add to watchlist icon
+   9. Hover on same content
+   10. Click on remove from my watchlist icon
+      * expect Content should be removed from my watchlist and "Removed from watchlist" toast message should be displayed
+
+### 7.6. IW3-T2063 Verify the auto-suggestions while typing in the search field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Type anything and Observe
+      * expect Auto-suggestions should appear based on partial input
+
+### 7.7. IW3-T2065 Verify the message like 'No results found.' is shown for irrelevant search terms
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Type anything and observe(Ex: tfdiyhujehfdyhglfjh843847hgfhilwajigjlu, @#%*",)
+      * expect A proper "No results found." message should be displayed, assert this excepted mesaage
+
+### 7.8. IW3-T2066 Verify if subscribed users can play premium content from search results
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Search any content
+   7. Tap on that particular content(Premium)
+   8. Tap on play and Observe      
+   * expect Playback should start successfully when the user play premium content from search results if they have a subscription
 
 ### 8.1. IW3-T2094 Verify Parental pin option will be available is Settings page
 **File:** `tests/home/parential-pin.spec.ts`

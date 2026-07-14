@@ -62,6 +62,40 @@ export async function openContentAndPlay(page: any, input?: OpenContentAndPlayIn
   };
 }
 
+export async function playPremiumContentFromSearch(page: any, input?: PlayPremiumContentFromSearchInput): Promise<PlayPremiumContentFromSearchOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const searchQuery = (input?.searchQuery ?? '').trim();
+  const mode = input?.mode;
+  logger.step('Starting premium content search and playback flow');
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in', isLoggedIn);
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(searchQuery);
+  const searchQueryTyped = searchQuery.length > 0;
+  logger.assertion('Search query typed', searchQueryTyped);
+  await authPage.submitSearchQuery();
+  const searchResultsVisible = await authPage.isSearchResultsVisible(searchQuery);
+  logger.assertion('Search results visible for premium content query', searchResultsVisible);
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Content details page visible', detailsVisible);
+  await detailsPage.clickPlayButton();
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  logger.assertion('Player screen visible', playerVisible);
+  const playbackStarted = playerVisible;
+  logger.assertion('Playback started successfully for premium content', playbackStarted);
+  return {
+    isLoggedIn,
+    searchQueryTyped,
+    searchResultsVisible,
+    detailsVisible,
+    playerVisible,
+    playbackStarted,
+  };
+}
+
 export interface VerifyPlaybackResumeOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -97,8 +131,6 @@ export interface VerifyBrowserSeekBarFlowOutput {
   playbackTimeVisible: boolean;
   playbackPositionChanged: boolean;
 }
-
-
 
 export interface VerifyPlayerControlsOutput {
   isLoggedIn: boolean;
@@ -152,6 +184,21 @@ export interface VerifyPlaybackShortDurationTimestampFormatOutput {
   detailsVisible: boolean;
   shortFormatValid: boolean;
   playbackTimeText: string;
+}
+
+export interface PlayPremiumContentFromSearchInput {
+  mode?: string;
+  searchQuery: string;
+  expectedPlayback?: boolean;
+}
+
+export interface PlayPremiumContentFromSearchOutput {
+  isLoggedIn: boolean;
+  searchQueryTyped: boolean;
+  searchResultsVisible: boolean;
+  detailsVisible: boolean;
+  playerVisible: boolean;
+  playbackStarted: boolean;
 }
 
 export interface VerifySubtitleSelectionOutput {

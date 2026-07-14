@@ -612,7 +612,10 @@ export class OTTAuthPage {
 
     async clickMyWatchlistTab(): Promise<void> {
         logger.elementInteraction('click', 'My Watchlist tab');
-        await this.page.waitForTimeout(1500);
+        const locator = this.page.locator(this.myWatchlistTab.selector).first();
+        await locator.waitFor({ state: 'attached', timeout: 15000 });
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.scrollIntoViewIfNeeded().catch(() => undefined);
         await this.pageUtils.safeClick(this.myWatchlistTab);
     }
 
@@ -1097,6 +1100,122 @@ export class OTTAuthPage {
             return normalizedAltText.includes(normalizedQuery) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
         }
         return /(search|result|thumbnail|poster|image)/i.test(altText || '');
+    }
+
+    async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
+        logger.elementInteraction('verify', 'search auto-suggestions');
+        try {
+            const suggestions = this.page.locator('[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"]');
+            // Wait for suggestions to appear
+            await this.page.waitForTimeout(500);
+            const suggestionCount = await suggestions.count();
+            if (suggestionCount > 0) {
+                await suggestions.first().waitFor({ state: 'visible', timeout: 8000 });
+                await this.page.waitForTimeout(800);
+                return true;
+            }
+            // Try alternative selectors if primary ones don't find suggestions
+            await this.page.waitForTimeout(1000);
+            const altSuggestions = this.page.locator('div[class*="absolute"], li, [role="listitem"], [aria-label*="suggestion"]');
+            const altCount = await altSuggestions.count();
+            return altCount > 0;
+        } catch (error) {
+            logger.debug(`Auto-suggestions not visible for query: ${partialQuery}`, error);
+            return false;
+        }
+    }
+
+    async getSearchAutoSuggestions(): Promise<string[]> {
+        logger.elementInteraction('retrieve', 'search auto-suggestions');
+        try {
+            const suggestions = this.page.locator('[class*="dropdown"], [class*="suggestion"], [role="option"], .search-suggestions li, [data-testid*="suggestion"]');
+            // Wait for suggestions to load and stabilize
+            await this.page.waitForTimeout(800);
+            let count = await suggestions.count();
+            // If no suggestions found, try alternative selectors
+            if (count === 0) {
+                const altSuggestions = this.page.locator('div[class*="absolute"] div, li, [role="listitem"]');
+                count = await altSuggestions.count();
+            }
+            const suggestionTexts: string[] = [];
+            for (let i = 0; i < Math.min(count, 10); i++) {
+                const text = await suggestions.nth(i).textContent().catch(() => '');
+                if (text && text.trim()) {
+                    suggestionTexts.push(text.trim());
+                }
+            }
+            return suggestionTexts;
+        } catch (error) {
+            logger.debug('Failed to retrieve auto-suggestions', error);
+            return [];
+        }
+    }
+
+    async verifySuggestionsContainQuery(query: string, suggestions: string[]): Promise<boolean> {
+        logger.elementInteraction('verify', `suggestions contain query: ${query}`);
+        const normalizedQuery = query.toLowerCase().trim();
+        if (suggestions.length === 0) {
+            logger.debug(`No suggestions to verify against query: ${query}`);
+            return false;
+        }
+        const suggestionsWithQuery = suggestions.filter(suggestion => 
+            suggestion.toLowerCase().includes(normalizedQuery)
+        );
+        const allSuggestionsRelevant = suggestionsWithQuery.length > 0;
+        const percentageMatch = (suggestionsWithQuery.length / suggestions.length) * 100;
+        logger.step(`Query relevance check: ${suggestionsWithQuery.length}/${suggestions.length} suggestions contain "${query}" (${percentageMatch.toFixed(0)}%)`);
+        logger.assertion(`Suggestions contain search query "${query}"`, allSuggestionsRelevant);
+        return allSuggestionsRelevant;
+    }
+
+    async clickSearchAutoSuggestion(suggestionText: string): Promise<void> {
+        logger.elementInteraction('click', `search suggestion: ${suggestionText}`);
+        try {
+            const suggestion = this.page.locator(`[role="option"]:has-text("${suggestionText}"), [class*="suggestion"]:has-text("${suggestionText}"), .search-suggestions li:has-text("${suggestionText}")`);
+            await suggestion.first().waitFor({ state: 'visible', timeout: 5000 });
+            await suggestion.first().click();
+        } catch (error) {
+            logger.debug(`Failed to click suggestion: ${suggestionText}`, error);
+        }
+    }
+
+    async isNoResultsMessageVisible(): Promise<boolean> {
+        logger.elementInteraction('verify', 'no results message visibility');
+        try {
+            // Use a single robust text locator for "No results" message
+            const noResultsMessage = this.page.locator('text=/no\\s+results/i');
+            await noResultsMessage.first().waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch (error) {
+            logger.debug('Failed to verify no results message', error);
+            return false;
+        }
+    }
+
+    async getNoResultsMessageText(): Promise<string> {
+        logger.elementInteraction('retrieve', 'no results message text');
+        try {
+            // Use a single robust text locator for "No results" message
+            const noResultsMessage = this.page.locator('text=/no\\s+results/i');
+            const text = await noResultsMessage.first().textContent().catch(() => '');
+            return text?.trim() || 'No results found';
+        } catch (error) {
+            logger.debug('Failed to retrieve no results message text', error);
+            return '';
+        }
+    }
+
+    async getSearchResultsCount(): Promise<number> {
+        logger.elementInteraction('count', 'search result cards');
+        try {
+            // Count visible content cards/thumbnails - use image elements as proxy for result cards
+            const resultImages = this.page.locator('img[alt]');
+            const count = await resultImages.count();
+            return count;
+        } catch (error) {
+            logger.debug('Failed to count search results', error);
+            return 0;
+        }
     }
 
     async clickAccountIcon(): Promise<void> {

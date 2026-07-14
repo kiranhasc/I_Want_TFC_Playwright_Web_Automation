@@ -281,6 +281,34 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-search-auto-suggestions"
+  name: "Verify search auto-suggestions appear while typing"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchAutoSuggestions"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2063"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-no-results"
+  name: "Verify no results message for irrelevant search terms"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchNoResultsMessage"
+  tags:
+    - navigation
+    - search
+    - negative
+    - ui
+  testCases:
+    - "IW3-T2065"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-parental-controls-visibility"
   name: "Verify parental controls visibility in Settings"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -604,6 +632,32 @@
     - positive
   testCases:
     - "IW3-T3659"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "add-content-to-watchlist-from-search-page"
+  name: "Add content to watchlist from search results via hover"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "addContentToWatchlistFromSearchPage"
+  tags:
+    - watchlist
+    - search
+    - positive
+  testCases:
+    - "IW3-T2058"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "remove-content-from-watchlist-from-search-page"
+  name: "Remove content from watchlist from search results via hover"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "removeContentFromWatchlistFromSearchPage"
+  tags:
+    - watchlist
+    - search
+    - positive
+  testCases:
+    - "IW3-T2059"
   dependsOn:
     - "login-to-ott"
  

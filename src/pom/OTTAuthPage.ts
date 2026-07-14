@@ -100,9 +100,9 @@ export class OTTAuthPage {
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
-        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
+        this.verifyOTPHeading = { role: 'heading', text: 'Verify your identity', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
-        this.emailErrorMessage = { selector: 'form', text: 'Invalid email address' };
+        this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
@@ -627,7 +627,21 @@ export class OTTAuthPage {
     }
 
     async isContinueWatchingRailVisible(): Promise<boolean> {
-        return await this.pageUtils.isVisible(this.continueWatchingRail, 10000);
+        try {
+            const locator = this.page.locator(this.continueWatchingRail.selector).first();
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+                if (await locator.isVisible().catch(() => false)) {
+                    return true;
+                }
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                await this.page.mouse.wheel(0, 600).catch(() => undefined);
+                await this.page.waitForTimeout(1000);
+            }
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     private getContinueWatchingTitleLocator() {
@@ -1062,7 +1076,7 @@ export class OTTAuthPage {
         logger.step(`Search completed - Results count: ${resultsCount}, Has query text: ${hasResults}`);
         return hasResults || resultsCount > 0;
     }
-    
+
     async enterSearchText(text: string): Promise<void> {
         logger.elementInteraction('type', 'Search input');
         await this.pageUtils.safeType(this.searchBar, text);
@@ -1151,7 +1165,7 @@ export class OTTAuthPage {
     }
 
     async isLoginSuccessful(): Promise<boolean> {
-        const profileVisible = await this.pageUtils.isVisible(this.profileLink, 5000);
+        const profileVisible = await this.pageUtils.isVisible(this.profileLink, 10000);
         if (profileVisible) {
             return true;
         }

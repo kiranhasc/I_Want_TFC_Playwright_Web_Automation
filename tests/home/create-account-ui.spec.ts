@@ -120,7 +120,6 @@ test.describe('Account creation UI', () => {
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
     });
 
-    
     test('@Low  IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
         const data = testCaseData['tc-auth-001-invalid-credentials'];
         const result = await loginWithInvalidCredentials(page, {

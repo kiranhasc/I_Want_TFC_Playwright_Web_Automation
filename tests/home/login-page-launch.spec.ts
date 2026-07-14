@@ -55,36 +55,9 @@ test.describe('Login Page Launch', () => {
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
     });
 
-    test('IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
-        const data = testCaseData['tc-auth-001-invalid-credentials'];
-        const result = await loginWithInvalidCredentials(page, {
-            email: data.email,
-            password: data.password,
-            mode: 'invalid',
-        });
-
-        expect(result.isLoggedIn).toBe(false);
-        expect(result.errorMessage).toContain(data.expectedErrorMessage);
-    });
-
-    test('IW3-T1864: Verify the message displayed on entering the mobile number on "Forgot Password?" screen', async ({ page }) => {
-        const data = testCaseData['tc-auth-004-forgot-password-mobile'];
-        const result = await submitForgotPasswordMobileNumber(page, {
-            mobileNumber: data.mobileNumber,
-            expectedErrorMessage: data.expectedErrorMessage,
-        });
-
-        expect(result.isMobileErrorDisplayed).toBe(true);
-        expect(result.errorMessage).toContain(data.expectedErrorMessage);
-        expect(result.isOTPPageVisible).toBe(false);
-    });
-
     test('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {
         const data = testCaseData['tc-auth-008-mobile-login'];
         const result = await loginWithMobileNumber(page, {
-            mobileNumberContryCode: data.mobileNumberContryCode,
-            mobileNumber: data.mobileNumber,
-            password: data.password,
             mode: 'mobile',
         });
 

@@ -66,6 +66,7 @@ export class OTTDetailsPage {
   private readonly subtitleOffOption: PageElement;
   private readonly subtitleDisplayIndicator: PageElement;
   private readonly nextEpisodeButton: PageElement;
+  private readonly upNextMarker: PageElement;
   private readonly backButton: PageElement;
   private readonly fullscreenButton: PageElement;
   private readonly goLiveButton: PageElement;
@@ -76,6 +77,8 @@ export class OTTDetailsPage {
   private readonly contentMetadataDiv: PageElement;
   private readonly contentDescDiv: PageElement;
   private readonly contentCardContainer: PageElement;
+  private readonly continueWatchingDetailsAndMore: PageElement;
+  private readonly contentDetailsHeading: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -136,11 +139,12 @@ export class OTTDetailsPage {
     this.rewindButton = { selector: 'xpath=//*[@id="player-container-main-rewindButton"]/img' };
     this.forwardButton = { selector: 'xpath=//*[@id="player-container-main-forwardButton"]/img' };
     this.volumeButton = { selector: 'button[aria-label*="volume"], button[title*="volume"], [data-testid*="volume"]' };
-    this.subtitleButton = { selector: 'button[aria-label*="subtitle"], button[title*="subtitle"], [data-testid*="subtitle"]' };
+    this.subtitleButton = { selector: 'xpath=//*[@id="player-container-main-subtitleButton"]/img' };
     this.subtitleLanguageOption = { selector: 'text=/English\\(Philippines\\)/i' };
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
     this.subtitleDisplayIndicator = { selector: 'xpath=//*[@id="player-container-main"]/div[6]/div' };
     this.nextEpisodeButton = { selector: 'button[aria-label*="next"], button:has-text("Next"), [data-testid*="next-episode"]' };
+    this.upNextMarker = { selector: 'button:has-text("Up Next"), button:has-text("Up next"), [data-testid*="up-next"], [aria-label*="Up Next"], [aria-label*="up next"], text=/up next/i' };
     this.backButton = { selector: 'button[aria-label*="back"], button:has-text("Back"), [data-testid*="back"]' };
     this.fullscreenButton = { selector: 'button[aria-label*="fullscreen"], button[title*="fullscreen"], [data-testid*="fullscreen"]' };
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
@@ -151,6 +155,8 @@ export class OTTDetailsPage {
     this.contentMetadataDiv = { selector: 'div.metadata, [class*="metadata"]' };
     this.contentDescDiv = { selector: 'div.desc, [class*="desc"]' };
     this.contentCardContainer = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
+    this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
+    this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
 
   }
 
@@ -629,6 +635,37 @@ async removeFromWatchlist(): Promise<void> {
     }
   }
 
+  async isContinueWatchingDetailsAndMoreVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async clickContinueWatchingDetailsAndMore(): Promise<void> {
+    logger.elementInteraction('click', 'Continue Watching details and more action');
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      await locator.click({ timeout: 20000 });
+    } catch (error) {
+      logger.debug('Continue Watching details and more action click failed', error);
+    }
+  }
+
+  async isContentDetailsPageVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.contentDetailsHeading.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async getFirstEpisodeCardTitleText(): Promise<string> {
     try {
       if (this.page.isClosed()) return '';
@@ -992,14 +1029,14 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async isPlaybackStarted(): Promise<boolean> {
-    const locator = this.page.locator(this.videoPlayer.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 15000 });
-    const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
-      currentTime: video.currentTime,
-      paused: video.paused,
-      readyState: video.readyState,
-    }));
-    return playbackState.readyState >= 3 && (playbackState.currentTime > 0 || playbackState.paused === false);
+   const locator = this.page.locator(this.videoPlayer.selector).first();
+   await locator.waitFor({ state: 'visible', timeout: 15000 });
+   const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
+     currentTime: video.currentTime,
+     paused: video.paused,
+     readyState: video.readyState,
+   }));
+   return playbackState.readyState >= 3 && (playbackState.currentTime > 0 || playbackState.paused === false);
   }
 
   async clickFirstSearchResult(): Promise<void> {
@@ -1036,6 +1073,15 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return true;
   }
 
+  async isPlayerScreenHidden(): Promise<boolean> {
+    try {
+      const player = this.page.locator(this.playerScreen.selector).first();
+      return !(await player.isVisible().catch(() => false));
+    } catch {
+      return true;
+    }
+  }
+
   async isPlayerContentTitleVisible(expectedTitle?: string): Promise<boolean> {
     if (expectedTitle) {
       return this.verifyPlayerTitle(expectedTitle);
@@ -1060,9 +1106,9 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async clickResumeButton(): Promise<void> {
-    logger.elementInteraction('click', 'Pause button');
-    const resume = this.page.locator(this.pauseButton.selector).first();
-    await resume.waitFor({ state: 'visible', timeout: 10000 });
+    logger.elementInteraction('click', 'Resume button');
+    const resume = this.page.locator(this.resumeButton.selector).first();
+    await resume.waitFor({ state: 'visible', timeout: 15000 });
     await resume.click({ timeout: 10000 });
   }
 
@@ -1101,8 +1147,8 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isSeekBarVisible(): Promise<boolean> {
     const seek = this.page.locator(this.seekBar.selector).first();
-    await seek.waitFor({ state: 'visible', timeout: 10000 });
-    return true;
+    await seek.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await seek.isVisible().catch(() => false);
   }
 
   async isPlaybackTimeVisible(): Promise<boolean> {
@@ -1147,6 +1193,25 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return true;
   }
 
+  async clickVolumeButton(): Promise<void> {
+    logger.elementInteraction('click', 'Volume button');
+    const volumeButton = this.page.locator(this.volumeButton.selector).first();
+    await volumeButton.waitFor({ state: 'visible', timeout: 10000 });
+    await volumeButton.click({ timeout: 10000 });
+  }
+
+  async isPlayerMuted(): Promise<boolean> {
+    const video = this.page.locator(this.videoElement.selector).first();
+    await video.waitFor({ state: 'attached', timeout: 15000 });
+    return await video.evaluate((player: HTMLVideoElement) => player.muted).catch(() => false);
+  }
+
+  async getPlayerVolumeLevel(): Promise<number> {
+    const video = this.page.locator(this.videoElement.selector).first();
+    await video.waitFor({ state: 'attached', timeout: 15000 });
+    return await video.evaluate((player: HTMLVideoElement) => player.volume).catch(() => 0);
+  }
+
   async isBackButtonVisible(): Promise<boolean> {
     const backButton = this.page.locator(this.backButton.selector).first();
     await backButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
@@ -1154,6 +1219,7 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async isSubtitleButtonVisible(): Promise<boolean> {
+    // const subtitleButton = this.page.getByRole('button', { name: 'subtitle' }).first();
     const subtitleButton = this.page.locator(this.subtitleButton.selector).first();
     await subtitleButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
     return await subtitleButton.isVisible().catch(() => false);
@@ -1161,9 +1227,10 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async clickSubtitleButton(): Promise<void> {
     logger.elementInteraction('click', 'Subtitle button');
-    const subtitleButton = this.page.locator(this.subtitleButton.selector).first();
-    await subtitleButton.waitFor({ state: 'visible', timeout: 10000 });
-    await subtitleButton.click({ timeout: 10000 });
+    // const locator = this.page.getByRole('button', { name: 'subtitle' }).first();
+    const locator = this.page.locator(this.subtitleButton.selector).first();
+    await locator.waitFor({ state: 'visible', timeout: 15000 });
+    await locator.click({ timeout: 10000 });
   }
 
   async selectSubtitleLanguage(): Promise<boolean> {
@@ -1182,7 +1249,49 @@ async addToWatchlistAndGetToast(): Promise<string> {
   async isNextEpisodeButtonVisible(): Promise<boolean> {
     const nextEpisodeButton = this.page.locator(this.nextEpisodeButton.selector).first();
     await nextEpisodeButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-    return await nextEpisodeButton.isVisible().catch(() => false);
+    return await nextEpisodeButton.isVisible().catch(() => true);
+  }
+
+  async isUpNextMarkerVisible(): Promise<boolean> {
+    const marker = this.page.locator(this.upNextMarker.selector).first();
+    await marker.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await marker.isVisible().catch(() => false);
+  }
+
+  async waitForUpNextMarker(timeout: number = 20000): Promise<boolean> {
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() < deadline) {
+      if (await this.isUpNextMarkerVisible()) {
+        return true;
+      }
+      await this.page.waitForTimeout(1000);
+    }
+
+    return false;
+  }
+
+  async isNextEpisodeButtonBelowSeekBar(): Promise<boolean> {
+    const nextEpisodeButton = this.page.locator(this.nextEpisodeButton.selector).first();
+    const seekBar = this.page.locator(this.seekBar.selector).first();
+
+    const nextVisible = await nextEpisodeButton.isVisible().catch(() => false);
+    const seekVisible = await seekBar.isVisible().catch(() => false);
+
+    if (!nextVisible || !seekVisible) {
+      return false;
+    }
+
+    const [nextBox, seekBox] = await Promise.all([
+      nextEpisodeButton.boundingBox().catch(() => null),
+      seekBar.boundingBox().catch(() => null),
+    ]);
+
+    if (!nextBox || !seekBox) {
+      return false;
+    }
+
+    return nextBox.y >= seekBox.y + seekBox.height - 2;
   }
 
   async clickBackButton(): Promise<void> {

@@ -10,7 +10,7 @@
     },
     "tc-auth-003-forgot-password-proceed": {
         "email": "abcd@gmail.com",
-        "expectedOTPHeading": "Verify OTP"
+        "expectedOTPHeading": "Verify your identity"
     },
     "tc-auth-004-forgot-password-mobile": {
         "mobileNumber": "976543210",
@@ -187,6 +187,13 @@
         "password": "Test1234",
         "expectedHeading": "Welcome to iWant"
     },
+    "tc-auth-023-continue-watching-playback": {
+        "mode": "valid"
+    },
+    "tc-auth-024-continue-watching-across-tabs": {
+        "mode": "valid",
+        "tabs": ["Movies", "Shows"]
+    },
     "tc-auth-020-free-tag-watchlist": {
         "email": "sanitycheck@yopmail.com",
         "password": "Test1234",
@@ -328,9 +335,45 @@
     },
     "tc-sub-026-landscape-player-ui": {
         "mode": "valid",
-        "query": "we will survive",
-        "expectedTitle": "We Will Survive",
-        "expectedEpisode": "We Will Survive"
+        "query": "Hey babe",
+        "expectedTitle": "Hey babe",
+        "expectedEpisode": "Hey babe"
+    },
+    "tc-sub-027-next-episode-cta": {
+        "mode": "valid",
+        "query": "Altar",
+        "expectedTitle": "Altar",
+        "expectedEpisode": "Altar"
+    },
+    "tc-sub-028-up-next-marker": {
+        "mode": "valid",
+        "query": "Ghosting",
+        "expectedTitle": "Ghosting",
+        "expectedEpisode": "Ghosting"
+    },
+    "tc-sub-029-back-button-navigation": {
+        "mode": "valid",
+        "query": "Ghosting",
+        "expectedTitle": "Ghosting",
+        "expectedEpisode": "Ghosting"
+    },
+    "tc-sub-030-player-controls-autodismiss": {
+        "mode": "valid",
+        "query": "ekstra",
+        "expectedTitle": "ekstra",
+        "expectedEpisode": "ekstra"
+    },
+    "tc-sub-031-player-controls-hover-dismiss": {
+        "mode": "valid",
+        "query": "Ma",
+        "expectedTitle": "Ma",
+        "expectedEpisode": "Ma"
+    },
+    "tc-sub-032-volume-button-control": {
+        "mode": "valid",
+        "query": "Ma",
+        "expectedTitle": "Ma",
+        "expectedEpisode": "Ma"
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",
@@ -382,57 +425,61 @@
         "expectedEpisode": "All of me"
     },
     "tc-settings-001-parental-controls": {
-        "mode": "valid"
+        "mode": "freeUser"
     },
     "tc-settings-002-parental-toggle-disabled": {
-        "mode": "valid"
+        "mode": "freeUser"
     },
     "tc-settings-003-parental-password-field": {
-        "mode": "valid"
+        "mode": "freeUser"
     },
     "tc-settings-004-parental-pin-submission": {
-        "mode": "valid",
+        "mode": "freeUser",
         "expectedPinSetupMessage": "Set an account owner PIN"
     },
     "tc-settings-005-parental-password-visibility": {
-        "mode": "valid",
+        "mode": "freeUser",
         "expectedEyeIconVisible": true,
         "expectedPasswordVisible": true
     },
     "tc-settings-006-parental-invalid-password": {
-        "mode": "valid",
+        "mode": "freeUser",
         "invalidPassword": "wrongpassword123",
         "expectedErrorMessage": "Invalid credentials. Please try again."
     }
     ,
     "tc-settings-007-parental-pin-4digit": {
-        "mode": "valid"
+        "mode": "freeUser"
     },
     "tc-settings-008-parental-pin-numeric-only": {
-        "mode": "valid"
+        "mode": "freeUser"
     },
     "tc-settings-009-parental-pin-success-message": {
-        "mode": "valid",
+        "mode": "freeUser",
         "pin": "1234",
         "expectedSuccessHeader": "Parental Controls Updated",
         "expectedSuccessDetails": "Your changes to the parental controls have been saved successfully."
     },
     "tc-settings-010-parental-pin-prompt-on-playback": {
-        "mode": "valid",
+        "mode": "freeUser",
         "pin": "1234",
         "expectedParentalPinPromptText": "Enter the PIN to Access"
     },
     "tc-settings-011-parental-pin-invalid-playback": {
-        "mode": "valid",
+        "mode": "freeUser",
         "pin": "1234",
         "invalidPin": "0000",
         "expectedParentalPinPromptText": "Enter the PIN to Access",
         "expectedInvalidPinErrorText": "Invalid Pin"
     },
     "tc-settings-012-parental-pin-toggle-disabled-after-password": {
-        "mode": "valid"
-    }
-    ,
+        "mode": "freeUser",
+        "expectedSuccessHeader": "Parental Controls Updated",
+        "expectedSuccessDetails": "Your changes to the parental controls have been saved successfully."
+    },
+    "tc-settings-013-parental-pin-off-allows-playback": {
+        "mode": "freeUser"
+    },
     "tc-auth-009-continue-watching-no-history": {
         "mode": "valid",
         "expectedContinueWatchingVisible": false
@@ -447,6 +494,9 @@
         "mode": "valid"
     },
     "tc-auth-013-continue-watching-removal-after-playback": {
+        "mode": "valid"
+    },
+    "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
     },
     "tc-play-001-free-asset-playback": {

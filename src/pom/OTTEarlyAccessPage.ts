@@ -20,7 +20,7 @@ export class OTTEarlyAccessPage {
 
     async scrollToRail(railTitle: string): Promise<void> {
         logger.step(`Processing rail: ${railTitle}`);
-        if (railTitle === 'iWant Picks ROW with Ad Unit') {
+        if (railTitle.includes('iWant Picks ROW')) {
             logger.info(`Skipping scroll for rail: ${railTitle}`);
             return;
         }

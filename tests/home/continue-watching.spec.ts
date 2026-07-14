@@ -73,7 +73,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@Medium IW3-T1945: Verify the content under Continue Watching tray upon watching the content from different tabs', async ({ page }) => {
-        test.setTimeout(240000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-024-continue-watching-across-tabs'] as { mode?: string; tabs?: string[] } | undefined;
         const result = await verifyContinueWatchingAcrossTabs(page, { mode: data?.mode, tabs: data?.tabs });
 

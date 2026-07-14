@@ -1706,6 +1706,21 @@ export interface ParentalPinSubmissionOutput {
     pinSetupMessage: string;
 }
 
+export interface DisableParentalPinInput {
+    password?: string;
+    expectedPinSetupMessage?: string;
+    mode?: string;
+    expectedSuccessHeader?: string;
+    expectedSuccessDetails?: string;
+}
+
+export interface DisableParentalPinOutput {
+    isLoggedIn: boolean;
+    parentalControlsVisible: boolean;
+    passwordSubmitted: boolean;
+    toggleDisabledAfterSubmission: boolean;
+}
+
 export interface PasswordVisibilityInput {
     password?: string;
     mode?: string;
@@ -2200,6 +2215,18 @@ export async function verifyParentalPinPromptOnContentPlayback(page: any, input?
     return output;
 }
 
+export interface ParentalPinPlaybackAllowedWhenDisabledInput {
+    mode?: string;
+}
+
+export interface ParentalPinPlaybackAllowedWhenDisabledOutput {
+    isLoggedIn: boolean;
+    parentalControlsVisible: boolean;
+    parentalPinEnabled: boolean;
+    parentalPinPromptVisible: boolean;
+    playbackStarted: boolean;
+}
+
 export interface ParentalPinInvalidPlaybackPromptInput {
     mode?: string;
     pin?: string;
@@ -2219,6 +2246,62 @@ export interface ParentalPinInvalidPlaybackPromptOutput {
     parentalPinPromptText: string;
     parentalPinInvalidErrorVisible: boolean;
     parentalPinInvalidErrorText: string;
+}
+
+export async function verifyParentalPinPlaybackAllowedWhenDisabled(page: any, input?: Partial<ParentalPinPlaybackAllowedWhenDisabledInput>): Promise<ParentalPinPlaybackAllowedWhenDisabledOutput> {
+    const authPage = new OTTAuthPage(page);
+    const settingsPage = new OTTSettingsPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+
+    logger.step('Starting parental PIN disabled playback verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await settingsPage.clickAccountIcon();
+    await settingsPage.clickAccountAndSettings();
+    await settingsPage.scrollToParentalControlsSection();
+
+    const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
+    let parentalPinEnabled = false;
+
+    if (parentalControlsVisible) {
+        parentalPinEnabled = await settingsPage.isParentalPinToggleOn();
+        if (parentalPinEnabled) {
+            await settingsPage.clickParentalPinToggle();
+            parentalPinEnabled = await settingsPage.isParentalPinToggleOn();
+        }
+    }
+
+    logger.assertion('Parental PIN toggle is off before playback', !parentalPinEnabled);
+
+    await page.goBack({ waitUntil: 'networkidle' }).catch(() => undefined);
+     const continueRailVisible = await authPage.isContinueWatchingRailVisible();
+    if (continueRailVisible) {
+        await detailsPage.clickFirstShowContent();
+    } else {
+        await detailsPage.clickFirstShowContent();
+    }
+    await detailsPage.clickResumeButton();
+    const parentalPinPromptVisible = await detailsPage.isParentalPinPlaybackPromptVisible();
+    const playbackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
+
+    logger.assertion('Parental PIN prompt is not shown when parental PIN is disabled', !parentalPinPromptVisible);
+    logger.assertion('Playback starts without a parental PIN prompt', playbackStarted);
+
+    return {
+        isLoggedIn: true,
+        parentalControlsVisible,
+        parentalPinEnabled,
+        parentalPinPromptVisible,
+        playbackStarted,
+    };
 }
 
 export async function verifyParentalPinInvalidPlaybackPrompt(page: any, input?: Partial<ParentalPinInvalidPlaybackPromptInput>): Promise<ParentalPinInvalidPlaybackPromptOutput> {
@@ -2449,5 +2532,56 @@ export async function verifyTermsPageDetails(page: any, input: VerifyTermsPageDe
     return {
         pageDetailsVisible: detailsPageVisible,
         currentUrl,
+    };
+}
+export async function disableParentalPin(page: any, input?: Partial<DisableParentalPinInput>): Promise<DisableParentalPinOutput> {
+    const authPage = new OTTAuthPage(page);
+    const settingsPage = new OTTSettingsPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const pinPassword = (input?.password ?? '').trim() || credentials.password;
+    logger.step('Starting parental PIN password submission flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await settingsPage.clickAccountIcon();
+    await settingsPage.clickAccountAndSettings();
+    await settingsPage.scrollToParentalControlsSection();
+    const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
+    await settingsPage.clickParentalPinToggle();
+    const passwordFieldVisible = parentalControlsVisible ? await settingsPage.isParentalPinPasswordFieldVisible() : false;
+    let passwordSubmitted = false;
+    let successMessageVisible = false;
+    let successMessage = '';
+    let successHeaderVisible = false;
+    let  successDetails = '';
+    let  successHeader = '';
+    let  continueButtonVisible = false;
+    await settingsPage.enterParentalPinPassword(pinPassword);
+    await settingsPage.clickParentalPinSubmitButton();
+    successMessageVisible = await settingsPage.waitForParentalPinSuccessMessageVisible(5000);
+    if (successMessageVisible) {
+        successMessage = await settingsPage.getParentalPinSuccessMessage();
+        // additional checks per updated test case: header, details, Continue button
+        successHeaderVisible = await settingsPage.isParentalPinSuccessHeaderVisible();            successHeader = await settingsPage.getParentalPinSuccessHeader();
+        successDetails = await settingsPage.getParentalPinSuccessDetails();                continueButtonVisible = await settingsPage.isParentalPinSuccessContinueButtonVisible();
+    }
+    const toggleOff = parentalControlsVisible ? await settingsPage.isParentalPinToggleDisabled() : false;
+    if(toggleOff) {
+        passwordSubmitted = true;
+    }
+    const toggleDisabledAfterSubmission = await settingsPage.isParentalPinToggleDisabled();
+    logger.assertion('Parental PIN password submitted successfully', passwordSubmitted);
+    logger.assertion('Parental PIN toggle is disabled after submitting password', toggleDisabledAfterSubmission);
+    return {
+        isLoggedIn: true,
+        parentalControlsVisible,
+        passwordSubmitted,
+        toggleDisabledAfterSubmission,
     };
 }

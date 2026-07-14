@@ -410,7 +410,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 8. Observe the **Continue Watching** tray.
    - **Expect:** The selected content should be removed from the **Continue Watching** tray.
 
-### 1.21. T1937IW3- Verify that "Resume" CTA turns to "Play" button and retains to default season number and episode number on removing the content from CW tray.
+### 1.21. IW3-T1937- Verify that "Resume" CTA turns to "Play" button and retains to default season number and episode number on removing the content from CW tray.
 
 **File:** `tests/home/continue-watching.spec.ts`
 
@@ -688,7 +688,25 @@ This test plan covers validation of application launch behavior for the OTT plat
    12. Click Continue and parental pin id should be in Off Condition.
       * except Parental Pin toggle should be disabled post entering the password.
 
-
+### 8.13. IW3-T2109 Verify user is able to play any content if parental pin is turn off
+**File:** `tests/home/parential-pin.spec.ts`
+**Steps:**
+  1. Open the browser.
+   2. Enter the URL (https://uat.iwanttfc.com/).
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on "Account" icon.
+   6. Tap on Account and Settings.
+   7. Scroll down to the Parental Controls section.
+   8. If the toggle button is in On condition:
+      - Click on toggle Off button
+      - Enter the account password.
+      - Click Submit CTA.
+   9. If the toggle button is already in Off condition, proceed to the next step.
+   10. Navigate to the Home page.
+   11. Tap on any content under Continue Watching.
+   12. Play the content
+      * except The content should play directly without prompting for PIN
 
 #### 2.1. IW3-T1967 Verify that tapping the play button from the content detail page NFvigates the user to the player screen.
 
@@ -897,7 +915,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -921,7 +939,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -943,7 +961,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -966,7 +984,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -990,7 +1008,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1011,7 +1029,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1031,7 +1049,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1052,7 +1070,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1073,7 +1091,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1094,7 +1112,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1118,7 +1136,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1146,7 +1164,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1167,7 +1185,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1189,7 +1207,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1213,7 +1231,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1236,7 +1254,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL(https://iwanttfc.com/)
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 3. Click on Email field
-4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+4. Enter valid email as "abhilash584@gmail.com" in email field.
 5. Click on Password field
 6. Enter valid password as "Test1234" in password field
 7. Tap on "Continue" button.
@@ -1275,6 +1293,130 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 10. Click back button 
 11. navigate to home page
 12. Verify that played content is visible in the first place of continue watching rail in home page 
+
+#### 2.27 IW3-T1989 Verify that the 'Next Episode' CTA appears under the seek bar of the player scree when next episode exists.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Altar" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Verify the Next episode buttons are visible(have a condition)
+
+#### 2.28 IW3-T1990 Verify that the "Up Next" binge marker appears at the end of the content playback.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Ghosting" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Drag the seek  bar till end 
+13. Verify for the appearance of the 'Up next wedge' button CTA at the end
+
+#### 2.29 IW3-T1992	Verify that user Navigates to previous screen on tapping back button
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Ghosting" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Click the back button 
+13. Verify that post clicking the back button goes to back screen 
+
+#### 2.30 IW3-T1997 Verify that the player controls auto-dismiss automatically after a 5 seconds of infectivity during video playback
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "ekstra" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Wait for 5sec
+13. Verify that player control is not visible after 5sec of playing content 
+
+#### 2.31 IW3-T1998 Verify that the player controls are dismissed when the user hovers on the screen while controls are visible 
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Ma" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+13. Verify that player control is not visible after hover the screen 
+
+#### 2.32 IW3-T2005 Verify that user can increase or decrease the volume using volume button .
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Ma" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Click on volume button 
+14. Verify you volume can mute and unmute by clicking on volume button
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 

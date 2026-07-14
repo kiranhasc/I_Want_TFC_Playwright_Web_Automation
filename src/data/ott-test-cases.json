@@ -205,6 +205,12 @@
         "searchTerm": "A Moment in Time",
         "contentTitle": "A Moment in Time"
     },
+    "tc-watch-002-metadata-validation": {
+        "mode": "valid",
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "assertions": ["thumbnail", "metadata", "contentCard"]
+    },
     "tc-auth-018-ph-region-guest-search": {
         "searchTerm": "Lavender Fields",
         "expectedTitle": "Lavender Fields"
@@ -463,5 +469,12 @@
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
+    },
+    "tc-sub-035-add-premium-watchlist": {
+        "mode": "freeUser",
+        "email": "sanitycheck@yopmail.com",
+        "password": "Test1234",
+        "searchTerm": "Everybody Sing",
+        "contentTitle": "Everybody, Sing!"
     }
 }

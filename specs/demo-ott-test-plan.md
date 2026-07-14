@@ -1814,3 +1814,97 @@ Click on the Email Address field.
    - expect: A popup with the message **"Removed from Watchlist"** is displayed.
 
 
+#### 7.5 IW3-T2052 Verify that use is able to add premium content to my watchlist
+
+**File:** `tests\home\watchlist-management.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
+4. Click on the Password field.
+5. Enter the valid password `Test1234` in the Password field.
+6. Click on the Continue CTA.
+7. Click on the Search icon.
+8. Search for **"Everybody Sing"** and press Enter.
+9. Click on the first content from the first rail.
+10. Click on the Watchlist icon.
+   - expect: The **"Added to Watchlist"** toast message is displayed.
+11. Navigate to **My Watchlist** tab
+12. Click the first content of the rail.
+   - expect: The added content is visible in the My Watchlist.
+
+
+#### 7.6 IW3-T2053 Verify that user is able to remove premium content from my watchlist
+
+**File:** `tests\home\watchlist-management.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
+4. Click on the Password field.
+5. Enter the valid password `Test1234` in the Password field.
+6. Click on the Continue CTA.
+7. Click on the Search icon.
+8. Search for **"Everybody Sing"** and press Enter.
+9. Click on the first content from the first rail.
+10. Click on the Watchlist icon.
+   - expect: The **"Removed from the Watchlist"** toast message is displayed.
+11. Navigate to the **My Watchlist** tab.
+12. Verify the removed content is not displayed in the **My Watchlist**.
+   - expect: The removed content is not visible in the **My Watchlist**.
+
+
+#### 7.7 IW3-T2056 Verify that user is able to add content to my watchlist from search page
+
+**File:** `tests\home\watchlist-management.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
+4. Click on the Password field.
+5. Enter the valid password `Test1234` in the Password field.
+6. Click on the Continue CTA.
+7. Click on the Search icon.
+8. Search for **"Everybody Sing"** and press Enter.
+9. Click on the first content from the first rail.
+10. Click on the Watchlist icon.
+   - expect: The **"Added to Watchlist"** toast message is displayed.
+
+
+#### 7.8 IW3-T2057 Verify that user is able to remove content from my watchlist from search page
+
+**File:** `tests\home\watchlist-management.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
+4. Click on the Password field.
+5. Enter the valid password `Test1234` in the Password field.
+6. Click on the Continue CTA.
+7. Click on the Search icon.
+8. Search for **"Everybody Sing"** and press Enter.
+9. Click on the first content from the first rail.
+10. Click on the Watchlist icon.
+   - expect: The **"Added to Watchlist"** toast message is displayed.
+
+
+#### 7.9 IW3-T2048 Verify that Movie/Show content in my watchlist page loads correctly with correct thumbnails and meta data
+
+**File:** `tests\home\watchlist-management.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
+4. Click on the Password field.
+5. Enter the valid password `Test1234` in the Password field.
+6. Click on the Continue CTA.
+7. Navigate to the **Movies** tab.
+8. Click on the Watchlist icon.
+9. Navigate to the **My Watchlist** page.
+10. Click on the first content in the rail.
+   - expect: The added Watchlist items are displayed with the correct titlename and metadata.

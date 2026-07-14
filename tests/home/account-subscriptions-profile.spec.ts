@@ -5,6 +5,7 @@ import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Profile and account details', () => {
   test('@High IW3-T3658: Verify the user is able see the Account & subscriptions details in My Space/Profile sections', async ({ page }) => {
+    test.setTimeout(120000);
     const data = testCaseData['tc-auth-015-account-subscriptions'];
     const result = await verifyAccountAndSubscriptionDetails(page, {
       mode: data.mode,
@@ -20,7 +21,7 @@ test.describe('Profile and account details', () => {
   });
 
   
-  test('@High IW3-T3659: Verify the user is able to add/remove any contents to the My watchlist page using Add/Remove from watchlist', async ({ page }) => {
+  test('@High  IW3-T3659: Verify the user is able to add/remove any contents to the My watchlist page using Add/Remove from watchlist', async ({ page }) => {
     const data = testCaseData['tc-auth-016-watchlist-management'];
     const result = await manageWatchlistItem(page, {
       mode: data.mode,

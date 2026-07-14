@@ -142,8 +142,8 @@ export class OTTAuthPage {
         this.providerPasswordField = { selector: 'role=textbox[name="Password"]' };
         this.providerSignInButton = { role: 'button', text: 'Sign in', selector: 'button:has-text("Sign in")' };
         this.profileLink = { selector: 'role=img[name="account"]' };
-        this.profileSectionTextElement = { selector: 'text=Account' };
-        this.accountDetailsTextElement = { selector: 'text=Subscription' };
+        this.profileSectionTextElement = { selector: 'h1:has-text("Account"), h2:has-text("Account"), section:has-text("Account")' };
+        this.accountDetailsTextElement = { selector: 'h1:has-text("Subscription"), h2:has-text("Subscription"), h3:has-text("Subscription")' };
         this.createAccountLinkFromHome = { role: 'link', text: 'Create Account', selector: 'a:has-text("Create Account")' };
         this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };

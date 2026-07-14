@@ -5,7 +5,7 @@ import { submitEmptyCredentials } from '../../src/businessFunction/ott-auth-bfs'
 import {verifyWelcomeScreenUI,loginWithInvalidCredentials,submitForgotPasswordMobileNumber,loginWithMobileNumber,submitUnregisteredUserLogin,verifyPasswordVisibilityToggle} from '../../src/businessFunction/ott-auth-bfs';
 
 test.describe('Account creation UI', () => {
-    test('@Low IW3-T1849: Verify the UI/UX of the Create an account screen', async ({ page }) => {
+    test('@Low  IW3-T1849: Verify the UI/UX of the Create an account screen', async ({ page }) => {
         const data = testCaseData['tc-auth-006-create-account-ui'];
         const result = await verifyCreateAccountScreenUI(page, {
             expectedHeading: data.expectedHeading,
@@ -28,7 +28,7 @@ test.describe('Account creation UI', () => {
         expect(result.isLoginLinkVisible).toBe(true);
     });
 
-    test('@High IW3-T1848: Verify the navigation on tapping of Create Account', async ({ page }) => {
+    test('@High  IW3-T1848: Verify the navigation on tapping of Create Account', async ({ page }) => {
         const data = testCaseData['tc-auth-006-create-account-ui'];
         const result = await verifyCreateAccountScreenUI(page, {
             expectedHeading: data.expectedHeading,
@@ -45,7 +45,7 @@ test.describe('Account creation UI', () => {
         expect(result.headingText).toContain(data.expectedHeading);
     });
 
-    test('@High IW3-T1850: Verify the functionality of entering email id in the "Let\'s Get Started" screen', async ({ page }) => {
+    test('@High  IW3-T1850: Verify the functionality of entering email id in the "Let\'s Get Started" screen', async ({ page }) => {
         const data = testCaseData['tc-auth-011-create-account-credentials'];
         const result = await enterCreateAccountEmailOnly(page, {
             email: data.email,
@@ -55,7 +55,7 @@ test.describe('Account creation UI', () => {
         expect(result.emailFieldValue).toBe(data.email);
     });
 
-    test('@High IW3-T1855: Verify the error message on entering invalid email/phone number and password on the Email text field on Get Started screen', async ({ page }) => {
+    test('@High  IW3-T1855: Verify the error message on entering invalid email/phone number and password on the Email text field on Get Started screen', async ({ page }) => {
         const data = testCaseData['tc-auth-012-create-account-invalid-credentials'];
         const result = await submitCreateAccountInvalidCredentials(page, {
             email: data.email,
@@ -67,7 +67,7 @@ test.describe('Account creation UI', () => {
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
     });
 
-    test('@Low IW3-T1856: Verify error message is displayed when email and password fields are left empty', async ({ page }) => {
+    test('@Low  IW3-T1856: Verify error message is displayed when email and password fields are left empty', async ({ page }) => {
         const data = testCaseData['tc-auth-007-empty-credentials'];
         const result = await submitEmptyCredentials(page, {
             email: data.email,
@@ -78,7 +78,7 @@ test.describe('Account creation UI', () => {
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
     });
 
-    test('@High IW3-T1846: Verify that user navigates to "Welcome to iWant" screen on entering the URL from Non-PH region', async ({ page }) => {
+    test('@High  IW3-T1846: Verify that user navigates to "Welcome to iWant" screen on entering the URL from Non-PH region', async ({ page }) => {
         const data = testCaseData['tc-auth-009-welcome-screen-navigation'];
         const expectedHeading = data.expectedHeading;
         const expectedSubheading = data.expectedSubheading ?? '';
@@ -90,7 +90,7 @@ test.describe('Account creation UI', () => {
         expect(result.headingText).toContain(expectedHeading);
     });
 
-    test('@Low IW3-T1847: Verify the UI/UX of the "Welcome to iWant" screen', async ({ page }) => {
+    test('@Low  IW3-T1847: Verify the UI/UX of the "Welcome to iWant" screen', async ({ page }) => {
         const data = testCaseData['tc-auth-010-welcome-screen-ui'];
         const result = await verifyWelcomeScreenUI(page, {
             expectedHeading: data.expectedHeading,
@@ -109,7 +109,7 @@ test.describe('Account creation UI', () => {
         expect(result.isCreateAccountLinkVisible).toBe(true);
     });
 
-    test('@Low IW3-T1857: Verify the message displayed when new user try to login without registration', async ({ page }) => {
+    test('@Low  IW3-T1857: Verify the message displayed when new user try to login without registration', async ({ page }) => {
         const data = testCaseData['tc-auth-013-unregistered-user-login'];
         const result = await submitUnregisteredUserLogin(page, {
             email: data.email,
@@ -120,7 +120,8 @@ test.describe('Account creation UI', () => {
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
     });
 
-    test('@Low IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
+    
+    test('@Low  IW3-T1859: Verify the message displayed on entering invalid credentials during login', async ({ page }) => {
         const data = testCaseData['tc-auth-001-invalid-credentials'];
         const result = await loginWithInvalidCredentials(page, {
             email: data.email,
@@ -151,7 +152,7 @@ test.describe('Account creation UI', () => {
         expect(result.homeTabVisible).toBe(true);
     });
 
-    test('@Low IW3-T1858: Verify the password visibility toggle', async ({ page }) => {
+    test('@Low  IW3-T1858: Verify the password visibility toggle', async ({ page }) => {
         const data = testCaseData['tc-auth-014-password-visibility-toggle'];
         const result = await verifyPasswordVisibilityToggle(page, {
             email: data.email,
@@ -163,7 +164,7 @@ test.describe('Account creation UI', () => {
     });
 });
 
-test('@Medium IW3-T4024 Verify the validation of first name and last name fields inside the Edit Profile screen', async ({ page }) => {
+test('@Medium  IW3-T4024 Verify the validation of first name and last name fields inside the Edit Profile screen', async ({ page }) => {
     const data = testCaseData['tc-auth-017-edit-profile-name-validation'];
     const result = await validateEditProfileNameFields(page, {
       mode: data.mode,

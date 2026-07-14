@@ -10,7 +10,7 @@ export interface GraphQLResult<T> {
 export class GraphQLHelper {
     constructor(private readonly page: Page) {}
 
-    async waitForOperation<T>(operationName: string): Promise<GraphQLResult<T>> {
+    async waitForOperation<T>(operationName: string,timeout: number = 60000): Promise<GraphQLResult<T>> {
         logger.info(`Waiting for GraphQL operation: ${operationName}`);
         const response = await this.page.waitForResponse(async response => {
             if (!response.url().includes('/graphql')) {

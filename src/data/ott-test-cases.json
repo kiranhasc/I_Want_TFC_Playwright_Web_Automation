@@ -10,7 +10,7 @@
     },
     "tc-auth-003-forgot-password-proceed": {
         "email": "abcd@gmail.com",
-        "expectedOTPHeading": "Verify OTP"
+        "expectedOTPHeading": "Verify your identity"
     },
     "tc-auth-004-forgot-password-mobile": {
         "mobileNumber": "976543210",

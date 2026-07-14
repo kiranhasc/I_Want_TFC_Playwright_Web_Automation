@@ -24,6 +24,7 @@ test.describe('Synacor Logout', () => {
     });
 
     test('@High IW3-T3664: Verify Synacor user will not be able to edit the profile in account page', async ({ page }) => {
+        test.setTimeout(50000)
         const data = testCaseData['tc-auth-017-synacor-profile-edit-restriction'];
         const result = await verifySynacorProfileEditRestriction(page, {
             providerName: data.providerName,

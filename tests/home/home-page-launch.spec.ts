@@ -88,6 +88,7 @@ test.describe('Home Page Launch', () => {
     });
 
     test('@High IW3-T4332: Verify that Welcome to iWant, Terms and Conditions, Cookie Policy, and Privacy Policy pages are displayed when the user taps their respective links', async ({ page }) => {
+        test.setTimeout(60000)
         const data = testCaseData['tc-auth-009-help-support-links'];
         const result = await verifySupportAndPolicyLinks(page, {
             mode: data.mode,

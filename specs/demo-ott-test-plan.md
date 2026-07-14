@@ -229,9 +229,9 @@ This test plan covers validation of application launch behavior for the OTT plat
 7. Click on "Continue" CTA.
    *expect : User should be able to login with mobile number and navigated to "Home" screen.
  
-#### 1.10. IW3-T1871 Verify the content starts playing on tapping the "Play" button for a free asset.
+### 1.10. IW3-T1871 Verify the content starts playing on tapping the "Play" button for a free asset.
 
-**File:** `tests/home/home-page-launch.spec.ts`
+**File:** `tests/home/home-page.spec.ts`
 
 **Steps:**
 1. Open the browser.
@@ -245,7 +245,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.11. IW3-T1931 Verify the Continue Watching tray for the loggedin user who has not watched any content.
 
-**File:** `tests/home/continue-watching-no-watch-history.spec.ts`
+**File:** `tests/home/continue-watching.spec.ts`
 
 **Steps**
 
@@ -277,7 +277,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.13. IW3-T2025 Verify the message displayed when user try to play premium content.
 
-**File:** `tests/playback/premium-content.spec.ts`
+**File:** `tests/playback/subscription.spec.ts`
 
 **Steps**
 
@@ -295,9 +295,9 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.14. IW3-T2010 Verify that the pause and resume buttons function correctly during live playback.
 
-# File: `tests/live-tv/live-tv.spec.ts`
+**File:** `tests/home/playback.spec.ts`
 
-## Steps
+**Steps**
 
 1. Open the browser.
 2. Enter the URL (https://iwanttfc.com/).
@@ -313,7 +313,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.15. IW3-T2030	Verify that the user is able to initiate video playback directly from the 'My Watchlist' page by selecting any listed content.
 
-**File:** `tests/watchlist/watchlist-play-content.spec.ts`
+**File:** `tests/watchlist/watchlist.spec.ts`
 
 **Steps**
 
@@ -328,7 +328,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.16. IW3-T2032 Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user
 
-**File:** `tests/playback/premium-content.spec.ts`
+**File:** `tests/home/subscription.spec.ts`
 
 **Steps**
 
@@ -341,12 +341,12 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 ### 1.17. IW3-T2035 Verify the message displayed on "Subscribe to watch" CTA from Home/Shows/Movies/GMA tabs from "Carousel".
 
-**File:** `tests/subscription/subscribe-to-watch-carousel.spec.ts`
+**File:** `tests/home/subscription.spec.ts`
 
 **Steps**
 
 1. Open the browser.
-2. Enter the URL (https://uat.iwanttfc.com/).
+2. Enter the URL (https://iwanttfc.com/).
 3. Log in with valid **free user** credentials.
 4. Navigate to the **Home**, **Shows**, **Movies**, or **GMA** page.
 5. Locate a premium content card displaying the **"Subscribe to Watch"** button.
@@ -1814,3 +1814,55 @@ Click on the Email Address field.
    - expect: A popup with the message **"Removed from Watchlist"** is displayed.
 
 
+### 5.5 IW3-T1951	Verify the Continue Watching tray upon logout and login with same account.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have content available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Verify that the **Continue Watching** tray is displayed with existing content.
+6. Log out of the application.
+7. Log in again using the same user credentials.
+8. Navigate to the **Home** page.
+9. Observe the **Continue Watching** tray.
+   - **Expect:** The **Continue Watching** tray should remain unchanged after logout and login.
+   - **Expect:** The previously available content and its watch progress should be preserved.
+
+### 5.6 IW3-T1935 Verify the Navigation on tapping 3 dots and "Details and More" option displayed on the  CW tray bottom bar popup.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have content available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Locate a content card in the **Continue Watching** tray.
+7. Hover on the content card.
+8. Click on **View More**
+9. Observe the navigation.
+   - **Expect:** The user should be navigated to the **Content Details** page for the selected content.
+
+### 5.7 IW3-T1945 Verify the content under Continue watching tray upon watching the content from different tabs.
+
+**File:** `tests/home/continue-watching-across-tabs.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to the **Movies** or **Shows** tab.
+5. Select any playable content and start playback.
+6. Watch the content partially, then exit the player.
+7. Navigate back to the **Home** page.
+8. Locate the **Continue Watching** tray.
+9. Observe the tray contents.
+   - **Expect:** The partially watched content should be displayed in the **Continue Watching** tray.
+   - **Expect:** Content watched from different tabs (such as **Movies** and **Shows**) should appear in the **Continue Watching** tray.

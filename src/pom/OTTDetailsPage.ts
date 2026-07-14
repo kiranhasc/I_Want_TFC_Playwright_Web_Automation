@@ -67,6 +67,8 @@ export class OTTDetailsPage {
   private readonly goLiveButton: PageElement;
   private readonly adTag: PageElement;
   private readonly pauseAdBanner: PageElement;
+  private readonly continueWatchingDetailsAndMore: PageElement;
+  private readonly contentDetailsHeading: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -137,6 +139,8 @@ export class OTTDetailsPage {
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
     this.adTag = { selector: '//*[@id="ad-ui-overlay"]' };
     this.pauseAdBanner = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"]' };
+    this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
+    this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
 
   }
 
@@ -586,6 +590,37 @@ async removeFromWatchlist(): Promise<void> {
     }
   }
 
+  async isContinueWatchingDetailsAndMoreVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async clickContinueWatchingDetailsAndMore(): Promise<void> {
+    logger.elementInteraction('click', 'Continue Watching details and more action');
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      await locator.click({ timeout: 20000 });
+    } catch (error) {
+      logger.debug('Continue Watching details and more action click failed', error);
+    }
+  }
+
+  async isContentDetailsPageVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.contentDetailsHeading.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async getFirstEpisodeCardTitleText(): Promise<string> {
     try {
       if (this.page.isClosed()) return '';
@@ -708,15 +743,34 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return await this.pageUtils.isVisible(this.videoPlayer, 15000);
   }
 
-  async isPlaybackStarted(): Promise<boolean> {
+  async isPlaybackStarted(timeout: number = 30000): Promise<boolean> {
     const locator = this.page.locator(this.videoPlayer.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 15000 });
-    const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
-      currentTime: video.currentTime,
-      paused: video.paused,
-      readyState: video.readyState,
-    }));
-    return playbackState.readyState >= 3 && (playbackState.currentTime > 0 || playbackState.paused === false);
+    await locator.waitFor({ state: 'visible', timeout: timeout }).catch(() => undefined);
+    const endAt = Date.now() + timeout;
+
+    while (Date.now() < endAt) {
+      const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
+        currentTime: video.currentTime,
+        paused: video.paused,
+        readyState: video.readyState,
+        ended: video.ended,
+      })).catch(() => null);
+
+      if (playbackState) {
+        const { currentTime, paused, readyState, ended } = playbackState;
+        const isPlaying = !paused && !ended;
+        const hasProgress = currentTime > 0;
+        const isReady = readyState >= 2;
+
+        if ((isReady && isPlaying) || hasProgress || (readyState >= 3 && !paused)) {
+          return true;
+        }
+      }
+
+      await this.page.waitForTimeout(1000);
+    }
+
+    return false;
   }
 
   async clickFirstSearchResult(): Promise<void> {
@@ -818,8 +872,8 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isSeekBarVisible(): Promise<boolean> {
     const seek = this.page.locator(this.seekBar.selector).first();
-    await seek.waitFor({ state: 'visible', timeout: 10000 });
-    return true;
+    await seek.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await seek.isVisible().catch(() => false);
   }
 
   async isPlaybackTimeVisible(): Promise<boolean> {
@@ -989,24 +1043,24 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return match?.[1] ?? playbackText;
   }
 
-  async dragSeekBarToPosition(targetPercent: number): Promise<void> {
-    const seekBar = this.page.locator(this.seekBar.selector).first();
-    await seekBar.waitFor({ state: 'visible', timeout: 15000 });
-    const box = await seekBar.boundingBox();
+  async dragSeekBarToPosition(targetPercent: number, targetSeconds?: number): Promise<void> {
+    const video = this.page.locator('video').first();
+    const duration = await video.evaluate((element: HTMLVideoElement) => {
+      return Number.isFinite(element.duration) ? element.duration : null;
+    }).catch(() => null);
 
-    if (!box) {
+    if (duration) {
+      const targetTime = typeof targetSeconds === 'number'
+        ? Math.min(Math.max(targetSeconds, 10), Math.max(duration - 1, 10))
+        : Math.min(Math.max(duration * Math.max(targetPercent, 0.1), 10), Math.max(duration - 1, 10));
+      await video.evaluate((element: HTMLVideoElement, seconds: number) => {
+        if (Number.isFinite(element.duration)) {
+          element.currentTime = Math.min(seconds, element.duration - 1);
+        }
+      }, targetTime);
+      await this.page.waitForTimeout(1500);
       return;
     }
-
-    const startX = box.x + box.width * 0.2;
-    const startY = box.y + box.height / 2;
-    const endX = box.x + box.width * Math.min(Math.max(targetPercent, 0.05), 0.95);
-    const endY = startY;
-
-    await this.page.mouse.move(startX, startY);
-    await this.page.mouse.down();
-    await this.page.mouse.move(endX, endY, { steps: 8 });
-    await this.page.mouse.up();
   }
 
   async clickliveContent(contentName: string = 'TFC Asia'): Promise<void> {

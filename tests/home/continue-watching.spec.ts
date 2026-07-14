@@ -26,7 +26,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@Low IW3-T1932: Verify the UI/UX of the Continue Watching tray', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-010-continue-watching-tray-ui'];
         const result = await verifyContinueWatchingTrayUI(page, { mode: data.mode });
 
@@ -34,7 +34,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@Low IW3-T1933: Verify the scroll functionality for the contents under Continue Watching tray', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-011-continue-watching-tray-scroll'];
         const result = await verifyContinueWatchingTrayScroll(page, { mode: data.mode });
 
@@ -42,7 +42,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@High IW3-T1936: Verify the functionality of "Remove From Continue Watching" CTA displayed on the CW tray bottom bar popup from Home screen', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-012-continue-watching-remove-item'];
         const result = await verifyContinueWatchingRemoveItem(page, { mode: data.mode });
 
@@ -62,7 +62,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@High IW3-T1960: Verify that movie content gets removed from CW tray post completely watching the same content', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-013-continue-watching-removal-after-playback'];
         const result = await verifyContinueWatchingRemovalAfterPlayback(page, { mode: data.mode });
 

@@ -1710,6 +1710,8 @@ export interface DisableParentalPinInput {
     password?: string;
     expectedPinSetupMessage?: string;
     mode?: string;
+    expectedSuccessHeader?: string;
+    expectedSuccessDetails?: string;
 }
 
 export interface DisableParentalPinOutput {
@@ -2554,8 +2556,21 @@ export async function disableParentalPin(page: any, input?: Partial<DisableParen
     await settingsPage.clickParentalPinToggle();
     const passwordFieldVisible = parentalControlsVisible ? await settingsPage.isParentalPinPasswordFieldVisible() : false;
     let passwordSubmitted = false;
+    let successMessageVisible = false;
+    let successMessage = '';
+    let successHeaderVisible = false;
+    let  successDetails = '';
+    let  successHeader = '';
+    let  continueButtonVisible = false;
     await settingsPage.enterParentalPinPassword(pinPassword);
     await settingsPage.clickParentalPinSubmitButton();
+    successMessageVisible = await settingsPage.waitForParentalPinSuccessMessageVisible(5000);
+    if (successMessageVisible) {
+        successMessage = await settingsPage.getParentalPinSuccessMessage();
+        // additional checks per updated test case: header, details, Continue button
+        successHeaderVisible = await settingsPage.isParentalPinSuccessHeaderVisible();            successHeader = await settingsPage.getParentalPinSuccessHeader();
+        successDetails = await settingsPage.getParentalPinSuccessDetails();                continueButtonVisible = await settingsPage.isParentalPinSuccessContinueButtonVisible();
+    }
     const toggleOff = parentalControlsVisible ? await settingsPage.isParentalPinToggleDisabled() : false;
     if(toggleOff) {
         passwordSubmitted = true;

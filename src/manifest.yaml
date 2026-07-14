@@ -268,6 +268,31 @@
   testCases:
     - "IW3-T1960"
   dependsOn: []
+
+- id: "verify-continue-watching-details-and-more"
+  name: "Verify Continue Watching details and more navigation"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingDetailsAndMoreNavigation"
+  tags:
+    - continue-watching
+    - navigation
+    - positive
+  testCases:
+    - "IW3-T1935"
+  dependsOn: []
+
+- id: "verify-continue-watching-across-tabs"
+  name: "Verify Continue Watching content after playback from different tabs"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingAcrossTabs"
+  tags:
+    - continue-watching
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1945"
+  dependsOn: []
+
 - id: "verify-search-icon-visibility"
   name: "Verify search icon visibility on navigation pages"
   path: "src/businessFunction/ott-auth-bfs.ts"

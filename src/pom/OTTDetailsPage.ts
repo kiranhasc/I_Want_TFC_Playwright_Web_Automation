@@ -68,6 +68,8 @@ export class OTTDetailsPage {
   private readonly goLiveButton: PageElement;
   private readonly adTag: PageElement;
   private readonly pauseAdBanner: PageElement;
+  private readonly continueWatchingDetailsAndMore: PageElement;
+  private readonly contentDetailsHeading: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -139,6 +141,8 @@ export class OTTDetailsPage {
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
     this.adTag = { selector: '//*[@id="ad-ui-overlay"]' };
     this.pauseAdBanner = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"]' };
+    this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
+    this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
 
   }
 
@@ -588,6 +592,37 @@ async removeFromWatchlist(): Promise<void> {
     }
   }
 
+  async isContinueWatchingDetailsAndMoreVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async clickContinueWatchingDetailsAndMore(): Promise<void> {
+    logger.elementInteraction('click', 'Continue Watching details and more action');
+    try {
+      const locator = this.page.locator(this.continueWatchingDetailsAndMore.selector).filter({ hasText: /Details and More|View More|Details/i }).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      await locator.click({ timeout: 20000 });
+    } catch (error) {
+      logger.debug('Continue Watching details and more action click failed', error);
+    }
+  }
+
+  async isContentDetailsPageVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.contentDetailsHeading.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 20000 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async getFirstEpisodeCardTitleText(): Promise<string> {
     try {
       if (this.page.isClosed()) return '';
@@ -711,14 +746,14 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async isPlaybackStarted(): Promise<boolean> {
-    const locator = this.page.locator(this.videoPlayer.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 15000 });
-    const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
-      currentTime: video.currentTime,
-      paused: video.paused,
-      readyState: video.readyState,
-    }));
-    return playbackState.readyState >= 3 && (playbackState.currentTime > 0 || playbackState.paused === false);
+   const locator = this.page.locator(this.videoPlayer.selector).first();
+   await locator.waitFor({ state: 'visible', timeout: 15000 });
+   const playbackState = await locator.evaluate((video: HTMLVideoElement) => ({
+     currentTime: video.currentTime,
+     paused: video.paused,
+     readyState: video.readyState,
+   }));
+   return playbackState.readyState >= 3 && (playbackState.currentTime > 0 || playbackState.paused === false);
   }
 
   async clickFirstSearchResult(): Promise<void> {
@@ -829,8 +864,8 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isSeekBarVisible(): Promise<boolean> {
     const seek = this.page.locator(this.seekBar.selector).first();
-    await seek.waitFor({ state: 'visible', timeout: 10000 });
-    return true;
+    await seek.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await seek.isVisible().catch(() => false);
   }
 
   async isPlaybackTimeVisible(): Promise<boolean> {

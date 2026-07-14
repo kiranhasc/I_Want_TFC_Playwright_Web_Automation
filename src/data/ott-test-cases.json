@@ -187,6 +187,13 @@
         "password": "Test1234",
         "expectedHeading": "Welcome to iWant"
     },
+    "tc-auth-023-continue-watching-playback": {
+        "mode": "valid"
+    },
+    "tc-auth-024-continue-watching-across-tabs": {
+        "mode": "valid",
+        "tabs": ["Movies", "Shows"]
+    },
     "tc-auth-020-free-tag-watchlist": {
         "email": "sanitycheck@yopmail.com",
         "password": "Test1234",
@@ -481,6 +488,9 @@
         "mode": "valid"
     },
     "tc-auth-013-continue-watching-removal-after-playback": {
+        "mode": "valid"
+    },
+    "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
     },
     "tc-play-001-free-asset-playback": {

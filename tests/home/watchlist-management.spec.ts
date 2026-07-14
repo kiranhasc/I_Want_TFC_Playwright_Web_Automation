@@ -3,6 +3,7 @@ import { OTTAuthPage } from '../../src/pom/OTTAuthPage';
 import { OTTDetailsPage } from '../../src/pom/OTTDetailsPage';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyLiveContentWatchlistAbsence } from '../../src/businessFunction/ott-watchlist-bfs';
+import { playContentFromWatchlist } from '../../src/businessFunction/ott-playback-bfs';
 
 test.describe('Watchlist management', () => {
   
@@ -30,7 +31,6 @@ test.describe('Watchlist management', () => {
     await page.waitForTimeout(5000);
     await detailsPage.hoverFirstContentThumbnailAndClickRemoveWatchlistIcon();
   });
-});
 
 test('@Medium IW3-T2047: Verify Add to Watchlist option is not displayed for Live content', async ({ page }) => {
   test.setTimeout(120000);
@@ -89,3 +89,20 @@ test('@Medium IW3-T2051: Verify that user is able to remove free content from my
   expect(popupResult.toLowerCase()).toContain('removed');
   console.log(`Removed popup for "${data.contentTitle}": ${popupResult}`);
 });
+
+test('@High IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
+        test.setTimeout(180000);
+        const result = await playContentFromWatchlist(page, {
+            email: process.env.VALID_LOGIN_EMAIL,
+            password: process.env.VALID_LOGIN_PASSWORD,
+        });
+
+        expect(result.isLoggedIn).toBeTruthy();
+        expect(result.watchlistOpened).toBeTruthy();
+        expect(result.contentSelected).toBeTruthy();
+        expect(result.playClicked).toBeTruthy();
+        expect(result.contentPlayed).toBeTruthy();
+        expect(result.playbackStarted).toBeTruthy();
+    });
+
+  });

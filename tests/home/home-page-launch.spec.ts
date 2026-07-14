@@ -172,7 +172,7 @@ test.describe('Home Page Launch', () => {
        expect(result.homeTabVisible).toBe(true);
    });
 
-   test('@High - IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+   test('@High IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
        const data = testCaseData['tc-play-001-free-asset-playback'];
        const result = await playFreeAsset(page, {
            email: process.env.VALID_LOGIN_EMAIL,

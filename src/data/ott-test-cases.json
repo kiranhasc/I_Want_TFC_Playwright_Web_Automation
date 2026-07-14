@@ -461,8 +461,10 @@
     },
     "tc-settings-012-parental-pin-toggle-disabled-after-password": {
         "mode": "valid"
-    }
-    ,
+    },
+    "tc-settings-013-parental-pin-off-allows-playback": {
+        "mode": "valid"
+    },
     "tc-auth-009-continue-watching-no-history": {
         "mode": "valid",
         "expectedContinueWatchingVisible": false

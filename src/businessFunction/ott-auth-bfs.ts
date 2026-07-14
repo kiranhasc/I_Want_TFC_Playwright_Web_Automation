@@ -447,6 +447,32 @@ export interface SearchResultsOutput {
     resultsVisible: boolean;
 }
 
+export interface VerifySearchAutoSuggestionsInput {
+    mode?: string;
+    query: string;
+}
+
+export interface VerifySearchAutoSuggestionsOutput {
+    isLoggedIn: boolean;
+    suggestionsVisible: boolean;
+    suggestionsCount: number;
+    suggestionsList: string[];
+    suggestionsContainQuery: boolean;
+}
+
+export interface VerifySearchNoResultsMessageInput {
+    mode?: string;
+    searchQuery?: string;
+}
+
+export interface VerifySearchNoResultsMessageOutput {
+    isLoggedIn: boolean;
+    searchQueryTyped: boolean;
+    noResultsMessageVisible: boolean;
+    messageText: string;
+    contentCardsPresent: number;
+}
+
 export interface ParentalPinVisibilityOutput {
     isLoggedIn: boolean;
     parentalControlsVisible: boolean;
@@ -523,6 +549,83 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
         queryTyped,
         resultsVisible,
     };
+}
+
+export async function verifySearchAutoSuggestions(page: any, input?: Partial<VerifySearchAutoSuggestionsInput>): Promise<VerifySearchAutoSuggestionsOutput> {
+  const authPage = new OTTAuthPage(page);
+  const mode = normalizeLoginMode(input?.mode);
+  const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+  const query = input?.query ?? 'Love';
+  logger.step('Starting search auto-suggestions verification flow');
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail(credentials.email);
+  await authPage.clickPasswordField();
+  await authPage.enterPassword(credentials.password);
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  // Wait for suggestions to load and become visible
+  logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
+  await page.waitForTimeout(1500);
+  const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(query);
+  const suggestionsList = await authPage.getSearchAutoSuggestions();
+  const suggestionsCount = suggestionsList.length;
+  // Verify that suggestions contain the query
+  const suggestionsContainQuery = await authPage.verifySuggestionsContainQuery(query, suggestionsList);
+  logger.assertion('Auto-suggestions visible after typing', suggestionsVisible);
+  logger.assertion('At least one suggestion available', suggestionsCount > 0);
+  logger.step(`Found ${suggestionsCount} suggestions: ${suggestionsList.slice(0, 3).join(', ')}${suggestionsCount > 3 ? '...' : ''}`);
+  return {
+    isLoggedIn: true,
+    suggestionsVisible,
+    suggestionsCount,
+    suggestionsList,
+    suggestionsContainQuery,
+  };
+}
+
+export async function verifySearchNoResultsMessage(page: any, input?: Partial<VerifySearchNoResultsMessageInput>): Promise<VerifySearchNoResultsMessageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const mode = normalizeLoginMode(input?.mode);
+  const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+  const searchQuery = input?.searchQuery ?? 'tfdiyhujehfdyhglfjh843847';
+  logger.step('Starting search no results message verification flow');
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail(credentials.email);
+  await authPage.clickPasswordField();
+  await authPage.enterPassword(credentials.password);
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(searchQuery);
+  // Wait for search results/message to load - wait for the "No results" message to appear
+  logger.step(`Waiting for no results message to display for irrelevant query: ${searchQuery}`);
+  // Wait for the no results message to become visible (up to 15 seconds)
+  const messageVisible = await authPage.isNoResultsMessageVisible();
+  if (!messageVisible) {
+    logger.step('No results message did not appear, waiting additional time...');
+    await page.waitForTimeout(3000);
+  }
+  const searchInputValue = await authPage.getSearchBarValue();
+  const searchQueryTyped = searchInputValue.includes(searchQuery);
+  // Verify "No results found" message appears
+  const noResultsMessageVisible = messageVisible;
+  const messageText = await authPage.getNoResultsMessageText();
+  const contentCardsPresent = await authPage.getSearchResultsCount();
+  logger.assertion('No results message visible for irrelevant query', noResultsMessageVisible);
+  logger.step(`Search message: ${messageText}; Content cards found: ${contentCardsPresent}`);
+  return {
+    isLoggedIn: true,
+    searchQueryTyped,
+    noResultsMessageVisible,
+    messageText,
+    contentCardsPresent,
+  };
 }
 
 export async function verifyParentalPinOptionVisibility(page: any, input?: Partial<InvalidLoginInput>): Promise<ParentalPinVisibilityOutput> {

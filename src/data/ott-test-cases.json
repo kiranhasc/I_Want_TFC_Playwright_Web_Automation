@@ -241,6 +241,14 @@
         "mode": "valid",
         "query": "Abandoned"
     },
+    "tc-nav-004-watchlist-hover": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
+    "tc-nav-005-watchlist-remove": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
     "tc-sub-001-free-subscribe": {
         "mode": "freeUser",
         "query": "Karnal"
@@ -519,6 +527,22 @@
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
+    },
+    "tc-nav-006-search-auto-suggestions": {
+        "mode": "valid",
+        "query": "Love",
+        "expectedSuggestionsVisible": true
+    },
+    "tc-nav-007-search-no-results": {
+        "mode": "valid",
+        "searchQuery": "tfdiyhujehfdyhglfjh843847hgfhilwajigjlu",
+        "expectedNoResultsMessage": "No results found."
+    },
+    "tc-nav-008-premium-playback": {
+        "mode": "valid",
+        "searchQuery": "La Luna Sangre",
+        "expectedPlayback": true,
+        "expectedSubscribePrompt": false
     },
     "tc-sub-035-add-premium-watchlist": {
         "mode": "freeUser",

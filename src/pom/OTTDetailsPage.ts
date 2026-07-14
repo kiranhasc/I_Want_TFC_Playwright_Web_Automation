@@ -43,6 +43,8 @@ export class OTTDetailsPage {
   private readonly skipRecapMarker: PageElement;
   private readonly addToWatchlistButton: PageElement;
   private readonly removeFromWatchlistButton: PageElement;
+  private readonly addWatchlistIcon: PageElement;
+  private readonly removeWatchlistIcon: PageElement;
   private readonly watchlistToast: PageElement;
   private readonly cinemaOnePhSection: PageElement;
   private readonly liveChannelsTray: PageElement;
@@ -118,6 +120,8 @@ export class OTTDetailsPage {
     this.playButton = { selector: '#play div' };
     this.addToWatchlistButton = { selector: '#watchlist div' };
     this.removeFromWatchlistButton = { selector: '#watchlist div' };
+    this.addWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/add_watchlist.svg' };
+    this.removeWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/remove_watchlist.svg' };
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.cinemaOnePhSection = {selector: 'img[alt="Cinema One PH"]'};
     this.liveChannelsTray = { text: 'Live Channels', selector: 'text=Live Channels' };
@@ -158,6 +162,18 @@ export class OTTDetailsPage {
     this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
     this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
 
+  }
+
+  private getRoleLocator(element: PageElement, exact = false) {
+    if (element.role && element.text) {
+      return this.page.getByRole(element.role as 'img' | 'button' | 'link' | 'textbox', { name: element.text }).first();
+    }
+    if (element.text) {
+      return exact
+        ? this.page.getByText(element.text, { exact: true }).first()
+        : this.page.getByText(element.text).first();
+    }
+    return this.page.locator(element.selector ?? '').first();
   }
 
   async navigate(): Promise<void> {
@@ -264,26 +280,71 @@ export class OTTDetailsPage {
 
   async clickWatchlistIcon(): Promise<void> {
     logger.elementInteraction('click', 'watchlist icon');
-      const locator = this.page.locator(this.addToWatchlistButton.selector).first();
-      await locator.waitFor({ state: 'visible', timeout: 15000 });
-      await locator.click({ timeout: 15000 });
+      const addIcon = this.getRoleLocator(this.addWatchlistIcon);
+      const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
+      if (await removeIcon.isVisible().catch(() => false)) {
+        await removeIcon.click({ timeout: 15000, force: true });
+        await this.page.waitForTimeout(1000);
+      }
+      await addIcon.waitFor({ state: 'visible', timeout: 15000 });
+      await addIcon.click({ timeout: 15000, force: true });
       await this.page.waitForTimeout(1000);
   }
 
-  async hoverContentThumbnailAndClickWatchlistIcon(contentTitle: string): Promise<void> {
+  async hoverContentThumbnailAndClickWatchlistIcon(contentTitle: string): Promise<string> {
     logger.elementInteraction('hover', `content thumbnail ${contentTitle}`);
-
     try {
-      const contentThumbnail = this.page.getByRole('img', { name: contentTitle }).first();
+      const contentThumbnail = this.getRoleLocator({ role: 'img', text: contentTitle });
       await contentThumbnail.waitFor({ state: 'visible', timeout: 15000 });
       await contentThumbnail.hover();
       await this.page.waitForTimeout(7000);
-      const watchlistIcon = this.page.locator('#watchlist div').first();
-      await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 });
-      await watchlistIcon.click({ timeout: 15000 });
-      await this.page.waitForTimeout(1000);
+      const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
+      const addIcon = this.getRoleLocator(this.addWatchlistIcon);
+      if (await removeIcon.isVisible().catch(() => false)) {
+        await removeIcon.click({ timeout: 15000, force: true });
+        await this.page.waitForTimeout(1000);
+      }
+      await addIcon.waitFor({ state: 'visible', timeout: 15000 });
+      await addIcon.click({ timeout: 15000, force: true });
+      await this.page.waitForTimeout(1500);
+      return await this.validateAddedToWatchlistPopup();
     } catch (error) {
       logger.debug(`Hover content thumbnail and click watchlist icon failed for ${contentTitle}`, error);
+      return '';
+    }
+  }
+
+  async getWatchlistActionState(contentTitle: string): Promise<'add' | 'remove' | 'none'> {
+    logger.elementInteraction('hover', `content thumbnail ${contentTitle}`);
+    try {
+      const contentThumbnail = this.getRoleLocator({ role: 'img', text: contentTitle });
+      await contentThumbnail.waitFor({ state: 'visible', timeout: 15000 });
+      await contentThumbnail.hover();
+      await this.page.waitForTimeout(2000);
+      const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
+      const addIcon = this.getRoleLocator(this.addWatchlistIcon);
+      if (await removeIcon.isVisible().catch(() => false)) {
+        return 'remove';
+      }
+      if (await addIcon.isVisible().catch(() => false)) {
+        return 'add';
+      }
+      return 'none';
+    } catch (error) {
+      logger.debug(`Unable to determine watchlist action state for ${contentTitle}`, error);
+      return 'none';
+    }
+  }
+
+  async isWatchlistItemVisible(contentTitle: string): Promise<boolean> {
+    logger.elementInteraction('verify', `watchlist item visible ${contentTitle}`);
+    try {
+      const item = this.page.getByRole('img', { name: contentTitle }).first();
+      await item.waitFor({ state: 'visible', timeout: 20000 });
+      return true;
+    } catch {
+      console.log(`Item not visible: ${contentTitle}`);
+      return false;
     }
   }
 
@@ -311,13 +372,13 @@ export class OTTDetailsPage {
     logger.elementInteraction('hover', `content thumbnail ${contentTitle}`);
 
     try {
-      const contentThumbnail = this.page.getByRole('img', { name: contentTitle }).first();
+      const contentThumbnail = this.getRoleLocator({ role: 'img', text: contentTitle });
       await contentThumbnail.waitFor({ state: 'visible', timeout: 15000 });
       await contentThumbnail.hover();
       await this.page.waitForTimeout(5000);
-      const watchlistIcon = this.page.locator('#watchlist div').first();
+      const watchlistIcon = this.getRoleLocator(this.removeWatchlistIcon);
       await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 });
-      await watchlistIcon.click({ timeout: 15000 });
+      await watchlistIcon.click({ timeout: 15000, force: true });
     } catch (error) {
       logger.debug(`Hover content thumbnail and click remove watchlist icon failed for ${contentTitle}`, error);
     }
@@ -385,7 +446,7 @@ async removeFromWatchlist(): Promise<void> {
   async clickLiveContentByName(contentName: string): Promise<void> {
     logger.elementInteraction('click', `live content card ${contentName}`);
     try {
-      const locator = this.page.getByRole('img', { name: contentName }).first();
+      const locator = this.getRoleLocator({ role: 'img', text: contentName });
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       await locator.click({ timeout: 15000 });
       await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
@@ -687,7 +748,7 @@ async validateAddedToWatchlistPopup(): Promise<string> {
   logger.elementInteraction('verify', 'Added to Watchlist popup');
 
   const toastCandidates = [
-    this.page.getByText(/added to watchlist/i).first(),
+    this.page.getByText(/Added to watchlist/i).first(),
     this.page.locator('div, span, p').filter({ hasText: /added/i }).first(),
   ];
 
@@ -1069,7 +1130,7 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isPlayerScreenVisible(): Promise<boolean> {
     const player = this.page.locator(this.playerScreen.selector).first();
-    await player.waitFor({ state: 'visible', timeout: 15000 });
+    await player.waitFor({ state: 'visible', timeout: 20000 });
     return true;
   }
 
@@ -1156,12 +1217,6 @@ async addToWatchlistAndGetToast(): Promise<string> {
     await timeDisplay.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
     return await timeDisplay.isVisible().catch(() => false);
   }
-
-  // async isPlayerDurationTimeVisible(): Promise<boolean> {
-  //   const durationDisplay = this.page.locator(this.playerTimeDuration.selector).first();
-  //   await durationDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-  //   return await durationDisplay.isVisible().catch(() => false);
-  // }
 
   async tapPlaybackScreen(): Promise<void> {
     const playerScreen = this.page.locator(this.playerScreen.selector).first();
@@ -1344,8 +1399,9 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async clickGoLiveButton(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Go Live' }).waitFor({ state: 'visible', timeout: 10000 });
-    await this.page.getByRole('button', { name: 'Go Live' }).click({ timeout: 10000 });
+    const goLiveButton = this.getRoleLocator({ role: 'button', text: 'Go Live' });
+    await goLiveButton.waitFor({ state: 'visible', timeout: 10000 });
+    await goLiveButton.click({ timeout: 10000 });
   }
 
   async isGoLiveButtonVisible(): Promise<boolean> {

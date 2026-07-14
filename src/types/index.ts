@@ -8,7 +8,8 @@
 // }
 
 export interface PageElement {
-  selector: string;
+  // selector: string;
+  selector?: string;
   testId?: string;
   text?: string ;
   role?: string;

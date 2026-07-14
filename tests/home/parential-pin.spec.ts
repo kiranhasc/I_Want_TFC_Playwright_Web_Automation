@@ -159,7 +159,7 @@ test.describe('Parental controls', () => {
     expect(result.passwordSubmitted).toBe(true);
     expect(result.toggleDisabledAfterSubmission).toBe(true);
   });
-  test('@High - IW3-T2109 : Verify user is able to play any content if parental pin is turned off', async ({ page }) => {
+  test('@High - IW3-T2107 : Verify user is able to play any content if parental pin is turned off', async ({ page }) => {
     const data = testCaseData['tc-settings-013-parental-pin-off-allows-playback'];
     const result = await verifyParentalPinPlaybackAllowedWhenDisabled(page, {
       mode: data.mode,

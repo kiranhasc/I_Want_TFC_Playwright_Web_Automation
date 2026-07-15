@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { validateContinueWatchingForNoHistory, verifyContinueWatchingRemovalAfterPlayback, verifyContinueWatchingRemoveItem, verifyContinueWatchingTrayScroll, verifyContinueWatchingTrayUI } from '../../src/businessFunction/ott-auth-bfs';
 import { verifyContinueWatchingAcrossTabs, verifyContinueWatchingDetailsAndMoreNavigation, verifyContinueWatchingTrayPersistence } from '../../src/businessFunction/ott-continue-watching-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';

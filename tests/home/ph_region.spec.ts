@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifyGuestWatchlistNavigationFromFreeAsset } from '../../src/businessFunction/ott-watchlist-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyGuestSubscribeNavigationFromFreeAsset } from '../../src/businessFunction/ott-subscription-bfs';

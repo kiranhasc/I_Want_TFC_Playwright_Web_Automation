@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+const BOLD = '\x1b[1m';
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const RESET = '\x1b[0m';
+
 /**
  * Simple logger utility for the IGS Playwright Framework
  * Provides structured logging with different levels and formats
@@ -214,6 +219,52 @@ class Logger {
   public environmentSetup(environment: string, baseUrl: string): void {
     this.info(`ENVIRONMENT SETUP: ${environment} - ${baseUrl}`);
   }
+
+  /***
+   * Log colour
+   */
+  private colorLog(message: string, colorCode: string): void {
+    const formattedMessage = this.formatMessage('info', message);
+    console.log(`${colorCode}${formattedMessage}\x1b[0m`);
+    this.writeToFile('info', formattedMessage);
+  }
+
+
+
+  public start(message: string): void {
+
+  const formattedMessage = this.formatMessage('info', message);
+
+  console.log(
+    `${BOLD}${GREEN}${formattedMessage}${RESET}`
+  );
+
+  this.writeToFile('info', formattedMessage);
+}
+
+
+public success(message: string): void {
+
+  const formattedMessage = this.formatMessage('info', message);
+
+  console.log(
+    `${BOLD}${GREEN}${formattedMessage}${RESET}`
+  );
+
+  this.writeToFile('info', formattedMessage);
+}
+
+
+public failure(message: string): void {
+
+  const formattedMessage = this.formatMessage('error', message);
+
+  console.error(
+    `${BOLD}${RED}${formattedMessage}${RESET}`
+  );
+
+  this.writeToFile('error', formattedMessage);
+}
 }
 
 // Export singleton instance and class

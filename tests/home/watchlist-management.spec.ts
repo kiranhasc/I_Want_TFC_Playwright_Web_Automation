@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { OTTAuthPage } from '../../src/pom/OTTAuthPage';
 import { OTTDetailsPage } from '../../src/pom/OTTDetailsPage';
 import testCaseData from '../../src/data/ott-test-cases.json';

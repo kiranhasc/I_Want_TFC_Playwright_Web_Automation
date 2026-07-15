@@ -6,7 +6,17 @@
     "test:dev": "cross-env TEST_ENV=dev npx playwright test",
     "test:qa": "cross-env TEST_ENV=qa npx playwright test",
     "test:prod": "cross-env TEST_ENV=prod npx playwright test",
-    "test:file:prod": "cross-env TEST_ENV=prod npx playwright test"
+    "test:file:prod": "cross-env TEST_ENV=prod npx playwright test",
+    "test:all": "cross-env TEST_ENV=prod npx playwright test --workers=1 --headed",
+    "test:account": "cross-env TEST_ENV=prod npx playwright test --project=account --workers=1 --headed",
+    "test:playback": "cross-env TEST_ENV=prod npx playwright test --project=playback --workers=1 --headed",
+    "test:launch": "cross-env TEST_ENV=prod npx playwright test --project=launch --workers=1 --headed",
+    "test:search": "cross-env TEST_ENV=prod npx playwright test --project=search --workers=1 --headed",
+    "test:watchlist": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed",
+    "test:region": "cross-env TEST_ENV=prod npx playwright test --project=region --workers=1 --headed",
+    "test:high": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @High",
+    "test:medium": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Medium",
+    "test:low": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Low"
   },
   "keywords": [],
   "author": "",

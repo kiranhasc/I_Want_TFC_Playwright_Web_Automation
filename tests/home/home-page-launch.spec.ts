@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { loginWithInvalidCredentials, loginToOTT, loginWithMobileNumber, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs, verifySupportAndPolicyLinks, navigateToTermsAndConditionsSection, searchFromTermsPage, verifyTermsPageDetails } from '../../src/businessFunction/ott-auth-bfs';
 import { playFreeAsset } from '../../src/businessFunction/ott-playback-bfs.js'
 import testCaseData from '../../src/data/ott-test-cases.json';

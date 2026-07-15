@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { manageWatchlistItem } from '../../src/businessFunction/ott-watchlist-bfs';
 import { verifyAccountAndSubscriptionDetails } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';

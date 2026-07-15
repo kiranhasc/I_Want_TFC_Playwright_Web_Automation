@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifySearchIconVisibilityOnAllPages, verifySearchQueryTyping, verifySearchResults, verifySearchAutoSuggestions, verifySearchNoResultsMessage } from '../../src/businessFunction/ott-auth-bfs';
 import { addContentToWatchlistFromSearchPage, removeContentFromWatchlistFromSearchPage } from '../../src/businessFunction/ott-watchlist-bfs';
 import { playPremiumContentFromSearch } from '../../src/businessFunction/ott-playback-bfs';

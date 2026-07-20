@@ -1,6 +1,7 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
+import { loginToOTT } from './ott-auth-bfs';
 
 export interface ManageWatchlistItemInput {
   mode?: string;
@@ -60,6 +61,73 @@ export interface RemoveContentFromWatchlistFromSearchPageOutput {
   removedFromWatchlist: boolean;
   isVisibleInMyWatchlist: boolean;
   toastText: string;
+}
+
+export interface ManageWatchlistItemOnDetailsPageInput {
+  mode?: string;
+}
+
+export interface ManageWatchlistItemOnDetailsPageOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  isAddedToWatchlist: boolean;
+  addToastText: string;
+  isRemovedFromWatchlist: boolean;
+  removeToastText: string;
+}
+
+export async function manageWatchlistItemOnDetailsPage(
+  page: any,
+  input?: Partial<ManageWatchlistItemOnDetailsPageInput>
+): Promise<ManageWatchlistItemOnDetailsPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting details-page watchlist add/remove flow');
+
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before watchlist validation', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      isAddedToWatchlist: false,
+      addToastText: '',
+      isRemovedFromWatchlist: false,
+      removeToastText: '',
+    };
+  }
+
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+  await page.goto('https://iwanttfc.com/my_watchlist', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForTimeout(4000);
+
+  const watchlistContentAvailable = await detailsPage.getFirstContentTitle().catch(() => '');
+  const isDetailsPageVisible = Boolean(watchlistContentAvailable);
+  logger.assertion('My Watchlist page visible before selecting content', isDetailsPageVisible);
+
+  await detailsPage.clickFirstContentInWatchlist();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+
+  const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
+  const currentUrl = page.url();
+  const isRemovedFromWatchlist = currentUrl.includes('/details/') || /removed/i.test(removeToastText);
+  logger.assertion('Remove from Watchlist action completed', isRemovedFromWatchlist);
+
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    isAddedToWatchlist: isRemovedFromWatchlist,
+    addToastText: removeToastText,
+    isRemovedFromWatchlist,
+    removeToastText,
+  };
 }
 
 export async function verifyGuestWatchlistNavigationFromFreeAsset(

@@ -10,6 +10,8 @@ export class OTTAuthPage {
     private readonly emailField: PageElement;
     private readonly passwordField: PageElement;
     private readonly passwordVisibilityToggle: PageElement;
+    private readonly passwordTextField: PageElement;
+    private readonly passwordVisibilityEyeIcon: PageElement;
     private readonly continueButton: PageElement;
     private readonly proceedButton: PageElement;
     private readonly tvProviderLoginOption: PageElement;
@@ -50,6 +52,10 @@ export class OTTAuthPage {
     private readonly continueWatchingRemoveButton: PageElement;
     private readonly continueWatchingItemLink: PageElement;
     private readonly continueWatchingItemTitle: PageElement;
+    private readonly continueWatchingCard: PageElement;
+    private readonly continueWatchingImageWithAlt: PageElement;
+    private readonly continueWatchingProgressSelector: PageElement;
+    private readonly continueWatchingRecentMarkerSelector: PageElement;
     private readonly resumeButton: PageElement;
     private readonly seekBar: PageElement;
     private readonly trendingMoviesRail: PageElement;
@@ -88,6 +94,14 @@ export class OTTAuthPage {
     private readonly profileSaveButton: PageElement;
     private readonly firstNameValidationError: PageElement;
     private readonly lastNameValidationError: PageElement;
+    private readonly pageBody: PageElement;
+    private readonly bodyTextPattern: PageElement;
+    private readonly accountSettingsTextLink: PageElement;
+    private readonly profileValidationTextPattern: PageElement;
+    private readonly searchResultsContainer: PageElement;
+    private readonly searchSuggestionsContainer: PageElement;
+    private readonly noResultsMessage: PageElement;
+    private readonly searchResultImages: PageElement;
 
 
     constructor(page: Page) {
@@ -96,6 +110,8 @@ export class OTTAuthPage {
         this.emailField = { selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]', };
         this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]', };
         this.passwordVisibilityToggle = {selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")',};
+        this.passwordTextField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
+        this.passwordVisibilityEyeIcon = { selector: '.absolute.top-\\[8px\\] > svg > path:nth-child(2)' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
@@ -131,6 +147,10 @@ export class OTTAuthPage {
         this.continueWatchingRemoveButton = { selector: 'img[alt="remove-from-cw"], img[alt*="remove"], [aria-label*="remove"], [title*="remove"], [data-testid*="remove"]' };
         this.continueWatchingItemLink = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> a, text=Continue Watching >> xpath=following-sibling::* >> button, text=Continue Watching >> xpath=following-sibling::* >> [role="button"]' };
         this.continueWatchingItemTitle = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img[alt]' };
+        this.continueWatchingCard = { selector: 'img[alt]:not([alt="arrow-right"])' };
+        this.continueWatchingImageWithAlt = { selector: 'img[alt]' };
+        this.continueWatchingProgressSelector = { selector: '.progress, [aria-label*="progress"], [data-testid*="progress"], [class*="resume"]' };
+        this.continueWatchingRecentMarkerSelector = { selector: 'img[alt*="recently"], img[src*="recently"], [class*="recent"]' };
         this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
         this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
@@ -174,6 +194,14 @@ export class OTTAuthPage {
         this.profileSaveButton = { role: 'button', text: 'Save', selector: 'button:has-text("Save")' };
         this.firstNameValidationError = { selector: '//*[@id="first name-helper-text"]' };
         this.lastNameValidationError = { selector: '//*[@id="last name-helper-text"]' };
+        this.pageBody = { selector: 'body' };
+        this.bodyTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
+        this.accountSettingsTextLink = { text: 'Account & Settings', selector: 'text=Account & Settings' };
+        this.profileValidationTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
+        this.searchResultsContainer = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3' };
+        this.searchSuggestionsContainer = { selector: '[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"]' };
+        this.noResultsMessage = { selector: 'text=/no\\s+results/i' };
+        this.searchResultImages = { selector: 'img[alt]' };
     }
 
     async navigate(): Promise<void> {
@@ -283,9 +311,19 @@ export class OTTAuthPage {
 
     async clickPasswordVisibilityToggle(): Promise<void> {
         logger.elementInteraction('click', 'Password visibility toggle eye icon');
-        const eyeIcon = this.page.locator('.absolute.top-\\[8px\\] > svg > path:nth-child(2)');
-        await eyeIcon.waitFor({ state: 'visible', timeout: 10000 });
-        await eyeIcon.click({ timeout: 10000 });
+        await this.pageUtils.safeClick(this.passwordVisibilityEyeIcon, 10000);
+    }
+
+    async isPasswordTextVisible(): Promise<boolean> {
+        return await this.page.locator(this.passwordTextField.selector).count() > 0;
+    }
+
+    getTermsAndConditionsLinkSelector(): string {
+        return this.termsAndConditionsLink.selector;
+    }
+
+    getSearchInputSelector(): string {
+        return this.searchBar.selector;
     }
 
     async getPasswordFieldType(): Promise<string> {
@@ -352,7 +390,7 @@ export class OTTAuthPage {
     }
 
     async scrollToBottomLinks(): Promise<void> {
-        await this.page.locator(this.createAccountLink.selector).scrollIntoViewIfNeeded();
+        await this.pageUtils.scrollIntoView(this.createAccountLink);
     }
 
     async isLoginFormVisible(): Promise<boolean> {
@@ -367,7 +405,7 @@ export class OTTAuthPage {
     }
 
     async scrollToSupportLinks(): Promise<void> {
-        await this.page.locator(this.helpAndSupportLink.selector).first().scrollIntoViewIfNeeded();
+        await this.pageUtils.scrollIntoView(this.helpAndSupportLink);
     }
 
     async isHomeTabVisible(): Promise<boolean> {
@@ -422,24 +460,17 @@ export class OTTAuthPage {
                 logger.warn('No popup detected');
                 return false;
             }
-
             await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
-
             // Navigate directly to the section URL
             if (expectedUrlPart) {
                 const baseUrl = popup.url().split('/legal/')[0] + `/legal/${submoduleName}/`;
                 const sectionUrl = baseUrl + expectedUrlPart + '/';
-
                 await popup.goto(sectionUrl, { waitUntil: 'domcontentloaded' });
-
                 const urlMatches = popup.url().toLowerCase().includes(expectedUrlPart.toLowerCase());
                 const headingVisible = await this.isPageHeadingVisibleOnPage(popup, expectedHeading);
-
-
                 this.page = popup;
                 return headingVisible && urlMatches;
             }
-
             return false;
         } catch (error) {
             logger.warn(`Failed to navigate to Terms section: ${error}`);
@@ -491,7 +522,6 @@ export class OTTAuthPage {
             return false;
         }
     }
-
     getCurrentUrl(): string {
         return this.page.url();
     }
@@ -499,12 +529,10 @@ export class OTTAuthPage {
     private async openLinkInNewTab(link: PageElement, expectedHeading?: string, keepPageOpen: boolean = false): Promise<boolean> {
         const mainPage = this.page;
         const initialUrl = mainPage.url();
-
         try {
             const popupPromise = this.page.context().waitForEvent('page', { timeout: 8000 });
             await this.pageUtils.safeClick(link);
             await mainPage.waitForTimeout(1000);
-
             const popup = await popupPromise.catch(() => undefined);
             if (popup && popup.url() !== 'about:blank') {
                 logger.step(`Popup detected: ${popup.url()}`);
@@ -514,15 +542,12 @@ export class OTTAuthPage {
                     return !!currentUrl && currentUrl !== 'about:blank' && !currentUrl.startsWith('about:');
                 }, { timeout: 15000 }).catch(() => undefined);
                 await popup.waitForTimeout(3000);
-
                 const headingVisible = await this.isPageHeadingVisibleOnPage(popup, expectedHeading);
-
                 if (keepPageOpen) {
                     logger.step('Keeping popup open, switching context to new tab');
                     this.page = popup;
                     return headingVisible;
                 }
-
                 await popup.close().catch(() => undefined);
                 this.page = mainPage;
                 await mainPage.waitForLoadState('domcontentloaded');
@@ -562,7 +587,7 @@ export class OTTAuthPage {
             if (visibleHeading) {
                 return true;
             }
-            const bodyText = await targetPage.locator('body').textContent().catch(() => '');
+            const bodyText = await targetPage.locator(this.pageBody.selector || 'body').textContent().catch(() => '');
             if (bodyText?.toLowerCase().includes(normalizedHeading)) {
                 return true;
             }
@@ -588,7 +613,6 @@ export class OTTAuthPage {
     async closeCurrentTabAndReturnToMain(): Promise<void> {
         const pages = this.page.context().pages();
         const mainPage = pages.find((candidate) => candidate !== this.page);
-
         if (mainPage) {
             try {
                 await this.page.close();
@@ -596,10 +620,9 @@ export class OTTAuthPage {
                 await mainPage.waitForLoadState('domcontentloaded');
                 return;
             } catch {
-                // fall back to the primary page
+                logger.error('Failed to close current tab or switch back to main page');
             }
         }
-
         await this.page.bringToFront();
         await this.page.waitForLoadState('domcontentloaded');
     }
@@ -648,7 +671,7 @@ export class OTTAuthPage {
     }
 
     private getContinueWatchingTitleLocator() {
-        return this.page.locator('text=Continue Watching').first();
+        return this.page.locator(this.continueWatchingRail.selector).first();
     }
 
     private getContinueWatchingRailLocator() {
@@ -667,16 +690,13 @@ export class OTTAuthPage {
         if (!await title.count()) {
             return false;
         }
-
         await title.waitFor({ state: 'visible', timeout });
         await title.scrollIntoViewIfNeeded();
         await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
-
         const section = this.getContinueWatchingRailLocator();
         if (!await section.count()) {
             return false;
         }
-
         await section.scrollIntoViewIfNeeded();
         await section.waitFor({ state: 'visible', timeout });
         return true;
@@ -691,30 +711,24 @@ export class OTTAuthPage {
         if (!isInView) {
             return false;
         }
-
         const section = this.getContinueWatchingRailLocator();
         const boundingBox = await section.boundingBox();
         if (!boundingBox) {
             return false;
         }
-
         const hoverX = direction === 'right' ? boundingBox.x + boundingBox.width - 30 : boundingBox.x + 30;
         const hoverY = boundingBox.y + boundingBox.height / 2;
-
         await this.page.mouse.move(hoverX, hoverY);
         await this.page.waitForTimeout(500);
-
         const arrowLocator = this.getContinueWatchingArrowLocator(direction);
         const arrowVisible = await arrowLocator.isVisible().catch(() => false);
         if (!arrowVisible) {
             return false;
         }
-
         await arrowLocator.hover({ timeout: 5000 }).catch(() => undefined);
         await arrowLocator.click({ timeout: 5000 }).catch(() => undefined);
         await this.page.waitForTimeout(1000);
         await this.page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
-
         return true;
     }
 
@@ -731,26 +745,21 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return { clicked: false, confirmationVisible: false };
         }
-
-        const card = section.locator('img[alt]:not([alt="arrow-right"])').first();
+        const card = section.locator(this.continueWatchingCard.selector).first();
         if (!await card.count()) {
             return { clicked: false, confirmationVisible: false };
         }
-
         await card.hover({ timeout: 20000 }).catch(() => undefined);
         await this.page.waitForTimeout(2000);
-
         const removeButton = section.locator(this.continueWatchingRemoveButton.selector).first();
         await removeButton.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
         const buttonVisible = await removeButton.isVisible().catch(() => false);
         if (!buttonVisible) {
             return { clicked: false, confirmationVisible: false };
         }
-
         await removeButton.click({ timeout: 20000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForTimeout(3000);
-
         const confirmationLocator = this.page.getByText(/removed/i).first();
         const confirmationVisible = await confirmationLocator.isVisible().catch(() => false);
         return { clicked: true, confirmationVisible };
@@ -761,7 +770,7 @@ export class OTTAuthPage {
         if (!await title.count()) return 0;
         const section = this.getContinueWatchingRailLocator();
         if (!await section.count()) return 0;
-        return await section.locator('img[alt]:not([alt="arrow-right"])').count();
+        return await section.locator(this.continueWatchingCard.selector).count();
     }
 
     async getContinueWatchingTrayItemDetails(): Promise<Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }>> {
@@ -769,11 +778,9 @@ export class OTTAuthPage {
         if (!await title.count()) return [];
         const section = this.getContinueWatchingRailLocator();
         if (!await section.count()) return [];
-
-        const cards = section.locator('img[alt]:not([alt="arrow-right"])');
+        const cards = section.locator(this.continueWatchingCard.selector);
         const count = await cards.count();
         const details: Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }> = [];
-
         for (let i = 0; i < count; i++) {
             const card = cards.nth(i);
             const alt = (await card.getAttribute('alt')) || '';
@@ -782,7 +789,6 @@ export class OTTAuthPage {
             const hasProgress = /progress|resume|%/i.test(text) || (await card.locator('[class*="progress"], [aria-label*="progress"], [data-testid*="progress"]').count()) > 0;
             details.push({ title: alt.trim() || text.trim(), hasThumbnail, hasProgress });
         }
-
         return details;
     }
 
@@ -800,8 +806,7 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return null;
         }
-
-        const cards = section.locator('img[alt]:not([alt="arrow-right"])');
+        const cards = section.locator(this.continueWatchingCard.selector);
         const count = await cards.count().catch(() => 0);
         const preferredMovieTitles = ['ang panday', 'bagong buwan', 'abandoned', 'unang bastardo', 'odd encounter', 'collatz conjecture'];
         const excludedPatterns = [
@@ -825,31 +830,25 @@ export class OTTAuthPage {
             const isExcluded = excludedPatterns.some((pattern) => pattern.test(combined));
             const hasMeaningfulTitle = alt.length > 2 && !/^\d+$/.test(alt);
             const isPreferredMovie = preferredMovieTitles.some((title) => combined.includes(title));
-
             if (!hasMeaningfulTitle || isExcluded) {
                 continue;
             }
-
             await card.scrollIntoViewIfNeeded();
             await card.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
-
             const pageText = `${(await this.page.locator('body').innerText()).toLowerCase()} ${(await this.page.title()).toLowerCase()}`;
             const durationMinutes = this.parseDurationMinutes(pageText);
             const looksLikeMovie = isPreferredMovie
                 && durationMinutes >= 60
                 && !/\bepisode\b|\bseason\b|\bseries\b|\bshow\b|\bs1\b|\bs2\b|\bep\b/i.test(pageText);
-
             await this.page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
             if (looksLikeMovie) {
                 logger.step(`Selected explicit movie candidate from Continue Watching: ${alt}`);
                 return { title: alt, locator: card };
             }
         }
-
         return null;
     }
 
@@ -858,9 +857,8 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return false;
         }
-
         const normalizedTitle = title.toLowerCase();
-        const items = section.locator('img[alt]').filter({ hasNotText: '' });
+        const items = section.locator(this.continueWatchingImageWithAlt.selector).filter({ hasNotText: '' });
         const count = await items.count().catch(() => 0);
         for (let index = 0; index < count; index += 1) {
             const item = items.nth(index);
@@ -869,7 +867,6 @@ export class OTTAuthPage {
                 return await item.isVisible().catch(() => false);
             }
         }
-
         const candidate = section.locator(`img[alt*="${title}"]`).first();
         return await candidate.isVisible().catch(() => false);
     }
@@ -879,36 +876,30 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return false;
         }
-
         const normalizedTitle = title.toLowerCase();
-        const candidates = section.locator('img[alt]').filter({ hasNotText: '' });
+        const candidates = section.locator(this.continueWatchingImageWithAlt.selector).filter({ hasNotText: '' });
         const count = await candidates.count().catch(() => 0);
         let clicked = false;
-
         for (let index = 0; index < count; index += 1) {
             const item = candidates.nth(index);
             const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
             if (!alt.includes(normalizedTitle)) {
                 continue;
             }
-
             await item.scrollIntoViewIfNeeded();
             await item.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
-
             const actionTarget = this.page.getByText(/Resume|Play/i).first();
             const actionVisible = await actionTarget.isVisible().catch(() => false);
             if (actionVisible) {
                 await actionTarget.click({ force: true, timeout: 30000 }).catch(() => undefined);
             }
-
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(8000);
             clicked = true;
             break;
         }
-
         return clicked;
     }
 
@@ -919,7 +910,6 @@ export class OTTAuthPage {
             await this.page.waitForTimeout(10000);
             return false;
         }
-
         const duration = await video.evaluate((node: HTMLVideoElement) => node.duration).catch(() => 0);
         if (duration > 0) {
             await video.evaluate((node: HTMLVideoElement) => {
@@ -928,7 +918,6 @@ export class OTTAuthPage {
                 }
             }).catch(() => undefined);
         }
-
         await this.page.waitForTimeout(15000);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
         const ended = await video.evaluate((node: HTMLVideoElement) => node.ended).catch(() => false);
@@ -942,7 +931,7 @@ export class OTTAuthPage {
     }
 
     async getContinueWatchingItemsCount(): Promise<number> {
-        const header = this.page.locator('text=Continue Watching').first();
+        const header = this.page.locator(this.continueWatchingRail.selector).first();
         if (!await header.count()) return 0;
         const container = header.locator('xpath=following-sibling::*').first();
         if (!await container.count()) return 0;
@@ -953,30 +942,22 @@ export class OTTAuthPage {
     }
 
     async getContinueWatchingItemsDetails(): Promise<Array<{ title: string; hasProgress: boolean }>> {
-        const header = this.page.locator('text=Continue Watching').first();
+        const header = this.page.locator(this.continueWatchingRail.selector).first();
         if (!await header.count()) return [];
         const container = header.locator('xpath=following-sibling::*').first();
         if (!await container.count()) return [];
-
         const images = container.locator('img');
         const count = await images.count();
         const details: Array<{ title: string; hasProgress: boolean }> = [];
-
         for (let i = 0; i < count; i++) {
             const img = images.nth(i);
-            const alt = (await img.getAttribute('alt')) || '';
-
+            const alt = (await img.getAttribute('alt'));
             // Determine a nearby progress indicator or recently_added marker
             const ancestor = img.locator('xpath=ancestor::div[1]');
             const progressSelectors = [
-                '.progress',
-                '[aria-label*="progress"]',
-                '[class*="recent"]',
-                '[class*="progress"]',
-                'img[alt*="recently"]',
-                'img[src*="recently"]'
+                this.continueWatchingProgressSelector.selector,
+                this.continueWatchingRecentMarkerSelector.selector,
             ];
-
             let hasProgress = false;
             for (const sel of progressSelectors) {
                 try {
@@ -986,16 +967,13 @@ export class OTTAuthPage {
                     // ignore selector errors
                 }
             }
-
             // Fallback: check for any text like 'Resume' or '%' near the image
             if (!hasProgress) {
                 const nearbyText = ancestor.locator('xpath=.//*[contains(text(),"Resume") or contains(text(),"resumo") or contains(text(),"%")]');
                 if (await nearbyText.count()) hasProgress = true;
             }
-
             details.push({ title: alt.trim(), hasProgress });
         }
-
         return details;
     }
 
@@ -1072,7 +1050,7 @@ export class OTTAuthPage {
         await searchInput.waitFor({ state: 'visible', timeout: 10000 });
         await searchInput.fill(query);
         await this.page.waitForTimeout(2000);
-        const searchResultsContainer = this.page.locator('[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3').count();
+        const searchResultsContainer = this.page.locator(this.searchResultsContainer.selector).count();
         const resultsCount = await searchResultsContainer.catch(() => 0);
         const pageHasContent = await this.page.locator('body').textContent();
         const hasResults = pageHasContent && pageHasContent.toLowerCase().includes(query.toLowerCase());
@@ -1092,7 +1070,7 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
-        const locator = this.page.locator('[class*="flex flex-wrap gap-[1rem]"] img[alt]').first();
+        const locator = this.page.locator(this.searchResultImages.selector).first();
         const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();
         const normalizedAltText = (altText || '').toLowerCase();
@@ -1105,7 +1083,7 @@ export class OTTAuthPage {
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
         logger.elementInteraction('verify', 'search auto-suggestions');
         try {
-            const suggestions = this.page.locator('[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"]');
+            const suggestions = this.page.locator(this.searchSuggestionsContainer.selector);
             // Wait for suggestions to appear
             await this.page.waitForTimeout(500);
             const suggestionCount = await suggestions.count();
@@ -1116,7 +1094,7 @@ export class OTTAuthPage {
             }
             // Try alternative selectors if primary ones don't find suggestions
             await this.page.waitForTimeout(1000);
-            const altSuggestions = this.page.locator('div[class*="absolute"], li, [role="listitem"], [aria-label*="suggestion"]');
+            const altSuggestions = this.page.locator(this.searchSuggestionsContainer.selector);
             const altCount = await altSuggestions.count();
             return altCount > 0;
         } catch (error) {
@@ -1128,13 +1106,13 @@ export class OTTAuthPage {
     async getSearchAutoSuggestions(): Promise<string[]> {
         logger.elementInteraction('retrieve', 'search auto-suggestions');
         try {
-            const suggestions = this.page.locator('[class*="dropdown"], [class*="suggestion"], [role="option"], .search-suggestions li, [data-testid*="suggestion"]');
+            const suggestions = this.page.locator(this.searchSuggestionsContainer.selector);
             // Wait for suggestions to load and stabilize
             await this.page.waitForTimeout(800);
             let count = await suggestions.count();
             // If no suggestions found, try alternative selectors
             if (count === 0) {
-                const altSuggestions = this.page.locator('div[class*="absolute"] div, li, [role="listitem"]');
+                const altSuggestions = this.page.locator(this.searchSuggestionsContainer.selector);
                 count = await altSuggestions.count();
             }
             const suggestionTexts: string[] = [];
@@ -1171,7 +1149,7 @@ export class OTTAuthPage {
     async clickSearchAutoSuggestion(suggestionText: string): Promise<void> {
         logger.elementInteraction('click', `search suggestion: ${suggestionText}`);
         try {
-            const suggestion = this.page.locator(`[role="option"]:has-text("${suggestionText}"), [class*="suggestion"]:has-text("${suggestionText}"), .search-suggestions li:has-text("${suggestionText}")`);
+            const suggestion = this.page.locator(this.searchSuggestionsContainer.selector   ).filter({ hasText: suggestionText });
             await suggestion.first().waitFor({ state: 'visible', timeout: 5000 });
             await suggestion.first().click();
         } catch (error) {
@@ -1182,8 +1160,7 @@ export class OTTAuthPage {
     async isNoResultsMessageVisible(): Promise<boolean> {
         logger.elementInteraction('verify', 'no results message visibility');
         try {
-            // Use a single robust text locator for "No results" message
-            const noResultsMessage = this.page.locator('text=/no\\s+results/i');
+            const noResultsMessage = this.page.locator(this.noResultsMessage.selector);
             await noResultsMessage.first().waitFor({ state: 'visible', timeout: 10000 });
             return true;
         } catch (error) {
@@ -1195,8 +1172,7 @@ export class OTTAuthPage {
     async getNoResultsMessageText(): Promise<string> {
         logger.elementInteraction('retrieve', 'no results message text');
         try {
-            // Use a single robust text locator for "No results" message
-            const noResultsMessage = this.page.locator('text=/no\\s+results/i');
+            const noResultsMessage = this.page.locator(this.noResultsMessage.selector);
             const text = await noResultsMessage.first().textContent().catch(() => '');
             return text?.trim() || 'No results found';
         } catch (error) {
@@ -1208,8 +1184,7 @@ export class OTTAuthPage {
     async getSearchResultsCount(): Promise<number> {
         logger.elementInteraction('count', 'search result cards');
         try {
-            // Count visible content cards/thumbnails - use image elements as proxy for result cards
-            const resultImages = this.page.locator('img[alt]');
+            const resultImages = this.page.locator(this.searchResultImages.selector);
             const count = await resultImages.count();
             return count;
         } catch (error) {
@@ -1289,7 +1264,7 @@ export class OTTAuthPage {
             return true;
         }
         const homeTabVisible = await this.pageUtils.isVisible(
-            { selector: 'text="Home"' },
+            { selector: this.homeTab.selector},
             5000
         );
         return homeTabVisible;
@@ -1361,14 +1336,12 @@ export class OTTAuthPage {
         if (!isLabelVisible) {
             return false;
         }
-
         let formText = '';
         try {
             formText = await this.pageUtils.getTextContent(this.marketingCheckboxDescription, 10000);
         } catch {
             formText = '';
         }
-
         return formText.includes(expectedMarketingText);
     }
 
@@ -1395,12 +1368,12 @@ export class OTTAuthPage {
     async openProfileSettings(): Promise<void> {
         logger.step('Opening profile settings');
         await this.clickAccountIcon();
-        await this.page.getByText('Account & Settings').click();
+        await this.pageUtils.safeClick(this.accountSettingsTextLink);
     }
 
     async openEditProfile(): Promise<void> {
         logger.step('Opening edit profile screen');
-        await this.page.getByRole('button', { name: 'Edit Profile' }).click();
+        await this.pageUtils.safeClick(this.editProfileOption);
     }
 
     async isEditProfileScreenVisible(): Promise<boolean> {
@@ -1437,7 +1410,7 @@ export class OTTAuthPage {
             return true;
         }
 
-        const helperText = await this.page.locator('text=/alphabetic|letters|only/i').first().count().catch(() => 0);
+        const helperText = await this.page.locator(this.profileValidationTextPattern.selector).first().count().catch(() => 0);
         return helperText > 0;
     }
 
@@ -1448,7 +1421,7 @@ export class OTTAuthPage {
             return [firstNameErrorText, lastNameErrorText].filter(Boolean).join(' | ');
         }
 
-        const fallbackText = await this.page.locator('text=/alphabetic|letters|only/i').first().textContent().catch(() => '');
+        const fallbackText = await this.page.locator(this.profileValidationTextPattern.selector).first().textContent().catch(() => '');
         return fallbackText || '';
     }
 }

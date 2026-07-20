@@ -286,6 +286,14 @@ export interface VerifyBackButtonNavigationOutput {
   backNavigationSuccessful: boolean;
 }
 
+export interface VerifyPlayerCloseReturnsToDetailsOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playerVisibleBeforeClose: boolean;
+  playerHiddenAfterClose: boolean;
+  returnedToDetails: boolean;
+}
+
 export interface VerifyPlaybackTimestampFormatOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -1214,6 +1222,70 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
     detailsVisible,
     playerScreenHidden,
     backNavigationSuccessful,
+  };
+}
+
+export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlayerCloseReturnsToDetailsOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting close-player return to details verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before testing player close return flow', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      detailsVisible: false,
+      playerVisibleBeforeClose: false,
+      playerHiddenAfterClose: false,
+      returnedToDetails: false,
+    };
+  }
+
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query || 'Abandoned');
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Details page visible after opening search result', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(2);
+  const playerVisibleBeforeClose = await detailsPage.isPlayerScreenVisible();
+  logger.assertion('Player screen visible before closing', playerVisibleBeforeClose);
+
+  await detailsPage.clickBackButton().catch(() => undefined);
+
+  await detailsPage.waitForPlayback(3);
+  const playerHiddenAfterClose = await detailsPage.isPlayerScreenHidden();
+  const contentDetailsVisibleAfterClose = await detailsPage.isContentDetailsPageVisible().catch(() => false);
+  const detailsHeadingAfterClose = contentDetailsVisibleAfterClose ? await detailsPage.getShowDetailsHeadingText().catch(() => '') : '';
+  const detailsMetadataVisibleAfterClose = contentDetailsVisibleAfterClose ? await detailsPage.isContentMetadataVisible().catch(() => false) : false;
+  const returnedToDetails = detailsVisible && contentDetailsVisibleAfterClose && !!detailsHeadingAfterClose && detailsMetadataVisibleAfterClose;
+
+  logger.assertion('Player screen hidden after closing', playerHiddenAfterClose);
+  logger.assertion('Content details heading is visible after returning from the player', !!detailsHeadingAfterClose);
+  logger.assertion('Content metadata is visible after returning from the player', detailsMetadataVisibleAfterClose);
+  logger.assertion('User returned to the content details screen after closing the player', returnedToDetails);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    playerVisibleBeforeClose,
+    playerHiddenAfterClose,
+    returnedToDetails,
   };
 }
 

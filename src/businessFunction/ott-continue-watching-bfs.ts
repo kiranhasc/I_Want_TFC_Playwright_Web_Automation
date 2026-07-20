@@ -47,6 +47,33 @@ export interface ContinueWatchingDetailsAndMoreOutput {
   reason?: string;
 }
 
+export interface ResumeCTADetailsPageInput {
+  mode?: string;
+  email?: string;
+  password?: string;
+}
+
+export interface ResumeCTADetailsPageOutput {
+  isValid: boolean;
+  resumeCtaVisible: boolean;
+  detailsPageVisible: boolean;
+  reason?: string;
+}
+
+export interface ContinueWatchingResumePlaybackInput {
+  mode?: string;
+  email?: string;
+  password?: string;
+}
+
+export interface ContinueWatchingResumePlaybackOutput {
+  isValid: boolean;
+  detailsPageVisible: boolean;
+  resumeActionVisible: boolean;
+  playerVisible: boolean;
+  reason?: string;
+}
+
 function parsePlaybackTimeToSeconds(value: string): number {
   const normalized = (value || '').replace(/,/g, '').trim();
   const firstTimeMatch = normalized.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
@@ -64,6 +91,42 @@ function parsePlaybackTimeToSeconds(value: string): number {
   }
 
   return hours * 60 + minuteValue;
+}
+
+async function waitForStablePlaybackTime(page: any, detailsPage: any, timeoutMs = 45000): Promise<{ timeText: string; timeSeconds: number }> {
+  const deadline = Date.now() + timeoutMs;
+  let playbackTime = '';
+  let playbackSeconds = 0;
+
+  while (Date.now() < deadline) {
+    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+    await page.waitForTimeout(1500);
+    playbackTime = await detailsPage.getPlaybackTimeText().catch(() => '');
+
+    if (!playbackTime) {
+      const videoElement = page.locator('video').first();
+      playbackTime = await videoElement.evaluate((element: HTMLVideoElement) => {
+        const currentTime = Number.isFinite(element.currentTime) ? Math.floor(element.currentTime) : 0;
+        const minutes = Math.floor(currentTime / 60);
+        const seconds = currentTime % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }).catch(() => '');
+    }
+
+    playbackSeconds = parsePlaybackTimeToSeconds(playbackTime);
+    if (playbackSeconds > 0) {
+      break;
+    }
+  }
+
+  return { timeText: playbackTime, timeSeconds: playbackSeconds };
+}
+
+async function pausePlaybackAfterControlsSettle(page: any, detailsPage: any, waitMs = 2000): Promise<void> {
+  await detailsPage.tapPlaybackScreen().catch(() => undefined);
+  await page.waitForTimeout(waitMs);
+  await detailsPage.clickPauseButton().catch(() => undefined);
+  await page.waitForTimeout(waitMs);
 }
 
 export async function verifyContinueWatchingPlaybackFromTray(
@@ -167,69 +230,27 @@ export async function verifyContinueWatchingPlaybackFromTray(
   }
 
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(6000);
+  await page.waitForTimeout(5000);
 
-  const playerVisible = await detailsPage.isPlayerScreenVisible();
-
-  let initialTime = '';
-  let initialTimeSeconds = 0;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await page.waitForTimeout(1500);
-    initialTime = await detailsPage.getPlaybackTimeText().catch(() => '');
-    if (!initialTime) {
-      const videoElement = page.locator('video').first();
-      const videoTime = await videoElement.evaluate((element: HTMLVideoElement) => {
-        const currentTime = Number.isFinite(element.currentTime) ? Math.floor(element.currentTime) : 0;
-        const minutes = Math.floor(currentTime / 60);
-        const seconds = currentTime % 60;
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      }).catch(() => '');
-
-      if (videoTime) {
-        initialTime = videoTime;
-      }
-    }
-
-    initialTimeSeconds = parsePlaybackTimeToSeconds(initialTime);
-    if (initialTimeSeconds > 0) {
-      break;
-    }
+  const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  if (playerVisible) {
+    await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
   }
 
+  const initialPlayback = await waitForStablePlaybackTime(page, detailsPage, 45000);
+  const initialTime = initialPlayback.timeText;
+  const initialTimeSeconds = initialPlayback.timeSeconds;
   logger.info('Initial playback time capture', { initialTime, initialTimeSeconds });
 
-  await detailsPage.dragSeekBarToPosition(0.3, initialTimeSeconds + 30);
-  await page.waitForTimeout(6000);
-  await page.mouse.move(100, 100);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
-  await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(3000);
+  await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
 
-  let forwardedTime = '';
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await page.waitForTimeout(1500);
-    forwardedTime = await detailsPage.getPlaybackTimeText().catch(() => '');
-    if (forwardedTime) {
-      break;
-    }
-
-    const videoElement = page.locator('video').first();
-    const videoTime = await videoElement.evaluate((element: HTMLVideoElement) => {
-      const currentTime = Number.isFinite(element.currentTime) ? Math.floor(element.currentTime) : 0;
-      const minutes = Math.floor(currentTime / 60);
-      const seconds = currentTime % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }).catch(() => '');
-
-    if (videoTime) {
-      forwardedTime = videoTime;
-      break;
-    }
-  }
-
-  const forwardedTimeSeconds = parsePlaybackTimeToSeconds(forwardedTime);
-  const dragMovedPlaybackForward = forwardedTimeSeconds > initialTimeSeconds;
-  logger.info('Forwarded playback time capture', { forwardedTime, forwardedTimeSeconds, initialTime, initialTimeSeconds, dragMovedPlaybackForward });
+  const forwardedPlayback = await waitForStablePlaybackTime(page, detailsPage, 45000);
+  const forwardedTime = forwardedPlayback.timeText;
+  const forwardedTimeSeconds = forwardedPlayback.timeSeconds;
+  const pauseTimeCaptured = forwardedTimeSeconds > initialTimeSeconds;
+  logger.info('Forwarded playback time capture', { forwardedTime, forwardedTimeSeconds, initialTime, initialTimeSeconds, pauseTimeCaptured });
 
   await page.goto('https://www.iwanttfc.com/', { waitUntil: 'networkidle' }).catch(() => undefined);
   await page.reload({ waitUntil: 'networkidle' }).catch(() => undefined);
@@ -266,7 +287,7 @@ export async function verifyContinueWatchingPlaybackFromTray(
 
   await reloadedItem.scrollIntoViewIfNeeded();
   await reloadedItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
 
   const resumedActionVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
@@ -274,57 +295,31 @@ export async function verifyContinueWatchingPlaybackFromTray(
     await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
   }
 
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(6000);
+  await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
 
-  let resumedTime = '';
-  let resumedTimeSeconds = 0;
-  const lowerBound = Math.max(0, forwardedTimeSeconds - 30);
-  const upperBound = forwardedTimeSeconds + 90;
-
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    await page.waitForTimeout(2000);
-    resumedTime = await detailsPage.getPlaybackTimeText().catch(() => '');
-
-    if (!resumedTime) {
-      const videoElement = page.locator('video').first();
-      const videoTime = await videoElement.evaluate((element: HTMLVideoElement) => {
-        const currentTime = Number.isFinite(element.currentTime) ? Math.floor(element.currentTime) : 0;
-        const minutes = Math.floor(currentTime / 60);
-        const seconds = currentTime % 60;
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      }).catch(() => '');
-
-      if (videoTime) {
-        resumedTime = videoTime;
-      }
-    }
-
-    resumedTimeSeconds = parsePlaybackTimeToSeconds(resumedTime);
-    if (resumedTimeSeconds > 0) {
-      const isWithinWindow = resumedTimeSeconds >= lowerBound && resumedTimeSeconds <= upperBound;
-      if (isWithinWindow) {
-        break;
-      }
-    }
-  }
-
+  const resumedPlayback = await waitForStablePlaybackTime(page, detailsPage, 45000);
+  const resumedTime = resumedPlayback.timeText;
+  const resumedTimeSeconds = resumedPlayback.timeSeconds;
   const timeDifferenceSeconds = Math.abs(resumedTimeSeconds - forwardedTimeSeconds);
   logger.info('Resumed playback time capture', { resumedTime, resumedTimeSeconds, forwardedTime, forwardedTimeSeconds, timeDifferenceSeconds });
   const progressBarVisible = await detailsPage.isSeekBarVisible().catch(() => false);
   const timeObserved = resumedTimeSeconds > 0 || !!resumedTime;
-  const hasExpectedPosition = resumedTimeSeconds > 0 && resumedTimeSeconds >= lowerBound && resumedTimeSeconds <= upperBound;
+  const isWithinFiveSeconds = resumedTimeSeconds > 0 && timeDifferenceSeconds <= 5;
+  const itemFound = !!reloadedItem;
   const isValid = Boolean(
     playerVisible &&
-    dragMovedPlaybackForward &&
+    itemFound &&
+    pauseTimeCaptured &&
     (progressBarVisible || timeObserved || resumeActionVisible) &&
-    (hasExpectedPosition || !timeObserved)
+    isWithinFiveSeconds
   );
 
   logger.assertion('Continue Watching content title captured', !!altText);
-  logger.assertion('Playback time captured before drag', initialTimeSeconds > 0);
-  logger.assertion('Playback time forwarded after drag', dragMovedPlaybackForward);
-  logger.assertion('Playback resumed close to forwarded position', isValid);
+  logger.assertion('Playback time captured before pause', initialTimeSeconds > 0);
+  logger.assertion('Playback time captured after first pause', pauseTimeCaptured);
+  logger.assertion('Playback resumed within +/- 5 seconds', isValid);
 
   return {
     isValid,
@@ -336,7 +331,7 @@ export async function verifyContinueWatchingPlaybackFromTray(
     forwardedTime,
     resumedTime,
     timeDifferenceSeconds,
-    reason: isValid ? undefined : `The resumed playback time differed by ${timeDifferenceSeconds}s from the forwarded position`,
+    reason: isValid ? undefined : `The resumed playback time differed by ${timeDifferenceSeconds}s from the paused position (allowed window ±5s)`,
   };
 }
 
@@ -353,6 +348,186 @@ export interface ContinueWatchingAcrossTabsOutput {
   contentVisibleInTray: boolean;
   selectedTab?: string;
   reason?: string;
+}
+
+export async function verifyResumeCtaOnContentDetailsPage(
+  page: any,
+  input?: ResumeCTADetailsPageInput
+): Promise<ResumeCTADetailsPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Resume CTA validation on content details page');
+
+  const mode = input?.mode === 'valid' || input?.mode === undefined ? 'valid' : input.mode;
+  const email = input?.email || String(config.get('VALID_LOGIN_EMAIL', '')).trim();
+  const password = input?.password || String(config.get('VALID_LOGIN_PASSWORD', '')).trim();
+
+  if (!email || !password) {
+    return {
+      isValid: false,
+      resumeCtaVisible: false,
+      detailsPageVisible: false,
+      reason: 'Valid login credentials were not found in .env configuration',
+    };
+  }
+
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail(email);
+  await authPage.clickPasswordField();
+  await authPage.enterPassword(password);
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+
+  const titleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+  if (!titleVisible) {
+    return {
+      isValid: false,
+      resumeCtaVisible: false,
+      detailsPageVisible: false,
+      reason: 'Continue Watching tray title is not visible',
+    };
+  }
+
+  await authPage.ensureContinueWatchingTrayInView();
+  const traySection = await authPage.getContinueWatchingTraySection();
+  const firstCard = traySection.locator('img[alt]:not([alt="arrow-right"])').first();
+  const cardCount = await traySection.locator('img[alt]:not([alt="arrow-right"])').count().catch(() => 0);
+  if (!cardCount) {
+    return {
+      isValid: false,
+      resumeCtaVisible: false,
+      detailsPageVisible: false,
+      reason: 'No Continue Watching cards were available to validate the Resume CTA',
+    };
+  }
+
+  await firstCard.scrollIntoViewIfNeeded();
+  await firstCard.click({ force: true, timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+
+  const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  const resumeCtaVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+
+  logger.assertion('Details page visible for selected Continue Watching item', detailsPageVisible);
+  logger.assertion('Resume CTA visible on the details page', resumeCtaVisible);
+
+  return {
+    isValid: detailsPageVisible && resumeCtaVisible,
+    resumeCtaVisible,
+    detailsPageVisible,
+    reason: detailsPageVisible && resumeCtaVisible ? undefined : 'The Resume CTA was not visible on the content details page',
+  };
+}
+
+export async function verifyContinueWatchingResumePlayback(
+  page: any,
+  input?: ContinueWatchingResumePlaybackInput
+): Promise<ContinueWatchingResumePlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Continue Watching resume playback validation');
+
+  const email = input?.email || String(config.get('VALID_LOGIN_EMAIL', '')).trim();
+  const password = input?.password || String(config.get('VALID_LOGIN_PASSWORD', '')).trim();
+
+  if (!email || !password) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      resumeActionVisible: false,
+      playerVisible: false,
+      reason: 'Valid login credentials were not found in .env configuration',
+    };
+  }
+
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickEmailField();
+  await authPage.enterEmail(email);
+  await authPage.clickPasswordField();
+  await authPage.enterPassword(password);
+  await authPage.clickContinue();
+  await authPage.waitForLoadingToDisappear();
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+
+  const titleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+  if (!titleVisible) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      resumeActionVisible: false,
+      playerVisible: false,
+      reason: 'Continue Watching tray title is not visible',
+    };
+  }
+
+  await authPage.ensureContinueWatchingTrayInView();
+  const traySection = await authPage.getContinueWatchingTraySection();
+  const trayCards = traySection.locator('img[alt]:not([alt="arrow-right"])');
+  const cardCount = await trayCards.count().catch(() => 0);
+  if (!cardCount) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      resumeActionVisible: false,
+      playerVisible: false,
+      reason: 'No Continue Watching cards were available to validate resume playback',
+    };
+  }
+
+  const targetCard = trayCards.first();
+  await targetCard.scrollIntoViewIfNeeded();
+  await targetCard.click({ force: true, timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+
+  const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  const resumeActionVisible = await detailsPage.isResumeButtonVisible().catch(() => false)
+    || await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+  logger.assertion('Details page visible for selected Continue Watching item', detailsPageVisible);
+  logger.assertion('Resume CTA visible on the details page', resumeActionVisible);
+
+  if (!resumeActionVisible) {
+    return {
+      isValid: false,
+      detailsPageVisible,
+      resumeActionVisible,
+      playerVisible: false,
+      reason: 'The Resume CTA was not visible on the details page',
+    };
+  }
+
+  const resumeClicked = await detailsPage.clickResumeAction();
+  if (!resumeClicked) {
+    return {
+      isValid: false,
+      detailsPageVisible,
+      resumeActionVisible,
+      playerVisible: false,
+      reason: 'The Resume CTA could not be clicked',
+    };
+  }
+
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(6000);
+  const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  const isValid = detailsPageVisible && resumeActionVisible && playerVisible;
+
+  logger.assertion('Playback resumed after Resume CTA tap', isValid);
+
+  return {
+    isValid,
+    detailsPageVisible,
+    resumeActionVisible,
+    playerVisible,
+    reason: isValid ? undefined : 'The Resume CTA did not lead to visible playback content',
+  };
 }
 
 export async function verifyContinueWatchingAcrossTabs(
@@ -488,7 +663,7 @@ export async function verifyContinueWatchingAcrossTabs(
         while (Date.now() < endAt) {
           const videoState = await getVideoState();
           const startedByVideo = Boolean(videoState && (videoState.currentTime > 0 || videoState.readyState >= 2 || !videoState.paused));
-          const startedByPlayer = await detailsPage.isPlaybackStarted(5000).catch(() => false);
+          const startedByPlayer = await detailsPage.isPlaybackStarted().catch(() => false);
           if (startedByVideo || startedByPlayer) {
             logger.debug('Playback detected', { videoState, startedByPlayer });
             return true;

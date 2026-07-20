@@ -672,8 +672,7 @@ export async function verifyPasswordVisibilityToggle(
     logger.step('Clicking password visibility toggle button');
     await authPage.clickPasswordVisibilityToggle();
     const afterTogglePasswordType = await authPage.getPasswordFieldType();
-    const passwordField = page.locator('input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]').first();
-    const isPasswordTextVisible = await passwordField.count() > 0;
+    const isPasswordTextVisible = await authPage.isPasswordTextVisible();
     logger.assertion('Password field type changes after toggle', initialPasswordType !== afterTogglePasswordType);
     logger.assertion('Password text is visible after toggle', isPasswordTextVisible);
     return {
@@ -1255,9 +1254,9 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
 
-    const isVisible = await authPage.isContinueWatchingRailVisible();
-    const itemsCount = await authPage.getContinueWatchingItemsCount().catch(() => 0);
-    const itemsDetails = await authPage.getContinueWatchingItemsDetails().catch(() => []);
+    const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
+    const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
+    const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
 
     logger.assertion('Continue Watching rail presence', isVisible);
     logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
@@ -2552,7 +2551,8 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
 
     // Get the popup for Terms page
     const popupPromise = page.context().waitForEvent('page', { timeout: 8000 });
-    const termsLink = page.locator('a:has-text("Terms and Conditions")').first();
+    const termsLinkSelector = authPage.getTermsAndConditionsLinkSelector();
+    const termsLink = page.locator(termsLinkSelector).first();
     await termsLink.click();
     await page.waitForTimeout(500);
 
@@ -2571,19 +2571,9 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
     // Try to find and interact with the search field
     let searchPerformed = false;
     try {
-        // Try multiple search field selectors
-        let searchInput = popup.locator('input[placeholder*="Search"]').first();
-        let isVisible = await searchInput.isVisible().catch(() => false);
-
-        if (!isVisible) {
-            searchInput = popup.locator('input[type="search"]').first();
-            isVisible = await searchInput.isVisible().catch(() => false);
-        }
-
-        if (!isVisible) {
-            searchInput = popup.locator('[data-testid*="search"]').first();
-            isVisible = await searchInput.isVisible().catch(() => false);
-        }
+        const searchSelector = authPage.getSearchInputSelector();
+        let searchInput = popup.locator(searchSelector).first();
+        const isVisible = await searchInput.isVisible().catch(() => false);
 
         if (isVisible) {
             logger.step(`Found search field, entering query: ${input.searchQuery}`);

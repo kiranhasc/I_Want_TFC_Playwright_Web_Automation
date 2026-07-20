@@ -2388,6 +2388,51 @@ Click on the Email Address field.
 9. Navigate to the **My Watchlist** page.
 10. Click on the first content in the rail.
    - expect: The added Watchlist items are displayed with the correct titlename and metadata.
+
+### 5.2 IW3-T1934 Verify the content playback from the Continue Watching tray.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Select any playable content and start playback.
+5. Watch the content partially, then exit the player.
+6. Navigate to the **Home** page.
+7. Locate the content in the **Continue Watching** tray.
+8. Select a content from the **Continue Watching** tray.
+9. Resume the content from content details page.
+10. Click pause in the player screen.
+11. Extract the time duration from the player.
+12. Navigate back to the homepage.
+13. Click the same content that was selected initially.
+14. Resume the content from the details page.
+15. Observe the player screen and playback behavior.
+   - **Expect:** The selected content should resume playback from the last watched position.
+   - **Expect:** The player should load successfully without buffering or playback errors.
+   - **Expect:** Playback should start seamlessly from the previously watched position.
+
+### 5.3 IW3-T1941 Verify that the content is updated in the Continue Watching (CW) tray when the user partially watches it.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have content available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Select a content item from the **Continue Watching** tray.
+7. Verify that playback resumes from the last watched position.
+8. Continue watching the content for a short duration without completing it.
+9. Exit the player and return to the **Home** page.
+10. Observe the content in the **Continue Watching** tray.
+    - **Expect:** The content should remain in the **Continue Watching** tray.
+    - **Expect:** The progress bar should accurately reflect the updated playback position where the user stopped watching.
+
 ### 5.5 IW3-T1951	Verify the Continue Watching tray upon logout and login with same account.
 
 **File:** `tests/home/continue-watching.spec.ts`
@@ -2440,3 +2485,248 @@ Click on the Email Address field.
 9. Observe the tray contents.
    - **Expect:** The partially watched content should be displayed in the **Continue Watching** tray.
    - **Expect:** Content watched from different tabs (such as **Movies** and **Shows**) should appear in the **Continue Watching** tray.
+
+### 5.8 IW3-T1958 Verify that "Resume" CTA is displayed inside the details screen for the partially watched contents.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched content item available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Continue Watching** tray where the partially watched content is displayed.
+6. Select the content to open its **Content Details** page.
+7. Observe the primary playback action.
+   - **Expect:** The **"Resume"** button should be displayed on the **Content Details** page for the partially watched content.
+
+### 5.9 IW3-T1959 Verify that content gets resumed on tapping "Resume" CTA.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched content item available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Continue Watching** tray where the partially watched content is displayed.
+6. Select the content to open its **Content Details** page.
+7. Click the **"Resume"** button.
+8. Observe the player screen.
+   - **Expect:** The content should resume playback from the previously watched position when the **"Resume"** button is clicked.
+
+### 6.1 IW3-T1895 Verify the user Navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to any page containing playable content (e.g., **Home**, **Movies**, **Shows**, or **Search**).
+5. Select any content card.
+6. Observe the navigation.
+   - **Expect:** The user should be navigated to the **Content Details** page for the selected content.
+
+### 6.2 IW3-T1896 Verify the UI of the Details Page of movie/Show/GMA contents
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://uat.iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to any page containing movie content.
+5. Select any movie from a content tray.
+6. Observe the **Content Details** page.
+   - **Expect:** A **preview screen** with a **Close/Cancel** button should be displayed.
+   - **Expect:** The **original content title** should be displayed.
+   - **Expect:** The **content metadata** should include:
+     - Year of release
+     - Genre
+     - Runtime
+     - Content rating
+     - Video quality
+     - Audio type
+   - **Expect:** One of the appropriate playback actions should be displayed:
+     - **Play**
+     - **Resume**
+     - **Subscribe to Watch**
+   - **Expect:** The **content description/summary** should be displayed.
+   - **Expect:** A **More/Expand** option should be available if the summary exceeds three lines.
+   - **Expect:** The **Language** icon and **Subtitle** icon should be displayed.
+   - **Expect:** The **Watchlist** icon and **Share** icon should be displayed.
+
+### 6.3 IW3-T1908 Verify that user can add and Remove the content to 'My Watchlist' on the Details Page.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Content Details** page of any playable content.
+5. Click the **My Watchlist** icon to add the content to the watchlist.
+6. Verify the confirmation message.
+7. Click the **My Watchlist** icon again to remove the content from the watchlist.
+8. Observe the **My Watchlist** icon and confirmation message.
+   - **Expect:** The selected content should be successfully added to **My Watchlist**, and an **"Added to Watchlist"** confirmation message should be displayed.
+   - **Expect:** Clicking the **My Watchlist** icon again should remove the content from **My Watchlist**, and a **"Removed from Watchlist"** confirmation message should be displayed.
+
+### 6.4 IW3-T1909 Verify that user redirect back to detail page post killing/closing the player.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with **valid user** credentials.
+4. Navigate to the **Content Details** page of any playable content.
+5. Click the **Play** button to start playback.
+6. Close or exit the player.
+7. Observe the navigation.
+   - **Expect:** The user should be redirected back to the **Content Details** page of the same content after closing the player.
+
+### 6.5 IW3-T1913 Verify on tapping "Share" icon "Share link copied to clipboard" message is displayed.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Content Details** page of any playable content.
+5. Click the **Share** icon.
+6. Observe the confirmation message.
+   - **Expect:** A **"Share link copied to clipboard" popup** confirmation message should be displayed.
+
+### 6.6 IW3-T1914 Verify episodes lists are divided and displayed by respective seasons
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to **shows** tab from homepage.
+5. Navigate to the **Content Details** page of any show in **shows tab**.
+6. Observe the **Episodes** section.
+   - **Expect:** The episode list should be grouped and displayed under their respective **Seasons**.
+   - **Expect:** Users should be able to distinguish episodes based on the selected season.
+
+### 6.7 IW3-T1915 Verify detail page and All episodes list is scrollable till the end for show contents
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Click on **shows** tab.
+5. Navigate to the **Content Details** page of a show with an episode list.
+6. Scroll down to the **Episodes** section until the end.
+7. Continue scrolling until the last episode is displayed.
+9. Observe the episode list.
+   - **Expect:** The episode list should be smoothly scrollable until the end.
+
+### 6.8 IW3-T1916 Verify episodes are displayed/listed in ascending order for all the show content.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Content Details** page of an off-air show with episodes.
+5. Observe the **Episodes** list.
+   - **Expect:** Episodes should be displayed in **ascending order**.
+   - **Expect:** The episode sequence should start from the earliest episode and continue sequentially to the latest episode.
+
+### 6.9 IW3-T1921 Verify that respective episode playback starts post tapping on episode cards in detail page
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Click on **shows** tab.
+4. Navigate to the **Content Details** page of a show with an episode list.
+5. Select any episode from the **Episodes** section.
+6. Observe the navigation and playback.
+   - **Expect:** The user should be redirected to the **Player** screen.
+   - **Expect:** Playback of the selected episode should start successfully.
+
+### 6.10 IW3-T1906 Verify subscription instruction pop up is displayed post tapping on Subscribe CTA for GMA contents
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to the **GMA** tab.
+5. Select any premium GMA content to open its **Content Details** page.
+6. Click the **Subscribe to watch** button.
+7. Observe the subscription prompt.
+   - **Expect:** The user should not be able to watch the selected GMA content.
+   - **Expect:** A subscription instruction popup should be displayed after clicking the **Subscribe** button.
+   - **Expect:** The popup should prompt the user to subscribe before accessing the content.
+
+### 6.11 IW3-T1899 Verify premium icon is displayed on Detail page for premium contents.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to **GMA** tab.
+5. Click on any premium content.
+6. Observe the premium indicator.
+   - **Expect:** A **Premium** icon should be clearly visible on the selected premium content.
+   - **Expect:** The **Premium** icon should be consistently displayed on all premium content.
+
+### 6.12 IW3-T1903 Verify Subscribe CTA is displayed on detail page for Non premium users.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to **GMA** tab.
+5. Click on any premium content.
+6. Observe the primary action button.
+   - **Expect:** A **"Subscribe to Watch"** button should be displayed on the **Content Details** page for free users.
+
+### 6.13 IW3-T1905 Verify that Free users navigate to plans page post tapping on Subscribe CTA
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **free user** credentials.
+4. Navigate to **GMA** tab.
+5. Click on any premium content.
+6. Click the **Subscribe to watch** button.
+7. Click the **Subscribe to watch** button in player screen.
+8. Observe the navigation.
+   - **Expect:** The free user should not be able to play the premium content.
+   - **Expect:** The user should be redirected to the **Plans** page after clicking the **Subscribe** button.

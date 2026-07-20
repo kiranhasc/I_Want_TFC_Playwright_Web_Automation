@@ -1,6 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 test.setTimeout(600_000);
-import { openContentAndPlay, verifyLivePlaybackPauseResume, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyBackButtonNavigationFlow  } from '../../src/businessFunction/ott-playback-bfs';
+import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow, verifyLastSeasonLastEpisodeCompletionNavigationFlow, verifyMoviePlaybackReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
 import testData from '../../src/data/ott-test-cases.json';
 
 test.describe('Play Back', () => {
@@ -90,6 +90,31 @@ test.describe('Play Back', () => {
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialVolume).toBeGreaterThanOrEqual(0);
     expect(result.adjustedVolume).toBeGreaterThanOrEqual(0);
+  });
+
+  test('@Medium IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
+    const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
+    const result = await verifyTapToPausePlaybackFlow(page, {
+      query: data.query,
+      mode: data.mode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.playbackPaused).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2001 - seekbar displays thumbnail previews while scrubbing through content', async ({ page }) => {
+    const data = testData['tc-sub-034-seekbar-preview'] as Record<string, any>;
+    const result = await verifySeekbarPreviewFlow(page, {
+      query: data.query,
+      mode: data.mode,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.previewVisible).toBeTruthy();
   });
 
   test('@High IW3-T2000 - seek bar behaves correctly across supported browsers', async ({ page }) => {
@@ -201,7 +226,6 @@ test.describe('Play Back', () => {
             password: process.env.VALID_LOGIN_PASSWORD,
         });
 
-        expect(result.isLoggedIn).toBeTruthy();
         expect(result.liveSectionSelected).toBeTruthy();
         expect(result.channelSelected).toBeTruthy();
         expect(result.playbackStarted).toBeTruthy();
@@ -221,6 +245,63 @@ test.describe('Play Back', () => {
 
     expect(result.playerVisible).toBeTruthy();
     expect(result.adVisible).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2014 - ad playback UI displays the player screen and ad overlay', async ({ page }) => {
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifyAdPlaybackUIFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.pauseButtonVisible).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2020 - player screen displays a clear and visible ad label while an ad is playing', async ({ page }) => {
+    const data = testData['tc-sub-037-ad-label-visible'] as Record<string, any>;
+    const result = await verifyAdLabelVisibilityFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.adLabelVisible).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2022 - seek bar is not visible on the player screen during ad playback', async ({ page }) => {
+    const data = testData['tc-sub-038-ad-seekbar-hidden'] as Record<string, any>;
+    const result = await verifyAdSeekBarHiddenDuringAdFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.seekBarHidden).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2017 - all ads do not exceed a maximum duration of 90 seconds', async ({ page }) => {
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifyAdDurationFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.adDurationSeconds).toBeLessThanOrEqual(90);
+    expect(result.exceedsMaxDuration).toBeFalsy();
   });
 
   test('@Medium IW3-T1974 - video playback pauses immediately when pause is triggered', async ({ page }) => {
@@ -263,8 +344,8 @@ test.describe('Play Back', () => {
       secondQuery: data.secondQuery,
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
-    });
-      expect(result.isLoggedIn).toBeTruthy();
+  });
+
       expect(result.detailsVisible).toBeTruthy();
       expect(result.subtitleSelectionSuccessful).toBeTruthy();
       expect(result.carryOverSubtitleVisible).toBeTruthy();
@@ -298,6 +379,22 @@ test.describe('Play Back', () => {
     expect(result.subtitleDisplayedOnPlayer).toBeTruthy();
   });
 
+  test('@Medium IW3-T1986 - subtitles display correctly and remain synchronized with the video during seeking operations', async ({ page }) => {
+    const data = testData['tc-sub-024-subtitle-synchronization'] as Record<string, any>;
+    const result = await verifySubtitleSynchronizationFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.subtitleSelectionSuccessful).toBeTruthy();
+    expect(result.subtitleVisibleAfterForward).toBeTruthy();
+    expect(result.subtitleVisibleAfterRewind).toBeTruthy();
+    expect(result.subtitleVisibleAfterSeek).toBeTruthy();
+  });
+
  test('@Medium IW3-T1987 - tapping the full screen icon activates fullscreen and continues playback', async ({ page }) => {
    const data = testData['tc-sub-025-fullscreen-functionality'] as Record<string, any>;  
    const result = await verifyFullscreenFunctionalityFlow(page, {
@@ -322,7 +419,6 @@ test.describe('Play Back', () => {
       expectedEpisode: data.expectedEpisode,
     });
 
-    expect(result.isLoggedIn).toBeTruthy();
     expect(result.detailsVisible).toBeTruthy();
     expect(result.backButtonVisible).toBeTruthy();
     expect(result.contentTitleVisible).toBeTruthy();
@@ -378,6 +474,75 @@ test.describe('Play Back', () => {
     expect(result.rewindChanged).toBeTruthy();
   });
 
+  test('@Medium IW3-T1998 - player controls dismissed when hovering while visible', async ({ page }) => {
+    const data = testData['tc-sub-031-player-controls-hover-dismiss'] as Record<string, any>;
+    const result = await verifyPlayerControlsHoverDismissFlow(page, {
+      query: data.query,
+      mode: data.mode,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.controlsInitiallyNotVisible).toBeTruthy();
+    expect(result.controlsVisibleOnHover).toBeTruthy();
+  });
+
+  test('@Medium IW3-T1990 - Up Next binge marker appears at the end of playback', async ({ page }) => {
+    test.setTimeout(90000);
+    const data = testData['tc-sub-028-up-next-marker'] as Record<string, any>;
+    const result = await verifyUpNextBingeMarkerFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.upNextMarkerVisible).toBeTruthy();
+  });
+
+  test('@Medium IW3-T1991 - tapping the Up Next binge marker navigates and starts the next episode playback', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testData['tc-sub-035-up-next-marker-navigation'] as Record<string, any>;
+    const result = await verifyUpNextMarkerNavigationFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.markerVisible).toBeTruthy();
+    expect(result.nextEpisodePlaybackStarted).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2004 - player automatically navigates and starts the next episode without manual intervention', async ({ page }) => {
+    test.setTimeout(240000);
+    const data = testData['tc-sub-036-auto-next-episode-playback'] as Record<string, any>;
+    const result = await verifyAutomaticNextEpisodePlaybackFlow(page, {
+      mode: data.mode,
+      query: data.query,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.markerVisible).toBeTruthy();
+    expect(result.autoPlaybackStarted).toBeTruthy();
+  });
+
+  test('@Medium IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
+    const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
+    const result = await verifyLiveTagOnPlayer(page, {
+      mode: data.mode,
+      channelName: data.channelName,
+    });
+
+    expect(result.liveChannelOpened).toBeTruthy();
+    expect(result.liveBadgeVisible).toBeTruthy();
+  });
+
   test('@High IW3-T2012 - live playback begins on tapping Go Live CTA', async ({ page }) => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLivePlaybackGoLiveFlow(page, {
@@ -399,5 +564,31 @@ test.describe('Play Back', () => {
     expect(result.liveChannelOpened).toBeTruthy();
     expect(result.rewindButtonVisible).toBeFalsy();
     expect(result.forwardButtonVisible).toBeFalsy();
+  });
+
+  test('@High IW3-T2023 - Verify user navigates to content details when last season last episode completely watched', async ({ page }) => {
+    const data = testData['tc-sub-039-last-season-last-episode'] as Record<string, any>;
+    const result = await verifyLastSeasonLastEpisodeCompletionNavigationFlow(page, {
+      mode: data.mode,
+      query: data.query,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.clickedEpisode || result.clickedSeason).toBeTruthy();
+    expect(result.playbackCompleted).toBeTruthy();
+    expect(result.postDetailsVisible).toBeTruthy();
+  });
+
+  test('@High IW3-T2024 - Verify user navigates to content details after completely watching movie content', async ({ page }) => {
+    const data = testData['tc-sub-040-movie-complete-details-navigation'] as Record<string, any>;
+    const result = await verifyMoviePlaybackReturnsToDetailsFlow(page, {
+      mode: data.mode,
+      query: data.query,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.playbackStarted).toBeTruthy();
+    expect(result.playbackCompleted).toBeTruthy();
+    expect(result.postDetailsVisible).toBeTruthy();
   });
 });

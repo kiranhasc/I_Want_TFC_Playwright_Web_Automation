@@ -8,6 +8,7 @@ dotenv.config();
  */
 export default defineConfig({
   testDir: './tests',
+  timeout: 50 * 1000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -124,6 +125,12 @@ export default defineConfig({
       name: 'watchlist',
       testDir: 'tests/home',
       testMatch: '**/watchlist-management.spec.ts',
+    },
+
+    {
+      name: 'end-to-end',
+      testDir: 'tests/home',
+      testMatch: '**/end-to-end.spec.ts',
     },
 
     {

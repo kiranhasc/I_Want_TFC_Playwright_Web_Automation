@@ -305,6 +305,18 @@
         "expectedTitle": "Eva Fonda",
         "expectedEpisode": "Eva Fonda"
     },
+    "tc-sub-037-ad-label-visible": {
+        "mode": "freeUser",
+        "query": "Biniverse and Chorus",
+        "expectedTitle": "Biniverse and Chorus",
+        "expectedEpisode": "Biniverse and Chorus"
+    },
+    "tc-sub-038-ad-seekbar-hidden": {
+        "mode": "freeUser",
+        "query": "Biniverse and Chorus",
+        "expectedTitle": "Biniverse and Chorus",
+        "expectedEpisode": "Biniverse and Chorus"
+    },
     "tc-sub-012-pause-ad": {
         "mode": "freeUser",
         "query": "Eva Fonda",
@@ -365,6 +377,18 @@
         "expectedTitle": "Ghosting",
         "expectedEpisode": "Ghosting"
     },
+    "tc-sub-035-up-next-marker-navigation": {
+        "mode": "valid",
+        "query": "Are you G?",
+        "expectedTitle": "Are you G?",
+        "expectedEpisode": "Are you G?"
+    },
+    "tc-sub-036-auto-next-episode-playback": {
+        "mode": "valid",
+        "query": "Annaliza",
+        "expectedTitle": "Annaliza",
+        "expectedEpisode": "Annaliza"
+    },
     "tc-sub-030-player-controls-autodismiss": {
         "mode": "valid",
         "query": "ekstra",
@@ -382,6 +406,12 @@
         "query": "Ma",
         "expectedTitle": "Ma",
         "expectedEpisode": "Ma"
+    },
+    "tc-sub-033-end-to-end-launch-login-search-playback": {
+        "mode": "valid",
+        "query": "BLOOD VS DUTY",
+        "expectedTitle": "BLOOD VS DUTY",
+        "expectedEpisode": "BLOOD VS DUTY"
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",
@@ -428,9 +458,15 @@
     },
     "tc-sub-024-subtitle-synchronization": {
         "mode": "valid",
-        "query": "All of me",
-        "expectedTitle": "All of me",
-        "expectedEpisode": "All of me"
+        "query": "Beauty and the bestie",
+        "expectedTitle": "Beauty and the bestie",
+        "expectedEpisode": "Beauty and the bestie"
+    },
+    "tc-sub-034-seekbar-preview": {
+        "mode": "valid",
+        "query": "oh my gan",
+        "expectedTitle": "Oh My Gan",
+        "expectedEpisode": "Oh My Gan"
     },
     "tc-settings-001-parental-controls": {
         "mode": "freeUser"
@@ -550,5 +586,16 @@
         "password": "Test1234",
         "searchTerm": "Everybody Sing",
         "contentTitle": "Everybody, Sing!"
+    }
+    ,
+    "tc-sub-039-last-season-last-episode": {
+        "mode": "valid",
+        "query": "A family affair",
+        "expectedTitle": "A Family Affair"
+    },
+    "tc-sub-040-movie-complete-details-navigation": {
+        "mode": "valid",
+        "query": "Sukob",
+        "expectedTitle": "Sukob"
     }
 }

@@ -293,6 +293,29 @@
     - "IW3-T1945"
   dependsOn: []
 
+- id: "verify-last-season-last-episode-completion"
+  name: "Verify navigation after completing last season last episode"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLastSeasonLastEpisodeCompletionNavigationFlow"
+  tags:
+    - playback
+    - continue-watching
+    - positive
+  testCases:
+    - "IW3-T2023"
+  dependsOn: []
+
+- id: "verify-movie-playback-completion-details-navigation"
+  name: "Verify navigation to content details after movie playback completion"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyMoviePlaybackReturnsToDetailsFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2024"
+  dependsOn: []
+
 - id: "verify-search-icon-visibility"
   name: "Verify search icon visibility on navigation pages"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -421,12 +444,35 @@
     - "IW3-T1998"
   dependsOn: []
 
+- id: "verify-tap-to-pause-playback"
+  name: "Verify content pauses when the player screen is tapped while controls are visible"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyTapToPausePlaybackFlow"
+  tags:
+    - playback
+    - ui
+  testCases:
+    - "IW3-T2003"
+  dependsOn: []
+
 - id: "verify-volume-control"
   name: "Verify user can adjust volume using volume button"
   path: "src/businessFunction/ott-playback-bfs.ts"
   export: "verifyVolumeControlFlow"
   tags:
     - playback
+    - ui
+  testCases:
+    - "IW3-T2005"
+  dependsOn: []
+
+- id: "verify-end-to-end-launch-login-search-playback"
+  name: "Verify end-to-end launch login navigation search and playback"
+  path: "src/businessFunction/ott-end-to-end-bfs.ts"
+  export: "verifyEndToEndLaunchLoginSearchPlaybackFlow"
+  tags:
+    - playback
+    - navigation
     - ui
   testCases:
     - "IW3-T2005"
@@ -963,6 +1009,30 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-up-next-marker-navigation"
+  name: "Verify tapping the Up Next binge marker navigates and starts the next episode playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyUpNextMarkerNavigationFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1991"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-automatic-next-episode-playback"
+  name: "Verify the player automatically navigates and starts the next episode playback without manual intervention"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAutomaticNextEpisodePlaybackFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2004"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-back-button-navigation"
   name: "Verify tapping the playback back button returns to the previous details screen"
   path: "src/businessFunction/ott-playback-bfs.ts"
@@ -1060,7 +1130,7 @@
     - "login-to-ott"
 
 - id: "verify-subtitle-synchronization"
-  name: "Verify subtitles remain visible during seek operations"
+  name: "Verify subtitles display correctly and remain synchronized during seek operations"
   path: "src/businessFunction/ott-playback-bfs.ts"
   export: "verifySubtitleSynchronizationFlow"
   tags:
@@ -1068,6 +1138,18 @@
     - positive
   testCases:
     - "IW3-T1986"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-seekbar-preview"
+  name: "Verify seekbar thumbnail previews appear while scrubbing playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySeekbarPreviewFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2001"
   dependsOn:
     - "login-to-ott"
 
@@ -1083,6 +1165,62 @@
     - "IW3-T2013"
   dependsOn:
     - "login-to-ott"
+
+- id: "verify-ad-playback-ui"
+  name: "Verify ad playback UI displays the player screen and ad overlay"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdPlaybackUIFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2014"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-ad-label-visibility"
+  name: "Verify the player screen displays a clear and visible ad label while an ad is playing"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdLabelVisibilityFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2020"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-ad-seekbar-hidden"
+  name: "Verify the seek bar is not visible on the player screen during ad playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdSeekBarHiddenDuringAdFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2022"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-ad-duration-limit"
+  name: "Verify all ads do not exceed a maximum duration of 90 seconds"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdDurationFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2017"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
 
 - id: "verify-pause-ad-playback"
   name: "Verify pause ad appears on player screen during pause state"
@@ -1132,6 +1270,20 @@
     - "IW3-T1976"
   dependsOn:
     - "login-to-ott"
+
+- id: "verify-live-tag-on-player"
+  name: "Verify LIVE tag is displayed on the player screen during live streaming"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyLiveTagOnPlayer"
+  tags:
+    - playback
+    - live-stream
+    - positive
+  testCases:
+    - "IW3-T2009"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
 
 - id: "verify-live-playback-go-live"
   name: "Verify live playback begins on tapping the Live CTA"

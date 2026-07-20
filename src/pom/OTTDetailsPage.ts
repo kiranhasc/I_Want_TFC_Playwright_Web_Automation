@@ -18,6 +18,7 @@ export class OTTDetailsPage {
   private readonly videoElement: PageElement;
   private readonly vpnErrorMessage: PageElement;
   private readonly firstEpisodeCard: PageElement;
+  private readonly episodesListItems: PageElement;
   private readonly videoPlayer: PageElement;
   private readonly episodeTitle: PageElement;
   private readonly playbackContentTitle: PageElement;
@@ -72,6 +73,7 @@ export class OTTDetailsPage {
   private readonly backButton: PageElement;
   private readonly fullscreenButton: PageElement;
   private readonly goLiveButton: PageElement;
+  private readonly liveTag: PageElement;
   private readonly adTag: PageElement;
   private readonly pauseAdBanner: PageElement;
   private readonly firstTitleImageCard: PageElement;
@@ -87,7 +89,6 @@ export class OTTDetailsPage {
     this.pageUtils = new PageUtils(page);
     this.showsSectionLink = { selector: 'nav >> text=Shows' };
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
-    this.playButton = { selector: '#play' };
     this.videoElement = { selector: 'video' };
     this.vpnErrorMessage = { selector: 'h2:has-text("We detected that you’re using a VPN or proxy")'};
     this.showDetailsHeading = { selector: 'main h1' };
@@ -96,6 +97,7 @@ export class OTTDetailsPage {
     this.showsSectionLink = { selector: 'nav >> text=Shows'};
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image'};
     this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item'};
+    this.episodesListItems = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
     this.videoPlayer = { selector: 'video, [data-testid="video-player"], .video-player video, .player video'};
     this.episodeTitle = { selector: '[data-testid="episode-title"], .episode-title, h2:has-text("Episode")'};
     this.playbackContentTitle = { selector: '[data-testid="player-title"], .player-title, .video-title, .content-title, .player-header h1, h1' };
@@ -107,7 +109,7 @@ export class OTTDetailsPage {
     this.continueWatchingRemoveButton = { selector: 'button[aria-label*="Remove"], button:has-text("Remove"), button:has-text("X"), [data-testid*="remove"], .remove-continue-watching' };
     this.showDetailsHeading = { selector: 'main h1'};
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]'};
-    this.resumeButton = { selector: 'p:has-text("Resume")' };
+    this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
     this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
     this.parentalPinEntryInputs = { selector: 'input[id^="parental-pin-input-"]' };
     this.parentalPinValidateButton = { selector: 'button:has-text("Submit"), button:has-text("Continue")' };
@@ -134,24 +136,25 @@ export class OTTDetailsPage {
     this.firstSearchResult = { selector: 'main img, main a img, main section img, main article img, main figure img, section[role="list"] img, div[role="list"] img, .search-results img, .results-list img, section[role="list"] .thumbnail, div[role="list"] .thumbnail, .search-results .thumbnail, .results-list .thumbnail' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '[data-testid="player"], .player-screen, video' };
-    this.seekBar = { selector: '.player-progress-indicator' };
+    this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
     this.playbackTime = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
     this.playerTimeDisplay = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
     this.playbackTimeValue = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
     this.pauseButton = { selector: 'button:has-text("pause"), [data-testid="pause-button"], .pause-button' };
     this.liveChannelTile = { selector: 'a, button, [role="button"], [data-testid*="content"], [data-testid*="card"]' };
-    this.rewindButton = { selector: 'xpath=//*[@id="player-container-main-rewindButton"]/img' };
-    this.forwardButton = { selector: 'xpath=//*[@id="player-container-main-forwardButton"]/img' };
+    this.rewindButton = { selector: '//*[@id="player-container-main-rewindButton"]/img' };
+    this.forwardButton = { selector: '//*[@id="player-container-main-forwardButton"]/img' };
     this.volumeButton = { selector: 'button[aria-label*="volume"], button[title*="volume"], [data-testid*="volume"]' };
     this.subtitleButton = { selector: 'xpath=//*[@id="player-container-main-subtitleButton"]/img' };
     this.subtitleLanguageOption = { selector: 'text=/English\\(Philippines\\)/i' };
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
     this.subtitleDisplayIndicator = { selector: 'xpath=//*[@id="player-container-main"]/div[6]/div' };
     this.nextEpisodeButton = { selector: 'button[aria-label*="next"], button:has-text("Next"), [data-testid*="next-episode"]' };
-    this.upNextMarker = { selector: 'button:has-text("Up Next"), button:has-text("Up next"), [data-testid*="up-next"], [aria-label*="Up Next"], [aria-label*="up next"], text=/up next/i' };
+    this.upNextMarker = { selector: '//div[contains(@class,"player-upNextWidget-forground-gradient")]' };
     this.backButton = { selector: 'button[aria-label*="back"], button:has-text("Back"), [data-testid*="back"]' };
     this.fullscreenButton = { selector: 'button[aria-label*="fullscreen"], button[title*="fullscreen"], [data-testid*="fullscreen"]' };
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
+    this.liveTag = { selector: 'text=/\\bLIVE\\b/i' };
     this.adTag = { selector: '//*[@id="ad-ui-overlay"]' };
     this.pauseAdBanner = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"]' };
     this.firstTitleImageCard = { selector: 'img.title-image' };
@@ -275,6 +278,52 @@ export class OTTDetailsPage {
       await this.page.waitForLoadState('networkidle', { timeout: 15000 });
     } catch (err) {
       logger.debug('Post-click waits failed or page closed', err);
+    }
+  }
+
+  async clickLastSeasonIfAvailable(): Promise<boolean> {
+    logger.elementInteraction('click', 'last season heading');
+    try {
+      const seasonHeading = this.page.locator('xpath=//*[contains(@class,"seasons-container")]/div/div/div/h3').last();
+      const count = await seasonHeading.count().catch(() => 0);
+      if (!count) return false;
+
+      await seasonHeading.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      await seasonHeading.scrollIntoViewIfNeeded().catch(() => undefined);
+      await seasonHeading.click({ timeout: 20000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+      await this.page.waitForTimeout(2000);
+      return true;
+    } catch (err) {
+      logger.debug('clickLastSeasonIfAvailable failed', err);
+      return false;
+    }
+  }
+
+  async clickLastEpisodeFromEpisodesList(): Promise<boolean> {
+    logger.elementInteraction('click', 'last episode from episodes-list');
+    try {
+      // Scroll to the bottom of the page
+      await this.page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
+      // Locate the last episode via framework-declared locator
+      const episodeItems = this.page.locator(this.episodesListItems.selector);
+      const count = await episodeItems.count().catch(() => 0);
+      if (!count) return false;
+
+      const lastEpisode = episodeItems.last();
+
+      // Ensure it is visible and click
+      await lastEpisode.scrollIntoViewIfNeeded().catch(() => undefined);
+      await lastEpisode.click({ timeout: 20000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+      await this.page.waitForTimeout(2000);
+      return true;
+    } catch (err) {
+      logger.debug('clickLastEpisodeFromEpisodesList failed', err);
+      return false;
     }
   }
 
@@ -1218,6 +1267,57 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return await timeDisplay.isVisible().catch(() => false);
   }
 
+  async hoverSeekBarAndWaitForPreview(): Promise<boolean> {
+    const seekBar = this.page.locator(this.seekBar.selector).first();
+    await seekBar.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+
+    const box = await seekBar.boundingBox().catch(() => null);
+    if (!box) {
+      return false;
+    }
+
+    const previewSelectors = [
+      '[data-testid*="preview"]',
+      '[data-testid*="thumbnail"]',
+      '[class*="preview"]',
+      '[class*="thumbnail"]',
+      '[class*="thumb"]',
+      '[aria-label*="preview"]',
+      '[aria-label*="thumbnail"]',
+    ];
+
+    const previewLocator = this.page.locator(previewSelectors.join(', ')).filter({ has: this.page.locator('img, canvas') });
+
+    const initialVisibleCount = await previewLocator.evaluateAll((elements) =>
+      elements.filter((element) => {
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      }).length
+    );
+
+    const startX = box.x + box.width * 0.35;
+    const startY = box.y + box.height / 2;
+    const endX = box.x + box.width * 0.65;
+    const endY = startY;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(endX, endY, { steps: 8 });
+    await this.page.mouse.up();
+    await this.page.waitForTimeout(1500);
+
+    const visibleCountAfterHover = await previewLocator.evaluateAll((elements) =>
+      elements.filter((element) => {
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      }).length
+    );
+
+    return visibleCountAfterHover > initialVisibleCount;
+  }
+
   async tapPlaybackScreen(): Promise<void> {
     const playerScreen = this.page.locator(this.playerScreen.selector).first();
     await playerScreen.waitFor({ state: 'visible', timeout: 15000 });
@@ -1308,9 +1408,25 @@ async addToWatchlistAndGetToast(): Promise<string> {
   }
 
   async isUpNextMarkerVisible(): Promise<boolean> {
-    const marker = this.page.locator(this.upNextMarker.selector).first();
-    await marker.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-    return await marker.isVisible().catch(() => false);
+    const candidateSelectors = [
+      this.upNextMarker.selector,
+      this.nextEpisodeButton.selector,
+      'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
+    ];
+
+    for (const selector of candidateSelectors) {
+      const marker = this.page.locator(selector).first();
+      try {
+        await marker.waitFor({ state: 'visible', timeout: 3000 });
+        if (await marker.isVisible().catch(() => false)) {
+          return true;
+        }
+      } catch {
+        // Continue to the next selector.
+      }
+    }
+
+    return false;
   }
 
   async waitForUpNextMarker(timeout: number = 20000): Promise<boolean> {
@@ -1358,10 +1474,9 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isSubtitleLanguageVisible(): Promise<boolean> {
     try {
-      const option = this.page.getByText('English (Philippines)');
-      await option.waitFor({ state: 'visible', timeout: 10000 });
-      await option.click().catch(() => undefined);
-      return true;
+      const option = this.page.getByText('English (Philippines)').first();
+      await option.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+      return await option.isVisible().catch(() => false);
     } catch {
       return false;
     }
@@ -1394,8 +1509,24 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async isAdTagVisible(): Promise<boolean> {
     const adTag = this.page.locator(this.adTag.selector).first();
-    await adTag.waitFor({ state: 'visible', timeout: 10000 });
-    return true;
+    await adTag.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await adTag.isVisible().catch(() => false);
+  }
+
+  async measureAdDuration(maxSeconds: number = 90): Promise<number> {
+    const startedAt = Date.now();
+    const timeoutMs = maxSeconds * 1000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const adVisible = await this.isAdTagVisible();
+      if (!adVisible) {
+        return Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+      }
+
+      await this.page.waitForTimeout(1000);
+    }
+
+    return maxSeconds;
   }
 
   async clickGoLiveButton(): Promise<void> {
@@ -1407,6 +1538,16 @@ async addToWatchlistAndGetToast(): Promise<string> {
   async isGoLiveButtonVisible(): Promise<boolean> {
     await this.page.getByText('Live', { exact: true }).waitFor({ state: 'visible', timeout: 10000 });
     return true;
+  }
+
+  async isLiveTagVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.liveTag.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      return await locator.isVisible().catch(() => false);
+    } catch {
+      return false;
+    }
   }
 
   async getPlaybackTimeText(): Promise<string> {
@@ -1439,22 +1580,45 @@ async addToWatchlistAndGetToast(): Promise<string> {
 
   async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
-    await seekBar.waitFor({ state: 'visible', timeout: 15000 });
-    const box = await seekBar.boundingBox();
+    await seekBar.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    const box = await seekBar.boundingBox().catch(() => null);
 
-    if (!box) {
-      return;
+    const clampedPercent = Math.min(Math.max(targetPercent, 0.05), 0.99);
+
+    if (box) {
+      const startX = box.x + box.width * 0.1;
+      const startY = box.y + box.height / 2;
+      const endX = box.x + box.width * clampedPercent;
+      const endY = startY;
+
+      await this.page.mouse.move(startX, startY);
+      await this.page.mouse.down();
+      await this.page.mouse.move(endX, endY, { steps: 12 });
+      await this.page.mouse.up();
     }
 
-    const startX = box.x + box.width * 0.2;
-    const startY = box.y + box.height / 2;
-    const endX = box.x + box.width * Math.min(Math.max(targetPercent, 0.05), 0.95);
-    const endY = startY;
+    const videoUpdated = await this.page.evaluate(({ percent }) => {
+      const video = document.querySelector('video') as HTMLVideoElement | null;
+      if (!video || Number.isNaN(video.duration) || video.duration <= 0) {
+        return false;
+      }
 
-    await this.page.mouse.move(startX, startY);
-    await this.page.mouse.down();
-    await this.page.mouse.move(endX, endY, { steps: 8 });
-    await this.page.mouse.up();
+      const targetTime = Math.max(0, Math.min(video.duration * percent, video.duration - 0.5));
+      if (Math.abs(video.currentTime - targetTime) > 0.1) {
+        video.currentTime = targetTime;
+        video.dispatchEvent(new Event('timeupdate'));
+        video.dispatchEvent(new Event('seeked'));
+        return true;
+      }
+
+      return true;
+    }, { percent: clampedPercent });
+
+    if (!videoUpdated && box) {
+      await seekBar.click({ position: { x: Math.max(4, Math.round(box.width * clampedPercent)), y: Math.max(4, Math.round(box.height / 2)) } });
+    }
+
+    await this.page.waitForTimeout(1500);
   }
 
   async clickliveContent(contentName: string = 'TFC Asia'): Promise<void> {

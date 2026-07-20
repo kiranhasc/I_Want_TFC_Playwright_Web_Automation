@@ -1165,7 +1165,8 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 10. Click on the first content from first rail
 11. Click the play button 
 12. Click on Sub title button
-13. verify and click English(Phillippines) language
+13. click on English(Phillippines) language option
+14. verify subtitle is selected.
 
 #### 2.19 IW3-T1982 Verify that selected subtitle option from the current episode continues for the next epiosde.
 
@@ -1282,9 +1283,9 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button 
 12. Click on Sub title button
 13. click on English(Phillippines) language option 
-14. verify subtitle is visible post selecting the language on playback screen
+14. verify subtitle is visible post selecting the language on playback screen(wait till the subtitle is displayed)
 15. Click on forward button, rewind button and drag the seek bar
-16. Verify subtitle is visible post selecting each button and dragging seek bar 
+16. Verify subtitle is visible post selecting each button and dragging seek bar (wait till the subtitle is displayed)
 
 #### 2.24 IW3-T1987	Verify the functioNFlity on tapping "Full screen" icon .
 
@@ -1460,7 +1461,8 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 9. Type "Ma" in the search box and Click "Enter"
 10. Click on the first content from first rail
 11. Click the play button 
-13. Verify that player control is not visible after hover the screen 
+12. Verify that player control is not visible after 5sec
+13. Verify that player control is visible after hover the screen 
 
 #### 2.32 IW3-T2005 Verify that user can increase or decrease the volume using volume button .
 
@@ -1482,6 +1484,277 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button 
 12. Click on volume button 
 14. Verify you volume can mute and unmute by clicking on volume button
+
+#### 2.32. End-To-End: launch, login, navigation across tabs, search and playback of a content
+
+**File:** `tests/home/EndToEnd.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+* except - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. When user is on "Home" tab
+      * expect "Continue Watching" rail should be displayed
+6. When user is on "Movies" tab
+      * expect "Trending Movies Worldwide" rail should be displayed
+7. When user is on "Shows" tab
+      * expect "Trending Shows Worldwide" rail should be displayed
+8. When user is on "My Watchlist" tab
+      * expect "My Watchlist" rail should be displayed
+9. When user is on "GMA" tab
+      * expect "Top Streamed" rail should be displayed
+10. Click on Search bar
+      * expect the search bar should display inner text as "Search by title, actor, genre..."
+11. Click on Account icon
+      * expect "Sign Out" option should be displayed
+12. Click on search icon
+13. Type 'BLOOD VS DUTY' in search field 
+14. Observe the Search result
+      * expect Observe 'BLOOD VS DUTY' related results should appear with thumbnails and labels 
+15. Hover on Movie content
+      * expect Content details popup should be displayed with "Add to watchlist" icon, 'Remove" icon, with "Resume" and "Play" button
+16. Click on content
+      * expect Navigates to content details screen.
+      * expect content details screen is displayed with title of the content, genre, rating number, quality of player, content description, subtitle language(if visible) with "Resume" and "Play" button, "Add to watchlist" and "share" icon
+17. Click on play button
+      * expect navigates to player screen.
+      * expect player screen should be displayed with "Content title", "Seek bar" with "Back", "Pause/play", "Forward and rewind", "Subtitle (condition: If visible)", "Next episode (Condition: If visible)" button, and "Content duration time in HH:MM:SS or MM:SS"
+18. Click on back button
+      * expect Navigates to content details screen.
+
+#### 2.34 IW3-T2009 Verify the "LIVE" tag is displayed on the player screen during live streaming.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the "TFC Asia" live channel content in the home screen
+9. Verify "live" tag is visible  
+
+#### 2.35 IW3-T2014 Verify the UI of the player screen during Ad playback.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Eva Fonda" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button
+12. Verify there is a AD tag on the play screen 
+
+#### 2.36 IW3-T2017 Verify that all ads do not exceed a maximum duration of 90 seconds.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Eva Fonda" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button
+12. Verify there is a AD tag on the play screen 
+13. Add wait for 90sec
+14. Verify there is no AD tag visible after 90 sec on the play screen
+
+#### 2.37 IW3-T2003 Verify that the content gets paused on tapping the player screen when the player controls are visible.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Ma" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Player should pause on tapping the player screen
+12. Verify that player control is visible 
+
+#### 2.38 IW3-T2001 Verify that the seekbar displays thumbNFil previews when scrubbing through the content. 
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "oh my gan" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Hover on the screen 
+13. Thumbnail should displayed when seek bar is hovered on player screen.
+
+#### 2.39 IW3-T1991 Verify that tapping the 'Up Next binge" marker Navigates and starts the next episode playback.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Are you G?" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Drag the seek  bar till end 
+13. Click the 'Up next wedge' button CTA
+14. Verify the content has navigated to the next episode playback. 
+
+#### 2.40 IW3-T2004 Verify that the player automatically Navigates and starts playback of the next episode immediately after the current episode ends without requiring user intervention.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Annaliza" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Drag the seek  bar till end 
+13. Wait till player navigates to next episode
+14. Verify the content has navigated to the next episode playback 
+
+#### 2.41 IW3-T2020 Verify that a clear and visible label is displayed on the player screen whenever an ad is playing.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Biniverse and Chorus" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button
+12. Verify yellow color tag with name 'Ad' with a timer is displayed whenever an ad is playing.
+
+#### 2.42 IW3-T2022 Verify that the seek bar is not visible on the player screen during ad playback.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Biniverse and Chorus" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button
+12. Verify the seek bar is not visible on the player screen during ad playback.
+
+#### 2.43 IW3-T2023 Verify user Navigates to content details screen when the last season last episode completely watched 
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Can't buy me love" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Verify it navigates to content details screen.
+12. Click on the last season of content in the content detailed screen
+13. Click on the last episode in content detailed screen
+14. Drag the seek bar till end of the episode 
+15. Verify the screen is navigated to the content details page after the completion of the episode.
+
+#### 2.44 IW3-T2024 Verify user Navigates to content details screen post completely watching movie content.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Sukob" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Verify it navigates to content details screen.
+12. Click the play button
+13. Drag the seek bar till end of movie episode 
+15. Verify the screen is navigated to the content details page after the complete play of movie.  
+
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 

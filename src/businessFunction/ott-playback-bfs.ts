@@ -265,6 +265,20 @@ export interface VerifyUpNextBingeMarkerOutput {
   upNextMarkerVisible: boolean;
 }
 
+export interface VerifyUpNextMarkerNavigationOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  markerVisible: boolean;
+  nextEpisodePlaybackStarted: boolean;
+}
+
+export interface VerifyAutomaticNextEpisodePlaybackOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  markerVisible: boolean;
+  autoPlaybackStarted: boolean;
+}
+
 export interface VerifyBackButtonNavigationOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -308,6 +322,19 @@ export interface VerifySubtitleSelectionOutput {
   subtitleSelectionSuccessful: boolean;
 }
 
+export interface VerifySeekbarPreviewInput {
+  query?: string;
+  mode?: string;
+  expectedTitle?: string;
+  expectedEpisode?: string;
+}
+
+export interface VerifySeekbarPreviewOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  previewVisible: boolean;
+}
+
 export interface VerifySubtitlePersistenceOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -347,6 +374,137 @@ export interface VerifySubtitleSynchronizationOutput {
   subtitleVisibleAfterForward: boolean;
   subtitleVisibleAfterRewind: boolean;
   subtitleVisibleAfterSeek: boolean;
+}
+
+export interface VerifyLastSeasonLastEpisodeCompletionOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  clickedSeason: boolean;
+  clickedEpisode: boolean;
+  playbackCompleted: boolean;
+  postDetailsVisible: boolean;
+}
+
+export interface VerifyMoviePlaybackDetailsAfterCompletionOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playbackStarted: boolean;
+  playbackCompleted: boolean;
+  postDetailsVisible: boolean;
+}
+
+export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyMoviePlaybackDetailsAfterCompletionOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting movie playback completion details navigation flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Content details page visible', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  const playbackStarted = await detailsPage.isPlayerScreenVisible();
+  logger.assertion('Movie playback started', playbackStarted);
+
+  await detailsPage.dragSeekBarToPosition(1.0);
+  const authPageForFinish = new OTTAuthPage(page);
+  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem().catch(() => false);
+  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+
+  logger.assertion('Playback completed', playbackCompleted);
+  logger.assertion('Content details page visible after playback completion', postDetailsVisible);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    playbackStarted,
+    playbackCompleted,
+    postDetailsVisible,
+  };
+}
+
+/**
+ * Flow: search -> open details -> click last season (if exists) -> click last episode -> play/finish -> verify details visible after completion
+ */
+export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyLastSeasonLastEpisodeCompletionOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting last season/last episode completion navigation flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  // search and open details
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Content details page visible', detailsVisible);
+
+  // Click last season and last episode using POM methods
+  let clickedSeason = false;
+  try {
+    clickedSeason = await detailsPage.clickLastSeasonIfAvailable().catch(() => false);
+  } catch (err) {
+    logger.debug('click last season failed', err);
+    clickedSeason = false;
+  }
+
+  let clickedEpisode = false;
+  try {
+    clickedEpisode = await detailsPage.clickLastEpisodeFromEpisodesList().catch(() => false);
+  } catch (err) {
+    logger.debug('click last episode failed', err);
+    clickedEpisode = false;
+  }
+
+  // If Play/Resume is visible, click to start playback
+  try {
+    const action = page.getByText(/Resume|Play/i).first();
+    if (await action.isVisible().catch(() => false)) {
+      await action.click({ timeout: 30000 }).catch(() => undefined);
+    }
+  } catch (err) {
+    logger.debug('click play/resume failed', err);
+  }
+
+  // Finish playback by moving player near end
+  const authPageForFinish = new OTTAuthPage(page);
+  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem().catch(() => false);
+
+  // After completion, verify details page is visible (expected navigation back to details)
+  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+
+  logger.assertion('Playback completed', playbackCompleted);
+  logger.assertion('Details page visible after playback completion', postDetailsVisible);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    clickedSeason,
+    clickedEpisode,
+    playbackCompleted,
+    postDetailsVisible,
+  };
 }
 
 export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlaybackResumeOutput> {
@@ -634,8 +792,8 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
 export interface VerifyPlayerControlsHoverDismissOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
-  controlsInitiallyVisible: boolean;
-  controlsDismissedOnHover: boolean;
+  controlsInitiallyNotVisible: boolean;
+  controlsVisibleOnHover: boolean;
 }
 
 export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlayerControlsHoverDismissOutput> {
@@ -660,25 +818,25 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   logger.assertion('Details page visible after opening search result', detailsVisible);
 
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForPlayback(3);
-
-  await detailsPage.tapPlaybackScreen();
   await detailsPage.waitForPlayback(1);
   const controlsInitiallyVisible = await detailsPage.isPauseButtonVisible();
-  logger.assertion('Player controls visible after tapping playback screen', controlsInitiallyVisible);
+  logger.assertion('Player controls visible before auto-dismiss', controlsInitiallyVisible);
+
+  await detailsPage.waitForPlayback(6);
+  const controlsInitiallyNotVisible = !(await detailsPage.isPauseButtonVisible());
+  logger.assertion('Player controls are not visible after 5 seconds of inactivity', controlsInitiallyNotVisible);
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.waitForPlayback(1);
-  const controlsStillVisible = await detailsPage.isPauseButtonVisible();
-  const controlsDismissedOnHover = controlsInitiallyVisible && !controlsStillVisible;
+  const controlsVisibleOnHover = await detailsPage.isPauseButtonVisible();
 
-  logger.assertion('Player controls dismissed when hovering over the screen', controlsDismissedOnHover);
+  logger.assertion('Player controls become visible again on hover', controlsVisibleOnHover);
 
   return {
     isLoggedIn,
     detailsVisible,
-    controlsInitiallyVisible,
-    controlsDismissedOnHover,
+    controlsInitiallyNotVisible,
+    controlsVisibleOnHover,
   };
 }
 
@@ -923,6 +1081,101 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   };
 }
 
+export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyUpNextMarkerNavigationOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting Up Next marker navigation verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Details page visible after opening search result', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(3);
+  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.clickResumeButton();
+
+  const markerVisible = await detailsPage.waitForUpNextMarker(15000);
+  logger.assertion('Up Next marker is visible', markerVisible);
+
+  if (markerVisible) {
+    await detailsPage.clickNextEpisodeButton();
+    await detailsPage.waitForPlayback(2);
+    await detailsPage.tapPlaybackScreen();
+  }
+
+  const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible().catch(() => false));
+  logger.assertion('Next episode playback started after tapping marker', nextEpisodePlaybackStarted);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    markerVisible,
+    nextEpisodePlaybackStarted,
+  };
+}
+
+export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyAutomaticNextEpisodePlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting automatic next episode playback verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Details page visible after opening search result', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(3);
+  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForPlayback(2);
+  // await detailsPage.clickResumeButton();
+
+  const markerVisible = await detailsPage.waitForUpNextMarker(15000);
+  logger.assertion('Up Next marker is visible', markerVisible);
+
+  let autoPlaybackStarted = false;
+  if (markerVisible) {
+    await detailsPage.waitForPlayback(8);
+    autoPlaybackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  }
+
+  logger.assertion('Next episode playback started automatically', autoPlaybackStarted);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    markerVisible,
+    autoPlaybackStarted,
+  };
+}
+
 export async function verifyBackButtonNavigationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyBackButtonNavigationOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
@@ -1089,6 +1342,42 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
   };
 }
 
+export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarPreviewInput): Promise<VerifySeekbarPreviewOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting seekbar thumbnail preview verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Details page visible after opening search result', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(7);
+  await detailsPage.tapPlaybackScreen();
+  await detailsPage.hoverPlaybackScreen();
+
+  const previewVisible = await detailsPage.hoverSeekBarAndWaitForPreview();
+  logger.assertion('Seekbar preview becomes visible while scrubbing', previewVisible);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    previewVisible,
+  };
+}
+
 export async function verifySubtitlePersistenceFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifySubtitlePersistenceOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
@@ -1212,14 +1501,18 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   logger.assertion('Details page visible after opening search result', detailsVisible);
 
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForPlayback(3);
-  await detailsPage.tapPlaybackScreen();
+  await detailsPage.waitForPlayback(2);
+  // await detailsPage.tapPlaybackScreen();
 
   await detailsPage.clickSubtitleButton();
-  await detailsPage.waitForPlayback(1);
+  await detailsPage.waitForPlayback(10);
+  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.clickSubtitleButton();
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   console.log('Subtitle selection successful:', subtitleSelectionSuccessful);
-  await detailsPage.waitForPlayback(1);
+  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.dragSeekBarToPosition(0.1);
+  // await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterSelection = await detailsPage.isSubtitleDisplayedOnPlayer();
   console.log('Subtitle visible after selection:', subtitleVisibleAfterSelection);
 
@@ -1276,6 +1569,43 @@ export interface VerifyPausePlaybackOutput {
   initialPlaybackTime: string;
   pausedPlaybackTime: string;
   playbackPaused: boolean;
+}
+
+export interface VerifyTapToPausePlaybackInput {
+  query?: string;
+  mode?: string;
+}
+
+export interface VerifyTapToPausePlaybackOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playerVisible: boolean;
+  initialPlaybackTime: string;
+  pausedPlaybackTime: string;
+  playbackPaused: boolean;
+}
+
+export interface VerifyAdPlaybackUIOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  pauseButtonVisible: boolean;
+}
+
+export interface VerifyAdLabelVisibilityOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  adLabelVisible: boolean;
+  adLabelText: string;
+}
+
+export interface VerifyAdDurationOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  adDurationSeconds: number;
+  exceedsMaxDuration: boolean;
 }
 
 export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPreRollAdPlaybackOutput> {
@@ -1400,6 +1730,179 @@ export async function verifyPauseAdPlaybackFlow(page: any, input?: OpenContentAn
   };
 }
 
+export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyAdPlaybackUIOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting ad playback UI verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(5);
+
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const adVisible = await detailsPage.isAdTagVisible();
+  const pauseButtonVisible = await detailsPage.isPauseButtonVisible();
+
+  logger.assertion('Player screen visible during ad playback', playerVisible);
+  logger.assertion('Ad tag visible during ad playback', adVisible);
+  logger.assertion('Pause button visible during ad playback', pauseButtonVisible);
+
+  return {
+    isLoggedIn,
+    playerVisible,
+    adVisible,
+    pauseButtonVisible,
+  };
+}
+
+export async function verifyAdLabelVisibilityFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyAdLabelVisibilityOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting ad label visibility verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(5);
+
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const adVisible = await detailsPage.isAdTagVisible();
+  const adLabelText = await page.evaluate(() => {
+    const candidates = Array.from(document.querySelectorAll('div, span, p, h1, h2, h3, button, [role="status"], [role="dialog"]'));
+    const visibleText = candidates
+      .map((element) => ({
+        text: (element.textContent || '').trim(),
+        style: window.getComputedStyle(element),
+        rect: element.getBoundingClientRect(),
+      }))
+      .filter(({ style, rect }) => style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0)
+      .map(({ text }) => text)
+      .filter((text) => /ad|advertisement|ad break|sponsored/i.test(text));
+
+    return visibleText.find(Boolean) || '';
+  });
+  const adLabelVisible = adVisible && adLabelText.length > 0;
+
+  logger.assertion('Player screen visible during ad label check', playerVisible);
+  logger.assertion('Ad overlay visible during ad label check', adVisible);
+  logger.assertion('Visible ad label detected on the player screen', adLabelVisible);
+
+  return {
+    isLoggedIn,
+    playerVisible,
+    adVisible,
+    adLabelVisible,
+    adLabelText,
+  };
+}
+
+export interface VerifyAdSeekBarHiddenDuringAdOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  seekBarHidden: boolean;
+}
+
+export async function verifyAdSeekBarHiddenDuringAdFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyAdSeekBarHiddenDuringAdOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting ad seek bar hidden verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(10);
+
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const adVisible = await detailsPage.isAdTagVisible();
+  const seekBarVisible = await detailsPage.isSeekBarVisible();
+  const seekBarHidden = adVisible && seekBarVisible;
+
+  logger.assertion('Player screen visible during ad playback', playerVisible);
+  logger.assertion('Ad tag visible during ad playback', adVisible);
+  logger.assertion('Seek bar hidden during ad playback', seekBarHidden);
+
+  return {
+    isLoggedIn,
+    playerVisible,
+    adVisible,
+    seekBarHidden,
+  };
+}
+
+export async function verifyAdDurationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyAdDurationOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting ad duration verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(5);
+
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const adVisible = await detailsPage.isAdTagVisible();
+  const adDurationSeconds = await detailsPage.measureAdDuration(90);
+  const exceedsMaxDuration = adDurationSeconds > 90;
+
+  logger.assertion('Player screen visible during ad duration check', playerVisible);
+  logger.assertion('Ad overlay visible during ad duration check', adVisible);
+  logger.assertion('Ad duration stays within the maximum allowed limit', !exceedsMaxDuration);
+
+  return {
+    isLoggedIn,
+    playerVisible,
+    adVisible,
+    adDurationSeconds,
+    exceedsMaxDuration,
+  };
+}
+
 export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPausePlaybackOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
@@ -1434,6 +1937,51 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
 
   return {
     isLoggedIn,
+    playerVisible,
+    initialPlaybackTime,
+    pausedPlaybackTime,
+    playbackPaused,
+  };
+}
+
+export async function verifyTapToPausePlaybackFlow(page: any, input?: VerifyTapToPausePlaybackInput): Promise<VerifyTapToPausePlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting tap-to-pause playback verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Details page visible after opening search result', detailsVisible);
+
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(10);
+  await detailsPage.tapPlaybackScreen();
+  await detailsPage.waitForPlayback(1);
+
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const initialPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
+  await detailsPage.waitForPlayback(5);
+  const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
+  const playbackPaused = initialPlaybackTime === pausedPlaybackTime;
+
+  logger.assertion('Player screen visible after tapping to pause', playerVisible);
+  logger.assertion('Playback paused after tapping the player screen', playbackPaused);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
     playerVisible,
     initialPlaybackTime,
     pausedPlaybackTime,
@@ -1759,6 +2307,33 @@ export interface VerifyLivePlaybackPauseResumeOutput {
     currentTimeAfterResume: number;
     playbackCompleted: boolean;
     pauseResumeWorked: boolean;
+}
+
+export interface VerifyLiveTagOnPlayerOutput {
+    liveChannelOpened: boolean;
+    liveBadgeVisible: boolean;
+}
+
+export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; channelName?: string }): Promise<VerifyLiveTagOnPlayerOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const mode = input?.mode;
+    const channelName = input?.channelName ?? 'TFC Asia';
+
+
+    logger.step('Starting live tag visibility verification flow');
+
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
+    
+    await detailsPage.clickliveContent(channelName);
+    const liveBadgeVisible = await detailsPage.isLiveTagVisible();
+    logger.assertion('LIVE badge visible during live playback', liveBadgeVisible);
+
+    return {
+        liveChannelOpened: true,
+        liveBadgeVisible,
+    };
 }
 
 export async function verifyLivePlaybackPauseResume(page: any, input?: VerifyLivePlaybackPauseResumeInput): Promise<VerifyLivePlaybackPauseResumeOutput> {

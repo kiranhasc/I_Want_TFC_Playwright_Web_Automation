@@ -36,6 +36,18 @@
         "expectedYear": "2026",
         "expectedGenre": "Action"
     },
+    "tc-disc-002-content-details-ui": {
+        "mode": "valid"
+    },
+    "tc-disc-003-watchlist-details-page": {
+        "mode": "valid"
+    },
+    "tc-disc-009-premium-icon-display": {
+        "mode": "freeUser"
+    },
+    "tc-disc-010-subscribe-cta-on-details-page": {
+        "mode": "freeUser"
+    },
     "tc-disc-002-episode-playback": {
         "mode": "valid",
         "searchTerm": "The Blood Sisters"
@@ -167,6 +179,9 @@
     "tc-sub-002-upgrade-plan": {
         "mode": "freeUser"
     },
+    "tc-sub-003-gma-subscribe-popup": {
+        "mode": "freeUser"
+    },
     "tc-auth-015-account-subscriptions": {
         "mode": "tvUser",
         "providerName": "Frontier, a Verizon Company",
@@ -193,6 +208,12 @@
     "tc-auth-024-continue-watching-across-tabs": {
         "mode": "valid",
         "tabs": ["Movies", "Shows"]
+    },
+    "tc-auth-025-continue-watching-resume-cta": {
+        "mode": "valid"
+    },
+    "tc-auth-026-continue-watching-resume-playback": {
+        "mode": "valid"
     },
     "tc-auth-020-free-tag-watchlist": {
         "email": "sanitycheck@yopmail.com",
@@ -586,6 +607,18 @@
         "password": "Test1234",
         "searchTerm": "Everybody Sing",
         "contentTitle": "Everybody, Sing!"
+    },
+    "tc-disc-006-seasons-grouped": {
+        "mode": "valid"
+    },
+    "tc-disc-007-episode-list-scrollable": {
+        "mode": "valid"
+    },
+    "tc-disc-008-episode-order": {
+        "mode": "valid"
+    },
+    "tc-disc-005-share-link-copied": {
+        "mode": "valid"
     }
     ,
     "tc-sub-039-last-season-last-episode": {

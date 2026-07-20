@@ -170,65 +170,37 @@ export class OTTPlaybackPage {
     }
 
     async clickFirstPremiumContentCard(): Promise<boolean> {
-        const premiumLabels = this.page.getByText(/Subscribe to watch|Subscribe to Watch/i);
-        const labelCount = await premiumLabels.count().catch(() => 0);
-        if (labelCount) {
-            const premiumLabel = premiumLabels.first();
-            const isVisible = await premiumLabel.isVisible().catch(() => false);
-            if (isVisible) {
-                const clicked = await premiumLabel.evaluate((node: HTMLElement) => {
-                    let current = node.parentElement;
-                    while (current) {
-                        const hasImage = current.querySelector('img');
-                        if (hasImage) {
-                            current.scrollIntoView({ block: 'center' });
-                            current.click();
-                            return true;
-                        }
-                        current = current.parentElement;
-                    }
-                    return false;
-                });
+        const cardCandidates = this.page
+            .locator('div.thumbnail')
+            .filter({ has: this.page.locator('img[alt], img[title]') })
+            .filter({ hasNot: this.page.locator('img[alt*="arrow"], img[alt*="logo"], img[alt*="icon"], img[title*="arrow"], img[title*="logo"], img[title*="icon"]') });
+        const cardCount = await cardCandidates.count().catch(() => 0);
 
-                await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
-                await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-                await this.page.waitForTimeout(5000);
-                return clicked;
+        for (let index = 0; index < Math.min(8, cardCount); index += 1) {
+            const card = cardCandidates.nth(index);
+            const visible = await card.isVisible().catch(() => false);
+            if (!visible) {
+                continue;
             }
-        }
 
-        const paidIndicators = this.page.locator(this.paidContentBadge.selector);
-        const paidCount = await paidIndicators.count().catch(() => 0);
-        if (paidCount) {
-            for (let index = 0; index < Math.min(5, paidCount); index += 1) {
-                const paidIndicator = paidIndicators.nth(index);
-                const isVisible = await paidIndicator.isVisible().catch(() => false);
-                if (!isVisible) {
-                    continue;
-                }
+            await card.scrollIntoViewIfNeeded().catch(() => undefined);
+            await card.hover().catch(() => undefined);
+            await card.dblclick({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
+            await this.page.waitForTimeout(1500);
 
-                await paidIndicator.scrollIntoViewIfNeeded();
-                await paidIndicator.click({ force: true, timeout: 30000 }).catch(() => undefined);
-                await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
-                await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-                await this.page.waitForTimeout(5000);
+            const navigated = await this.page.waitForURL(/\/player\/|\/show\/|\/movie\/|\/detail\//, { timeout: 5000 }).catch(() => false);
+            if (navigated) {
+                return true;
+            }
+
+            const detailsHeadingVisible = await this.page.locator('main h1').first().isVisible().catch(() => false);
+            if (detailsHeadingVisible) {
                 return true;
             }
         }
 
-        const fallbackCards = this.page.locator(this.contentCard.selector);
-        const cardCount = await fallbackCards.count().catch(() => 0);
-        if (!cardCount) {
-            return false;
-        }
-
-        const firstCard = fallbackCards.first();
-        await firstCard.scrollIntoViewIfNeeded();
-        await firstCard.click({ force: true, timeout: 30000 }).catch(() => undefined);
-        await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
-        await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-        await this.page.waitForTimeout(5000);
-        return true;
+        return false;
     }
 
     async clickSubscribeOrSubscribeToWatchButton(): Promise<boolean> {

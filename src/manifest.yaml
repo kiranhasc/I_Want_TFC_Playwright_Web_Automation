@@ -314,6 +314,40 @@
     - positive
   testCases:
     - "IW3-T2024"
+- id: "verify-continue-watching-playback-from-tray"
+  name: "Verify Continue Watching content resumes from the tray and playback is restored"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingPlaybackFromTray"
+  tags:
+    - continue-watching
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1934"
+  dependsOn: []
+
+- id: "verify-resume-cta-on-details-page"
+  name: "Verify Resume CTA visibility on content details page for partially watched content"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyResumeCtaOnContentDetailsPage"
+  tags:
+    - continue-watching
+    - details
+    - positive
+  testCases:
+    - "IW3-T1958"
+  dependsOn: []
+
+- id: "verify-continue-watching-resume-playback"
+  name: "Verify Continue Watching content resumes after tapping Resume CTA"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingResumePlayback"
+  tags:
+    - continue-watching
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1959"
   dependsOn: []
 
 - id: "verify-search-icon-visibility"
@@ -569,6 +603,72 @@
     - "IW3-T1895"
   dependsOn:
     - "login-valid-credentials"
+
+- id: "verify-content-details-page-ui"
+  name: "Verify content details page UI"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyContentDetailsPageUi"
+  tags:
+    - discovery
+    - ui
+    - positive
+  testCases:
+    - "IW3-T1896"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-premium-icon-on-details-page"
+  name: "Verify premium icon is displayed on the details page for premium content"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyPremiumIconOnDetailsPage"
+  tags:
+    - discovery
+    - ui
+    - premium
+    - positive
+  testCases:
+    - "IW3-T1899"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-episodes-grouped-by-season"
+  name: "Verify episodes are grouped under their respective seasons"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyEpisodesGroupedBySeason"
+  tags:
+    - discovery
+    - ui
+    - positive
+  testCases:
+    - "IW3-T1914"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-show-episode-list-scrollable-to-end"
+  name: "Verify show episode list can be scrolled to the end"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyShowEpisodeListScrollableToEnd"
+  tags:
+    - discovery
+    - ui
+    - positive
+  testCases:
+    - "IW3-T1915"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-episodes-in-ascending-order"
+  name: "Verify episodes are displayed in ascending order for show content"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyEpisodesDisplayedInAscendingOrder"
+  tags:
+    - discovery
+    - ui
+    - positive
+  testCases:
+    - "IW3-T1916"
+  dependsOn:
+    - "login-to-ott"
    
 - id: "play-episode-from-details"
   name: "Play episode from details page"
@@ -633,6 +733,20 @@
     - positive
   testCases:
     - "IW3-T2033"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "navigate-to-upgrade-plan-from-subscription-blocker"
+  name: "Navigate to plan selection page from subscription blocker"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "navigateToUpgradePlanFromSubscriptionBlocker"
+  tags:
+    - subscription
+    - premium
+    - positive
+  testCases:
+    - "IW3-T1905"
+    - "IW3-T2039"
   dependsOn:
     - "login-to-ott"
 
@@ -1042,6 +1156,18 @@
     - positive
   testCases:
     - "IW3-T1992"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-player-close-returns-to-details"
+  name: "Verify closing the player returns the user to the content details page"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyPlayerCloseReturnsToDetailsFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1909"
   dependsOn:
     - "login-to-ott"
 

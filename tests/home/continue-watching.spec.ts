@@ -1,11 +1,11 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { validateContinueWatchingForNoHistory, verifyContinueWatchingRemovalAfterPlayback, verifyContinueWatchingRemoveItem, verifyContinueWatchingTrayScroll, verifyContinueWatchingTrayUI } from '../../src/businessFunction/ott-auth-bfs';
-import { verifyContinueWatchingAcrossTabs, verifyContinueWatchingDetailsAndMoreNavigation, verifyContinueWatchingTrayPersistence } from '../../src/businessFunction/ott-continue-watching-bfs';
+import { verifyContinueWatchingAcrossTabs, verifyContinueWatchingDetailsAndMoreNavigation, verifyContinueWatchingPlaybackFromTray, verifyContinueWatchingResumePlayback, verifyContinueWatchingTrayPersistence, verifyResumeCtaOnContentDetailsPage } from '../../src/businessFunction/ott-continue-watching-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Continue Watching - No Watch History', () => {
     test('@Medium IW3-T1951: Verify the Continue Watching tray upon logout and login with same account', async ({ page }) => {
-        test.setTimeout(180000);
+        test.setTimeout(60000);
         const data = testCaseData['tc-auth-014-continue-watching-persistence'] || {};
         const email =process.env.VALID_LOGIN_EMAIL;
         const password =process.env.VALID_LOGIN_PASSWORD;
@@ -16,7 +16,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
     
     test('@High IW3-T1931: Verify the Continue Watching tray for logged-in user with no watch history', async ({ page }) => {
-        test.setTimeout(120000);
+        test.setTimeout(60000);
         const data = testCaseData['tc-auth-009-continue-watching-no-history'];
         const email = process.env.UNWATCHED_LOGIN_EMAIL;
         const password = process.env.UNWATCHED_LOGIN_PASSWORD;
@@ -70,6 +70,43 @@ test.describe('Continue Watching - No Watch History', () => {
         expect(result.removedItemTitle).toBeTruthy();
         expect(result.initiallyVisible).toBeTruthy();
         expect(result.finallyVisible).toBeFalsy();
+    });
+
+    test.only('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
+        test.setTimeout(240000);
+        const data = testCaseData['tc-auth-023-continue-watching-playback'] as { mode?: string } | undefined;
+        const email = process.env.VALID_LOGIN_EMAIL;
+        const password = process.env.VALID_LOGIN_PASSWORD;
+
+        const result = await verifyContinueWatchingPlaybackFromTray(page, { email, password, mode: data?.mode });
+        expect(result.isValid).toBeTruthy();
+        expect(result.itemFound).toBeTruthy();
+        expect(result.playerVisible).toBeTruthy();
+        expect(result.progressBarVisible).toBeTruthy();
+    });
+
+    test('@Medium IW3-T1958: Verify that "Resume" CTA is displayed inside the details screen for the partially watched contents', async ({ page }) => {
+        const data = testCaseData['tc-auth-025-continue-watching-resume-cta'] as { mode?: string } | undefined;
+        const email = process.env.VALID_LOGIN_EMAIL;
+        const password = process.env.VALID_LOGIN_PASSWORD;
+
+        const result = await verifyResumeCtaOnContentDetailsPage(page, { email, password, mode: data?.mode });
+        expect(result.isValid).toBeTruthy();
+        expect(result.resumeCtaVisible).toBeTruthy();
+        expect(result.detailsPageVisible).toBeTruthy();
+    });
+
+    test('@Medium IW3-T1959: Verify that content gets resumed on tapping "Resume" CTA', async ({ page }) => {
+        test.setTimeout(60000);
+        const data = testCaseData['tc-auth-026-continue-watching-resume-playback'] as { mode?: string } | undefined;
+        const email = process.env.VALID_LOGIN_EMAIL;
+        const password = process.env.VALID_LOGIN_PASSWORD;
+
+        const result = await verifyContinueWatchingResumePlayback(page, { email, password, mode: data?.mode });
+        expect(result.isValid).toBeTruthy();
+        expect(result.resumeActionVisible).toBeTruthy();
+        expect(result.detailsPageVisible).toBeTruthy();
+        expect(result.playerVisible).toBeTruthy();
     });
 
     test('@Medium IW3-T1945: Verify the content under Continue Watching tray upon watching the content from different tabs', async ({ page }) => {

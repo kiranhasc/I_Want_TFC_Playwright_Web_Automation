@@ -21,7 +21,7 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    channel: 'chrome',     
+    channel: 'chrome',  
     launchOptions: {       
     ignoreDefaultArgs: ['--disable-component-update'],     },
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -112,6 +112,7 @@ export default defineConfig({
         '**/early-access-launch.spec.ts',
         '**/synacor-page-launch.spec.ts',
         '**/vpn-page-launch.spec.ts',
+        '**/details-page.spec.ts',
       ],
     },
 

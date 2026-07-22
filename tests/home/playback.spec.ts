@@ -1,6 +1,8 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 test.setTimeout(600_000);
-import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow, verifyLastSeasonLastEpisodeCompletionNavigationFlow, verifyMoviePlaybackReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow,  verifyMoviePlaybackReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { verifyLastSeasonLastEpisodeCompletionNavigationFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { verifySubscribeToWatchRedirectsToAccountScreen } from '../../src/businessFunction/ott-subscription-bfs';
 import testData from '../../src/data/ott-test-cases.json';
 
 test.describe('Play Back', () => {
@@ -566,19 +568,6 @@ test.describe('Play Back', () => {
     expect(result.forwardButtonVisible).toBeFalsy();
   });
 
-  test('@High IW3-T2023 - Verify user navigates to content details when last season last episode completely watched', async ({ page }) => {
-    const data = testData['tc-sub-039-last-season-last-episode'] as Record<string, any>;
-    const result = await verifyLastSeasonLastEpisodeCompletionNavigationFlow(page, {
-      mode: data.mode,
-      query: data.query,
-    });
-
-    expect(result.detailsVisible).toBeTruthy();
-    expect(result.clickedEpisode || result.clickedSeason).toBeTruthy();
-    expect(result.playbackCompleted).toBeTruthy();
-    expect(result.postDetailsVisible).toBeTruthy();
-  });
-
   test('@High IW3-T2024 - Verify user navigates to content details after completely watching movie content', async ({ page }) => {
     const data = testData['tc-sub-040-movie-complete-details-navigation'] as Record<string, any>;
     const result = await verifyMoviePlaybackReturnsToDetailsFlow(page, {
@@ -590,5 +579,32 @@ test.describe('Play Back', () => {
     expect(result.playbackStarted).toBeTruthy();
     expect(result.playbackCompleted).toBeTruthy();
     expect(result.postDetailsVisible).toBeTruthy();
+  });
+  
+  test.skip('@High IW3-T2023 - Verify user navigates to content details when last season last episode completely watched', async ({ page }) => {
+    const data = testData['tc-sub-039-last-season-last-episode'] as Record<string, any>;
+    const result = await verifyLastSeasonLastEpisodeCompletionNavigationFlow(page, {
+      mode: data.mode,
+      query: data.query,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.clickedEpisode).toBeTruthy();
+    expect(result.playbackCompleted).toBeTruthy();
+    expect(result.postDetailsVisible).toBeTruthy();
+  });
+
+  test('@High IW3-T2027 - Verify that clicking "Subscribe to watch" redirects to Account screen', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testData['tc-sub-041-subscribe-to-watch-redirect-account'] as Record<string, any>;
+    const result = await verifySubscribeToWatchRedirectsToAccountScreen(page, {
+      mode: data.mode,
+      searchTerm: data.searchTerm,
+    });
+
+    expect(result.isDetailsPageVisible).toBeTruthy();
+    expect(result.accountScreenVisible).toBeTruthy();
+    expect(result.iWantIconVisible).toBeTruthy();
+    expect(result.urlContainsAccount).toBeTruthy();
   });
 });

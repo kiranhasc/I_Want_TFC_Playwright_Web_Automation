@@ -203,27 +203,6 @@ export class OTTPlaybackPage {
         return false;
     }
 
-    async clickSubscribeOrSubscribeToWatchButton(): Promise<boolean> {
-        const subscribeTargets = this.page.locator('button, a, [role="button"]').filter({ hasText: /subscribe/i });
-        const targetCount = await subscribeTargets.count().catch(() => 0);
-
-        for (let index = 0; index < Math.min(targetCount, 10); index += 1) {
-            const target = subscribeTargets.nth(index);
-            const targetVisible = await target.isVisible().catch(() => false);
-            if (!targetVisible) {
-                continue;
-            }
-
-            await target.scrollIntoViewIfNeeded();
-            await target.click({ force: true, timeout: 30000 }).catch(() => undefined);
-            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
-            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-            await this.page.waitForTimeout(4000);
-            return true;
-        }
-
-        return false;
-    }
 
     async clickLaterEpisodeFromPremiumContent(): Promise<boolean> {
         const episodeItems = this.page.locator('.episodes-list .episode-info, .episodes-list [data-testid*="episode"], .seasons-container .episode-info, .episodes-list li, [data-testid*="episode-item"]');
@@ -548,5 +527,4 @@ export class OTTPlaybackPage {
         await this.page.mouse.move(endX, endY, { steps: 8 });
         await this.page.mouse.up();
   }
- 
 }

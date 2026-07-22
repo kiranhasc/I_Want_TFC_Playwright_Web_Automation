@@ -1731,7 +1731,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click on the last season of content in the content detailed screen
 13. Click on the last episode in content detailed screen
 14. Drag the seek bar till end of the episode 
-15. Verify the screen is navigated to the content details page after the completion of the episode.
+15. Verify the screen is navigated to the content details page after dragging the seek bar till end of the episode.
 
 #### 2.44 IW3-T2024 Verify user Navigates to content details screen post completely watching movie content.
 
@@ -1754,6 +1754,28 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click the play button
 13. Drag the seek bar till end of movie episode 
 15. Verify the screen is navigated to the content details page after the complete play of movie.  
+
+#### 2.45 IW3-T2027 Verify that clicking "Subscribe to watch" redirects to "Account" screen.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "sanitycheck@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Everything About Her" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click on the subscribe to watch button in the content page 
+12. Click on the subscribe to watch in the player screen 
+13. Verify that post clicking the subscribe to watch button in the player screen should navigate the account page 
+14. Verify account page is displayed with iwant icon and "Account" name  
 
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"

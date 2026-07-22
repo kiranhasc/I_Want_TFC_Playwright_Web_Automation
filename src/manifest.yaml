@@ -303,6 +303,20 @@
     - positive
   testCases:
     - "IW3-T2023"
+  dataKey: "tc-sub-039-last-season-last-episode"
+  dependsOn: []
+
+- id: "verify-subscribe-to-watch-redirect-account"
+  name: "Verify Subscribe to Watch redirect navigates to Account screen"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifySubscribeToWatchRedirectsToAccountScreen"
+  tags:
+    - subscription
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2027"
+  dataKey: "tc-sub-041-subscribe-to-watch-redirect-account"
   dependsOn: []
 
 - id: "verify-movie-playback-completion-details-navigation"

@@ -62,7 +62,7 @@ export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
 
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
+  await detailsPage.waitForPlayback(5);
   const homeTabVisible = await authPage.isHomeTabVisible();
   const continueWatchingRailVisible = await authPage.isContinueWatchingRailVisible();
   logger.assertion('Continue Watching rail visible on Home tab', continueWatchingRailVisible);
@@ -94,11 +94,12 @@ export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
   logger.assertion('Sign Out option visible from account menu', signOutOptionVisible);
 
   await authPage.clickSearchBar();
+  await detailsPage.waitForPlayback(2);
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const searchResultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', searchResultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   const genreVisible = await endToEndPage.isGenreVisible();

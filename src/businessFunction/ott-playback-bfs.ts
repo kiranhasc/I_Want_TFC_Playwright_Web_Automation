@@ -38,7 +38,8 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -80,7 +81,8 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -124,7 +126,7 @@ export async function openContentAndPlay(page: any, input?: OpenContentAndPlayIn
 
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
@@ -393,6 +395,88 @@ export interface VerifyLastSeasonLastEpisodeCompletionOutput {
   postDetailsVisible: boolean;
 }
 
+export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(
+  page: any,
+  input?: OpenContentAndPlayInput
+): Promise<VerifyLastSeasonLastEpisodeCompletionOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const mode = input?.mode;
+
+  logger.step('Starting last-season last-episode completion -> details navigation flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion('Search results visible for query', resultsVisible);
+  await detailsPage.waitForPlayback(2);
+  
+  await detailsPage.clickFirstSearchResult();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Content details page visible', detailsVisible);
+
+  const clickedSeason = await detailsPage.clickLastSeasonIfAvailable().catch(() => false);
+  if (clickedSeason) {
+    await detailsPage.scrollEpisodeListToEnd();
+  } else {
+    await detailsPage.scrollEpisodeListToEnd().catch(() => undefined);
+  }
+
+  let clickedEpisode = false;
+  try {
+    const episodeLabels = await detailsPage.getEpisodeLabelsForCurrentSeason();
+    if (episodeLabels && episodeLabels.length) {
+      const lastLabel = episodeLabels[episodeLabels.length - 1];
+      const locator = page.getByText(lastLabel).first();
+      if ((await locator.count().catch(() => 0)) > 0) {
+        await locator.click({ timeout: 20000 }).catch(() => undefined);
+        clickedEpisode = true;
+      }
+    }
+  } catch (err) {
+    logger.debug('Clicking last episode label failed', err);
+  }
+
+  let clickedEpisodeMetadata = { title: '', seasonText: '', episodeText: '' };
+  if (!clickedEpisode) {
+    try {
+      clickedEpisodeMetadata = await detailsPage.clickRandomEpisodeCard();
+      clickedEpisode = !!(clickedEpisodeMetadata && (clickedEpisodeMetadata.title || clickedEpisodeMetadata.episodeText));
+    } catch {
+      clickedEpisode = false;
+    }
+  }
+
+  try {
+    await detailsPage.clickPlayButton();
+  } catch {}
+
+  await detailsPage.dragSeekBarToPosition(1.0).catch(() => undefined);
+  const playbackCompleted = await authPage.finishPlaybackFromCurrentItem().catch(() => false);
+  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+
+  logger.assertion('User logged in successfully', isLoggedIn);
+  logger.assertion('Content details page visible', detailsVisible);
+  logger.assertion('Clicked last season when available', clickedSeason);
+  logger.assertion('Clicked last episode', clickedEpisode);
+  logger.assertion('Playback completed for last episode', playbackCompleted);
+  logger.assertion('Content details visible after playback completion', postDetailsVisible);
+
+  return {
+    isLoggedIn,
+    detailsVisible,
+    clickedSeason: !!clickedSeason,
+    clickedEpisode,
+    playbackCompleted,
+    postDetailsVisible,
+  };
+}
+
 export interface VerifyMoviePlaybackDetailsAfterCompletionOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -417,7 +501,8 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
@@ -443,78 +528,6 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   };
 }
 
-/**
- * Flow: search -> open details -> click last season (if exists) -> click last episode -> play/finish -> verify details visible after completion
- */
-export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyLastSeasonLastEpisodeCompletionOutput> {
-  const authPage = new OTTAuthPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  const query = (input?.query ?? '').trim();
-  const mode = input?.mode;
-
-  logger.step('Starting last season/last episode completion navigation flow');
-
-  const loginResult = await loginToOTT(page, { mode });
-  const isLoggedIn = loginResult.isLoggedIn;
-
-  // search and open details
-  await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(query);
-  await authPage.submitSearchQuery();
-  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
-  logger.assertion('Search results visible for query', resultsVisible);
-
-  await detailsPage.clickFirstSearchResult();
-  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
-  logger.assertion('Content details page visible', detailsVisible);
-
-  // Click last season and last episode using POM methods
-  let clickedSeason = false;
-  try {
-    clickedSeason = await detailsPage.clickLastSeasonIfAvailable().catch(() => false);
-  } catch (err) {
-    logger.debug('click last season failed', err);
-    clickedSeason = false;
-  }
-
-  let clickedEpisode = false;
-  try {
-    clickedEpisode = await detailsPage.clickLastEpisodeFromEpisodesList().catch(() => false);
-  } catch (err) {
-    logger.debug('click last episode failed', err);
-    clickedEpisode = false;
-  }
-
-  // If Play/Resume is visible, click to start playback
-  try {
-    const action = page.getByText(/Resume|Play/i).first();
-    if (await action.isVisible().catch(() => false)) {
-      await action.click({ timeout: 30000 }).catch(() => undefined);
-    }
-  } catch (err) {
-    logger.debug('click play/resume failed', err);
-  }
-
-  // Finish playback by moving player near end
-  const authPageForFinish = new OTTAuthPage(page);
-  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem().catch(() => false);
-
-  // After completion, verify details page is visible (expected navigation back to details)
-  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
-
-  logger.assertion('Playback completed', playbackCompleted);
-  logger.assertion('Details page visible after playback completion', postDetailsVisible);
-
-  return {
-    isLoggedIn,
-    detailsVisible,
-    clickedSeason,
-    clickedEpisode,
-    playbackCompleted,
-    postDetailsVisible,
-  };
-}
-
 export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlaybackResumeOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
@@ -531,7 +544,7 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -579,7 +592,7 @@ export async function verifySmoothPlaybackFlow(page: any, input?: OpenContentAnd
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -624,7 +637,7 @@ export async function verifySeekBarDragFlow(page: any, input?: OpenContentAndPla
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -665,7 +678,8 @@ export async function verifyBrowserSeekBarFlow(page: any, input?: OpenContentAnd
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -713,7 +727,8 @@ export async function verifyPlayerControlsFlow(page: any, input?: OpenContentAnd
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -770,7 +785,7 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -783,7 +798,7 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
   const controlsInitiallyVisible = await detailsPage.isPauseButtonVisible();
   logger.assertion('Player controls visible after tapping playback screen', controlsInitiallyVisible);
 
-  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitForPlayback(7);
   const controlsStillVisible = await detailsPage.isPauseButtonVisible();
   const controlsAutoDismissed = controlsInitiallyVisible && !controlsStillVisible;
 
@@ -820,6 +835,7 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
+  await detailsPage.waitForPlayback(2);
 
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
@@ -835,7 +851,7 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   logger.assertion('Player controls are not visible after 5 seconds of inactivity', controlsInitiallyNotVisible);
 
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.waitForPlayback(1);
+  await detailsPage.waitForPlayback(2);
   const controlsVisibleOnHover = await detailsPage.isPauseButtonVisible();
 
   logger.assertion('Player controls become visible again on hover', controlsVisibleOnHover);
@@ -872,7 +888,8 @@ export async function verifyVolumeControlFlow(page: any, input?: OpenContentAndP
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -919,7 +936,8 @@ export async function verifyFullscreenButtonVisibilityFlow(page: any, input?: Op
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -954,7 +972,8 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -964,27 +983,16 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickFullscreenButton();
   await detailsPage.hoverPlaybackScreen();
-
-
-
   const backButtonVisible = await detailsPage.isBackButtonVisible();
   const contentTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer(input?.expectedTitle);
-  console.log('Content title visible in fullscreen mode:', contentTitleVisible);
   const seekBarVisible = await detailsPage.isSeekBarVisible();
-  console.log('Seek bar visible in fullscreen mode:', seekBarVisible);
   const pausePlayVisible = await detailsPage.isPauseButtonVisible();
-  console.log('Pause/play control visible in fullscreen mode:', pausePlayVisible);
   const rewindVisible = await detailsPage.isRewindButtonVisible();
-  console.log('Rewind button visible in fullscreen mode:', rewindVisible);
   const forwardVisible = await detailsPage.isForwardButtonVisible();
-  console.log('Forward button visible in fullscreen mode:', forwardVisible);
   const forwardRewindVisible = rewindVisible && forwardVisible;
   const subtitleVisible = await detailsPage.isSubtitleButtonVisible();
-  console.log('Subtitle control visible in fullscreen mode:', subtitleVisible);
   await detailsPage.waitForPlayback(2);
   const nextEpisodeVisible = await detailsPage.isNextEpisodeButtonVisible();
-  console.log('Next episode control visible in fullscreen mode:', nextEpisodeVisible);
-
   logger.assertion('Back button visible in fullscreen mode', backButtonVisible);
   logger.assertion('Content title visible in fullscreen mode', contentTitleVisible);
   logger.assertion('Seek bar visible in fullscreen mode', seekBarVisible);
@@ -1023,7 +1031,8 @@ export async function verifyNextEpisodeCtaVisibilityFlow(page: any, input?: Open
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1065,6 +1074,7 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
+  await detailsPage.waitForPlayback(2);
 
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
@@ -1074,11 +1084,9 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.98);
-  console.log('Dragged seek bar to 98% position');
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickResumeButton();
   const upNextMarkerVisible = await detailsPage.waitForUpNextMarker(15000);
-  console.log('Up Next binge marker visibility:', upNextMarkerVisible);
 
   logger.assertion('Up Next binge marker visible at the end of playback', upNextMarkerVisible);
 
@@ -1105,7 +1113,8 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1153,7 +1162,8 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1163,7 +1173,6 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForPlayback(2);
-  // await detailsPage.clickResumeButton();
 
   const markerVisible = await detailsPage.waitForUpNextMarker(15000);
   logger.assertion('Up Next marker is visible', markerVisible);
@@ -1200,7 +1209,8 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1305,7 +1315,8 @@ export async function verifyPlaybackTimestampFormatFlow(page: any, input?: OpenC
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1348,7 +1359,8 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1389,7 +1401,8 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1430,7 +1443,8 @@ export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarP
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1466,7 +1480,8 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1513,7 +1528,8 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1567,44 +1583,38 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
 
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(2);
-  // await detailsPage.tapPlaybackScreen();
 
   await detailsPage.clickSubtitleButton();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSubtitleButton();
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
-  console.log('Subtitle selection successful:', subtitleSelectionSuccessful);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.1);
-  // await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterSelection = await detailsPage.isSubtitleDisplayedOnPlayer();
-  console.log('Subtitle visible after selection:', subtitleVisibleAfterSelection);
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickForwardButton();
   await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterForward = await detailsPage.isSubtitleDisplayedOnPlayer();
-  console.log('Subtitle visible after forwarding:', subtitleVisibleAfterForward);
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickRewindButton();
   await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterRewind = await detailsPage.isSubtitleDisplayedOnPlayer();
-  console.log('Subtitle visible after rewinding:', subtitleVisibleAfterRewind);
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.6);
   await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterSeek = await detailsPage.isSubtitleDisplayedOnPlayer();
-  console.log('Subtitle visible after drag seeking:', subtitleVisibleAfterSeek);
 
   logger.assertion('Subtitle language selected successfully', subtitleSelectionSuccessful);
   logger.assertion('Subtitle remains visible after seeking forward', subtitleVisibleAfterForward);
@@ -1696,7 +1706,8 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
@@ -1730,7 +1741,8 @@ export async function verifySubtitleDefaultOffFlow(page: any, input?: OpenConten
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -1784,9 +1796,7 @@ export async function verifyPauseAdPlaybackFlow(page: any, input?: OpenContentAn
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickResumeButton();
-  console.log('Clicked resume button after pausing playback');
   const pauseAdVisible = await detailsPage.isPauseAdVisible();
-  console.log('Pause ad visible:', pauseAdVisible);
 
   logger.assertion('Player screen visible for pause ad flow', playerVisible);
   logger.assertion('Ad visible before main content starts', adVisible);
@@ -1818,7 +1828,8 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
@@ -1855,7 +1866,8 @@ export async function verifyAdLabelVisibilityFlow(page: any, input?: OpenContent
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
@@ -1914,7 +1926,8 @@ export async function verifyAdSeekBarHiddenDuringAdFlow(page: any, input?: OpenC
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(10);
@@ -1952,7 +1965,8 @@ export async function verifyAdDurationFlow(page: any, input?: OpenContentAndPlay
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
@@ -1991,7 +2005,8 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(20);
@@ -2032,7 +2047,8 @@ export async function verifyTapToPausePlaybackFlow(page: any, input?: VerifyTapT
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -2087,7 +2103,8 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(30);
@@ -2097,18 +2114,15 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
 
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Playback time:', pausedPlaybackTime);
 
   await detailsPage.clickForwardButton();
   await detailsPage.waitForPlayback(2);
   const forwardPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Forward playback time:', forwardPlaybackTime);
   const forwardChanged = pausedPlaybackTime !== forwardPlaybackTime;
 
   await detailsPage.clickRewindButton();
   await detailsPage.waitForPlayback(2);
   const rewindPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Rewind playback time:', rewindPlaybackTime);
   const rewindChanged = forwardPlaybackTime !== rewindPlaybackTime;
 
   logger.assertion('Player screen visible for pause seek buttons flow', playerVisible);
@@ -2142,7 +2156,8 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await detailsPage.waitForPlayback(2);
+  
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(30);
@@ -2150,20 +2165,17 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
 
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Playback time:', pausedPlaybackTime);
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickForwardButton();
   await detailsPage.waitForPlayback(1);
   const forwardPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Forward playback time:', forwardPlaybackTime);
   const forwardChanged = pausedPlaybackTime !== forwardPlaybackTime;
 
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickRewindButton();
   await detailsPage.waitForPlayback(1);
   const rewindPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Rewind playback time:', rewindPlaybackTime);
   const rewindChanged = forwardPlaybackTime !== rewindPlaybackTime;
 
   logger.assertion('Player screen visible for pause seek buttons flow', playerVisible);

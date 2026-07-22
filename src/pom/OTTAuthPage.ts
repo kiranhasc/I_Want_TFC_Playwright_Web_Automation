@@ -102,6 +102,8 @@ export class OTTAuthPage {
     private readonly searchSuggestionsContainer: PageElement;
     private readonly noResultsMessage: PageElement;
     private readonly searchResultImages: PageElement;
+    private readonly searchButton: PageElement;
+
 
 
     constructor(page: Page) {
@@ -202,6 +204,7 @@ export class OTTAuthPage {
         this.searchSuggestionsContainer = { selector: '[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"]' };
         this.noResultsMessage = { selector: 'text=/no\\s+results/i' };
         this.searchResultImages = { selector: 'img[alt]' };
+        this.searchButton = { selector: "img[alt='search-icon']" };
     }
 
     async navigate(): Promise<void> {
@@ -996,7 +999,8 @@ export class OTTAuthPage {
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
         try {
-            const searchBtn = this.page.getByRole('button', { name: /search/i }).first();
+            const searchBtn = this.page.locator(this.searchButton.selector).first();
+
             if (await searchBtn.count()) {
                 await searchBtn.waitFor({ state: 'visible', timeout: 5000 });
                 await searchBtn.click();

@@ -14,6 +14,14 @@ export interface VerifySubscribeToWatchOutput {
   isSubscribeToWatchCtaVisible: boolean;
 }
 
+export interface VerifySubscribeToWatchRedirectToAccountOutput {
+  isDetailsPageVisible: boolean;
+  playerSubscribeCtaClicked: boolean;
+  accountScreenVisible: boolean;
+  iWantIconVisible: boolean;
+  urlContainsAccount: boolean;
+}
+
 export interface UpgradePlanNavigationInput {
   mode?: string;
 }
@@ -147,6 +155,87 @@ export async function verifySubscribeToWatchCTA(
   return {
     isDetailsPageVisible,
     isSubscribeToWatchCtaVisible,
+  };
+}
+
+export async function verifySubscribeToWatchRedirectsToAccountScreen(
+  page: any,
+  input?: VerifySubscribeToWatchInput
+): Promise<VerifySubscribeToWatchRedirectToAccountOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting subscribe-to-watch redirect to account screen verification flow');
+
+  const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'freeUser' });
+  const isLoggedIn = loginResult.isLoggedIn;
+
+  await authPage.acceptCookieSettingsIfVisible();
+
+  if (input?.searchTerm) {
+    await authPage.clickSearchBar();
+    await authPage.enterSearchText(input.searchTerm);
+    await authPage.submitSearch();
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+    await detailsPage.waitForPlayback(2);
+
+    await detailsPage.clickFirstSearchResult();
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  }
+
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+  let subscribeCtaClicked = false;
+  let playerSubscribeCtaClicked = false;
+  logger.assertion('Details page visible after opening search result', isDetailsPageVisible);
+
+
+  // if (isDetailsPageVisible) {
+  //   await detailsPage.clickSubscribeCTA();
+  //   subscribeCtaClicked = true;
+  //   await page.waitForTimeout(3000);
+
+  //   if (await detailsPage.isSubscribeToWatchCtaVisible().catch(() => false)) {
+  //     await detailsPage.clickSubscribeToWatchCta();
+  //     playerSubscribeCtaClicked = true;
+  //     await page.waitForTimeout(3000);
+  //   }
+
+  //   await detailsPage.clickSubscribeToWatchCtaBlocker().catch(() => undefined);
+  // }
+
+  // await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  // await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  // await page.waitForTimeout(2000);
+
+
+  await detailsPage.clickSubscribeToWatchCta();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await detailsPage.clickSubscribeToWatchCtaBlocker();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+
+
+  // const accountHeading = page.getByRole('heading', { name: /Account/i }).first();
+  // await accountHeading.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  // const accountScreenVisible = await accountHeading.isVisible().catch(() => false);
+  // const iWantIconVisible = await detailsPage.isIWantElementVisible().catch(() => false);
+  // const urlContainsAccount = /account|profile|subscription/i.test(page.url());
+
+  const redirectVerification = await detailsPage.getAccountRedirectVerification();
+  const accountScreenVisible = redirectVerification.accountScreenVisible;
+  const iWantIconVisible = redirectVerification.iWantIconVisible;
+  const urlContainsAccount = redirectVerification.urlContainsAccount;
+
+  logger.assertion('Account screen visible after subscribe CTA redirect', accountScreenVisible);
+  logger.assertion('iWant icon visible on redirected account screen', iWantIconVisible);
+  logger.assertion('Page URL contains account or profile keywords', urlContainsAccount);
+
+  return {
+    isDetailsPageVisible,
+    playerSubscribeCtaClicked,
+    accountScreenVisible,
+    iWantIconVisible,
+    urlContainsAccount,
   };
 }
 

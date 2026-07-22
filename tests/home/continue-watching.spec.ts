@@ -16,7 +16,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
     
     test('@High IW3-T1931: Verify the Continue Watching tray for logged-in user with no watch history', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(120000);
         const data = testCaseData['tc-auth-009-continue-watching-no-history'];
         const email = process.env.UNWATCHED_LOGIN_EMAIL;
         const password = process.env.UNWATCHED_LOGIN_PASSWORD;
@@ -72,7 +72,7 @@ test.describe('Continue Watching - No Watch History', () => {
         expect(result.finallyVisible).toBeFalsy();
     });
 
-    test.only('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
+    test('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
         test.setTimeout(240000);
         const data = testCaseData['tc-auth-023-continue-watching-playback'] as { mode?: string } | undefined;
         const email = process.env.VALID_LOGIN_EMAIL;

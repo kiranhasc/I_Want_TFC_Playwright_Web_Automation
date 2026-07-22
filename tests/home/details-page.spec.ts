@@ -10,7 +10,7 @@ import {
   verifyPremiumIconOnDetailsPage,
 } from '../../src/businessFunction/ott-details-bfs';
 import { manageWatchlistItemOnDetailsPage } from '../../src/businessFunction/ott-watchlist-bfs';
-import { verifyPlayerCloseReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { verifyPlaybackResumeFlow, verifyPlayerCloseReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifySubscriptionInstructionPopupOnGmaContent, verifySubscribeCtaOnGmaDetailsPage, navigateToUpgradePlanFromSubscriptionBlocker } from '../../src/businessFunction/ott-subscription-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
@@ -199,4 +199,20 @@ test.describe('Content details navigation', () => {
     expect(result.playerSeasonVisible).toBe(true);
     expect(result.playerEpisodeVisible).toBe(true);
   });
+
+  test('@High IW3-T1907 - IW3-T1975 - playback starts post tapping Play/Resume CTA', async ({ page }) => {
+    const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
+    const result = await verifyPlaybackResumeFlow(page, {
+      query: data.query,
+      mode:data.mode,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.initialPlayed).toBeTruthy();
+    expect(result.resumed).toBeTruthy();
+    expect(result.seekBarVisible).toBeTruthy();
+  });
+
 });

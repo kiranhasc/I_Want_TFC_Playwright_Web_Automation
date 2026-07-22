@@ -189,7 +189,7 @@ export class OTTDetailsPage {
     this.continueWatchingTray = { selector: 'text=Continue Watching, [data-testid*="continue-watching"], .continue-watching, .cw-tray' };
     this.continueWatchingThumbnail = { selector: '[data-testid="continue-watching-item"], .continue-watching-item, .cw-item, .continue-watching__item, .continue-watching-thumbnail' };
     this.continueWatchingRemoveButton = { selector: 'button[aria-label*="Remove"], button:has-text("Remove"), button:has-text("X"), [data-testid*="remove"], .remove-continue-watching' };
-    this.showDetailsHeading = { selector: 'main h1'};
+    this.showDetailsHeading = { selector: 'h1'};
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]'};
     this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
     this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
@@ -218,7 +218,7 @@ export class OTTDetailsPage {
     this.loginCta = { selector: '#login div' };
     this.skipIntroMarker = { selector: 'button:has-text("Skip Intro"), [data-testid*="skip-intro"], [aria-label*="Skip Intro"]' };
     this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"]' };
-    this.firstSearchResult = { selector: 'main img, main a img, main section img, main article img, main figure img, section[role="list"] img, div[role="list"] img, .search-results img, .results-list img, section[role="list"] .thumbnail, div[role="list"] .thumbnail, .search-results .thumbnail, .results-list .thumbnail' };
+    this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '[data-testid="player"], .player-screen, video' };
     this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
@@ -1306,6 +1306,30 @@ async removeFromWatchlist(): Promise<void> {
     } catch (error) {
       logger.debug('Subscribe to watch CTA click failed', error);
     }
+  }
+
+   async isAccountHeadingVisible(timeout: number = 15000): Promise<boolean> {
+    try {
+      const accountHeading = this.page.getByRole('heading', { name: /Account|Profile|Subscription/i }).first();
+      await accountHeading.waitFor({ state: 'visible', timeout }).catch(() => undefined);
+      return await accountHeading.isVisible().catch(() => false);
+    } catch (error) {
+      logger.debug('Account heading visibility check failed', error);
+      return false;
+    }
+  }
+
+
+  async getAccountRedirectVerification(): Promise<{ accountScreenVisible: boolean; iWantIconVisible: boolean; urlContainsAccount: boolean }> {
+    const accountScreenVisible = await this.isAccountHeadingVisible();
+    const iWantIconVisible = await this.isIWantElementVisible().catch(() => false);
+    const urlContainsAccount = /account|profile|subscription/i.test(this.page.url());
+
+    return {
+      accountScreenVisible,
+      iWantIconVisible,
+      urlContainsAccount,
+    };
   }
 
   async isUpgradePlanButtonVisible(): Promise<boolean> {

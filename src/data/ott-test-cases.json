@@ -623,12 +623,18 @@
     ,
     "tc-sub-039-last-season-last-episode": {
         "mode": "valid",
-        "query": "A family affair",
-        "expectedTitle": "A Family Affair"
+        "query": "Can't buy me love",
+        "expectedTitle": "Can't Buy Me Love",
+        "expectedEpisode": "Can't buy me love"
     },
     "tc-sub-040-movie-complete-details-navigation": {
         "mode": "valid",
         "query": "Sukob",
         "expectedTitle": "Sukob"
+    },
+    "tc-sub-041-subscribe-to-watch-redirect-account": {
+        "mode": "freeUser",
+        "searchTerm": "Everything About Her",
+        "expectedAccountHeading": "Account"
     }
 }

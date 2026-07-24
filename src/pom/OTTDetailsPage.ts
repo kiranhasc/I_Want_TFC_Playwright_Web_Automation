@@ -3,6 +3,7 @@ import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { config } from '../utils/config-manager';
 import { logger } from '../utils/logger';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 import { TIMEOUT } from 'node:dns';
 
 export class OTTDetailsPage {
@@ -95,6 +96,8 @@ export class OTTDetailsPage {
   private readonly titleImageWithAlt: PageElement;
   private readonly contentMetadataDiv: PageElement;
   private readonly contentDescDiv: PageElement;
+  private readonly contentDetailsGenres: PageElement;
+  private readonly contentDetailsCast: PageElement;
   private readonly contentCardContainer: PageElement;
   private readonly freeContentBadge: PageElement;
   private readonly contentCardAncestor: PageElement;
@@ -246,6 +249,8 @@ export class OTTDetailsPage {
     this.titleImageWithAlt = { selector: '//img[contains(@class,"title") and @alt]' };
     this.contentMetadataDiv = { selector: 'div.metadata, [class*="metadata"]' };
     this.contentDescDiv = { selector: 'div.desc, [class*="desc"]' };
+    this.contentDetailsGenres = { selector: 'div[class*="genre"], span[class*="genre"], [data-testid*="genre"], [class*="genres"], .genres, .genre' };
+    this.contentDetailsCast = { selector: 'div[class*="cast"], span[class*="cast"], [data-testid*="cast"], [class*="actors"], .cast, .actors' };
     this.contentCardContainer = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
     this.freeContentBadge = { selector: "//img[@alt='free' and contains(@src,'free.png')]" };
     this.contentCardAncestor = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
@@ -1514,6 +1519,191 @@ async addToWatchlistAndGetToast(): Promise<string> {
     }
   }
 
+  private async getFirstSearchResultAsset(searchQuery?: string): Promise<any | null> {
+    try {
+      // Wait for a visible first-result element to appear (UI) before reading GraphQL
+      await this.page.locator(this.firstSearchResult.selector).first().waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
+
+      const gql = new GraphQLHelper(this.page);
+      const operation = await gql.waitForOperation('Search', 15000).catch((err) => {
+        logger.debug('Search GraphQL operation did not appear', err);
+        return null;
+      });
+      const resp = operation?.response;
+      if (!resp) {
+        logger.error('Search GraphQL response not received within timeout.');
+        return null;
+      }
+
+      // If a searchQuery is provided, use the SearchParser to get title matches
+      if (searchQuery && typeof searchQuery === 'string' && searchQuery.trim().length > 0) {
+        try {
+          const { SearchParser } = await import('../utils/graphql/parsers/search-parser').catch(() => ({ SearchParser: null }));
+          // If parser module could not be imported, fall back to generic walk
+          if (SearchParser) {
+            const parser = new SearchParser(resp);
+            const titleMatches = parser.getTitleMatches(searchQuery);
+            if (titleMatches && titleMatches.length > 0) {
+              const wantedTitle = titleMatches[0];
+              // Traverse response to find the asset object that has this exact title
+              let foundAsset: any = null;
+              const seen = new WeakSet();
+              const walkerFind = (obj: any) => {
+                if (!obj || typeof obj !== 'object' || seen.has(obj) || foundAsset) return;
+                seen.add(obj);
+                if (typeof obj.title === 'string' && String(obj.title).trim() === wantedTitle) {
+                  foundAsset = obj;
+                  return;
+                }
+                if (Array.isArray(obj)) {
+                  for (const it of obj) {
+                    if (foundAsset) break;
+                    walkerFind(it);
+                  }
+                  return;
+                }
+                for (const k of Object.keys(obj)) {
+                  if (foundAsset) break;
+                  try { walkerFind(obj[k]); } catch { }
+                }
+              };
+              walkerFind(resp);
+              if (foundAsset) return foundAsset;
+            }
+          }
+        } catch (err) {
+          logger.debug('SearchParser usage failed, falling back to generic walker', err);
+        }
+      }
+
+      // Fallback: generic walker that returns the first asset-like object with monetization/pricing
+      let firstAsset: any = null;
+      const seen = new WeakSet();
+      const walker = (obj: any) => {
+        if (!obj || typeof obj !== 'object' || seen.has(obj) || firstAsset) return;
+        seen.add(obj);
+        const hasTitle = typeof obj.title === 'string' && obj.title.trim().length > 0;
+        const hasMonet = obj.monetization || obj.pricing || obj.monetizationType || obj.pricing?.pricingType;
+        if (hasTitle && hasMonet) {
+          firstAsset = obj;
+          return;
+        }
+        if (Array.isArray(obj)) {
+          for (const it of obj) {
+            if (firstAsset) break;
+            walker(it);
+          }
+          return;
+        }
+        for (const k of Object.keys(obj)) {
+          if (firstAsset) break;
+          try { walker(obj[k]); } catch { }
+        }
+      };
+
+      walker(resp);
+      return firstAsset;
+    } catch (err) {
+      logger.debug('getFirstSearchResultAsset failed', err);
+      return null;
+    }
+  }
+
+  async isContentTaggedFreeInSearchResults(contentTitle: string): Promise<boolean> {
+    try {
+      const firstAsset = await this.getFirstSearchResultAsset(contentTitle);
+      if (!firstAsset) return false;
+      const firstTitle = String(firstAsset.title || '').trim();
+      const monetType = firstAsset.monetization?.type
+        ?? firstAsset.monetizationType
+        ?? firstAsset.pricing?.type
+        ?? firstAsset.pricing?.pricingType
+        ?? '';
+      logger.debug(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType='${monetType}'`);
+      console.log(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
+      const isFree = /complimentary|free|free_to_watch|freetowatch/i.test(String(monetType));
+      return isFree;
+    } catch (err) {
+      logger.debug('isContentTaggedFreeInSearchResults (GraphQL) failed', err);
+      return false;
+    }
+  }
+
+  async isContentTaggedPremiumInSearchResults(contentTitle: string): Promise<boolean> {
+    try {
+      const firstAsset = await this.getFirstSearchResultAsset(contentTitle);
+      if (!firstAsset) return false;
+      const firstTitle = String(firstAsset.title || '').trim();
+      const monetType = firstAsset.monetization?.type
+        ?? firstAsset.monetizationType
+        ?? firstAsset.pricing?.type
+        ?? firstAsset.pricing?.pricingType
+        ?? '';
+      logger.debug(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType='${monetType}'`);
+      console.log(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
+      const isPremium = /premium|paid|subscription|paywall|purchase/i.test(String(monetType));
+      return isPremium;
+    } catch (err) {
+      logger.debug('isContentTaggedPremiumInSearchResults (GraphQL) failed', err);
+      return false;
+    }
+  }
+
+  async isSearchResultTaggedWithLabel(labelText: string, contentTitle: string): Promise<boolean> {
+    try {
+      const normalizedLabel = String(labelText ?? '').trim().toLowerCase();
+      console.log('Checking if search result is tagged with label:', normalizedLabel);
+      if (!normalizedLabel) return false;
+
+      const firstThumbnailCard = this.page.locator(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`).first();
+      console.log(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
+      await firstThumbnailCard.waitFor({ state: 'visible', timeout: 20000 });
+
+      console.log('Checking if first thumbnail card is visible :', await firstThumbnailCard.isVisible());
+      
+      // const labelFound = await firstThumbnailCard.evaluate((card, expectedLabel) => {
+      //   if (!card || !expectedLabel) return false;
+      //   const labelImages = Array.from(card.querySelectorAll('.thumbnail-label img[alt]')) as HTMLImageElement[];
+      //   return labelImages.some(img => (img.alt || '').trim().toLowerCase() === expectedLabel);
+      // }, normalizedLabel);
+
+      const altText = await firstThumbnailCard.getAttribute('alt');
+      const formattedValue = altText
+        ?.replace(/[^a-zA-Z0-9]+/g, ' ') // Replace special characters with spaces
+        .replace(/\s+/g, ' ')            // Replace multiple spaces with a single space
+        .trim();
+      console.log(formattedValue);
+      const labelFound = formattedValue?.toLowerCase() === normalizedLabel;
+      return Boolean(labelFound);
+    } catch (err) {
+      logger.debug('isSearchResultTaggedWithLabel (DOM) failed', err);
+      return false;
+    }
+  }
+
+  async getFirstSearchResultMonetizationType(): Promise<string> {
+    try {
+      const firstAsset = await this.getFirstSearchResultAsset();
+      if (!firstAsset) {
+        logger.debug('No Search GraphQL response available to determine monetization type');
+        return '';
+      }
+      const monetType = firstAsset.monetization?.type
+        ?? firstAsset.monetizationType
+        ?? firstAsset.pricing?.type
+        ?? firstAsset.pricing?.pricingType
+        ?? firstAsset.monetization?.monetizationType
+        ?? '';
+      logger.debug(`First search result monetization type: ${monetType}`);
+      console.log(`[SEARCH DEBUG] First search result monetization type: "${monetType}"`);
+      return String(monetType ?? '');
+    } catch (err) {
+      logger.debug('getFirstSearchResultMonetizationType failed', err);
+      return '';
+    }
+  }
+
   async removeFromWatchlistAndGetToast(): Promise<string> {
     logger.elementInteraction('click', 'Remove from Watchlist');
     try {
@@ -2584,6 +2774,70 @@ async addToWatchlistAndGetToast(): Promise<string> {
     } catch (error) {
       logger.debug('Error getting content metadata text', error);
       return '';
+    }
+  }
+
+  async getDetailsPageText(): Promise<string> {
+    try {
+      const mainElement = this.page.locator('main');
+      await mainElement.waitFor({ state: 'visible', timeout: 10000 });
+      const text = await mainElement.textContent() || '';
+      return text.replace(/\s+/g, ' ').trim();
+    } catch (error) {
+      logger.debug('Error getting details page text', error);
+      return '';
+    }
+  }
+
+  async getDetailsPageShortDescription(): Promise<string> {
+    try {
+      const descLocator = this.page.locator(this.contentDescDiv.selector).first();
+      await descLocator.waitFor({ state: 'visible', timeout: 10000 });
+      const text = await descLocator.textContent() || '';
+      return text.replace(/\s+/g, ' ').trim();
+    } catch (error) {
+      logger.debug('Error getting details page short description', error);
+      return '';
+    }
+  }
+
+  async getDetailsPageGenres(): Promise<string[]> {
+    try {
+      const genreLocator = this.page.locator(this.contentDetailsGenres.selector);
+      await genreLocator.first().waitFor({ state: 'visible', timeout: 10000 });
+      const genres = [] as string[];
+      const count = await genreLocator.count();
+      for (let i = 0; i < count; i++) {
+        const text = await genreLocator.nth(i).textContent().catch(() => '');
+        if (text) {
+          const normalized = text.replace(/\s+/g, ' ').trim();
+          if (normalized) genres.push(normalized);
+        }
+      }
+      return genres;
+    } catch (error) {
+      logger.debug('Error getting details page genres', error);
+      return [];
+    }
+  }
+
+  async getDetailsPageCast(): Promise<string[]> {
+    try {
+      const castLocator = this.page.locator(this.contentDetailsCast.selector);
+      await castLocator.first().waitFor({ state: 'visible', timeout: 10000 });
+      const castNames = [] as string[];
+      const count = await castLocator.count();
+      for (let i = 0; i < count; i++) {
+        const text = await castLocator.nth(i).textContent().catch(() => '');
+        if (text) {
+          const normalized = text.replace(/\s+/g, ' ').trim();
+          if (normalized) castNames.push(normalized);
+        }
+      }
+      return castNames;
+    } catch (error) {
+      logger.debug('Error getting details page cast', error);
+      return [];
     }
   }
 

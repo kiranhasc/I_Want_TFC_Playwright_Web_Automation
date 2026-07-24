@@ -270,6 +270,35 @@
         "mode": "valid",
         "query": "Abandoned"
     },
+    "tc-nav-008-premium-playback": {
+        "mode": "valid",
+        "searchQuery": "Abandoned"
+    },
+    "tc-nav-009-actor-or-genre-search": {
+        "mode": "valid",
+        "actorquery": "Angel Locsin",
+        "genrequery": "Action",
+        "graphqlQueryName": "Search"
+    },
+    "tc-nav-010-search-placeholder": {
+        "mode": "valid",
+        "expectedSearchPlaceholder": "Search by title, actor, genre..."
+    },
+    "tc-nav-011-free-premium-labels": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-012-partial-search": {
+        "mode": "valid"
+    },
+    "tc-nav-013-search-result-redirect": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-014-search-smooth-scrolling": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
     "tc-sub-001-free-subscribe": {
         "mode": "freeUser",
         "query": "Karnal"
@@ -595,7 +624,29 @@
         "searchQuery": "tfdiyhujehfdyhglfjh843847hgfhilwajigjlu",
         "expectedNoResultsMessage": "No results found."
     },
-    "tc-nav-008-premium-playback": {
+    "tc-nav-016-search-junk-characters": {
+        "mode": "valid",
+        "searchQuery": "hjbjbd    jcjbvjbe",
+        "expectedNoResultsMessage": "No results found."
+    },
+    "tc-nav-017-search-invalid-suggestions": {
+        "mode": "valid",
+        "query": "dcwhch 1234",
+        "validationType": "Partial"
+    },
+    "tc-nav-018-search-live-content-exclusion": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-019-search-back-navigation": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-008-clear-search-input": {
+        "mode": "valid",
+        "query": "Abandoned"
+    },
+    "tc-nav-009-premium-playback": {
         "mode": "valid",
         "searchQuery": "La Luna Sangre",
         "expectedPlayback": true,

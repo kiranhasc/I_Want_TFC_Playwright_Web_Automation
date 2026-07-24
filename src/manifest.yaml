@@ -194,6 +194,7 @@
     - ui
   testCases:
     - "IW3-T1867"
+    - "IW3-T2070"
   dependsOn: []
 
 - id: "play-free-asset"
@@ -402,6 +403,115 @@
     - ui
   testCases:
     - "IW3-T2065"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-by-actor-or-genre"
+  name: "Verify actor and genre search results through search input"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchByActorOrGenre"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2068"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-free-premium-labels"
+  name: "Verify free and premium labels on search results"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchFreePremiumLabels"
+  tags:
+    - navigation
+    - search
+    - ui
+  testCases:
+    - "IW3-T2069"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-result-label-ui"
+  name: "Verify New Episode, Coming Soon, GMA, Recently Added labels appear on search results"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchResultLabelUI"
+  tags:
+    - navigation
+    - search
+    - labels
+    - ui
+  testCases:
+    - "IW3-T2082"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-partial-keyword"
+  name: "Verify search supports partial keyword in search field"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchPartialKeyword"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2073"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-smooth-scrolling"
+  name: "Verify smooth scrolling is maintained when searching for content"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchSmoothScrolling"
+  tags:
+    - navigation
+    - search
+    - performance
+  testCases:
+    - "IW3-T2077"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-result-redirect-to-detail"
+  name: "Verify tapping a search result navigates to the content detail page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchResultRedirectsToDetailPage"
+  tags:
+    - navigation
+    - search
+    - ui
+  testCases:
+    - "IW3-T2076"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-live-content-exclusion"
+  name: "Verify live content is excluded from search when typing a live channel title"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchLiveContentExclusion"
+  tags:
+    - navigation
+    - search
+    - live-tv
+    - negative
+  testCases:
+    - "IW3-T2086"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "clear-search-text-from-search-field"
+  name: "Clear search text from the search field"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "clearSearchTextFromSearchField"
+  tags:
+    - navigation
+    - search
+    - ui
+    - regression
+  testCases:
+    - "IW3-T2067"
   dependsOn:
     - "login-to-ott"
 

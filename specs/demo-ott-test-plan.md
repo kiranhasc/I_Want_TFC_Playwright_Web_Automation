@@ -550,6 +550,159 @@ This test plan covers validation of application launch behavior for the OTT plat
    8. Tap on play and Observe      
    * expect Playback should start successfully when the user play premium content from search results if they have a subscription
 
+### 7.9. IW3-T2067 Verify that "Clear All" icon removes the Search text/ input from the "Search" field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Search any content
+   7. Tap on 'Clear all' icon
+   8. Observe the Search field
+      * except The search text should be cleared immediately from the input field, and the placeholder text (Ex: "Search by title, actor, genre...") should be displayed again
+
+### 7.10. IW3-T2068 Verify that the search supports typing of actor name or show genres in the Search field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Search any content
+   7. Type any actor name
+      * except Results should include searched actor related contents (Use graphql api response to validate field name : cast)
+   8. Clear serach
+   8. Type any genre name
+      * except Results should include searched genre-related contents (Use graphql api response to validate field name : genres)
+
+### 7.11. IW3-T2069 Verify if free and premium content are labeled accordingly on the Search page
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Return a free content and premium content from collection graphQL API
+   6. Click on search icon
+   7. Search/Type free content returned
+      * except Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+   8. Clear search field Search/Type free Premium returned
+      * except Thumbnails should show correct 'Premium' tags on search page (Use search graphql api response to validate field name : type, should be equal to Premium)
+
+### 7.12. IW3-T2070 Verify placeholder text in search field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Click on search icon
+   6. Observe the Search field
+      * except Search input field should show placeholder like "Search by title, actor, genre..."
+      
+### 7.13. IW3-T2073 Verify if user can search with partial keyword in search field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   6. Click on search icon
+   7. Enter partial content name returned from Collection graphQL API
+   8. Observe result
+      * except Related results should appear, assert Content returned from collection API with first content displayed in search screen
+
+### 7.14. IW3-T2076 Verify that tapping on any search result redirects to the Detail page
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   5. Click on search icon
+   6. Enter content name returned from Collection graphQL API
+      * except Assert content searched with first content displayed in search screen
+   7. Store and Print First content title, shortDescription, genres, cast
+   8. Click on the first content searched 
+      * except App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast disaplyed in details page)
+
+### 7.15. IW3-T2077 Verify that smooth scrolling is maintained when the user searches for content
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   5. Click on search icon
+   6. Enter content name returned from Collection graphQL API
+      * except Assert content searched with first content displayed in search screen
+   7. Scroll the search result to bottom of the search results
+      * except All search results should load progressively displayed without any crash, lag or freeze the user to scroll smoothly through the entire list.
+
+### 7.16. IW3-T2083 Verify if user enters junk characters with space in search field
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Tap on Search icon
+   6. Enter junk characters like "gdfy 6487yhgf y98yfgjkb nbdjgh" in the
+   search field
+   7. Observe the search behavior
+      * except 'No search results found' message should be displayed when the user enters junk characters in the search bar.
+
+### 7.17. IW3-T2085 Verify if irrelevant search suggestions are being displayed which don't have valid results.
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Tap on Search icon
+   6. Begin typing a random or invalid string (e.g., 123z)
+   7. Observe suggestions
+      * except Relevant search suggestions should display for entered keywords. Print the suggested contents displayed
+
+### 7.18. IW3-T2086 Verify that live content is not displayed in search when user enters live content title
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any live channel title name from live channel rail from Collection graphQL API 
+      * except Print live channel title returned (Ex : Live Channel title : returnd value)
+   5. Tap on Search icon
+   6. Type live cannel returned
+   7. Observe suggestions
+      * except Live content searched should not be displayed when user searches for it.
+
+### 7.19. IW3-T2087 Verify user Navigated back to search screen post tapping back button from content details screen.
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   5. Click on search icon
+   6. Enter content name returned from Collection graphQL API
+      * except Assert content searched with first content displayed in search screen
+   7. Store and Print First content title, shortDescription, genres, cast
+   8. Click on the first content searched 
+      * except App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast disaplyed in details page)
+   9. Tap the content back button
+   10. Observe the Navigation
+      * except User should be correctly Navigated back to the Search results screen with
+      the previous search term and results still visible.
+
 ### 8.1. IW3-T2094 Verify Parental pin option will be available is Settings page
 **File:** `tests/home/parential-pin.spec.ts`
 **Steps:**

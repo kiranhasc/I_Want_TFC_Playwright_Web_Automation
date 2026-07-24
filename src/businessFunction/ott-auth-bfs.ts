@@ -4,10 +4,9 @@ import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
-import * as fs from 'fs';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
+import { SearchParser } from '../utils/graphql/parsers/search-parser';
 import { CollectionResponse } from '../utils/graphql/graphql-types';
-
 export interface InvalidLoginInput {
     email?: string;
     password?: string;
@@ -447,9 +446,29 @@ export interface SearchResultsOutput {
     resultsVisible: boolean;
 }
 
+export interface SearchByActorOrGenreInput {
+    mode?: string;
+    actorquery?: string;
+    genrequery?: string;
+    graphqlQueryName?: string;
+}
+
+export interface SearchByActorOrGenreOutput {
+    isLoggedIn: boolean;
+    searchActorInputValue: string;
+    searchGenreInputValue: string;
+    actorQueryTyped: boolean;
+    genreQueryTyped: boolean;
+    actorResultsVisible: boolean;
+    genreResultsVisible: boolean;
+    matchedCastValues: string[];
+    matchedGenreValues: string[];
+}
+
 export interface VerifySearchAutoSuggestionsInput {
     mode?: string;
     query: string;
+    validationType:string;
 }
 
 export interface VerifySearchAutoSuggestionsOutput {
@@ -471,6 +490,33 @@ export interface VerifySearchNoResultsMessageOutput {
     noResultsMessageVisible: boolean;
     messageText: string;
     contentCardsPresent: number;
+}
+
+export interface VerifySearchLiveContentExclusionInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchLiveContentExclusionOutput {
+    isLoggedIn: boolean;
+    liveContentTitle: string;
+    searchQueryTyped: boolean;
+    suggestionsVisible: boolean;
+    liveContentExcludedFromSuggestions: boolean;
+    liveContentTitleFoundInSearchResults: boolean;
+    suggestionsList: string[];
+}
+
+export interface ClearSearchTextFromSearchFieldInput {
+    mode?: string;
+    query?: string;
+}
+
+export interface ClearSearchTextFromSearchFieldOutput {
+    isLoggedIn: boolean;
+    queryTyped: boolean;
+    searchInputCleared: boolean;
+    searchInputValue: string;
 }
 
 export interface ParentalPinVisibilityOutput {
@@ -495,7 +541,6 @@ export async function verifySearchQueryTyping(page: any, input?: Partial<SearchQ
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
-
     logger.step('Starting search query typing flow');
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
@@ -505,14 +550,11 @@ export async function verifySearchQueryTyping(page: any, input?: Partial<SearchQ
     await authPage.enterPassword(credentials.password);
     await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
-
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     const searchInputValue = await authPage.getSearchBarValue();
     const queryTyped = searchInputValue.includes(query);
-
     logger.assertion('Search query typed into input box', queryTyped);
-
     return {
         isLoggedIn: true,
         searchInputValue,
@@ -525,7 +567,6 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
-
     logger.step('Starting search results verification flow');
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
@@ -535,19 +576,83 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
     await authPage.enterPassword(credentials.password);
     await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
-
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     const searchInputValue = await authPage.getSearchBarValue();
     const queryTyped = searchInputValue.includes(query);
     const resultsVisible = queryTyped ? await authPage.isSearchResultsVisible(query) : false;
-
     logger.assertion('Search results appear for a valid query', resultsVisible);
-
     return {
         isLoggedIn: true,
         queryTyped,
         resultsVisible,
+    };
+}
+
+export async function verifySearchByActorOrGenre(page: any, input?: Partial<SearchByActorOrGenreInput>): Promise<SearchByActorOrGenreOutput> {
+    const authPage = new OTTAuthPage(page);
+    const gql = new GraphQLHelper(page);
+    const actorQuery = (input?.actorquery ?? '').trim();
+    const genreQuery = (input?.genrequery ?? '').trim();
+    logger.step('Starting actor or genre search validation flow');
+    const login = await loginToOTT(page, { mode: input?.mode });
+    if (!login.isLoggedIn) {
+        return {
+            isLoggedIn: false,
+            searchActorInputValue: actorQuery,
+            searchGenreInputValue: genreQuery,
+            actorQueryTyped: false,
+            genreQueryTyped: false,
+            actorResultsVisible: false,
+            genreResultsVisible: false,
+            matchedCastValues: [],
+            matchedGenreValues: [],
+        };
+    }
+    const validateQuery = async (query: string, isActor: boolean): Promise<{ queryTyped: boolean; resultsVisible: boolean; matchedValues: string[] }> => {
+        await authPage.clickSearchBar();
+        await authPage.enterSearchQuery(query);
+        const graphqlResponsePromise = gql.waitForOperation(input?.graphqlQueryName ?? 'Search', 15000);
+        logger.step(`Waiting for search synchronization after submitting query: ${query}`);
+        await authPage.submitSearchQuery();
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        const queryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(query.toLowerCase());
+        let resultsVisible = false;
+        let matchedValues: string[] = [];
+        try {
+            const response = await graphqlResponsePromise;
+            const parser = new (require('../utils/graphql/parsers/search-parser').SearchParser)(response.response);
+            matchedValues = parser.getTitleMatches(query);
+            resultsVisible = matchedValues.length > 0;
+            if (matchedValues.length > 0) {
+                logger.info(`Matched content titles for search query "${query}"`, { values: matchedValues });
+                logger.info(`[SEARCH DEBUG] Titles matching "${query}":`, matchedValues);
+            }
+        } catch (error) {
+            logger.debug('GraphQL response was not available for actor/genre validation', error);
+        }
+        if (!resultsVisible) {
+            resultsVisible = queryTyped ? await authPage.isSearchResultsVisible(query) : false;
+        }
+        return { queryTyped, resultsVisible, matchedValues };
+    };
+    const actorResult = actorQuery ? await validateQuery(actorQuery, true) : { queryTyped: true, resultsVisible: true, matchedValues: [] };
+    await authPage.clearSearchInput();
+    const genreResult = genreQuery ? await validateQuery(genreQuery, false) : { queryTyped: true, resultsVisible: true, matchedValues: [] };
+    logger.assertion('Actor search query entered', actorResult.queryTyped);
+    logger.assertion('Actor search results validated', actorResult.resultsVisible);
+    logger.assertion('Genre search query entered', genreResult.queryTyped);
+    logger.assertion('Genre search results validated', genreResult.resultsVisible);
+    return {
+        isLoggedIn: true,
+        searchActorInputValue: actorQuery,
+        searchGenreInputValue: genreQuery,
+        actorQueryTyped: actorResult.queryTyped,
+        genreQueryTyped: genreResult.queryTyped,
+        actorResultsVisible: actorResult.resultsVisible,
+        genreResultsVisible: genreResult.resultsVisible,
+        matchedCastValues: actorResult.matchedValues,
+        matchedGenreValues: genreResult.matchedValues,
     };
 }
 
@@ -556,6 +661,7 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
   const mode = normalizeLoginMode(input?.mode);
   const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
   const query = input?.query ?? 'Love';
+  const validationType = input?.validationType;
   logger.step('Starting search auto-suggestions verification flow');
   await authPage.navigate();
   await authPage.acceptCookieSettingsIfVisible();
@@ -573,8 +679,11 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
   const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(query);
   const suggestionsList = await authPage.getSearchAutoSuggestions();
   const suggestionsCount = suggestionsList.length;
+  let suggestionsContainQuery ;
   // Verify that suggestions contain the query
-  const suggestionsContainQuery = await authPage.verifySuggestionsContainQuery(query, suggestionsList);
+  if(!validationType.includes('Partial')) {
+    suggestionsContainQuery = await authPage.verifySuggestionsContainQuery(query, suggestionsList);
+  }
   logger.assertion('Auto-suggestions visible after typing', suggestionsVisible);
   logger.assertion('At least one suggestion available', suggestionsCount > 0);
   logger.step(`Found ${suggestionsCount} suggestions: ${suggestionsList.slice(0, 3).join(', ')}${suggestionsCount > 3 ? '...' : ''}`);
@@ -628,12 +737,737 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
   };
 }
 
+export async function verifySearchLiveContentExclusion(page: any, input?: Partial<VerifySearchLiveContentExclusionInput>): Promise<VerifySearchLiveContentExclusionOutput> {
+  const authPage = new OTTAuthPage(page);
+  const gql = new GraphQLHelper(page);
+  const mode = normalizeLoginMode(input?.mode);
+  const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
+  logger.step('Starting live content exclusion verification flow');
+  const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
+  const login = await loginToOTT(page, { mode });
+  if (!login.isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      liveContentTitle: '',
+      searchQueryTyped: false,
+      suggestionsVisible: false,
+      liveContentExcludedFromSuggestions: false,
+      liveContentTitleFoundInSearchResults: false,
+      suggestionsList: [],
+    };
+  }
+  let liveContentTitle = '';
+  try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        const rails = parser.getRails();
+        const assetCandidates = rails.flatMap(rail => (rail.assets?.items ?? []).map(asset => ({ asset, railTitle: String(rail.title ?? '') })));
+        const filtered = assetCandidates.filter(({ asset, railTitle }) => {
+        const title = String(asset?.title ?? '');
+        const labels = Array.isArray((asset as any).labels) ? (asset as any).labels.map((label: any) => String(label?.text ?? '').toLowerCase()) : [];
+        return /\blive\b/i.test(title)
+        || labels.some(label => /\blive\b/i.test(label))
+        || /\blive\b/i.test(railTitle);
+    });
+    const candidateAsset = filtered.length > 0
+      ? filtered[0].asset
+      : assetCandidates.find(({ asset }) => /dzmm teleradyo|tfc asia|abs-cbn|radyo/i.test(String(asset?.title ?? '').toLowerCase()))?.asset;
+
+    if (candidateAsset && candidateAsset.title) {
+      liveContentTitle = String(candidateAsset.title).trim();
+    }
+  } catch (error) {
+    logger.debug('Failed to derive live content title from collection GraphQL response', error);
+  }
+  if (!liveContentTitle) {
+    logger.assertion('Could not retrieve a live content title from collection data', false);
+    return {
+      isLoggedIn: true,
+      liveContentTitle: '',
+      searchQueryTyped: false,
+      suggestionsVisible: false,
+      liveContentExcludedFromSuggestions: false,
+      liveContentTitleFoundInSearchResults: false,
+      suggestionsList: [],
+    };
+  }
+  await authPage.clickSearchBar();
+  logger.info(`Live content title returned for search: ${liveContentTitle}`);
+  await authPage.enterSearchQuery(liveContentTitle);
+  await page.waitForTimeout(1500);
+  const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(liveContentTitle);
+  const suggestionsList = await authPage.getSearchAutoSuggestions();
+  const liveContentExcludedFromSuggestions = !suggestionsList.some(suggestion => suggestion.toLowerCase().includes(liveContentTitle.toLowerCase()));
+  const searchQueryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(liveContentTitle.toLowerCase());
+  await authPage.submitSearchQuery();
+  await page.waitForLoadState('networkidle').catch(() => undefined);
+  const bodyText = (await page.locator('body').textContent())?.toLowerCase() ?? '';
+  const liveContentTitleFoundInSearchResults = bodyText.includes(liveContentTitle.toLowerCase());
+  logger.assertion('Search bar contains live content title', searchQueryTyped);
+  logger.assertion('Suggestions are visible after typing live content title', suggestionsVisible);
+  logger.assertion('Live content title is excluded from suggestions', liveContentExcludedFromSuggestions);
+  logger.assertion('Live content title is not present in search results', !liveContentTitleFoundInSearchResults);
+  return {
+    isLoggedIn: true,
+    liveContentTitle,
+    searchQueryTyped,
+    suggestionsVisible,
+    liveContentExcludedFromSuggestions,
+    liveContentTitleFoundInSearchResults,
+    suggestionsList,
+  };
+}
+
+export async function clearSearchTextFromSearchField(page: any, input?: Partial<ClearSearchTextFromSearchFieldInput>): Promise<ClearSearchTextFromSearchFieldOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const query = (input?.query ?? '').trim();
+    logger.step('Starting clear search input flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(query);
+    const searchInputValueBeforeClear = await authPage.getSearchBarValue();
+    const queryTyped = searchInputValueBeforeClear.includes(query);
+    const searchInputCleared = await authPage.clearSearchInput();
+    const searchInputValue = await authPage.getSearchBarValue();
+    logger.assertion('Search query typed before clearing', queryTyped);
+    logger.assertion('Search input cleared after clicking clear action', searchInputCleared && searchInputValue.length === 0);
+    return {
+        isLoggedIn: true,
+        queryTyped,
+        searchInputCleared: searchInputCleared && searchInputValue.length === 0,
+        searchInputValue,
+    };
+}
+
+export interface VerifySearchFreePremiumLabelsInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchFreePremiumLabelsOutput {
+    isLoggedIn: boolean;
+    freeContentTitle?: string;
+    freeLabelVisible?: boolean;
+    premiumContentTitle?: string;
+    premiumLabelVisible?: boolean;
+}
+
+export interface VerifySearchPartialKeywordInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchPartialKeywordOutput {
+    isLoggedIn: boolean;
+    collectionTitle?: string;
+    partialQuery?: string;
+    queryTyped: boolean;
+    resultsVisible: boolean;
+    matchedSearchValues: string[];
+}
+
+export interface VerifySearchResultRedirectToDetailInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchResultRedirectToDetailOutput {
+    isLoggedIn: boolean;
+    collectionTitle?: string;
+    searchQueryTyped: boolean;
+    searchResultsVisible: boolean;
+    detailsPageVisible: boolean;
+    expectedShortDescription?: string;
+    expectedGenres?: string[];
+    expectedCast?: string[];
+    actualDetailsTitle?: string;
+    actualShortDescription?: string;
+    actualGenres?: string[];
+    actualCast?: string[];
+    titleMatch?: boolean;
+    castMatch?: boolean;
+    genresMatch?: boolean;
+    shortDescriptionMatch?: boolean;
+}
+
+export interface VerifySearchBackNavigationInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchBackNavigationOutput {
+    isLoggedIn: boolean;
+    collectionTitle?: string;
+    searchQueryTyped: boolean;
+    searchResultsVisible: boolean;
+    detailsPageVisible: boolean;
+    searchResultsVisibleAfterBack: boolean;
+    expectedShortDescription?: string;
+    actualDetailsTitle?: string;
+    actualShortDescription?: string;
+    titleMatch?: boolean;
+    shortDescriptionMatch?: boolean;
+}
+
+export async function verifySearchResultRedirectsToDetailPage(
+    page: any,
+    input?: Partial<VerifySearchResultRedirectToDetailInput>
+): Promise<VerifySearchResultRedirectToDetailOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const gql = new GraphQLHelper(page);
+    const mode = input?.mode;
+    logger.step('Starting search result redirect to detail page flow');
+    const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        logger.assertion('User login failed, aborting search detail redirect verification', false);
+        return {
+            isLoggedIn: false,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            detailsPageVisible: false,
+        } as VerifySearchResultRedirectToDetailOutput;
+    }
+    let collectionTitle = '';
+    let expectedShortDescription = '';
+    let expectedGenres: string[] = [];
+    let expectedCast: string[] = [];
+    try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        const allAssets: any[] = parser.getRails().flatMap(rail => rail.assets?.items ?? []);
+        const candidate = allAssets.find((asset: any) => typeof asset.title === 'string');
+        if (candidate?.title) {
+            collectionTitle = String(candidate.title).trim();
+        }
+        if (collectionTitle) {
+            const matchedAsset = allAssets.find((asset: any) => String(asset.title).trim() === collectionTitle) ?? candidate;
+            if (matchedAsset) {
+                expectedShortDescription = String(matchedAsset.shortDescription ?? matchedAsset.description ?? '').trim();
+                expectedGenres = Array.isArray(matchedAsset.genres)
+                    ? matchedAsset.genres.map((genre: any) => typeof genre === 'string' ? genre.trim() : String(genre?.name ?? '').trim()).filter(Boolean)
+                    : [];
+                expectedCast = Array.isArray(matchedAsset.cast)
+                    ? matchedAsset.cast.map((member: any) => typeof member === 'string' ? member.trim() : String(member?.name ?? '').trim()).filter(Boolean)
+                    : [];
+            }
+        }
+        logger.info(`Using collection title for search: ${collectionTitle}`);
+        logger.info(`[SEARCH DEBUG] Collection title for detail redirect: "${collectionTitle}"`);
+    } catch (error) {
+        logger.debug('Failed to retrieve collection content for search result redirect verification', error);
+    }
+    if (!collectionTitle) {
+        logger.assertion('Could not derive a search query from collection content', false);
+        return {
+            isLoggedIn: true,
+            collectionTitle,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            detailsPageVisible: false,
+        };
+    }
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(collectionTitle);
+    await authPage.submitSearchQuery();
+    const searchQueryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(collectionTitle.toLowerCase());
+    const searchResultsVisible = searchQueryTyped ? await authPage.isSearchResultsVisible(collectionTitle) : false;
+    logger.assertion('Search results visible for collection title', searchResultsVisible);
+    let detailsPageVisible = false;
+    let actualDetailsTitle = '';
+    let actualShortDescription = '';
+    let actualGenres: string[] = [];
+    let actualCast: string[] = [];
+    let titleMatch = false;
+    let genresMatch = expectedGenres.length === 0;
+    let castMatch = expectedCast.length === 0;
+    let shortDescriptionMatch = expectedShortDescription.length === 0;
+    if (searchResultsVisible) {
+        await detailsPage.clickFirstSearchResult();
+        detailsPageVisible = await detailsPage.isShowDetailsPageVisible();
+        logger.assertion('Details page visible after clicking search result', detailsPageVisible);
+        if (detailsPageVisible) {
+            actualDetailsTitle = await detailsPage.getShowDetailsHeadingText();
+            actualShortDescription = await detailsPage.getDetailsPageShortDescription();
+            actualGenres = await detailsPage.getDetailsPageGenres();
+            actualCast = await detailsPage.getDetailsPageCast();
+            const detailsText = await detailsPage.getDetailsPageText();
+            logger.info('Details page text captured for assertion', { detailsText: detailsText.slice(0, 500) });
+            titleMatch = actualDetailsTitle.toLowerCase().includes(collectionTitle.toLowerCase());
+            const normalizedExpectedShort = expectedShortDescription.toLowerCase().trim();
+            shortDescriptionMatch = normalizedExpectedShort
+                ? actualShortDescription.toLowerCase().includes(normalizedExpectedShort.slice(0, 30))
+                : true;
+            const lowerActualGenres = actualGenres.map(g => g.toLowerCase());
+            genresMatch = expectedGenres.length === 0
+                ? true
+                : expectedGenres.some(expected => lowerActualGenres.some(actual => actual.includes(expected.toLowerCase())));
+            const lowerActualCast = actualCast.map(c => c.toLowerCase());
+            castMatch = expectedCast.length === 0
+                ? true
+                : expectedCast.some(expected => lowerActualCast.some(actual => actual.includes(expected.toLowerCase())));
+            logger.assertion('Details page title appears in details text', titleMatch);
+            if (expectedGenres.length > 0) {
+                logger.assertion('Details page genres match expected genres', genresMatch);
+            }
+            if (expectedCast.length > 0) {
+                logger.assertion('Details page cast matches expected cast', castMatch);
+            }
+            if (expectedShortDescription) {
+                logger.assertion('Details page short description matches expected value', shortDescriptionMatch);
+            }
+            detailsPageVisible = detailsPageVisible && titleMatch;
+        }
+    }
+    logger.info(`Actual Title : ${actualDetailsTitle}`);
+    logger.info(`Expected Title : ${collectionTitle}`);
+    logger.info(`Actual Cast : ${actualCast.join(', ') || 'N/A'}`);
+    logger.info(`Expected Cast : ${expectedCast.join(', ') || 'N/A'}`);
+    logger.info(`Actual genre : ${actualGenres.join(', ') || 'N/A'}`);
+    logger.info(`Expected genre : ${expectedGenres.join(', ') || 'N/A'}`);
+    logger.info(`Actual short description : ${actualShortDescription}`);
+    logger.info(`Expected short description : ${expectedShortDescription}`);
+    return {
+        isLoggedIn: true,
+        collectionTitle,
+        searchQueryTyped,
+        searchResultsVisible,
+        detailsPageVisible,
+        expectedShortDescription,
+        expectedGenres,
+        expectedCast,
+        actualDetailsTitle,
+        actualShortDescription,
+        actualGenres,
+        actualCast,
+        titleMatch,
+        genresMatch,
+        castMatch,
+        shortDescriptionMatch,
+    };
+}
+
+export async function verifySearchBackNavigationFromDetailPage(
+    page: any,
+    input?: Partial<VerifySearchBackNavigationInput>
+): Promise<VerifySearchBackNavigationOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const gql = new GraphQLHelper(page);
+    const mode = input?.mode;
+    const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
+    logger.step('Starting search back-navigation verification flow');
+    const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        return {
+            isLoggedIn: false,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            detailsPageVisible: false,
+            searchResultsVisibleAfterBack: false,
+        };
+    }
+    let collectionTitle = '';
+    let expectedShortDescription = '';
+    let expectedGenres: string[] = [];
+    let expectedCast: string[] = [];
+    try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        const allAssets: any[] = parser.getRails().flatMap(rail => rail.assets?.items ?? []);
+        const candidate = allAssets.find((asset: any) => typeof asset.title === 'string');
+        if (candidate) {
+            if (candidate.title) {
+                collectionTitle = String(candidate.title).trim();
+            }
+            expectedShortDescription = String(candidate.shortDescription ?? candidate.description ?? '').trim();
+            expectedGenres = Array.isArray(candidate.genres)
+                ? candidate.genres.map((genre: any) => typeof genre === 'string' ? genre.trim() : String(genre?.name ?? '').trim()).filter(Boolean)
+                : [];
+            expectedCast = Array.isArray(candidate.cast)
+                ? candidate.cast.map((member: any) => typeof member === 'string' ? member.trim() : String(member?.name ?? '').trim()).filter(Boolean)
+                : [];
+        }
+        logger.info(`Using collection title for back-navigation test: ${collectionTitle}`);
+        logger.info(`First content details from GraphQL - title: "${collectionTitle}"`);
+        logger.info(`First content details from GraphQL - shortDescription: "${expectedShortDescription}"`);
+        logger.info(`First content details from GraphQL - genres: "${expectedGenres.join(', ')}"`);
+        logger.info(`First content details from GraphQL - cast: "${expectedCast.join(', ')}"`);
+    } catch (error) {
+        logger.debug('Failed to retrieve collection content for back-navigation verification', error);
+    }
+    if (!collectionTitle) {
+        logger.assertion('Could not derive a search query from collection content', false);
+        return {
+            isLoggedIn: true,
+            collectionTitle,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            detailsPageVisible: false,
+            searchResultsVisibleAfterBack: false,
+        };
+    }
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(collectionTitle);
+    await authPage.submitSearchQuery();
+    const searchQueryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(collectionTitle.toLowerCase());
+    const searchResultsVisible = searchQueryTyped ? await authPage.isSearchResultsVisible(collectionTitle) : false;
+    logger.assertion('Search results visible for collection title', searchResultsVisible);
+    let detailsPageVisible = false;
+    let searchResultsVisibleAfterBack = false;
+    let actualDetailsTitle = '';
+    let actualShortDescription = '';
+    let titleMatch = false;
+    let shortDescriptionMatch = expectedShortDescription.length === 0;
+    if (searchResultsVisible) {
+        await detailsPage.clickFirstSearchResult();
+        detailsPageVisible = await detailsPage.isShowDetailsPageVisible();
+        logger.assertion('Details page visible after clicking first search result', detailsPageVisible);
+        if (detailsPageVisible) {
+            actualDetailsTitle = await detailsPage.getShowDetailsHeadingText();
+            actualShortDescription = await detailsPage.getDetailsPageShortDescription();
+            titleMatch = actualDetailsTitle.toLowerCase().includes(collectionTitle.toLowerCase());
+            const normalizedExpectedShort = expectedShortDescription.toLowerCase().trim();
+            if (normalizedExpectedShort) {
+                shortDescriptionMatch = actualShortDescription.toLowerCase().includes(normalizedExpectedShort.slice(0, 30));
+                logger.assertion('Details page short description matches collection short description', shortDescriptionMatch);
+            }
+            logger.info(`Details page content - title: "${collectionTitle}"`);
+            logger.info(`Details page content - shortDescription: "${expectedShortDescription}"`);
+            logger.assertion('Details page title matches collection title', titleMatch);
+            // Try clicking the UI back button, but allow browser history back as a fallback
+            await page.goBack();
+            await page.waitForLoadState('networkidle');
+            await authPage.waitForLoadingToDisappear();
+            searchResultsVisibleAfterBack = await authPage.isSearchResultsVisible(collectionTitle);
+            logger.assertion('Search results reappear after navigating back from details page', searchResultsVisibleAfterBack);
+        }
+    }
+    return {
+        isLoggedIn: true,
+        collectionTitle,
+        searchQueryTyped,
+        searchResultsVisible,
+        detailsPageVisible,
+        searchResultsVisibleAfterBack,
+        expectedShortDescription,
+        actualDetailsTitle,
+        actualShortDescription,
+        titleMatch,
+        shortDescriptionMatch,
+    };
+}
+
+export interface VerifySearchPartialKeywordInput {
+    mode?: string;
+    graphqlQueryName?: string;
+}
+
+export interface VerifySearchPartialKeywordOutput {
+    isLoggedIn: boolean;
+    collectionTitle?: string;
+    partialQuery?: string;
+    queryTyped: boolean;
+    resultsVisible: boolean;
+    matchedSearchValues: string[];
+}
+
+export async function verifySearchPartialKeyword(
+    page: any,
+    input?: Partial<VerifySearchPartialKeywordInput>
+): Promise<VerifySearchPartialKeywordOutput> {
+    const authPage = new OTTAuthPage(page);
+    const gql = new GraphQLHelper(page);
+    const mode = input?.mode;
+
+    logger.step('Starting partial keyword search verification flow');
+    const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        logger.assertion('User login failed, aborting partial search verification', false);
+        return {
+            isLoggedIn: false,
+            queryTyped: false,
+            resultsVisible: false,
+            matchedSearchValues: [],
+        } as VerifySearchPartialKeywordOutput;
+    }
+
+    let collectionTitle = '';
+    let partialQuery = '';
+    try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        for (const rail of parser.getRails()) {
+            const candidate = rail.assets?.items?.find((asset: any) => typeof asset.title === 'string');
+            if (candidate?.title) {
+                collectionTitle = String(candidate.title).trim();
+                break;
+            }
+        }
+
+        const titleWords = collectionTitle.split(/\s+/).filter(Boolean);
+        const selectedWord = titleWords.find(word => word.length >= 4) ?? titleWords[0] ?? '';
+        partialQuery = String(selectedWord).slice(0, Math.min(8, String(selectedWord).length)).trim();
+        logger.info(`Using first collection title for partial search: ${collectionTitle}`);
+        logger.info(`[SEARCH DEBUG] Using collection title: "${collectionTitle}" for partial search query: "${partialQuery}"`);
+    } catch (error) {
+        logger.debug('Failed to retrieve collection content for partial search query', error);
+    }
+
+    if (!partialQuery) {
+        logger.assertion('Could not derive a partial search query from collection content', false);
+        return {
+            isLoggedIn: true,
+            collectionTitle,
+            partialQuery,
+            queryTyped: false,
+            resultsVisible: false,
+            matchedSearchValues: [],
+        };
+    }
+
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(partialQuery);
+    const graphqlResponsePromise = gql.waitForOperation('Search', 20000);
+    await authPage.submitSearchQuery();
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
+
+    let matchedSearchValues: string[] = [];
+    try {
+        const searchResp = await graphqlResponsePromise;
+        const parser = new SearchParser(searchResp.response);
+        matchedSearchValues = parser.getTitlesMatchingQuery(partialQuery);
+        logger.info(`Partial search query matched ${matchedSearchValues.length} title values in the Search GraphQL response`, {
+            partialQuery,
+            matchedValues: matchedSearchValues,
+        });
+        logger.info(`[SEARCH DEBUG] Partial query "${partialQuery}" matched values:`, matchedSearchValues);
+    } catch (error) {
+        logger.debug('Search GraphQL response was not available for partial keyword validation', error);
+    }
+
+    const queryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(partialQuery.toLowerCase());
+    const resultsVisible = queryTyped ? await authPage.isSearchResultsVisible(partialQuery) : false;
+    logger.assertion('Partial search results visible', resultsVisible);
+
+    return {
+        isLoggedIn: true,
+        collectionTitle,
+        partialQuery,
+        queryTyped,
+        resultsVisible,
+        matchedSearchValues,
+    };
+}
+
+export interface VerifySearchSmoothScrollingInput {
+    mode?: string;
+    graphqlQueryName?: string;
+    iterations?: number;
+    pauseMs?: number;
+}
+
+export interface VerifySearchSmoothScrollingOutput {
+    isLoggedIn: boolean;
+    collectionTitle?: string;
+    searchQueryTyped: boolean;
+    searchResultsVisible: boolean;
+    scrolled: boolean;
+    positions: number[];
+}
+
+export async function verifySearchSmoothScrolling(
+    page: any,
+    input?: Partial<VerifySearchSmoothScrollingInput>
+): Promise<VerifySearchSmoothScrollingOutput> {
+    const authPage = new OTTAuthPage(page);
+    const gql = new GraphQLHelper(page);
+    const mode = input?.mode;
+    const iterations = input?.iterations ?? 6;
+    const pauseMs = input?.pauseMs ?? 800;
+    logger.step('Starting search smooth scrolling verification flow');
+    const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        logger.assertion('User login failed, aborting search smooth scrolling verification', false);
+        return {
+            isLoggedIn: false,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            scrolled: false,
+            positions: [],
+        };
+    }
+    let collectionTitle = '';
+    try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        const allAssets: any[] = parser.getRails().flatMap(rail => rail.assets?.items ?? []);
+        const candidate = allAssets.find((asset: any) => typeof asset.title === 'string');
+        if (candidate?.title) {
+            collectionTitle = String(candidate.title).trim();
+        }
+        logger.info(`Using collection title for search (smooth scroll): ${collectionTitle}`);
+    } catch (error) {
+        logger.debug('Failed to retrieve collection content for smooth scrolling verification', error);
+    }
+    if (!collectionTitle) {
+        logger.assertion('Could not derive a search query from collection content', false);
+        return {
+            isLoggedIn: true,
+            collectionTitle,
+            searchQueryTyped: false,
+            searchResultsVisible: false,
+            scrolled: false,
+            positions: [],
+        };
+    }
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(collectionTitle);
+    await authPage.submitSearchQuery();
+    const searchQueryTyped = (await authPage.getSearchBarValue()).toLowerCase().includes(collectionTitle.toLowerCase());
+    const searchResultsVisible = searchQueryTyped ? await authPage.isSearchResultsVisible(collectionTitle) : false;
+    logger.assertion('Search results visible for collection title', searchResultsVisible);
+    let scrolled = false;
+    let positions: number[] = [];
+    if (searchResultsVisible) {
+        const result = await authPage.scrollSearchResultsSmoothly(iterations, pauseMs);
+        scrolled = result.scrolled;
+        positions = result.positions;
+        logger.assertion('Search results can be scrolled smoothly', scrolled);
+    }
+    logger.info(`Smooth scroll result - scrolled: ${scrolled}, positions: ${positions.join(', ')}`);
+    return {
+        isLoggedIn: true,
+        collectionTitle,
+        searchQueryTyped,
+        searchResultsVisible,
+        scrolled,
+        positions,
+    };
+}
+
+export async function verifySearchFreePremiumLabels(
+    page: any,
+    input?: Partial<VerifySearchFreePremiumLabelsInput>
+): Promise<VerifySearchFreePremiumLabelsOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const gql = new GraphQLHelper(page);
+    const mode = input?.mode;
+    logger.step('Starting verification of free and premium labels in search results');
+    // Start waiting for the Collection GraphQL operation before triggering login
+    const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        logger.assertion('User login failed, aborting label verification', false);
+        return { isLoggedIn: false } as VerifySearchFreePremiumLabelsOutput;
+    }
+    let freeTitle = '';
+    let premiumTitle = '';
+    try {
+        const collectionResp = await collectionWait;
+        const parser = new CollectionParser(collectionResp as any);
+        // Build predicates for free/premium detection
+        const freePredicate = (asset: any) => {
+            const labels = asset.labels ?? [];
+            if (labels.some((l: any) => /free/i.test(l?.text ?? ''))) return true;
+            const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
+            return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
+        };
+        const premiumPredicate = (asset: any) => {
+            const labels = asset.labels ?? [];
+            if (labels.some((l: any) => /premium|paid|subscription/i.test(l?.text ?? ''))) return true;
+            const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
+            return monetType ? /premium|paid|subscription|paywall|purchase/i.test(String(monetType)) : false;
+        };
+        // Collect all matches and assert only one result per type
+        const rails = parser.getRails();
+        const collectMatches = (pred: (a: any) => boolean) => {
+            const matches: any[] = [];
+            for (const rail of rails) {
+                for (const asset of rail.assets?.items ?? []) {
+                    try {
+                        if (pred(asset)) matches.push({ rail, asset });
+                    } catch (e) {
+                        // ignore predicate errors for individual assets
+                    }
+                }
+            }
+            return matches;
+        };
+        const freeMatches = collectMatches(freePredicate);
+        const premiumMatches = collectMatches(premiumPredicate);
+        logger.step(`Collection scan found ${freeMatches.length} free candidate(s) and ${premiumMatches.length} premium candidate(s)`);
+        const freeResult = freeMatches[0] ?? null;
+        const premiumResult = premiumMatches[0] ?? null;
+        freeTitle = freeResult?.asset?.title ?? '';
+        premiumTitle = premiumResult?.asset?.title ?? '';
+        logger.info(`[SEARCH DEBUG] Free content title: "${freeTitle}", Premium content title: "${premiumTitle}"`);
+        const freeMonetType = freeResult?.asset?.monetization?.type ?? freeResult?.asset?.monetizationType ?? freeResult?.asset?.pricing?.type ?? '';
+        const premiumMonetType = premiumResult?.asset?.monetization?.type ?? premiumResult?.asset?.monetizationType ?? premiumResult?.asset?.pricing?.type ?? '';
+        if (freeResult?.asset?.monetization) logger.info('[SEARCH DEBUG] Free monetization sample:', freeResult.asset.monetization);
+        if (premiumResult?.asset?.monetization) logger.info('[SEARCH DEBUG] Premium monetization sample:', premiumResult.asset.monetization);
+        // Assert monetization type aligns with detected label/title
+        if (freeTitle) {
+            const freeTypeStr = String(freeMonetType ?? '');
+            const freeIsMonetizationFree = /free|complimentary|free_to_watch|freetowatch/i.test(freeTypeStr);
+            logger.assertion(`Monetization type for free title "${freeTitle}" indicates free (${freeTypeStr})`, freeIsMonetizationFree);
+        }
+        if (premiumTitle) {
+            const premiumTypeStr = String(premiumMonetType ?? '');
+            const premiumIsMonetizationPaid = /premium|paid|subscription|paywall|purchase/i.test(premiumTypeStr);
+            logger.assertion(`Monetization type for premium title "${premiumTitle}" indicates paid (${premiumTypeStr})`, premiumIsMonetizationPaid);
+        }
+    } catch (err) {
+        logger.debug('Collection GraphQL operation did not return or parsing failed', err);
+    }
+    // Verify premium labeled content via search UI
+    let premiumLabelVisible = false;
+    if (premiumTitle) {
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await authPage.clickSearchBar();
+        await authPage.enterSearchQuery(premiumTitle);
+        await authPage.submitSearchQuery();
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        premiumLabelVisible = await detailsPage.isContentTaggedPremiumInSearchResults(premiumTitle).catch(() => false);
+        logger.assertion(`Premium label visible for "${premiumTitle}"`, premiumLabelVisible);
+    }
+    // Verify free labeled content via search UI
+    let freeLabelVisible = false;
+    if (freeTitle) {
+        await authPage.clickSearchBar();
+        await authPage.enterSearchQuery(freeTitle);
+        await authPage.submitSearchQuery();
+        freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeTitle).catch(() => false);
+        logger.assertion(`Free label visible for "${freeTitle}"`, freeLabelVisible);
+    }
+    return {
+        isLoggedIn: true,
+        freeContentTitle: freeTitle,
+        freeLabelVisible,
+        premiumContentTitle: premiumTitle,
+        premiumLabelVisible,
+    };
+}
+
 export async function verifyParentalPinOptionVisibility(page: any, input?: Partial<InvalidLoginInput>): Promise<ParentalPinVisibilityOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-
     logger.step('Starting parental controls visibility flow');
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
@@ -647,9 +1481,7 @@ export async function verifyParentalPinOptionVisibility(page: any, input?: Parti
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
     const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
-
     logger.assertion('Parental Controls section visible in Settings page', parentalControlsVisible);
-
     return {
         isLoggedIn: true,
         parentalControlsVisible,

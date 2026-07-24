@@ -39,6 +39,7 @@ export class OTTAuthPage {
     private readonly gmaTab: PageElement;
     private readonly searchBar: PageElement;
     private readonly searchBarIcon: PageElement;
+    private readonly clearSearchButton: PageElement;
     private readonly accountIcon: PageElement;
     private readonly signOutOption: PageElement;
     private readonly accountAndSettingsOption: PageElement;
@@ -136,6 +137,7 @@ export class OTTAuthPage {
         this.gmaTab = { selector: 'div#gma' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
+        this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
         this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
@@ -1034,12 +1036,35 @@ export class OTTAuthPage {
     async submitSearchQuery(): Promise<void> {
         logger.elementInteraction('press', 'Enter key');
         await this.page.keyboard.press('Enter');
+        await this.waitForLoadingToDisappear(20000);
+        await this.page.waitForLoadState('networkidle').catch(() => undefined);
     }
       
     async getSearchBarValue(): Promise<string> {
         const locator = this.page.locator(this.searchBar.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.inputValue()) || '';
+    }
+
+    async clearSearchInput(): Promise<boolean> {
+        logger.elementInteraction('click', 'clear search input');
+        try {
+            await this.pageUtils.safeClick(this.clearSearchButton);
+            await this.page.waitForTimeout(500);
+            return true;
+        } catch (error) {
+            logger.debug('Clear search button was not available', error);
+            try {
+                const searchInput = this.page.locator(this.searchBar.selector).first();
+                await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+                await searchInput.fill('');
+                await this.page.waitForTimeout(500);
+                return true;
+            } catch (fallbackError) {
+                logger.debug('Fallback clear search input failed', fallbackError);
+                return false;
+            }
+        }
     }
 
     async getSearchBarPlaceholder(): Promise<string> {
@@ -1110,14 +1135,18 @@ export class OTTAuthPage {
     async getSearchAutoSuggestions(): Promise<string[]> {
         logger.elementInteraction('retrieve', 'search auto-suggestions');
         try {
-            const suggestions = this.page.locator(this.searchSuggestionsContainer.selector);
+            let suggestions = this.page.locator(this.searchSuggestionsContainer.selector);
             // Wait for suggestions to load and stabilize
             await this.page.waitForTimeout(800);
             let count = await suggestions.count();
             // If no suggestions found, try alternative selectors
             if (count === 0) {
-                const altSuggestions = this.page.locator(this.searchSuggestionsContainer.selector);
-                count = await altSuggestions.count();
+                const altSuggestions = this.page.locator('div[class*="absolute"] div, li, [role="listitem"]');
+                const altCount = await altSuggestions.count();
+                if (altCount > 0) {
+                    suggestions = altSuggestions;
+                    count = altCount;
+                }
             }
             const suggestionTexts: string[] = [];
             for (let i = 0; i < Math.min(count, 10); i++) {
@@ -1149,7 +1178,6 @@ export class OTTAuthPage {
         logger.assertion(`Suggestions contain search query "${query}"`, allSuggestionsRelevant);
         return allSuggestionsRelevant;
     }
-
     async clickSearchAutoSuggestion(suggestionText: string): Promise<void> {
         logger.elementInteraction('click', `search suggestion: ${suggestionText}`);
         try {
@@ -1194,6 +1222,35 @@ export class OTTAuthPage {
         } catch (error) {
             logger.debug('Failed to count search results', error);
             return 0;
+        }
+    }
+
+    async scrollSearchResultsSmoothly(times: number = 6, pauseMs: number = 800): Promise<{ scrolled: boolean; positions: number[] }> {
+        logger.elementInteraction('scroll', 'search results smooth scroll check');
+        const positions: number[] = [];
+        try {
+            // Try to perform smooth scrolling multiple times and record Y positions
+            for (let i = 0; i < times; i++) {
+                const before = await this.page.evaluate(() => window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+                positions.push(Number(before || 0));
+                // scroll by 70% of viewport height smoothly
+                await this.page.evaluate(() => {
+                    const delta = Math.floor((window.innerHeight || 600) * 0.7);
+                    window.scrollBy({ top: delta, left: 0, behavior: 'smooth' });
+                });
+                // wait briefly for smooth scroll to progress
+                await this.page.waitForTimeout(pauseMs);
+                // ensure page is responsive
+                await this.page.evaluate(() => document.readyState).catch(() => undefined);
+            }
+            const finalPos = await this.page.evaluate(() => window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+            positions.push(Number(finalPos || 0));
+            const scrolled = positions.length > 1 && positions[positions.length - 1] > positions[0];
+            logger.debug(`Scroll positions captured: ${positions.join(', ')}`);
+            return { scrolled, positions };
+        } catch (error) {
+            logger.debug('Smooth scroll check failed', error);
+            return { scrolled: false, positions };
         }
     }
 

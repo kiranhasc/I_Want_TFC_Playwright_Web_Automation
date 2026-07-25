@@ -8,3 +8,9 @@ node_modules/
 /playwright/.auth/
 /playwright/
 logs/
+
+# Dashboard
+dashboard/node_modules/
+dashboard/frontend/node_modules/
+dashboard/frontend/dist/
+dashboard/data/

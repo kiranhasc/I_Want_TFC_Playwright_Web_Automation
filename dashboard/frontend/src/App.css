@@ -1,0 +1,281 @@
+h2,
+h3 {
+  margin: 0 0 12px;
+  color: var(--text-primary);
+}
+
+.run-history,
+.run-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Buttons --- */
+
+.primary-button,
+.danger-button,
+.link-button {
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: var(--status-running);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.danger-button {
+  background: transparent;
+  color: var(--status-critical);
+  border: 1px solid var(--status-critical);
+  padding: 9px 16px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--status-running);
+  padding: 0;
+  font-size: 12px;
+}
+
+.filter-pill {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.filter-pill.active {
+  background: var(--status-running);
+  border-color: var(--status-running);
+  color: #fff;
+}
+
+/* --- New run form --- */
+
+.new-run-form .form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.new-run-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.new-run-form select,
+.new-run-form input,
+.table-search {
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-page);
+  color: var(--text-primary);
+}
+
+.grep-label {
+  flex: 1;
+  min-width: 140px;
+}
+
+.tag-quickpicks {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+/* --- Run list / test table --- */
+
+.test-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.test-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gridline);
+}
+
+.test-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--gridline);
+  vertical-align: top;
+}
+
+.test-table tr.row-failed {
+  background: color-mix(in srgb, var(--status-critical) 6%, transparent);
+}
+
+.expand-cell {
+  width: 16px;
+  color: var(--text-muted);
+}
+
+.test-file {
+  font-size: 11px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.run-list table tbody tr:hover {
+  background: color-mix(in srgb, var(--status-running) 5%, transparent);
+}
+
+/* --- Failure detail panel --- */
+
+.failure-panel {
+  background: var(--surface-page);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.failure-error-message {
+  color: var(--status-critical);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.failure-error-stack {
+  font-size: 11px;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  margin: 0 0 12px;
+}
+
+.failure-artifacts {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.artifact-thumb img {
+  max-height: 120px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.artifact-video {
+  max-height: 160px;
+  border-radius: 6px;
+}
+
+.trace-link {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* --- Charts --- */
+
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.chart-card h3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.chart-legend {
+  list-style: none;
+  display: flex;
+  gap: 16px;
+  padding: 0;
+  margin: 8px 0 0;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* --- Run detail header / progress --- */
+
+.run-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.run-detail-header h2 {
+  margin: 6px 0;
+  font-size: 18px;
+}
+
+.progress-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--status-running);
+  transition: width 0.3s ease;
+}

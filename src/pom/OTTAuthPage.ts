@@ -1074,6 +1074,18 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
+        // Same result-card selector OTTDetailsPage.clickFirstSearchResult() uses
+        // to actually click into a result - that selector reliably finds real
+        // result thumbnails, whereas the previous check here grabbed the first
+        // img[alt] on the whole page (often a header/logo icon rendered before
+        // any results), producing false negatives even when results were present.
+        const resultThumbnails = this.page.locator('div[class*="thumbnail"]');
+        try {
+            await resultThumbnails.first().waitFor({ state: 'visible', timeout: 8000 });
+            return true;
+        } catch {
+            // Fall back to the alt-text heuristic for layouts that render results as bare images.
+        }
         const locator = this.page.locator(this.searchResultImages.selector).first();
         const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();

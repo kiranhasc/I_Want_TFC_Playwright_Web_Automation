@@ -3,6 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// When a run is triggered from the dashboard, DASHBOARD_RUN_ID is set by
+// dashboard/lib/processRunner.js so the json reporter's output lands in a
+// per-run file that dashboard/reporter/dashboard-reporter.js's sibling
+// backend code can associate back to that run.
+const dashboardRunId = process.env.DASHBOARD_RUN_ID;
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -17,8 +23,18 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* 'html' is kept for CI artifact upload compatibility; 'json' is a secondary
+   * structured artifact; the dashboard reporter streams live events to the
+   * dashboard backend and is a no-op unless DASHBOARD_SERVER_URL is set. */
+  reporter: [
+    ['html'],
+    ['json', {
+      outputFile: dashboardRunId
+        ? `dashboard/data/reports/${dashboardRunId}.json`
+        : 'test-results/results.json',
+    }],
+    ['./dashboard/reporter/dashboard-reporter.js'],
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     channel: 'chrome',  

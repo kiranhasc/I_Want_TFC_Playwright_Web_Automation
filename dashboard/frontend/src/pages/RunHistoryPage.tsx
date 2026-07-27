@@ -1,29 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useDashboardSocket } from '../api/useDashboardSocket';
-import type { ProjectsManifest, RunRecord } from '../api/types';
-import { StatusBadge } from '../components/StatusBadge';
+import type { ProjectsManifest, RunRecord, RunStatus } from '../api/types';
 import { NewRunForm } from '../components/NewRunForm';
+import { RunCard } from '../components/RunCard';
 
-function relativeTime(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
+const STATUS_FILTERS = ['all', 'running', 'passed', 'failed', 'stopped'] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+function matchesStatus(status: RunStatus, filter: StatusFilter) {
+  if (filter === 'all') return true;
+  if (filter === 'running') return status === 'running' || status === 'queued';
+  return status === filter;
 }
 
 export function RunHistoryPage() {
   const [manifest, setManifest] = useState<ProjectsManifest | null>(null);
   const [runs, setRuns] = useState<RunRecord[]>([]);
   const [starting, setStarting] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const navigate = useNavigate();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const refetchRuns = useCallback(() => {
-    api.listRuns(30).then(setRuns).catch(() => {});
+    api.listRuns(50).then(setRuns).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -36,6 +38,31 @@ export function RunHistoryPage() {
     else if (msg.type === 'run-status' || msg.type === 'job-status') refetchRuns();
   });
 
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (document.activeElement?.tagName ?? '').toLowerCase();
+      if (e.key === '/' && tag !== 'input' && tag !== 'textarea') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === 'Escape' && document.activeElement === searchRef.current) {
+        searchRef.current?.blur();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
+  const filtered = useMemo(() => {
+    return runs.filter((r) => {
+      if (!matchesStatus(r.status, statusFilter)) return false;
+      if (search) {
+        const haystack = `${r.trigger.project ?? 'all projects'} ${r.trigger.env} ${r.trigger.grep ?? ''} ${r.trigger.type}`.toLowerCase();
+        if (!haystack.includes(search.toLowerCase())) return false;
+      }
+      return true;
+    });
+  }, [runs, search, statusFilter]);
+
   async function handleStart(args: { env: string; project?: string; grep?: string }) {
     setStarting(true);
     try {
@@ -47,44 +74,48 @@ export function RunHistoryPage() {
   }
 
   return (
-    <div className="run-history">
+    <div className="run-history page-fade">
+      <div className="page-heading">
+        <h2>Run history</h2>
+        <p className="muted">Start a new run, or dig back through past ones.</p>
+      </div>
+
       {manifest && <NewRunForm manifest={manifest} onStart={handleStart} starting={starting} />}
 
       <div className="card run-list">
-        <h3>Run history</h3>
+        <div className="table-toolbar">
+          <h3>All runs</h3>
+          <input
+            ref={searchRef}
+            type="search"
+            placeholder="Search runs… ( / )"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="table-search"
+          />
+          <div className="filter-pills" role="tablist" aria-label="Filter by status">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f}
+                className={`filter-pill${statusFilter === f ? ' active' : ''}`}
+                onClick={() => setStatusFilter(f)}
+              >
+                {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {runs.length === 0 ? (
           <p className="muted">No runs yet — start one above.</p>
+        ) : filtered.length === 0 ? (
+          <p className="muted">No runs match this filter.</p>
         ) : (
-          <table className="test-table">
-            <thead>
-              <tr>
-                <th>Run</th>
-                <th>Status</th>
-                <th>Results</th>
-                <th>Started</th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((run) => (
-                <tr key={run.runId} onClick={() => navigate(`/runs/${run.runId}`)} style={{ cursor: 'pointer' }}>
-                  <td>
-                    <div>{run.trigger.project ?? 'All projects'} · {run.trigger.env}</div>
-                    <div className="muted test-file">
-                      {run.trigger.type === 'rerun' ? `Rerun of ${run.trigger.sourceRunId?.slice(0, 8)}…` : run.trigger.type}
-                      {run.trigger.grep ? ` · ${run.trigger.grep}` : ''}
-                    </div>
-                  </td>
-                  <td>
-                    <StatusBadge status={run.status} />
-                  </td>
-                  <td className="tabular-nums muted">
-                    {run.stats.passed}✓ / {run.stats.failed}✕ / {run.stats.skipped}–
-                  </td>
-                  <td className="muted">{relativeTime(run.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="run-card-grid">
+            {filtered.map((run) => (
+              <RunCard run={run} key={run.runId} />
+            ))}
+          </div>
         )}
       </div>
     </div>

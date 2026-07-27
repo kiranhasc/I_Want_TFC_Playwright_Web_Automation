@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { TestRecord } from '../api/types';
 import { StatusBadge } from './StatusBadge';
 import { FailureDetailPanel } from './FailureDetailPanel';
@@ -24,6 +24,21 @@ export function TestTable({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'failed' | 'passed' | 'skipped'>('all');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (document.activeElement?.tagName ?? '').toLowerCase();
+      if (e.key === '/' && tag !== 'input' && tag !== 'textarea') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === 'Escape' && document.activeElement === searchRef.current) {
+        searchRef.current?.blur();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const filtered = useMemo(() => {
     return tests.filter((t) => {
@@ -48,8 +63,9 @@ export function TestTable({
     <div className="card">
       <div className="table-toolbar">
         <input
+          ref={searchRef}
           type="search"
-          placeholder="Search tests…"
+          placeholder="Search tests… ( / )"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="table-search"

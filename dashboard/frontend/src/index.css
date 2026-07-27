@@ -102,28 +102,25 @@ button {
   font-family: inherit;
 }
 
-.app-shell {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 20px 64px;
+:focus-visible {
+  outline: 2px solid var(--status-running);
+  outline-offset: 2px;
 }
 
-.app-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 24px;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--axis) transparent;
 }
 
-.app-header h1 {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0;
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
-.app-header a {
-  text-decoration: none;
-  color: inherit;
+::-webkit-scrollbar-thumb {
+  background: var(--axis);
+  border-radius: 999px;
+  border: 2px solid var(--surface-page);
 }
 
 .card {

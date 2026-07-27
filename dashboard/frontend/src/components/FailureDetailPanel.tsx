@@ -1,5 +1,6 @@
 import { api } from '../api/client';
 import type { TestRecord } from '../api/types';
+import { CopyButton } from './CopyButton';
 
 function attachmentsByName(test: TestRecord, name: string) {
   return test.attachments.filter((a) => a.name === name && a.path);
@@ -14,7 +15,10 @@ export function FailureDetailPanel({ test }: { test: TestRecord }) {
     <div className="failure-panel">
       {test.error && (
         <div className="failure-error">
-          <div className="failure-error-message">{test.error.message}</div>
+          <div className="failure-error-header">
+            <div className="failure-error-message">{test.error.message}</div>
+            <CopyButton value={test.error.stack ?? test.error.message} label="Copy error" />
+          </div>
           {test.error.stack && <pre className="failure-error-stack">{test.error.stack}</pre>}
         </div>
       )}

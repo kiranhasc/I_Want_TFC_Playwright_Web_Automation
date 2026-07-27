@@ -6,7 +6,9 @@ import { useDashboardSocket } from '../api/useDashboardSocket';
 import type { RunRecord } from '../api/types';
 import { StatTile } from '../components/StatTile';
 import { RunCard } from '../components/RunCard';
+import { ExportButtons } from '../components/ExportButtons';
 import { findFlakyTests, findTopFailing } from '../utils/runStats';
+import { exportOverviewPDF } from '../utils/export';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
 const HISTORY_WINDOW = 20;
@@ -75,9 +77,23 @@ export function OverviewPage() {
 
   return (
     <div className="overview-page page-fade">
-      <div className="page-heading">
-        <h2>Overview</h2>
-        <p className="muted">A pulse check on your last {Math.min(HISTORY_WINDOW, runs.length)} runs.</p>
+      <div className="page-heading page-heading-row">
+        <div>
+          <h2>Overview</h2>
+          <p className="muted">A pulse check on your last {Math.min(HISTORY_WINDOW, runs.length)} runs.</p>
+        </div>
+        <ExportButtons
+          onExportPDF={() =>
+            exportOverviewPDF({
+              totalRuns: stats.totalRuns,
+              passRate: stats.passRate,
+              activeCount: stats.active.length,
+              flaky: stats.flaky,
+              topFailing: stats.topFailing,
+              recentRuns: runs.slice(0, 10),
+            })
+          }
+        />
       </div>
 
       <div className="stat-grid">

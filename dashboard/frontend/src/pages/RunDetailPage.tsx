@@ -8,7 +8,9 @@ import { RunSummaryCharts } from '../components/RunSummaryCharts';
 import { TestTable } from '../components/TestTable';
 import { CopyButton } from '../components/CopyButton';
 import { Confetti } from '../components/Confetti';
+import { ExportButtons } from '../components/ExportButtons';
 import { formatDuration, runDuration } from '../utils/runStats';
+import { exportRunCSV, exportRunPDF } from '../utils/export';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
 const DEFAULT_TITLE = 'TFC Playwright Dashboard';
@@ -139,6 +141,7 @@ export function RunDetailPage() {
           </div>
         </div>
         <div className="run-detail-actions">
+          <ExportButtons onExportPDF={() => exportRunPDF(run)} onExportCSV={() => exportRunCSV(run)} />
           {isActive && (
             <button className="danger-button" onClick={handleStop} disabled={busy}>
               Stop run

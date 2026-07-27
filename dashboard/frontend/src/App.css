@@ -16,6 +16,14 @@ h3 {
   margin: 0;
 }
 
+.page-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .run-history,
 .run-detail,
 .overview-page {
@@ -272,6 +280,32 @@ h3 {
 
 .danger-button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--status-critical) 10%, transparent);
+}
+
+.secondary-button {
+  background: var(--surface-page);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 9px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.secondary-button:hover:not(:disabled) {
+  border-color: var(--status-running);
+  color: var(--status-running);
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.export-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .link-button {
@@ -753,6 +787,15 @@ h3 {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.run-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .progress-card {

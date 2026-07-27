@@ -5,6 +5,8 @@ import { useDashboardSocket } from '../api/useDashboardSocket';
 import type { ProjectsManifest, RunRecord, RunStatus } from '../api/types';
 import { NewRunForm } from '../components/NewRunForm';
 import { RunCard } from '../components/RunCard';
+import { ExportButtons } from '../components/ExportButtons';
+import { exportRunsCSV } from '../utils/export';
 
 const STATUS_FILTERS = ['all', 'running', 'passed', 'failed', 'stopped'] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
@@ -104,6 +106,7 @@ export function RunHistoryPage() {
               </button>
             ))}
           </div>
+          <ExportButtons onExportCSV={() => exportRunsCSV(filtered)} disabled={filtered.length === 0} />
         </div>
 
         {runs.length === 0 ? (

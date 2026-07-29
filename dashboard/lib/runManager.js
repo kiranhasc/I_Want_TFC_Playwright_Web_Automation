@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { RUNS_DIR, REPO_ROOT } = require('./paths');
 const { spawnPlaywrightJob, killJobTree } = require('./processRunner');
+const { analyzeTest: runRcaAnalysis } = require('./rca');
 
 const FAILURE_STATUSES = new Set(['failed', 'timedOut', 'interrupted']);
 
@@ -223,6 +224,20 @@ class RunManager {
     };
 
     runNext(0);
+  }
+
+  /** Runs RCA for one test in a run, persists the result onto that test record, and returns it. */
+  async analyzeTest(runId, testId) {
+    const run = this._getMutableRun(runId);
+    if (!run) throw new Error(`Run ${runId} not found`);
+    const test = run.tests[testId];
+    if (!test) throw new Error(`Test ${testId} not found in run ${runId}`);
+
+    const rca = await runRcaAnalysis(test);
+    test.rca = rca;
+    this._saveRun(run);
+    this.broadcast({ type: 'run-event', runId, event: 'test-rca', payload: { testId, rca } });
+    return rca;
   }
 
   _recomputeStats(run) {

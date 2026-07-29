@@ -13,6 +13,18 @@ export interface TestError {
   stack?: string;
 }
 
+export interface RcaResult {
+  ruleId?: string;
+  source: 'heuristic' | 'ollama' | 'api';
+  model?: string;
+  summary: string;
+  rootCause: string;
+  suggestedFix: string;
+  note?: string;
+  generatedAt: string;
+  errorContextFile: string | null;
+}
+
 export interface TestRecord {
   testId: string;
   title: string;
@@ -25,6 +37,7 @@ export interface TestRecord {
   duration: number | null;
   error: TestError | null;
   attachments: TestAttachment[];
+  rca?: RcaResult | null;
 }
 
 export interface JobRecord {

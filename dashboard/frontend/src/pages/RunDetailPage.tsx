@@ -185,6 +185,7 @@ export function RunDetailPage() {
 
       <TestTable
         tests={tests}
+        runId={run.runId}
         onRerunTest={(testId) => handleRerun('test', testId)}
         onRerunFile={(file) => handleRerun('file', file)}
         onRerunProject={(project) => handleRerun('project', project)}

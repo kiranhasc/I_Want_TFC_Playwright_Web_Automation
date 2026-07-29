@@ -1,15 +1,51 @@
+import { useState } from 'react';
 import { api } from '../api/client';
-import type { TestRecord } from '../api/types';
+import type { RcaResult, TestRecord } from '../api/types';
 import { CopyButton } from './CopyButton';
 
 function attachmentsByName(test: TestRecord, name: string) {
   return test.attachments.filter((a) => a.name === name && a.path);
 }
 
-export function FailureDetailPanel({ test }: { test: TestRecord }) {
+function RcaSourceBadge({ rca }: { rca: RcaResult }) {
+  const label =
+    rca.source === 'ollama'
+      ? `AI (local · ${rca.model || 'ollama'})`
+      : rca.source === 'api'
+        ? `AI (${rca.model || 'cloud'})`
+        : 'Heuristic (rule-based)';
+  return <span className={`rca-badge rca-badge-${rca.source}`}>{label}</span>;
+}
+
+export function FailureDetailPanel({
+  test,
+  runId,
+  onRerunTest,
+}: {
+  test: TestRecord;
+  runId: string;
+  onRerunTest: (testId: string) => void;
+}) {
+  const [rca, setRca] = useState<RcaResult | null | undefined>(test.rca);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
   const screenshots = attachmentsByName(test, 'screenshot');
   const videos = attachmentsByName(test, 'video');
   const traces = attachmentsByName(test, 'trace');
+
+  async function handleAnalyze() {
+    setAnalyzing(true);
+    setAnalyzeError(null);
+    try {
+      const result = await api.analyzeTest(runId, test.testId);
+      setRca(result);
+    } catch (err) {
+      setAnalyzeError(err instanceof Error ? err.message : 'Analysis failed');
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   return (
     <div className="failure-panel">
@@ -22,6 +58,44 @@ export function FailureDetailPanel({ test }: { test: TestRecord }) {
           {test.error.stack && <pre className="failure-error-stack">{test.error.stack}</pre>}
         </div>
       )}
+
+      <div className="rca-section">
+        {!rca && (
+          <button className="secondary-button" onClick={handleAnalyze} disabled={analyzing}>
+            {analyzing ? 'Analyzing…' : 'Analyze failure'}
+          </button>
+        )}
+
+        {analyzeError && <div className="rca-error">{analyzeError}</div>}
+
+        {rca && (
+          <div className="rca-result">
+            <div className="rca-result-header">
+              <RcaSourceBadge rca={rca} />
+              <button className="link-button" onClick={handleAnalyze} disabled={analyzing}>
+                {analyzing ? 'Re-analyzing…' : 'Re-analyze'}
+              </button>
+            </div>
+            {rca.note && <div className="rca-note">{rca.note}</div>}
+            <div className="rca-block">
+              <h4>Root cause</h4>
+              <p>{rca.summary}</p>
+              {rca.rootCause && rca.rootCause !== rca.summary && <p className="muted">{rca.rootCause}</p>}
+            </div>
+            {rca.suggestedFix && (
+              <div className="rca-block">
+                <h4>Suggested fix</h4>
+                <pre className="rca-fix">{rca.suggestedFix}</pre>
+              </div>
+            )}
+            <div className="rca-actions">
+              <button className="primary-button" onClick={() => onRerunTest(test.testId)}>
+                Rerun this test
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="failure-artifacts">
         {screenshots.map((s) => (

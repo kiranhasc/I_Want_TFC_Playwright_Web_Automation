@@ -1,4 +1,4 @@
-import type { AutoUpdateStatus, ProjectsManifest, RerunScope, RunRecord } from './types';
+import type { AutoUpdateStatus, ProjectsManifest, RcaResult, RerunScope, RunRecord } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -32,6 +32,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ scope, target }),
     }),
+
+  analyzeTest: (runId: string, testId: string) =>
+    request<RcaResult>(`/api/runs/${runId}/tests/${encodeURIComponent(testId)}/analyze`, { method: 'POST' }),
 
   rerunLastFailed: (env: string, project?: string) =>
     request<{ runId: string }>('/api/runs/last-failed/rerun', {

@@ -12,11 +12,13 @@ function formatDuration(ms: number | null) {
 
 export function TestTable({
   tests,
+  runId,
   onRerunTest,
   onRerunFile,
   onRerunProject,
 }: {
   tests: TestRecord[];
+  runId: string;
   onRerunTest: (testId: string) => void;
   onRerunFile: (file: string) => void;
   onRerunProject: (project: string) => void;
@@ -136,7 +138,7 @@ export function TestTable({
                 {isFailure && isOpen && (
                   <tr>
                     <td colSpan={6}>
-                      <FailureDetailPanel test={t} />
+                      <FailureDetailPanel test={t} runId={runId} onRerunTest={onRerunTest} />
                     </td>
                   </tr>
                 )}

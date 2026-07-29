@@ -55,6 +55,15 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     }
   });
 
+  router.post('/runs/:runId/tests/:testId/analyze', async (req, res) => {
+    try {
+      const rca = await runManager.analyzeTest(req.params.runId, req.params.testId);
+      res.json(rca);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
   router.post('/runs/last-failed/rerun', (req, res) => {
     const { env, project } = req.body || {};
     if (!env) return res.status(400).json({ error: 'env is required' });

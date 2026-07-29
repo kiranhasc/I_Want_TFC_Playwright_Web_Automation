@@ -1,8 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const { execSync, execFileSync } = require('child_process');
 const { REPO_ROOT } = require('./paths');
 const { regenerateProjectsManifest } = require('./generateProjectsManifest');
 
 const DEFAULT_INTERVAL_MS = 3 * 60 * 1000;
+const FRONTEND_SRC_DIR = path.join(REPO_ROOT, 'dashboard', 'frontend', 'src');
+const LOCAL_REBUILD_DEBOUNCE_MS = 500;
 
 function git(args) {
   return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
@@ -27,6 +31,13 @@ function git(args) {
  * (GET /api/auto-update/status, see routes/api.js) so a freshly opened
  * dashboard tab shows the current version/state immediately instead of
  * waiting for the next tick.
+ *
+ * Separately from the git-polling above, `startLocalFrontendWatch()` covers
+ * a gap nodemon doesn't: dashboard/nodemon.json deliberately ignores
+ * dashboard/frontend/**, since restarting the server wouldn't rebuild the
+ * pre-built dist/ bundle Express actually serves. Without this, editing a
+ * frontend file locally (no commit, no pull) would never show up until
+ * someone remembers to run `npm run dashboard:build` by hand.
  */
 class AutoUpdater {
   constructor({ broadcast, isRunActive, intervalMs, remote, log }) {
@@ -37,6 +48,10 @@ class AutoUpdater {
     this.log = log || ((msg) => console.log(`[auto-updater] ${msg}`));
     this.timer = null;
     this.status = this._initialStatus();
+    this.frontendWatcher = null;
+    this.rebuildDebounceTimer = null;
+    this.rebuildInProgress = false;
+    this.rebuildQueued = false;
   }
 
   _initialStatus() {
@@ -81,6 +96,58 @@ class AutoUpdater {
   stop() {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.stopLocalFrontendWatch();
+  }
+
+  startLocalFrontendWatch() {
+    if (this.frontendWatcher || !fs.existsSync(FRONTEND_SRC_DIR)) return;
+    // `recursive: true` is supported on Windows/macOS natively; on Linux
+    // Node silently only watches the top-level dir, so this is deliberately
+    // best-effort rather than a hard dependency of the feature.
+    this.frontendWatcher = fs.watch(FRONTEND_SRC_DIR, { recursive: true }, () => this._scheduleLocalRebuild());
+    this.log(`watching ${FRONTEND_SRC_DIR} for local edits`);
+  }
+
+  stopLocalFrontendWatch() {
+    if (this.frontendWatcher) this.frontendWatcher.close();
+    this.frontendWatcher = null;
+    if (this.rebuildDebounceTimer) clearTimeout(this.rebuildDebounceTimer);
+    this.rebuildDebounceTimer = null;
+  }
+
+  _scheduleLocalRebuild() {
+    if (this.rebuildDebounceTimer) clearTimeout(this.rebuildDebounceTimer);
+    this.rebuildDebounceTimer = setTimeout(() => this._runLocalRebuild(), LOCAL_REBUILD_DEBOUNCE_MS);
+  }
+
+  _runLocalRebuild() {
+    if (this.rebuildInProgress) {
+      // A save landed mid-build; run once more right after this one finishes
+      // instead of dropping it (execSync below is synchronous/blocking).
+      this.rebuildQueued = true;
+      return;
+    }
+    this.rebuildInProgress = true;
+    this._setStatus({ phase: 'building', detail: 'rebuilding dashboard frontend (local edit)' });
+    this.log('local frontend change detected — rebuilding');
+    try {
+      execSync('npm run build', { cwd: `${REPO_ROOT}/dashboard/frontend`, stdio: 'inherit' });
+      this._setStatus({
+        phase: 'updated',
+        detail: 'Dashboard frontend rebuilt from a local change — refresh to see it.',
+        lastUpdatedAt: new Date().toISOString(),
+      });
+      this.log('local rebuild complete');
+    } catch (err) {
+      this._setStatus({ phase: 'error', detail: `local rebuild failed: ${err.message}` });
+      this.log(`local rebuild failed: ${err.message}`);
+    } finally {
+      this.rebuildInProgress = false;
+      if (this.rebuildQueued) {
+        this.rebuildQueued = false;
+        this._scheduleLocalRebuild();
+      }
+    }
   }
 
   tick() {

@@ -45,6 +45,9 @@ const autoUpdater = new AutoUpdater({
 if (process.env.DASHBOARD_AUTO_UPDATE !== 'false') {
   autoUpdater.start();
 }
+if (process.env.DASHBOARD_WATCH_FRONTEND !== 'false') {
+  autoUpdater.startLocalFrontendWatch();
+}
 
 wss.on('connection', (socket) => {
   // Push a snapshot of recent runs so a freshly opened tab isn't blank mid-run.

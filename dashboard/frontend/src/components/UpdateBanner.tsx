@@ -33,7 +33,11 @@ export function UpdateBanner() {
     return (
       <div className="update-banner" role="status">
         <span>
-          New code was pulled from GitHub (<code>{status.shortSha}</code>) — refresh to see it.
+          {status.detail ?? (
+            <>
+              New code was pulled from GitHub (<code>{status.shortSha}</code>) — refresh to see it.
+            </>
+          )}
         </span>
         <div className="update-banner-actions">
           <button type="button" className="update-banner-refresh" onClick={() => window.location.reload()}>

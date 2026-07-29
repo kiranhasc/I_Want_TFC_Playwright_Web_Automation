@@ -17,7 +17,7 @@ export default function App() {
         <div className="sidebar-brand">
           <span className="sidebar-logo">▶</span>
           <span className="sidebar-title">
-            I Want TFC
+            I Want TFC v2
             <small>Playwright Dashboard</small>
           </span>
         </div>

@@ -98,30 +98,39 @@ class AutoUpdater {
       return;
     }
 
-    this._setStatus({ phase: 'checking', detail: null, lastCheckedAt: new Date().toISOString() });
-
+    // Read HEAD fresh on every tick — it may have moved since the last tick
+    // for reasons that have nothing to do with this updater's own pulls (a
+    // local commit, a manual `git pull`/checkout by whoever's developing).
+    // Stamping it onto every status below is what makes the badge
+    // self-correct on the very next poll instead of only when *this*
+    // updater is the one that moved HEAD.
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+    const sha = git(['rev-parse', 'HEAD']);
+    const shortSha = sha.slice(0, 7);
+
+    this._setStatus({ phase: 'checking', sha, shortSha, branch, detail: null, lastCheckedAt: new Date().toISOString() });
+
     git(['fetch', this.remote, branch]);
 
     const behind = Number(git(['rev-list', `HEAD..${this.remote}/${branch}`, '--count']));
     if (behind === 0) {
-      this._setStatus({ phase: 'up-to-date', detail: null });
+      this._setStatus({ phase: 'up-to-date', sha, shortSha, branch, detail: null });
       return;
     }
 
     if (git(['status', '--porcelain'])) {
-      this._setStatus({ phase: 'skipped', detail: 'local working tree has uncommitted changes' });
+      this._setStatus({ phase: 'skipped', sha, shortSha, branch, detail: 'local working tree has uncommitted changes' });
       this.log('skipped — local working tree has uncommitted changes');
       return;
     }
 
-    const beforeSha = git(['rev-parse', 'HEAD']);
-    this._setStatus({ phase: 'pulling', detail: `${behind} commit(s) available` });
+    const beforeSha = sha;
+    this._setStatus({ phase: 'pulling', sha, shortSha, branch, detail: `${behind} commit(s) available` });
 
     try {
       git(['pull', '--ff-only', this.remote, branch]);
     } catch (err) {
-      this._setStatus({ phase: 'error', detail: `fast-forward pull failed: ${err.message}` });
+      this._setStatus({ phase: 'error', sha, shortSha, branch, detail: `fast-forward pull failed: ${err.message}` });
       this.log(`skipped — fast-forward pull failed (history may have diverged): ${err.message}`);
       return;
     }
@@ -134,7 +143,7 @@ class AutoUpdater {
     this.log(`pulled ${behind} commit(s): ${beforeSha.slice(0, 7)} -> ${afterSha.slice(0, 7)}`);
 
     try {
-      this._runFollowUp(changedFiles);
+      this._runFollowUp(changedFiles, { sha: afterSha, shortSha: afterSha.slice(0, 7), branch });
     } catch (err) {
       this._setStatus({
         phase: 'error',
@@ -158,33 +167,33 @@ class AutoUpdater {
     });
   }
 
-  _runFollowUp(changedFiles) {
+  _runFollowUp(changedFiles, headInfo) {
     const changed = (prefix) => changedFiles.some((f) => f.startsWith(prefix));
 
     if (changed('package.json') || changed('package-lock.json')) {
-      this._setStatus({ phase: 'installing', detail: 'installing root dependencies' });
+      this._setStatus({ phase: 'installing', ...headInfo, detail: 'installing root dependencies' });
       this.log('root package.json changed — running npm install');
       execSync('npm install', { cwd: REPO_ROOT, stdio: 'inherit' });
     }
     if (changed('dashboard/package.json') || changed('dashboard/package-lock.json')) {
-      this._setStatus({ phase: 'installing', detail: 'installing dashboard dependencies' });
+      this._setStatus({ phase: 'installing', ...headInfo, detail: 'installing dashboard dependencies' });
       this.log('dashboard/package.json changed — running npm install');
       execSync('npm install', { cwd: `${REPO_ROOT}/dashboard`, stdio: 'inherit' });
     }
 
     if (changed('dashboard/frontend/')) {
       if (changed('dashboard/frontend/package.json') || changed('dashboard/frontend/package-lock.json')) {
-        this._setStatus({ phase: 'installing', detail: 'installing dashboard frontend dependencies' });
+        this._setStatus({ phase: 'installing', ...headInfo, detail: 'installing dashboard frontend dependencies' });
         this.log('dashboard/frontend/package.json changed — running npm install');
         execSync('npm install', { cwd: `${REPO_ROOT}/dashboard/frontend`, stdio: 'inherit' });
       }
-      this._setStatus({ phase: 'building', detail: 'rebuilding dashboard frontend' });
+      this._setStatus({ phase: 'building', ...headInfo, detail: 'rebuilding dashboard frontend' });
       this.log('dashboard/frontend changed — rebuilding');
       execSync('npm run build', { cwd: `${REPO_ROOT}/dashboard/frontend`, stdio: 'inherit' });
     }
 
     if (changed('playwright.config.ts') || changed('tests/')) {
-      this._setStatus({ phase: 'syncing-manifest', detail: 'syncing project list' });
+      this._setStatus({ phase: 'syncing-manifest', ...headInfo, detail: 'syncing project list' });
       this.log('playwright.config.ts or a spec changed — syncing project manifest');
       regenerateProjectsManifest();
     }

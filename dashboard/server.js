@@ -8,6 +8,8 @@ const { FRONTEND_DIST_DIR } = require('./lib/paths');
 const RunManager = require('./lib/runManager');
 const createApiRouter = require('./routes/api');
 const filesRouter = require('./routes/files');
+const { regenerateProjectsManifest } = require('./lib/generateProjectsManifest');
+const { AutoUpdater } = require('./lib/autoUpdater');
 
 const PORT = Number(process.env.DASHBOARD_PORT) || 4300;
 const HOST = '127.0.0.1'; // Localhost-only: this server can spawn arbitrary Playwright
@@ -28,13 +30,29 @@ function broadcast(message) {
 
 const runManager = new RunManager({ port: PORT, broadcast });
 
+// Keep dashboard/config/projects.json in sync with playwright.config.ts on
+// every boot. Never let a sync failure block the server from starting.
+try {
+  regenerateProjectsManifest();
+} catch (err) {
+  console.error('[dashboard] failed to sync projects.json on startup:', err.message);
+}
+
+const autoUpdater = new AutoUpdater({
+  broadcast,
+  isRunActive: () => runManager.activeJobs.size > 0,
+});
+if (process.env.DASHBOARD_AUTO_UPDATE !== 'false') {
+  autoUpdater.start();
+}
+
 wss.on('connection', (socket) => {
   // Push a snapshot of recent runs so a freshly opened tab isn't blank mid-run.
   socket.send(JSON.stringify({ type: 'snapshot', runs: runManager.listRuns(20) }));
 });
 
 app.use('/api/files', filesRouter);
-app.use('/api', createApiRouter(runManager));
+app.use('/api', createApiRouter(runManager, autoUpdater));
 
 if (fs.existsSync(FRONTEND_DIST_DIR)) {
   app.use(express.static(FRONTEND_DIST_DIR));

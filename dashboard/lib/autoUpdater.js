@@ -1,0 +1,194 @@
+const { execSync, execFileSync } = require('child_process');
+const { REPO_ROOT } = require('./paths');
+const { regenerateProjectsManifest } = require('./generateProjectsManifest');
+
+const DEFAULT_INTERVAL_MS = 3 * 60 * 1000;
+
+function git(args) {
+  return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf-8' }).trim();
+}
+
+/**
+ * Polls the configured remote/branch for new commits and, if the working
+ * tree is clean and a fast-forward is possible, pulls them in and does
+ * whatever follow-up the changed files call for. This is deliberately
+ * polling rather than a GitHub webhook: dashboard/server.js binds to
+ * 127.0.0.1 only because it can spawn arbitrary Playwright/Chrome processes
+ * on request, and a real webhook would need an inbound endpoint reachable
+ * from GitHub, which breaks that boundary.
+ *
+ * Any change under dashboard/server.js, dashboard/lib, dashboard/routes, or
+ * dashboard/reporter needs no explicit restart step here: the pull just
+ * rewrites those files on disk, and nodemon (wrapping `node server.js`,
+ * see dashboard/nodemon.json) notices and restarts on its own.
+ *
+ * `this.status` is broadcast over the WebSocket on every phase transition
+ * (`auto-update-status` messages) and also served over REST
+ * (GET /api/auto-update/status, see routes/api.js) so a freshly opened
+ * dashboard tab shows the current version/state immediately instead of
+ * waiting for the next tick.
+ */
+class AutoUpdater {
+  constructor({ broadcast, isRunActive, intervalMs, remote, log }) {
+    this.broadcast = broadcast;
+    this.isRunActive = isRunActive;
+    this.intervalMs = intervalMs || Number(process.env.DASHBOARD_AUTO_UPDATE_INTERVAL_MS) || DEFAULT_INTERVAL_MS;
+    this.remote = remote || process.env.DASHBOARD_GIT_REMOTE || 'origin';
+    this.log = log || ((msg) => console.log(`[auto-updater] ${msg}`));
+    this.timer = null;
+    this.status = this._initialStatus();
+  }
+
+  _initialStatus() {
+    const base = {
+      phase: 'idle',
+      sha: null,
+      shortSha: null,
+      branch: null,
+      detail: null,
+      changedFiles: [],
+      lastCheckedAt: null,
+      lastUpdatedAt: null,
+    };
+    try {
+      const sha = git(['rev-parse', 'HEAD']);
+      return {
+        ...base,
+        sha,
+        shortSha: sha.slice(0, 7),
+        branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
+      };
+    } catch {
+      return base;
+    }
+  }
+
+  getStatus() {
+    return this.status;
+  }
+
+  _setStatus(partial) {
+    this.status = { ...this.status, ...partial };
+    this.broadcast({ type: 'auto-update-status', ...this.status });
+  }
+
+  start() {
+    if (this.timer) return;
+    this.timer = setInterval(() => this.tick(), this.intervalMs);
+    this.log(`polling ${this.remote} every ${Math.round(this.intervalMs / 1000)}s`);
+  }
+
+  stop() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+  }
+
+  tick() {
+    try {
+      this._tick();
+    } catch (err) {
+      this._setStatus({ phase: 'error', detail: err.message });
+      this.log(`tick failed, will retry next interval: ${err.message}`);
+    }
+  }
+
+  _tick() {
+    if (this.isRunActive()) {
+      this.log('skipped — a test run is in progress');
+      return;
+    }
+
+    this._setStatus({ phase: 'checking', detail: null, lastCheckedAt: new Date().toISOString() });
+
+    const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+    git(['fetch', this.remote, branch]);
+
+    const behind = Number(git(['rev-list', `HEAD..${this.remote}/${branch}`, '--count']));
+    if (behind === 0) {
+      this._setStatus({ phase: 'up-to-date', detail: null });
+      return;
+    }
+
+    if (git(['status', '--porcelain'])) {
+      this._setStatus({ phase: 'skipped', detail: 'local working tree has uncommitted changes' });
+      this.log('skipped — local working tree has uncommitted changes');
+      return;
+    }
+
+    const beforeSha = git(['rev-parse', 'HEAD']);
+    this._setStatus({ phase: 'pulling', detail: `${behind} commit(s) available` });
+
+    try {
+      git(['pull', '--ff-only', this.remote, branch]);
+    } catch (err) {
+      this._setStatus({ phase: 'error', detail: `fast-forward pull failed: ${err.message}` });
+      this.log(`skipped — fast-forward pull failed (history may have diverged): ${err.message}`);
+      return;
+    }
+
+    const afterSha = git(['rev-parse', 'HEAD']);
+    const changedFiles = git(['diff', '--name-only', beforeSha, afterSha])
+      .split('\n')
+      .filter(Boolean);
+
+    this.log(`pulled ${behind} commit(s): ${beforeSha.slice(0, 7)} -> ${afterSha.slice(0, 7)}`);
+
+    try {
+      this._runFollowUp(changedFiles);
+    } catch (err) {
+      this._setStatus({
+        phase: 'error',
+        sha: afterSha,
+        shortSha: afterSha.slice(0, 7),
+        branch,
+        detail: `pulled but a follow-up step failed: ${err.message}`,
+      });
+      this.log(`follow-up failed: ${err.message}`);
+      return;
+    }
+
+    this._setStatus({
+      phase: 'updated',
+      sha: afterSha,
+      shortSha: afterSha.slice(0, 7),
+      branch,
+      changedFiles,
+      detail: null,
+      lastUpdatedAt: new Date().toISOString(),
+    });
+  }
+
+  _runFollowUp(changedFiles) {
+    const changed = (prefix) => changedFiles.some((f) => f.startsWith(prefix));
+
+    if (changed('package.json') || changed('package-lock.json')) {
+      this._setStatus({ phase: 'installing', detail: 'installing root dependencies' });
+      this.log('root package.json changed — running npm install');
+      execSync('npm install', { cwd: REPO_ROOT, stdio: 'inherit' });
+    }
+    if (changed('dashboard/package.json') || changed('dashboard/package-lock.json')) {
+      this._setStatus({ phase: 'installing', detail: 'installing dashboard dependencies' });
+      this.log('dashboard/package.json changed — running npm install');
+      execSync('npm install', { cwd: `${REPO_ROOT}/dashboard`, stdio: 'inherit' });
+    }
+
+    if (changed('dashboard/frontend/')) {
+      if (changed('dashboard/frontend/package.json') || changed('dashboard/frontend/package-lock.json')) {
+        this._setStatus({ phase: 'installing', detail: 'installing dashboard frontend dependencies' });
+        this.log('dashboard/frontend/package.json changed — running npm install');
+        execSync('npm install', { cwd: `${REPO_ROOT}/dashboard/frontend`, stdio: 'inherit' });
+      }
+      this._setStatus({ phase: 'building', detail: 'rebuilding dashboard frontend' });
+      this.log('dashboard/frontend changed — rebuilding');
+      execSync('npm run build', { cwd: `${REPO_ROOT}/dashboard/frontend`, stdio: 'inherit' });
+    }
+
+    if (changed('playwright.config.ts') || changed('tests/')) {
+      this._setStatus({ phase: 'syncing-manifest', detail: 'syncing project list' });
+      this.log('playwright.config.ts or a spec changed — syncing project manifest');
+      regenerateProjectsManifest();
+    }
+  }
+}
+
+module.exports = { AutoUpdater };

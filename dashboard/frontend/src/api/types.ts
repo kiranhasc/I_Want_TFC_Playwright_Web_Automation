@@ -71,3 +71,26 @@ export interface ProjectsManifest {
 }
 
 export type RerunScope = 'test' | 'file' | 'project' | 'all-failed';
+
+export type AutoUpdatePhase =
+  | 'idle'
+  | 'checking'
+  | 'pulling'
+  | 'installing'
+  | 'building'
+  | 'syncing-manifest'
+  | 'updated'
+  | 'up-to-date'
+  | 'skipped'
+  | 'error';
+
+export interface AutoUpdateStatus {
+  phase: AutoUpdatePhase;
+  sha: string | null;
+  shortSha: string | null;
+  branch: string | null;
+  detail: string | null;
+  changedFiles: string[];
+  lastCheckedAt: string | null;
+  lastUpdatedAt: string | null;
+}

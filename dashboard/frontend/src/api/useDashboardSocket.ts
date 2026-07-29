@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import type { RunRecord } from './types';
+import type { AutoUpdateStatus, RunRecord } from './types';
 
 export type SocketMessage =
   | { type: 'snapshot'; runs: RunRecord[] }
   | { type: 'run-status'; runId: string; status: string }
   | { type: 'job-status'; runId: string; jobId: string; status: string }
-  | { type: 'run-event'; runId: string; jobId: string; event: string; payload: unknown };
+  | { type: 'run-event'; runId: string; jobId: string; event: string; payload: unknown }
+  | ({ type: 'auto-update-status' } & AutoUpdateStatus);
 
 type Listener = (msg: SocketMessage) => void;
 type StatusListener = (connected: boolean) => void;

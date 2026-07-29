@@ -1,4 +1,4 @@
-import type { ProjectsManifest, RerunScope, RunRecord } from './types';
+import type { AutoUpdateStatus, ProjectsManifest, RerunScope, RunRecord } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -15,6 +15,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   getProjects: () => request<ProjectsManifest>('/api/projects'),
+
+  getAutoUpdateStatus: () => request<AutoUpdateStatus>('/api/auto-update/status'),
 
   listRuns: (limit = 20) => request<RunRecord[]>(`/api/runs?limit=${limit}`),
 

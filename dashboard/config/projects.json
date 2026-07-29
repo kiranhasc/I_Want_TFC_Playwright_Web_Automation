@@ -1,8 +1,17 @@
 {
   "environments": [
-    { "value": "dev", "label": "Dev" },
-    { "value": "qa", "label": "QA" },
-    { "value": "prod", "label": "Prod" }
+    {
+      "value": "dev",
+      "label": "Dev"
+    },
+    {
+      "value": "qa",
+      "label": "QA"
+    },
+    {
+      "value": "prod",
+      "label": "Prod"
+    }
   ],
   "projects": [
     {
@@ -37,14 +46,47 @@
         "details-page.spec.ts"
       ]
     },
-    { "name": "search", "label": "Search", "specs": ["search.spec.ts"] },
-    { "name": "watchlist", "label": "Watchlist", "specs": ["watchlist-management.spec.ts"] },
-    { "name": "end-to-end", "label": "End to End", "specs": ["end-to-end.spec.ts"] },
-    { "name": "region", "label": "Region", "specs": ["ph_region.spec.ts"] }
+    {
+      "name": "search",
+      "label": "Search",
+      "specs": [
+        "search.spec.ts"
+      ]
+    },
+    {
+      "name": "watchlist",
+      "label": "Watchlist",
+      "specs": [
+        "watchlist-management.spec.ts"
+      ]
+    },
+    {
+      "name": "end-to-end",
+      "label": "End to End",
+      "specs": [
+        "end-to-end.spec.ts"
+      ]
+    },
+    {
+      "name": "region",
+      "label": "Region",
+      "specs": [
+        "ph_region.spec.ts"
+      ]
+    }
   ],
   "tags": [
-    { "value": "@High", "label": "High priority" },
-    { "value": "@Medium", "label": "Medium priority" },
-    { "value": "@Low", "label": "Low priority" }
+    {
+      "value": "@High",
+      "label": "High priority"
+    },
+    {
+      "value": "@Medium",
+      "label": "Medium priority"
+    },
+    {
+      "value": "@Low",
+      "label": "Low priority"
+    }
   ]
 }

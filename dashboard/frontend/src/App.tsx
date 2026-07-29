@@ -4,6 +4,8 @@ import { OverviewPage } from './pages/OverviewPage';
 import { RunHistoryPage } from './pages/RunHistoryPage';
 import { RunDetailPage } from './pages/RunDetailPage';
 import { ConnectionBadge } from './components/ConnectionBadge';
+import { AutoUpdateBadge } from './components/AutoUpdateBadge';
+import { UpdateBanner } from './components/UpdateBanner';
 import { useTheme } from './hooks/useTheme';
 
 export default function App() {
@@ -15,7 +17,7 @@ export default function App() {
         <div className="sidebar-brand">
           <span className="sidebar-logo">▶</span>
           <span className="sidebar-title">
-            I Want TFC
+            I Want TFC v2
             <small>Playwright Dashboard</small>
           </span>
         </div>
@@ -30,7 +32,10 @@ export default function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <ConnectionBadge />
+          <div className="sidebar-footer-badges">
+            <ConnectionBadge />
+            <AutoUpdateBadge />
+          </div>
           <button
             type="button"
             className="theme-toggle"
@@ -44,6 +49,7 @@ export default function App() {
       </aside>
 
       <main className="app-main">
+        <UpdateBanner />
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/runs" element={<RunHistoryPage />} />

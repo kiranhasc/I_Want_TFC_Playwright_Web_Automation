@@ -39,10 +39,11 @@
     "test:high": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @High",
     "test:medium": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Medium",
     "test:low": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Low",
-    "dashboard": "cd dashboard && node server.js",
+    "dashboard": "cd dashboard && npx nodemon server.js",
     "dashboard:install": "cd dashboard && npm install && cd frontend && npm install",
     "dashboard:build": "cd dashboard/frontend && npm run build",
-    "dashboard:dev": "cd dashboard/frontend && npm run dev"
+    "dashboard:dev": "cd dashboard/frontend && npm run dev",
+    "dashboard:sync-projects": "node dashboard/lib/generateProjectsManifest.js"
   },
   "keywords": [],
   "author": "",

@@ -2,9 +2,16 @@ const express = require('express');
 const fs = require('fs');
 const { PROJECTS_MANIFEST } = require('../lib/paths');
 
-/** @param {import('../lib/runManager')} runManager */
-module.exports = function createApiRouter(runManager) {
+/**
+ * @param {import('../lib/runManager')} runManager
+ * @param {import('../lib/autoUpdater').AutoUpdater} [autoUpdater]
+ */
+module.exports = function createApiRouter(runManager, autoUpdater) {
   const router = express.Router();
+
+  router.get('/auto-update/status', (req, res) => {
+    res.json(autoUpdater ? autoUpdater.getStatus() : { phase: 'idle' });
+  });
 
   router.get('/projects', (req, res) => {
     const manifest = JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'));

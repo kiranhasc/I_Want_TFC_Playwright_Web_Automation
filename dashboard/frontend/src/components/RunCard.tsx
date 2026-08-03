@@ -5,7 +5,7 @@ import { relativeTime, runDuration, formatDuration } from '../utils/runStats';
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
 
-export function RunCard({ run }: { run: RunRecord }) {
+export function RunCard({ run, onDelete }: { run: RunRecord; onDelete?: (runId: string) => void }) {
   const navigate = useNavigate();
   const total = run.stats.passed + run.stats.failed + run.stats.skipped || 1;
   const passPct = Math.round((run.stats.passed / total) * 100);
@@ -24,6 +24,21 @@ export function RunCard({ run }: { run: RunRecord }) {
       <div className="run-card-top">
         <StatusBadge status={run.status} />
         <span className="muted run-card-time">{relativeTime(run.createdAt)}</span>
+        {onDelete && !isActive && (
+          <button
+            type="button"
+            className="run-card-delete"
+            title="Delete this run"
+            aria-label={`Delete run from ${relativeTime(run.createdAt)}`}
+            // The whole card is a navigation target, so this must not bubble.
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(run.runId);
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
       <div className="run-card-title">
         {run.trigger.project ?? 'All projects'} · {run.trigger.env}

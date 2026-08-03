@@ -22,7 +22,7 @@ const FORMAT_DEFAULTS = {
   anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-3-5-haiku-20241022' },
 };
 
-async function callOpenAiCompatible(prompt, { baseUrl, apiKey, model }) {
+async function callOpenAiCompatible(prompt, { baseUrl, apiKey, model, timeoutMs = TIMEOUT_MS, maxTokens }) {
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -33,8 +33,9 @@ async function callOpenAiCompatible(prompt, { baseUrl, apiKey, model }) {
       model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
+      ...(maxTokens ? { max_tokens: maxTokens } : {}),
     }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -46,7 +47,7 @@ async function callOpenAiCompatible(prompt, { baseUrl, apiKey, model }) {
   return text;
 }
 
-async function callAnthropic(prompt, { baseUrl, apiKey, model }) {
+async function callAnthropic(prompt, { baseUrl, apiKey, model, timeoutMs = TIMEOUT_MS, maxTokens = 1024 }) {
   const res = await fetch(`${baseUrl}/messages`, {
     method: 'POST',
     headers: {
@@ -56,10 +57,10 @@ async function callAnthropic(prompt, { baseUrl, apiKey, model }) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1024,
+      max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
     }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -71,22 +72,40 @@ async function callAnthropic(prompt, { baseUrl, apiKey, model }) {
   return text;
 }
 
-/** Throws on any failure (missing key, unreachable, bad response) — caller decides the fallback. */
-async function runApiProvider(test, errorContext, { format = 'openai', apiKey, baseUrl, model } = {}) {
+/**
+ * Sends an arbitrary prompt and returns the raw completion text. Shared by
+ * RCA and the spot-fix generator so both go through the one API key the
+ * server is already configured with. Throws on any failure (missing key,
+ * unreachable, bad response) — caller decides the fallback.
+ *
+ * timeoutMs/maxTokens are parameters because spot fixes send whole source
+ * files and ask for code back, needing more of both than an RCA summary.
+ */
+async function completeWithApi(prompt, { format = 'openai', apiKey, baseUrl, model, timeoutMs, maxTokens } = {}) {
   if (!apiKey) {
     throw new Error('RCA_API_KEY is not configured');
   }
   const defaults = FORMAT_DEFAULTS[format] || FORMAT_DEFAULTS.openai;
-  const resolvedBaseUrl = baseUrl || defaults.baseUrl;
   const resolvedModel = model || defaults.model;
-  const prompt = buildPrompt(test, errorContext);
+  const opts = {
+    baseUrl: baseUrl || defaults.baseUrl,
+    apiKey,
+    model: resolvedModel,
+    timeoutMs,
+    maxTokens,
+  };
+  const raw = format === 'anthropic' ? await callAnthropic(prompt, opts) : await callOpenAiCompatible(prompt, opts);
+  return { raw, model: resolvedModel };
+}
 
-  const raw =
-    format === 'anthropic'
-      ? await callAnthropic(prompt, { baseUrl: resolvedBaseUrl, apiKey, model: resolvedModel })
-      : await callOpenAiCompatible(prompt, { baseUrl: resolvedBaseUrl, apiKey, model: resolvedModel });
-
+async function runApiProvider(test, errorContext, { format = 'openai', apiKey, baseUrl, model } = {}) {
+  const { raw, model: resolvedModel } = await completeWithApi(buildPrompt(test, errorContext), {
+    format,
+    apiKey,
+    baseUrl,
+    model,
+  });
   return { source: 'api', model: resolvedModel, ...parseModelResponse(raw) };
 }
 
-module.exports = { runApiProvider, FORMAT_DEFAULTS };
+module.exports = { runApiProvider, completeWithApi, FORMAT_DEFAULTS };

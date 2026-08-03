@@ -933,6 +933,367 @@ h3 {
   margin-top: 8px;
 }
 
+.rca-result-header .rca-category {
+  margin-right: auto;
+  margin-left: 8px;
+}
+
+.rca-category {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.rca-category-code {
+  color: var(--status-serious);
+}
+
+.rca-category-environment {
+  color: var(--status-warning);
+}
+
+.rca-category-infrastructure {
+  color: var(--status-running);
+}
+
+.rca-category-unknown {
+  color: var(--text-muted);
+}
+
+/* --- Spot fix (AI-proposed source edit, human-approved) --- */
+
+.spotfix-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.spotfix-unavailable {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.spotfix-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.spotfix-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.spotfix-confidence {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.spotfix-confidence-high {
+  background: color-mix(in srgb, var(--status-good) 15%, transparent);
+  color: var(--status-good);
+}
+
+.spotfix-confidence-medium {
+  background: color-mix(in srgb, var(--status-warning) 20%, transparent);
+  color: var(--status-warning);
+}
+
+.spotfix-confidence-low {
+  background: color-mix(in srgb, var(--status-serious) 18%, transparent);
+  color: var(--status-serious);
+}
+
+.spotfix-explanation {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+/* Deliberately loud: this is the "the fix cheats" warning. */
+.spotfix-risks {
+  background: color-mix(in srgb, var(--status-critical) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-critical) 35%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.spotfix-risks-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--status-critical);
+  margin-bottom: 6px;
+}
+
+.spotfix-risks ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.spotfix-risks li {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.spotfix-diff {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.spotfix-diff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.spotfix-edit-reason {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 6px 10px 0;
+}
+
+.spotfix-diff-body {
+  margin: 0;
+  padding: 8px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  /* Long test lines are common here; scroll this block rather than the page. */
+  overflow-x: auto;
+}
+
+.diff-row {
+  display: flex;
+  white-space: pre;
+}
+
+.diff-gutter {
+  flex: none;
+  width: 20px;
+  text-align: center;
+  user-select: none;
+  color: var(--text-muted);
+}
+
+.diff-text {
+  flex: 1;
+}
+
+.diff-add {
+  background: color-mix(in srgb, var(--status-good) 12%, transparent);
+}
+
+.diff-add .diff-gutter {
+  color: var(--status-good);
+}
+
+.diff-remove {
+  background: color-mix(in srgb, var(--status-critical) 10%, transparent);
+}
+
+.diff-remove .diff-gutter {
+  color: var(--status-critical);
+}
+
+.spotfix-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.spotfix-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--status-good) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-good) 30%, transparent);
+}
+
+/* --- Clear run history --- */
+
+.clear-history-confirm {
+  background: color-mix(in srgb, var(--status-critical) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-critical) 32%, transparent);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.clear-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.clear-history-result {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+/* Sits in the card's top row; the card itself is a navigation target. */
+.run-card-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.run-card:hover .run-card-delete,
+.run-card-delete:focus-visible {
+  opacity: 1;
+}
+
+.run-card-delete:hover {
+  color: var(--status-critical);
+  background: color-mix(in srgb, var(--status-critical) 12%, transparent);
+}
+
+/* --- Stalled run warning --- */
+
+.stalled-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--status-critical) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-critical) 40%, transparent);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- Applied spot fixes banner (uncommitted edits in the working tree) --- */
+
+.applied-fixes-banner {
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-warning) 45%, transparent);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.applied-fixes-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.applied-fixes-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.applied-fixes-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid color-mix(in srgb, var(--status-warning) 30%, transparent);
+}
+
+.applied-fixes-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.applied-fixes-item-text code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.applied-fixes-error {
+  margin-top: 8px;
+  color: var(--status-critical);
+  font-size: 12px;
+}
+
+.spotfix-verification {
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+
+.spotfix-verification.is-pending {
+  background: color-mix(in srgb, var(--status-running) 10%, transparent);
+  border-color: color-mix(in srgb, var(--status-running) 32%, transparent);
+}
+
+.spotfix-verification.is-passed {
+  background: color-mix(in srgb, var(--status-good) 12%, transparent);
+  border-color: color-mix(in srgb, var(--status-good) 35%, transparent);
+}
+
+.spotfix-verification.is-failed {
+  background: color-mix(in srgb, var(--status-critical) 10%, transparent);
+  border-color: color-mix(in srgb, var(--status-critical) 35%, transparent);
+}
+
+.spotfix-reverted,
+.spotfix-rejected {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.spotfix-rejected ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
 /* --- Charts --- */
 
 .charts-row {

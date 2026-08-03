@@ -64,6 +64,76 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     }
   });
 
+  // Generates a spot-fix proposal. Deliberately read-only with respect to the
+  // working tree — /spot-fix/apply below is the only endpoint that writes.
+  router.post('/runs/:runId/tests/:testId/spot-fix', async (req, res) => {
+    try {
+      const proposal = await runManager.proposeSpotFix(req.params.runId, req.params.testId);
+      res.json(proposal);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Writes the reviewed proposal to disk, optionally rerunning the test after.
+  router.post('/runs/:runId/tests/:testId/spot-fix/apply', (req, res) => {
+    try {
+      const result = runManager.applySpotFix(req.params.runId, req.params.testId, {
+        rerun: Boolean(req.body?.rerun),
+        // Provisional apply: kept only if the rerun comes back green.
+        verify: Boolean(req.body?.verify),
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.post('/runs/:runId/tests/:testId/spot-fix/revert', (req, res) => {
+    try {
+      const result = runManager.revertSpotFix(req.params.runId, req.params.testId);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Bulk-clears run history. Kept above the ':runId' routes so that adding a
+  // POST /runs/:runId later can't start swallowing "clear" as a run id.
+  router.post('/runs/clear', (req, res) => {
+    const keepLast = Number(req.body?.keepLast) || 0;
+    if (keepLast < 0) return res.status(400).json({ error: 'keepLast must be zero or greater' });
+    try {
+      res.json(runManager.clearRuns({ keepLast }));
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.delete('/runs/:runId', (req, res) => {
+    try {
+      runManager.deleteRun(req.params.runId);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Every spot fix currently applied to the working tree, across all runs —
+  // what backs the "uncommitted spot fixes" banner.
+  router.get('/spot-fixes', (req, res) => {
+    res.json(runManager.listAppliedSpotFixes());
+  });
+
+  // Revert by registry id, so undo works without knowing the originating run.
+  router.post('/spot-fixes/:id/revert', (req, res) => {
+    try {
+      res.json(runManager.revertAppliedSpotFix(req.params.id));
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
   router.post('/runs/last-failed/rerun', (req, res) => {
     const { env, project } = req.body || {};
     if (!env) return res.status(400).json({ error: 'env is required' });

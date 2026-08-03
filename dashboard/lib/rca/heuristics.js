@@ -9,6 +9,7 @@ const { stripAnsi } = require('./ansi');
 const RULES = [
   {
     id: 'cdn-access-denied',
+    category: 'infrastructure',
     test: (text) => /access denied/i.test(text) && /edgesuite\.net|akamai|don't have permission to access/i.test(text),
     build: () => ({
       summary: 'Blocked by the CDN edge (Akamai) before the app ever loaded.',
@@ -19,7 +20,35 @@ const RULES = [
     }),
   },
   {
+    /**
+     * The app's shell rendered but its content area came back empty — nav and
+     * footer present, `main` with no children at all. Every downstream check
+     * then fails for one reason: there was nothing on the page to check.
+     *
+     * Worth its own rule because it is otherwise indistinguishable from a
+     * stale-selector bug, and gets mislabelled as a code issue: the observed
+     * case was a live-channel page that navigated correctly (the document
+     * title matched) but rendered an empty `main`, which the AI classified as
+     * "code" and then tried to fix by rewriting an assertion. No edit to this
+     * repo can populate a page the app left blank.
+     *
+     * Matched against the page snapshot only, where `- main` on its own line
+     * means a main element with no accessible children.
+     */
+    id: 'empty-content-area',
+    category: 'environment',
+    test: (text, errorContext) => /^\s*-\s*main\s*$/m.test(errorContext?.pageSnapshot || ''),
+    build: () => ({
+      summary: 'The app rendered its shell but the content area came back empty.',
+      rootCause:
+        "The page snapshot shows navigation and footer present but `main` with no children — the app loaded its frame and then rendered nothing inside it. Any assertion about on-page content fails as a consequence, so the failing assertion is a symptom rather than the cause. This is not a test-logic bug: no change to the test or page objects can populate an empty page.",
+      suggestedFix:
+        'Open the same URL manually in a normal browser. If the content renders there but not under test, it is environmental — geo/entitlement restrictions or bot detection blocking the automated session (this app has a history of Akamai blocks). If it is empty there too, it is an application bug to raise with the developers rather than anything to fix here.',
+    }),
+  },
+  {
     id: 'locator-timeout',
+    category: 'code',
     test: (text) => /timeouterror/i.test(text) && /waitfor/i.test(text) && /locator/i.test(text),
     build: (match) => ({
       summary: `Element never became visible in time: ${match[1] ? match[1].trim() : 'target locator'}.`,
@@ -31,6 +60,7 @@ const RULES = [
   },
   {
     id: 'toast-text-mismatch',
+    category: 'code',
     test: (text) => /expect\(received\)\.toContain\(expected\)/i.test(text) && /received string:\s*""/i.test(text),
     build: () => ({
       summary: 'Expected confirmation text (e.g. a toast) was empty when checked.',
@@ -42,6 +72,7 @@ const RULES = [
   },
   {
     id: 'network-error',
+    category: 'environment',
     test: (text) => /net::err_|econnrefused|enotfound|err_connection/i.test(text),
     build: () => ({
       summary: 'A network-level request failed (connection refused/DNS/reset).',
@@ -53,6 +84,7 @@ const RULES = [
   },
   {
     id: 'assertion-mismatch',
+    category: 'code',
     test: (text) => /expect\(.*\)\.(toBe|toEqual|toContain|toHaveText)/i.test(text),
     build: () => ({
       summary: 'A value assertion failed (actual did not match expected).',
@@ -74,13 +106,16 @@ function combinedText(test, errorContext) {
 function runHeuristics(test, errorContext) {
   const text = combinedText(test, errorContext);
   for (const rule of RULES) {
-    if (!rule.test(text)) continue;
+    // errorContext is passed too: some signals (an empty content area) live in
+    // the structure of the page snapshot, not in the flattened error text.
+    if (!rule.test(text, errorContext)) continue;
     const locatorMatch = text.match(/locator\('([^']+)'\)/) || [];
-    return { ruleId: rule.id, source: 'heuristic', ...rule.build(locatorMatch) };
+    return { ruleId: rule.id, source: 'heuristic', category: rule.category, ...rule.build(locatorMatch) };
   }
   return {
     ruleId: 'no-match',
     source: 'heuristic',
+    category: 'unknown',
     summary: 'No known failure pattern matched — needs manual review.',
     rootCause: 'This failure did not match any of the known signatures this dashboard recognizes automatically.',
     suggestedFix: 'Check the error details, page snapshot, and screenshot/trace below to diagnose manually.',

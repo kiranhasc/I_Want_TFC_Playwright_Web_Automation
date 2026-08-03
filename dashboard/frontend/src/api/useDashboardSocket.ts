@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AutoUpdateStatus, RunRecord } from './types';
+import type { AppliedSpotFix, AutoUpdateStatus, RunRecord } from './types';
 
 export type SocketMessage =
   | { type: 'snapshot'; runs: RunRecord[] }
   | { type: 'run-status'; runId: string; status: string }
   | { type: 'job-status'; runId: string; jobId: string; status: string }
   | { type: 'run-event'; runId: string; jobId: string; event: string; payload: unknown }
+  | { type: 'spot-fixes-applied'; fixes: AppliedSpotFix[] }
+  | { type: 'run-stalled'; runId: string; stalledSince: string | null; silentForMs?: number }
+  | { type: 'runs-cleared'; deleted: number }
   | ({ type: 'auto-update-status' } & AutoUpdateStatus);
 
 type Listener = (msg: SocketMessage) => void;

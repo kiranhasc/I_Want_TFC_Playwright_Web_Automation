@@ -11,20 +11,32 @@ const DEFAULT_URL = 'http://127.0.0.1:11434';
 const DEFAULT_MODEL = 'llama3.2';
 const TIMEOUT_MS = 20000;
 
-/** Throws on any failure (unreachable, timeout, bad response) — caller decides the fallback. */
-async function runOllama(test, errorContext, { url = DEFAULT_URL, model = DEFAULT_MODEL } = {}) {
+/**
+ * Sends an arbitrary prompt and returns the raw completion text. Shared by
+ * RCA and the spot-fix generator so both run through whichever provider the
+ * server is already configured with. Throws on any failure (unreachable,
+ * timeout, bad response) — caller decides the fallback.
+ *
+ * timeoutMs is a parameter because spot fixes send whole source files and
+ * ask for code back, which takes materially longer than an RCA summary.
+ */
+async function completeWithOllama(prompt, { url = DEFAULT_URL, model = DEFAULT_MODEL, timeoutMs = TIMEOUT_MS } = {}) {
   const res = await fetch(`${url}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, prompt: buildPrompt(test, errorContext), stream: false }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    body: JSON.stringify({ model, prompt, stream: false }),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
     throw new Error(`Ollama responded with ${res.status}`);
   }
   const data = await res.json();
-  const parsed = parseModelResponse(data.response || '');
-  return { source: 'ollama', model, ...parsed };
+  return data.response || '';
 }
 
-module.exports = { runOllama, DEFAULT_URL, DEFAULT_MODEL };
+async function runOllama(test, errorContext, { url = DEFAULT_URL, model = DEFAULT_MODEL } = {}) {
+  const raw = await completeWithOllama(buildPrompt(test, errorContext), { url, model });
+  return { source: 'ollama', model, ...parseModelResponse(raw) };
+}
+
+module.exports = { runOllama, completeWithOllama, DEFAULT_URL, DEFAULT_MODEL };

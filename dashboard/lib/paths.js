@@ -8,6 +8,24 @@ const REPORTS_DIR = path.join(DATA_DIR, 'reports');
 const FRONTEND_DIST_DIR = path.join(DASHBOARD_ROOT, 'frontend', 'dist');
 const PROJECTS_MANIFEST = path.join(DASHBOARD_ROOT, 'config', 'projects.json');
 
+/**
+ * Playwright ships its trace viewer as a self-contained static PWA inside
+ * playwright-core. Serving that directory ourselves lets traces open from
+ * this server's own origin instead of https://trace.playwright.dev — see
+ * the comment on the /trace-viewer mount in server.js for why that matters.
+ * Resolved from playwright-core rather than hardcoded so it tracks whatever
+ * Playwright version the repo has installed.
+ */
+function resolveTraceViewerDir() {
+  try {
+    const coreRoot = path.dirname(require.resolve('playwright-core/package.json'));
+    return path.join(coreRoot, 'lib', 'vite', 'traceViewer');
+  } catch {
+    return null;
+  }
+}
+const TRACE_VIEWER_DIR = resolveTraceViewerDir();
+
 // Directories under which file-serving routes are allowed to read from.
 // Anything outside these roots is rejected, even though the server only
 // binds to localhost, to guard against path-traversal in the ?path= query.
@@ -23,5 +41,6 @@ module.exports = {
   REPORTS_DIR,
   FRONTEND_DIST_DIR,
   PROJECTS_MANIFEST,
+  TRACE_VIEWER_DIR,
   ALLOWED_FILE_ROOTS,
 };

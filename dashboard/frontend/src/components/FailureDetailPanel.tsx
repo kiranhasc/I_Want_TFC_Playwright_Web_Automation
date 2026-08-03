@@ -1,10 +1,27 @@
 import { useState } from 'react';
 import { api } from '../api/client';
-import type { RcaResult, TestRecord } from '../api/types';
+import type { FailureCategory, RcaResult, TestRecord } from '../api/types';
 import { CopyButton } from './CopyButton';
+import { SpotFixPanel } from './SpotFixPanel';
+import { stripAnsi } from '../utils/ansi';
 
 function attachmentsByName(test: TestRecord, name: string) {
   return test.attachments.filter((a) => a.name === name && a.path);
+}
+
+const CATEGORY_LABELS: Record<FailureCategory, string> = {
+  code: 'Code issue',
+  environment: 'Environment',
+  infrastructure: 'Infrastructure',
+  unknown: 'Unclassified',
+};
+
+/**
+ * Whether the failure is in the repo's own code, which is what decides
+ * whether a spot fix is even on the table.
+ */
+function CategoryBadge({ category }: { category: FailureCategory }) {
+  return <span className={`rca-category rca-category-${category}`}>{CATEGORY_LABELS[category] ?? category}</span>;
 }
 
 function RcaSourceBadge({ rca }: { rca: RcaResult }) {
@@ -52,10 +69,10 @@ export function FailureDetailPanel({
       {test.error && (
         <div className="failure-error">
           <div className="failure-error-header">
-            <div className="failure-error-message">{test.error.message}</div>
-            <CopyButton value={test.error.stack ?? test.error.message} label="Copy error" />
+            <div className="failure-error-message">{stripAnsi(test.error.message)}</div>
+            <CopyButton value={stripAnsi(test.error.stack ?? test.error.message)} label="Copy error" />
           </div>
-          {test.error.stack && <pre className="failure-error-stack">{test.error.stack}</pre>}
+          {test.error.stack && <pre className="failure-error-stack">{stripAnsi(test.error.stack)}</pre>}
         </div>
       )}
 
@@ -72,6 +89,7 @@ export function FailureDetailPanel({
           <div className="rca-result">
             <div className="rca-result-header">
               <RcaSourceBadge rca={rca} />
+              {rca.category && <CategoryBadge category={rca.category} />}
               <button className="link-button" onClick={handleAnalyze} disabled={analyzing}>
                 {analyzing ? 'Re-analyzing…' : 'Re-analyze'}
               </button>
@@ -93,6 +111,8 @@ export function FailureDetailPanel({
                 Rerun this test
               </button>
             </div>
+
+            <SpotFixPanel test={test} runId={runId} rca={rca} />
           </div>
         )}
       </div>
@@ -107,7 +127,13 @@ export function FailureDetailPanel({
           <video key={v.path} src={api.videoUrl(v.path!)} controls className="artifact-video" />
         ))}
         {traces.map((t) => (
-          <a key={t.path} href={api.traceViewerUrl(t.path!)} target="_blank" rel="noreferrer" className="trace-link">
+          <a
+            key={t.path}
+            href={api.traceViewerUrl(t.path!)}
+            target="_blank"
+            rel="noreferrer"
+            className="trace-link"
+          >
             Open trace ↗
           </a>
         ))}

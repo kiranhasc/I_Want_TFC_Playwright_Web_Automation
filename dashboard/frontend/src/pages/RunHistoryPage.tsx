@@ -23,6 +23,9 @@ export function RunHistoryPage() {
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearResult, setClearResult] = useState<string | null>(null);
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +67,33 @@ export function RunHistoryPage() {
       return true;
     });
   }, [runs, search, statusFilter]);
+
+  async function handleClear(keepLast: number) {
+    setClearing(true);
+    setClearResult(null);
+    try {
+      const { deleted, skipped } = await api.clearRuns(keepLast);
+      // Anything protected is reported rather than silently left behind.
+      const kept = skipped.length ? ` ${skipped.length} kept (${[...new Set(skipped.map((s) => s.reason))].join('; ')}).` : '';
+      setClearResult(`Deleted ${deleted} run${deleted === 1 ? '' : 's'}.${kept}`);
+      setConfirmingClear(false);
+      refetchRuns();
+    } catch (err) {
+      setClearResult(err instanceof Error ? err.message : 'Could not clear run history');
+    } finally {
+      setClearing(false);
+    }
+  }
+
+  async function handleDeleteRun(runId: string) {
+    setClearResult(null);
+    try {
+      await api.deleteRun(runId);
+      setRuns((prev) => prev.filter((r) => r.runId !== runId));
+    } catch (err) {
+      setClearResult(err instanceof Error ? err.message : 'Could not delete that run');
+    }
+  }
 
   async function handleStart(args: { env: string; project?: string; grep?: string }) {
     setStarting(true);
@@ -107,7 +137,38 @@ export function RunHistoryPage() {
             ))}
           </div>
           <ExportButtons onExportCSV={() => exportRunsCSV(filtered)} disabled={filtered.length === 0} />
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setConfirmingClear((v) => !v)}
+            disabled={runs.length === 0}
+          >
+            Clear history…
+          </button>
         </div>
+
+        {confirmingClear && (
+          <div className="clear-history-confirm">
+            <div>
+              <strong>Delete past runs?</strong> This removes their results and reports from the dashboard permanently.
+              Active runs, and any run holding a spot fix that's still applied to your working tree, are kept. Your
+              test files and <code>test-results/</code> are not touched.
+            </div>
+            <div className="clear-history-actions">
+              <button className="danger-button" onClick={() => handleClear(0)} disabled={clearing}>
+                {clearing ? 'Clearing…' : 'Delete all finished runs'}
+              </button>
+              <button className="secondary-button" onClick={() => handleClear(10)} disabled={clearing}>
+                Keep 10 most recent
+              </button>
+              <button className="link-button" onClick={() => setConfirmingClear(false)} disabled={clearing}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {clearResult && <div className="clear-history-result muted">{clearResult}</div>}
 
         {runs.length === 0 ? (
           <p className="muted">No runs yet — start one above.</p>
@@ -116,7 +177,7 @@ export function RunHistoryPage() {
         ) : (
           <div className="run-card-grid">
             {filtered.map((run) => (
-              <RunCard run={run} key={run.runId} />
+              <RunCard run={run} key={run.runId} onDelete={handleDeleteRun} />
             ))}
           </div>
         )}

@@ -126,6 +126,19 @@ export function RunDetailPage() {
     <div className="run-detail page-fade">
       {celebrate && <Confetti />}
 
+      {isActive && run.stalledSince && (
+        <div className="stalled-banner" role="alert">
+          <div>
+            <strong>This run looks stuck.</strong> No test has reported since{' '}
+            {new Date(run.stalledSince).toLocaleTimeString()}. The usual cause is the browser under test dying, which
+            leaves Playwright waiting on it forever — the run will not recover on its own.
+          </div>
+          <button className="danger-button" onClick={handleStop} disabled={busy}>
+            {busy ? 'Stopping…' : 'Stop run'}
+          </button>
+        </div>
+      )}
+
       <div className={`run-detail-header card${run.status === 'failed' ? ' header-alert' : ''}`}>
         <div>
           <Link to="/runs" className="muted">

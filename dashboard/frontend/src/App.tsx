@@ -6,6 +6,7 @@ import { RunDetailPage } from './pages/RunDetailPage';
 import { ConnectionBadge } from './components/ConnectionBadge';
 import { AutoUpdateBadge } from './components/AutoUpdateBadge';
 import { UpdateBanner } from './components/UpdateBanner';
+import { AppliedFixesBanner } from './components/AppliedFixesBanner';
 import { useTheme } from './hooks/useTheme';
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
 
       <main className="app-main">
         <UpdateBanner />
+        <AppliedFixesBanner />
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/runs" element={<RunHistoryPage />} />

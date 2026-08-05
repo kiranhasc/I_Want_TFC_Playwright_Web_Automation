@@ -2548,9 +2548,7 @@ Click on the Email Address field.
 
 
 #### 7.9 IW3-T2048 Verify that Movie/Show content in my watchlist page loads correctly with correct thumbnails and meta data
-
 **File:** `tests\home\watchlist-management.spec.ts`
-
 **Steps:**
 1. Open the browser and navigate to https://www.iwanttfc.com/
 2. Click on the Confirm button in the cookies popup window.
@@ -2905,3 +2903,251 @@ Click on the Email Address field.
 8. Observe the navigation.
    - **Expect:** The free user should not be able to play the premium content.
    - **Expect:** The user should be redirected to the **Plans** page after clicking the **Subscribe** button.
+### 10.18. IW3-T3672 VeVerify the message displayed on tapping the "Early Access" content as a free or basic plan user.
+**File:** `tests/home/early-access-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Login with a valid **Free** user Email and Password.
+5. Wait until the **Loading...** indicator disappears.
+   *expect:* The **Home** tab should be displayed.
+6. Wait for the GraphQL operation **Collection** to complete.
+7. Capture the GraphQL response for the **Collection** operation.
+8. Create a `CollectionParser` instance using the captured response.
+9. Search the parsed collection for an asset whose label is **"Early Access"**.
+10. If a matching asset is found:
+    - Store the asset details.
+    - Retrieve the **Rail Title** containing the asset.
+    - Retrieve the **Asset Title**.
+    - Retrieve the **Asset ID**.
+11. Navigate to the retrieved rail on the **Home** page.
+12. Locate the content thumbnail using the retrieved **Asset Title** or **Asset ID**.
+    *expect:* The content thumbnail should be visible in the identified rail.
+13. Verify that the content thumbnail displays the **"Early Access"** tag.
+    *expect:* The **"Early Access"** tag should be displayed on the corresponding content thumbnail.
+14. Click on the **Early Access** content thumbnail.
+    *expect:* The content **Details** page should be displayed, and the title should match the **Asset Title** retrieved from the GraphQL response.
+15. Locate the latest (last) episode that displays the **"Early Access"** tag.
+    *expect:* The latest episode should display the **"Early Access"** tag.
+16. Click the **Play** button for the latest **Early Access** episode.
+    *expect:* The **Unlock Early Access** upgrade prompt should be displayed.
+17. Verify the upgrade prompt contains the following:
+    *expect* **Upgrade** arrow icon.
+    *expect* **"Unlock Early Access"**. title should be displayed
+    *expect* **"Upgrade to Premium for exclusive early viewing and be the first to watch the new content."** description should be displayed
+    *expect* **"Maybe later"** CTA should be displayed.
+    *expect* **"Upgrade to watch now"** CTA should be displayed.
+
+### 10.19. IW3-T3670 Verify the popup displayed when free/basic plan users taps on "Early Access" content..
+**File:** `tests/home/early-access-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Login with a valid **Free** user Email and Password.
+5. Wait until the **Loading...** indicator disappears.
+   *expect:* The **Home** tab should be displayed.
+6. Wait for the GraphQL operation **Collection** to complete.
+7. Capture the GraphQL response for the **Collection** operation.
+8. Create a `CollectionParser` instance using the captured response.
+9. Search the parsed collection for an asset whose label is **"Early Access"**.
+10. If a matching asset is found:
+    - Store the asset details.
+    - Retrieve the **Rail Title** containing the asset.
+    - Retrieve the **Asset Title**.
+    - Retrieve the **Asset ID**.
+11. Navigate to the retrieved rail on the **Home** page.
+12. Locate the content thumbnail using the retrieved **Asset Title** or **Asset ID**.
+    *expect:* The content thumbnail should be visible in the identified rail.
+13. Verify that the content thumbnail displays the **"Early Access"** tag.
+    *expect:* The **"Early Access"** tag should be displayed on the corresponding content thumbnail.
+14. Click on the **Early Access** content thumbnail.
+    *expect:* The content **Details** page should be displayed, and the title should match the **Asset Title** retrieved from the GraphQL response.
+15. Locate the latest (last) episode that displays the **"Early Access"** tag.
+    *expect:* The latest episode should display the **"Early Access"** tag.
+16. Click the **Play** button for the latest **Early Access** episode.
+    *expect:* The **Unlock Early Access** upgrade prompt should be displayed.
+
+### 10.20. IW3-T3675 Verify the "Early access" tag displayed on the episode thumbnail inside the content details screen.
+**File:** `tests/home/early-access-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Login with a valid **Free** user Email and Password.
+5. Wait until the **Loading...** indicator disappears.
+   *expect:* The **Home** tab should be displayed.
+6. Wait for the GraphQL operation **Collection** to complete.
+7. Capture the GraphQL response for the **Collection** operation.
+8. Create a `CollectionParser` instance using the captured response.
+9. Search the parsed collection for an asset whose label is **"Early Access"**.
+10. If a matching asset is found:
+    - Store the asset details.
+    - Retrieve the **Rail Title** containing the asset.
+    - Retrieve the **Asset Title**.
+    - Retrieve the **Asset ID**.
+11. Navigate to the retrieved rail on the **Home** page.
+12. Locate the content thumbnail using the retrieved **Asset Title** or **Asset ID**.
+    *expect:* The content thumbnail should be visible in the identified rail.
+13. Verify that the content thumbnail displays the **"Early Access"** tag.
+    *expect:* The **"Early Access"** tag should be displayed on the corresponding content thumbnail.
+14. Click on the **Early Access** content thumbnail.
+    *expect:* The content **Details** page should be displayed, and the title should match the **Asset Title** retrieved from the GraphQL response.
+15. Locate the latest (last) episode that displays the **"Early Access"** tag.
+    *expect:* The latest episode should display the **"Early Access"** tag.
+
+### 10.21. IW3-T3679 Verify that "Early Access" content with the tag is not displayed on "Continue Watching" tray upon partially watching.
+**File:** `tests/home/early-access-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Login with a valid **Free** user Email and Password.
+5. Wait until the **Loading...** indicator disappears.
+   *expect:* The **Home** tab should be displayed.
+6. Wait for the GraphQL operation **Collection** to complete.
+7. Capture the GraphQL response for the **Collection** operation.
+8. Create a `CollectionParser` instance using the captured response.
+9. Search the parsed collection for an asset whose label is **"Early Access"**.
+10. If a matching asset is found:
+    - Store the asset details.
+    - Retrieve the **Rail Title** containing the asset.
+    - Retrieve the **Asset Title**.
+    - Retrieve the **Asset ID**.
+11. Navigate to the retrieved rail on the **Home** page.
+12. Locate the content thumbnail using the retrieved **Asset Title** or **Asset ID**.
+    *expect:* The content thumbnail should be visible in the identified rail.
+13. Verify that the content thumbnail displays the **"Early Access"** tag.
+    *expect:* The **"Early Access"** tag should be displayed on the corresponding content thumbnail.
+14. Click on the **Early Access** content thumbnail.
+    *expect:* The content **Details** page should be displayed, and the title should match the **Asset Title** retrieved from the GraphQL response.
+15. Locate the latest (last) episode that displays the **"Early Access"** tag.
+    *expect:* The latest episode should display the **"Early Access"** tag.
+16. Click the **Play** button for the latest **Early Access** episode.
+    *expect* Video should start playing
+17. Watch for 30 secs
+18. Click on browser back button
+19. Refresh the page and and look for "Continue Watching" qraphql operation
+20. In "Conitunue Watching" operation based on my early access **Asset Title** find the "title" and store in a            variable
+21. Look for the returnes **Asset Title** in Continue watching tray
+   *expect* thumbnail has does not contain "Early Access" tag in continue watching tray
+
+### 10.22. IW3-T3660 Verify user is able to see partially watched content in the Continue Watching (CW) tray
+**File:** `tests/home/synacor-page-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL 
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Login with a valid **TV Provider** user Email and Password.
+5. Wait until the **Loading...** indicator disappears.
+   *expect:* The **Home** tab should be displayed.
+6. Wait for the GraphQL operation **Collection** to complete.
+7. Capture the **Collection** GraphQL response.
+8. Create a `CollectionParser` instance using the captured response.
+9. Retrieve a playable **movie** from the parsed collection and store the following details:
+   - Movie Title
+   - Asset ID
+10. Search for the stored movie using the search bar.
+    *expect:* The search results should contain the previously stored movie title.
+11. Open the searched movie.
+    *expect:* The movie **Details** page should be displayed, and the title should match the previously stored movie title.
+12. Play the movie for approximately **one minute**.
+    *expect:* Video playback should start successfully.
+13. Navigate back to the **Home** page.
+14. Locate the **Continue Watching** tray.
+    *expect:* The **Continue Watching** tray should be visible.
+15. Verify that the partially watched movie is displayed in the **Continue Watching** tray.
+    *expect:* The movie title should match the previously stored movie title.
+
+#### 10.23. IW3-T3666 Verify that all landing pages will be properly displayed when the user logs in with any  Synacor credentials.
+**File:** `tests/home/synacor-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. When user is on "Home" tab
+      * expect "Continue Watching" rail should be displayed
+   6. When user is on "Movies" tab
+      * expect "Trending Movies Worldwide" rail should be displayed
+   7. When user is on "Shows" tab
+      * expect "Trending Shows Worldwide" rail should be displayed
+   8. When user is on "My Watchlist" tab
+      * expect "My Watchlist" rail should be displayed
+   9. When user is on "GMA" tab
+      * expect "Top Streamed" rail should be displayed
+   10. Click on Search bar
+      * expect the search bar should display inner text as "Search by title, actor, genre..."
+   11.  Click on Account icon
+      * expect "Sign Out" option should be displayed
+
+### 10.25. IW3-T1852 Verify the navigation on entering a valid email and password on the "Let's Get Started" screen
+**File:** `tests/home/registration-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (e.g., `abcde@gmail.com`).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+
+### 10.26. IW3-T1853 Verify the UI/UX of the "Verify Your Email" screen.
+**File:** `tests/home/registration-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL 
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (e.g., `abcde@gmail.com`) and store the email address in a variable.
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Verify the **"A verification OTP was sent to"** message is displayed.
+    *expect:* The verification message should be visible.
+15. Verify the email address displayed on the **Verify OTP** screen.
+    *expect:* The displayed email address should match the email address entered during registration.
+16. Verify the **"Input the code below to proceed"** text is displayed.
+    *expect:* The instruction text should be visible.
+17. Verify the **Verify** button is displayed.
+    *expect:* The **Verify** button should be visible.
+18. Verify the **Back to Login** link is displayed.
+    *expect:* The **Back to Login** link should be visible.
+
+### 10.27. IW3-T1854 Verify the navigation on entering a valid email and password on the "Let's Get Started" screen
+**File:** `tests/home/registration-launch.spec.ts`
+**Steps:**
+1. Open the browser.
+2. Enter the URL
+3. Accept the **Cookie & Notification Settings** popup by clicking the **Confirm** button.
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (e.g., `abcde@gmail.com`).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Enter the OTP captured.
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen

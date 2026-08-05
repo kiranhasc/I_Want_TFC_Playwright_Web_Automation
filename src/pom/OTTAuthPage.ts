@@ -70,13 +70,22 @@ export class OTTAuthPage {
     private readonly createAccountHeading: PageElement;
     private readonly createAccountEmailField: PageElement;
     private readonly createAccountPasswordField: PageElement;
+    private readonly createAccountConfirmPasswordField: PageElement;
     private readonly termsCheckbox: PageElement;
+    private readonly createAccountTermsText: PageElement;
     private readonly marketingCheckbox: PageElement;
+    private readonly createAccountMarketingText: PageElement;
     private readonly marketingCheckboxDescription: PageElement;
     private readonly createAccountContinueButton: PageElement;
     private readonly alreadyHaveAccountText: PageElement;
     private readonly createAccountLoginLink: PageElement;
     private readonly emptyCredentialsErrorMessage: PageElement;
+    private readonly verifyOTPMessage: PageElement;
+    private readonly verifyOTPEmail: PageElement;
+    private readonly verifyOTPInstructionText: PageElement;
+    private readonly verifyOTPContainer: PageElement;
+    private readonly verifyButton: PageElement;
+    private readonly backToLoginLink: PageElement;
     private readonly useMobileNumberLink: PageElement;
     private readonly countryCodeDropdown: PageElement;
     private readonly countryCodeOption: PageElement;
@@ -119,7 +128,7 @@ export class OTTAuthPage {
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
-        this.verifyOTPHeading = { role: 'heading', text: 'Verify your identity', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
+        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
         this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
@@ -172,9 +181,21 @@ export class OTTAuthPage {
         this.createAccountHeading = { role: 'heading', text: 'Create an account', selector: 'h1:has-text("Create an account"), h2:has-text("Create an account")' };
         this.createAccountEmailField = { selector: 'input[placeholder="Email Address"], input[name*="email"], input[type="email"]' };
         this.createAccountPasswordField = { selector: 'input[name="userPassword"]' };
+        this.createAccountConfirmPasswordField = { selector: 'input[placeholder="Confirm Password"], input[name*="confirm"], input[id*="confirm"], input[aria-label*="confirm"]' };
         this.termsCheckbox = { selector: 'input#cem' };
-        this.marketingCheckbox = { selector: 'text=I agree to receive marketing', text: 'I agree to receive marketing' };
+        this.createAccountTermsText = { selector: 'text=I agree to the Terms and Conditions and Privacy Policy', text: 'I agree to the Terms and Conditions and Privacy Policy' };
+        this.marketingCheckbox = { selector: '//input[@id="cem"]/following-sibling::label/span' };
+        this.createAccountMarketingText = { selector: 'text=I agree to receive marketing communications', text: 'I agree to receive marketing communications' };
         this.marketingCheckboxDescription = { selector: 'form' };
+        // this.verifyOTPMessage = { selector: 'text=A verification OTP was sent to, text=/A verification OTP was sent to/i' };
+        // this.verifyOTPEmail = { selector: 'text=@' };
+        // this.verifyOTPInstructionText = { selector: 'text=Input the code below to proceed, text=/Input the code below to proceed/i' };
+        this.verifyOTPContainer = { selector: 'span.text-white\\/60' };
+        this.verifyOTPMessage = { selector: 'text=/A verification OTP was sent to/i' };
+        this.verifyOTPEmail = { selector: 'span.text-white\\/60 span.italic' };
+        this.verifyOTPInstructionText = { selector: 'text=/Input the code below to proceed/i' };
+        this.verifyButton = { role: 'button', text: 'Verify', selector: 'button:has-text("Verify")' };
+        this.backToLoginLink = { role: 'link', text: 'Back to Login', selector: 'a:has-text("Back to Login")' };
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
@@ -425,7 +446,7 @@ export class OTTAuthPage {
         try {
             await this.pageUtils.waitForElementToDisappear(this.loadingIndicator, timeout);
         } catch {
-            
+
         }
     }
 
@@ -873,7 +894,36 @@ export class OTTAuthPage {
             }
         }
         const candidate = section.locator(`img[alt*="${title}"]`).first();
+        console.log("Candidate, ", candidate)
         return await candidate.isVisible().catch(() => false);
+    }
+
+    async isContinueWatchingItemVisibleWithTag(title: string, tagAlt: string): Promise<{ visible: boolean; hasTag: boolean }> {
+        const section = this.getContinueWatchingRailLocator();
+        if (!await section.count()) {
+            return { visible: false, hasTag: false };
+        }
+
+        const normalizedTitle = title.toLowerCase();
+        const items = section.locator('img[alt]:not([alt="arrow-right"])');
+        const count = await items.count().catch(() => 0);
+
+        for (let index = 0; index < count; index += 1) {
+            const item = items.nth(index);
+            const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
+            const text = ((await item.locator('xpath=ancestor::div[1]').textContent()) || '').toLowerCase();
+            const matchesTitle = alt.includes(normalizedTitle) || text.includes(normalizedTitle);
+            if (!matchesTitle) {
+                continue;
+            }
+
+            const visible = await item.isVisible().catch(() => false);
+            const tagLocator = item.locator(`xpath=ancestor::*[self::div or self::li or self::a][1]//img[@alt="${tagAlt}"]`).first();
+            const hasTag = await tagLocator.isVisible().catch(() => false);
+            return { visible, hasTag };
+        }
+
+        return { visible: false, hasTag: false };
     }
 
     async openContinueWatchingItemAndStartPlayback(title: string): Promise<boolean> {
@@ -930,7 +980,8 @@ export class OTTAuthPage {
     }
 
     async navigateHome(): Promise<void> {
-        await this.page.goto('https://www.iwanttfc.com/');
+        const baseUrl = config.getBaseURL();
+        await this.page.goto(baseUrl);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForTimeout(5000);
     }
@@ -1039,7 +1090,7 @@ export class OTTAuthPage {
         await this.waitForLoadingToDisappear(20000);
         await this.page.waitForLoadState('networkidle').catch(() => undefined);
     }
-      
+
     async getSearchBarValue(): Promise<string> {
         const locator = this.page.locator(this.searchBar.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
@@ -1169,7 +1220,7 @@ export class OTTAuthPage {
             logger.debug(`No suggestions to verify against query: ${query}`);
             return false;
         }
-        const suggestionsWithQuery = suggestions.filter(suggestion => 
+        const suggestionsWithQuery = suggestions.filter(suggestion =>
             suggestion.toLowerCase().includes(normalizedQuery)
         );
         const allSuggestionsRelevant = suggestionsWithQuery.length > 0;
@@ -1358,6 +1409,11 @@ export class OTTAuthPage {
         await this.pageUtils.safeType(this.createAccountPasswordField, password);
     }
 
+    async enterCreateAccountConfirmPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'Create account confirm password field');
+        await this.pageUtils.safeType(this.createAccountConfirmPasswordField, password);
+    }
+
     async getCreateAccountEmailValue(): Promise<string> {
         const locator = this.page.locator(this.createAccountEmailField.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
@@ -1368,6 +1424,84 @@ export class OTTAuthPage {
         const locator = this.page.locator(this.createAccountPasswordField.selector).first();
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.inputValue()) || '';
+    }
+
+    async getCreateAccountConfirmPasswordValue(): Promise<string> {
+        const locator = this.page.locator(this.createAccountConfirmPasswordField.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        return (await locator.inputValue()) || '';
+    }
+
+    async isCreateAccountConfirmPasswordFieldVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.createAccountConfirmPasswordField, 10000);
+    }
+
+    async getCreateAccountTermsText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.createAccountTermsText, 10000);
+    }
+
+    async getCreateAccountMarketingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.createAccountMarketingText, 10000);
+    }
+
+    async isVerifyOTPMessageVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.verifyOTPMessage, 10000);
+    }
+
+    async getVerifyOTPMessageText(): Promise<string> {
+        const text = await this.page.locator(this.verifyOTPContainer.selector).first().innerText();
+        return text.split('\n')[0].trim();
+    }
+
+    async isVerifyOTPEmailVisible(expectedEmail: string): Promise<boolean> {
+        try {
+            const locator = this.page.locator(this.verifyOTPEmail.selector);
+            await locator.waitFor({ state: 'visible', timeout: 10000 });
+            const actualEmail = (await locator.innerText()).trim();
+            return actualEmail === expectedEmail;
+        } catch {
+            return false;
+        }
+    }
+
+    async getVerifyOTPEmailText(expectedEmail: string): Promise<string> {
+        const locator = this.page.locator(this.verifyOTPEmail.selector);
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        const actualEmail = (await locator.innerText()).trim();
+        if (actualEmail !== expectedEmail) {
+            throw new Error(
+                `Expected OTP email to be "${expectedEmail}", but found "${actualEmail}".`
+            );
+        }
+        return actualEmail;
+    }
+
+    async isInputCodeInstructionVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.verifyOTPInstructionText, 10000);
+    }
+
+    async getInputCodeInstructionText(): Promise<string> {
+        const text = await this.page.locator(this.verifyOTPContainer.selector).first().innerText();
+        const lines = text
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean);
+        return lines[2];
+    }
+
+    async isVerifyButtonVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.verifyButton, 10000);
+    }
+
+    async isBackToLoginLinkVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.backToLoginLink, 10000);
+    }
+
+    async selectCreateAccountMarketingCheckbox(): Promise<void> {
+        logger.elementInteraction('check', 'Create account marketing checkbox');
+        const locator = this.page.getByRole('checkbox', { name: /I agree to receive marketing/i }).first();
+        await locator.waitFor({ state: 'visible', timeout: 10000 });
+        await locator.check({ force: true });
     }
 
     async isTermsCheckboxVisible(): Promise<boolean> {

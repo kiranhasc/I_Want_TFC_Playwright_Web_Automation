@@ -23,6 +23,12 @@ export interface Asset {
         landscape: string;
         portrait: string;
     };
+    labels?: Label[];
+    tvShowDetails?: {
+        defaultEpisode?: {
+            id: string;
+        };
+    };
 }
 
 export interface Label {
@@ -30,18 +36,6 @@ export interface Label {
     text: string;
     position?: string;
     url?: string;
-}
-
-export interface Asset {
-    id: string;
-    title: string;
-
-    images: {
-        landscape: string;
-        portrait: string;
-    };
-
-    labels?: Label[];
 }
 
 export interface Episode {

@@ -136,7 +136,39 @@
         "mode": "valid",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
-        "earlyAccessAttributeValue" : "early_access"
+        "earlyAccessAttributeValue": "early_access"
+    },
+    "tc-discovery-002-early-access-upgrade-prompt": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue": "early_access",
+        "expectedUpgradeTitle": "Unlock Early Access",
+        "expectedUpgradeDescription": "Upgrade to Premium for exclusive early viewing and be the first to watch new content.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedUpgradeCtaText": "Upgrade to Watch Now"
+    },
+    "tc-discovery-003-early-access-popup": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue": "early_access",
+        "expectedUpgradeTitle": "Unlock Early Access",
+        "expectedUpgradeDescription": "Upgrade to Premium for exclusive early viewing and be the first to watch new content.",
+        "expectedMaybeLaterText": "Maybe Later",
+        "expectedUpgradeCtaText": "Upgrade to Watch Now"
+    },
+    "tc-discovery-004-early-access-episode-tag": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue": "early_access"
+    },
+    "tc-discovery-005-early-access-continue-watching": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue": "early_access"
     },
     "tc-auth-009-welcome-screen-navigation": {
         "expectedHeading": "Welcome to iWant",
@@ -149,6 +181,19 @@
     "tc-auth-011-create-account-credentials": {
         "email": "testuser@example.com",
         "password": "Password123!"
+    },
+    "tc-auth-026-registration-navigation": {
+        "email": "abcde@gmail.com",
+        "password": "Abcd@1234",
+        "confirmPassword": "Abcd@1234",
+        "expectedHeading": "Create an account",
+        "expectedTermsText": "I agree to the Terms and Conditions and Privacy Policy",
+        "expectedMarketingText": "I agree to receive marketing communications",
+        "expectedOTPHeading": "Verify OTP",
+        "expectedOTPMessagePrefix": "A verification OTP was sent to",
+        "expectedOTPInputText": "Input the code below to proceed",
+        "expectedVerifyButtonText": "Verify",
+        "expectedBackToLoginText": "Back to Login"
     },
     "tc-auth-012-create-account-invalid-credentials": {
         "email": "invalid-email",
@@ -202,12 +247,23 @@
         "password": "Test1234",
         "expectedHeading": "Welcome to iWant"
     },
+    "tc-auth-023-continue-watching-playback-synacor": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-auth-025-synacor-landing-pages": {
+        "mode": "provider",
+        "providerName": "Frontier, a Verizon Company"
+    },
     "tc-auth-023-continue-watching-playback": {
         "mode": "valid"
     },
     "tc-auth-024-continue-watching-across-tabs": {
         "mode": "valid",
-        "tabs": ["Movies", "Shows"]
+        "tabs": [
+            "Movies",
+            "Shows"
+        ]
     },
     "tc-auth-025-continue-watching-resume-cta": {
         "mode": "valid"
@@ -237,7 +293,11 @@
         "mode": "valid",
         "email": "sanitycheck@yopmail.com",
         "password": "Test1234",
-        "assertions": ["thumbnail", "metadata", "contentCard"]
+        "assertions": [
+            "thumbnail",
+            "metadata",
+            "contentCard"
+        ]
     },
     "tc-auth-018-ph-region-guest-search": {
         "searchTerm": "Lavender Fields",
@@ -540,8 +600,7 @@
         "mode": "freeUser",
         "invalidPassword": "wrongpassword123",
         "expectedErrorMessage": "Invalid credentials. Please try again."
-    }
-    ,
+    },
     "tc-settings-007-parental-pin-4digit": {
         "mode": "freeUser"
     },
@@ -593,17 +652,14 @@
     "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
     },
-    "tc-play-001-free-asset-playback": {
-    },
+    "tc-play-001-free-asset-playback": {},
     "tc-play-002-premium-content-gate": {
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
     },
-    "tc-live-001-pause-resume-live-playback": {
-    },
-    "tc-watch-001-play-from-watchlist": {
-    },
+    "tc-live-001-pause-resume-live-playback": {},
+    "tc-watch-001-play-from-watchlist": {},
     "tc-sub-001-carousel-subscribe-cta": {
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",

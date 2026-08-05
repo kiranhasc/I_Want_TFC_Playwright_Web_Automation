@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { verifyEarlyAccessTag } from '../../src/businessFunction/ott-early-access-bfs';
+import { verifyEarlyAccessTag, verifyEarlyAccessUpgradePromptMessage, verifyEarlyAccessEpisodeTag, verifyEarlyAccessNotInContinueWatchingAfterPlayback } from '../../src/businessFunction/ott-early-access-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Early Access Tag', () => {
@@ -10,5 +10,76 @@ test.describe('Early Access Tag', () => {
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
         expect(result.labelVisible).toBe(true);
+    });
+
+    test('@High IW3-T3672: Verify the Early Access upgrade prompt message for free or basic users', async ({ page }) => {
+        test.setTimeout(50000)
+        const data = testCaseData['tc-discovery-002-early-access-upgrade-prompt'];
+        const result = await verifyEarlyAccessUpgradePromptMessage(page, {
+            mode: data.mode,
+            graphqlQueryName: data.graphqlQueryName,
+            labelText: data.labelText,
+            earlyAccessAttributeValue: data.earlyAccessAttributeValue,
+            expectedUpgradeTitle: data.expectedUpgradeTitle,
+            expectedUpgradeDescription: data.expectedUpgradeDescription,
+            expectedMaybeLaterText: data.expectedMaybeLaterText,
+            expectedUpgradeCtaText: data.expectedUpgradeCtaText,
+        });
+        expect(result.loggedIn).toBe(true);
+        expect(result.foundInGraphQL).toBe(true);
+        expect(result.upgradeIconVisible).toBe(true);
+        expect(result.titleVisible).toBe(data.expectedUpgradeTitle);
+        expect(result.descriptionVisible).toBe(data.expectedUpgradeDescription);
+        expect(result.maybeLaterVisible).toBe(data.expectedMaybeLaterText);
+        expect(result.upgradeCtaVisible).toBe(data.expectedUpgradeCtaText);
+    });
+
+    test('@High IW3-T3670: Verify the popup displayed when free or basic users tap on Early Access content', async ({ page }) => {
+        test.setTimeout(50000)
+        const data = testCaseData['tc-discovery-003-early-access-popup'];
+        const result = await verifyEarlyAccessUpgradePromptMessage(page, {
+            mode: data.mode,
+            graphqlQueryName: data.graphqlQueryName,
+            labelText: data.labelText,
+            earlyAccessAttributeValue: data.earlyAccessAttributeValue,
+            expectedUpgradeTitle: data.expectedUpgradeTitle,
+            expectedUpgradeDescription: data.expectedUpgradeDescription,
+            expectedMaybeLaterText: data.expectedMaybeLaterText,
+            expectedUpgradeCtaText: data.expectedUpgradeCtaText,
+        });
+        expect(result.loggedIn).toBe(true);
+        expect(result.foundInGraphQL).toBe(true);
+        expect(result.upgradeIconVisible).toBe(true);
+        expect(result.titleVisible).toBe(data.expectedUpgradeTitle);
+        expect(result.descriptionVisible).toBe(data.expectedUpgradeDescription);
+        expect(result.maybeLaterVisible).toBe(data.expectedMaybeLaterText);
+        expect(result.upgradeCtaVisible).toBe(data.expectedUpgradeCtaText);
+    });
+
+    test('@High IW3-T3675: Verify Early Access tag is shown on the episode thumbnail inside the content details screen', async ({ page }) => {
+        test.setTimeout(50000)
+        const data = testCaseData['tc-discovery-004-early-access-episode-tag'];
+        const result = await verifyEarlyAccessEpisodeTag(page, {
+            mode: data.mode,
+            graphqlQueryName: data.graphqlQueryName,
+            labelText: data.labelText,
+            earlyAccessAttributeValue: data.earlyAccessAttributeValue,
+        });
+        expect(result.loggedIn).toBe(true);
+        expect(result.foundInGraphQL).toBe(true);
+        expect(result.labelVisible).toBe(true);
+    });
+    test('@High IW3-T3679: Verify Early Access content with the tag is not displayed on the Continue Watching tray after partial playback', async ({ page }) => {
+        test.setTimeout(180000)
+        const data = testCaseData['tc-discovery-005-early-access-continue-watching'];
+        const result = await verifyEarlyAccessNotInContinueWatchingAfterPlayback(page, {
+            mode: data.mode,
+            graphqlQueryName: data.graphqlQueryName,
+            labelText: data.labelText,
+            earlyAccessAttributeValue: data.earlyAccessAttributeValue,
+        });
+        expect(result.loggedIn).toBe(true);
+        expect(result.foundInGraphQL).toBe(true);
+        expect(result.assetVisibleInContinueWatching).toBe(false);
     });
 });

@@ -175,4 +175,18 @@ export class PageUtils {
     const locator = this.getLocator(element);
     await expect(locator).toBeHidden({ timeout });
   }
+
+  async parameterizeSelector(element: string | PageElement, params: Record<string, string>): Promise<Locator> {
+    let selector =
+      typeof element === 'string'
+        ? element
+        : element.selector;
+    Object.entries(params).forEach(([key, value]) => {
+      selector = selector.replace(
+        new RegExp(`\\{${key}\\}`, 'g'),
+        value
+      );
+    });
+    return this.page.locator(selector);
+  }
 }

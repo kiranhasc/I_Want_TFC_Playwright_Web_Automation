@@ -2,57 +2,18 @@ pipeline {
 
     agent any
 
-    environment {
-        REPO_B_URL = 'https://github.com/<username>/<repo-b>.git'
-        BRANCH = 'main'
-    }
-
-
     stages {
 
-        stage('Checkout Repo B') {
-
+        stage('Checkout') {
             steps {
-
-                echo "Checking out Repo B"
-
-                git(
-                    url: "${REPO_B_URL}",
-                    branch: "${BRANCH}",
-                    credentialsId: 'github-creds'
-                )
-
+                echo "Checking out repository"
             }
         }
 
-        stage('Test') {
-
+        stage('Build') {
             steps {
-
-                echo "Running tests"
-
-                // Add test commands here
-
+                echo "Building application"
             }
-
-        }
-
-    }
-
-
-    post {
-
-        success {
-
-            echo "Pipeline completed successfully"
-
-        }
-
-
-        failure {
-
-            echo "Pipeline failed"
-
         }
 
     }

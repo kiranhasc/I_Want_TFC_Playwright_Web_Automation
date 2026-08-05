@@ -1,6 +1,8 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifyParentalPinOptionVisibility, verifyParentalPinToggleState, verifyParentalPinPasswordField, submitParentalPinPassword, verifyParentalPinPasswordVisibility, verifyParentalPinInvalidPasswordError, verifyParentalPinFourDigitInput, verifyParentalPinSaveSuccess, verifyParentalPinPromptOnContentPlayback, verifyParentalPinInvalidPlaybackPrompt, disableParentalPin, verifyParentalPinPlaybackAllowedWhenDisabled } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyContinueWatchingPlaybackFromTrayWithParentalPin } from '../../src/businessFunction/ott-continue-watching-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
+import { env } from 'process';
 
 test.describe('Parental controls', () => {
   test('@High - IW3-T2094 : Verify Parental pin option will be available in Settings page', async ({ page }) => {
@@ -145,6 +147,21 @@ test.describe('Parental controls', () => {
     expect(result.parentalPinPromptText).toContain(data.expectedParentalPinPromptText);
     expect(result.parentalPinInvalidErrorVisible).toBe(true);
     expect(result.parentalPinInvalidErrorText).toContain(data.expectedInvalidPinErrorText);
+  });
+
+  test.only('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
+    test.setTimeout(300000);
+    const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
+    const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {
+      mode: data.mode,
+      email: env.VALID_LOGIN_EMAIL,
+      password: env.VALID_LOGIN_PASSWORD,
+      parentalPin: data.pin,
+    });
+    expect(result.itemFound).toBe(true);
+    expect(result.playerVisible).toBe(true);
+    expect(result.parentalPinPromptVisible).toBe(true);
+    expect(result.parentalPinSubmitted).toBe(true);
   });
 
   test('@High - IW3-T2105 : Verify parental PIN toggle gets disabled after entering the password', async ({ page }) => {

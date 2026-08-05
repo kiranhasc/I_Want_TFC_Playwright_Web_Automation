@@ -96,6 +96,20 @@
     - "IW3-T1865"
   dependsOn: []
 
+- id: "verify-top10-tag-on-thumbnail"
+  name: "Verify Top 10 tag displayed on content thumbnails"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyTop10TagOnContentThumbnail"
+  tags:
+    - home
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T4703"
+    - "IW3-T4704"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "logout-from-ott"
   name: "Logout from OTT after Synacor login"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -354,6 +368,20 @@
     - "IW3-T1934"
   dependsOn: []
 
+- id: "verify-continue-watching-playback-from-tray-with-parental-pin"
+  name: "Verify Continue Watching content resumes from the tray after parental PIN playback prompt"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingPlaybackFromTrayWithParentalPin"
+  tags:
+    - continue-watching
+    - playback
+    - parental-pin
+    - positive
+  testCases:
+    - "IW3-T2110"
+  dependsOn:
+    - "verify-continue-watching-playback-from-tray"
+
 - id: "verify-resume-cta-on-details-page"
   name: "Verify Resume CTA visibility on content details page for partially watched content"
   path: "src/businessFunction/ott-continue-watching-bfs.ts"
@@ -471,6 +499,93 @@
     - ui
   testCases:
     - "IW3-T2073"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-exact-title-match-top"
+  name: "Verify exact title matches appear at the top of search results"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchExactTitleMatchAtTop"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2088"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-trending-results"
+  name: "Verify trending results are shown when opening search without a query"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchTrendingResults"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2089"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-search-top-picks-title"
+  name: "Verify Top Picks Near You title is displayed when opening the search tab"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifySearchTopPicksNearYouTitle"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2090"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-guest-search-results-without-login"
+  name: "Verify search results appear without login"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyGuestSearchResultsWithoutLogin"
+  tags:
+    - navigation
+    - search
+    - guest
+    - positive
+    - ui
+  testCases:
+    - "IW3-T2080"
+  dependsOn: []
+
+- id: "verify-trending-results-hidden-on-query"
+  name: "Verify trending results are hidden when user enters a search query"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyTrendingResultsHiddenWhenSearching"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+    - trending
+  testCases:
+    - "IW3-T2091"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-trending-content-detail-navigation"
+  name: "Verify clicking trending content navigates to the Detail Page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyTrendingContentDetailNavigation"
+  tags:
+    - navigation
+    - search
+    - positive
+    - ui
+    - trending
+    - details
+  testCases:
+    - "IW3-T2092"
   dependsOn:
     - "login-to-ott"
 

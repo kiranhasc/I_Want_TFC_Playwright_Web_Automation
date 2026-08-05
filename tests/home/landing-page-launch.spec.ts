@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { loginWithTVProvider } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithTVProvider, verifyTop10TagOnContentThumbnail } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Home Page Landing', () => {
@@ -10,5 +10,26 @@ test.describe('Home Page Landing', () => {
             mode: data.mode
         });
         expect(result.isLoggedIn).toBe(true);
+    });
+
+    test('@High - IW3-T4703: Verify the "Top 10" tag on content thumbnails across home rails', async ({ page }) => {
+        const data = testCaseData['tc-home-top10-tag'];
+        const result = await verifyTop10TagOnContentThumbnail(page, {
+            mode: data.mode
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.top10Titles.length).toBeGreaterThan(0);
+        expect(result.matchedCount).toBeGreaterThan(0);
+    });
+
+    test('@High - IW3-T4704: Verify the "Top 10" tag is displayed at the top-right corner of the content thumbnail', async ({ page }) => {
+        const data = testCaseData['tc-home-top10-tag'];
+        const result = await verifyTop10TagOnContentThumbnail(page, {
+            mode: data.mode
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.top10Titles.length).toBeGreaterThan(0);
+        expect(result.matchedRails.some((entry) => entry.hasTop10Tag && entry.isTopRightPosition)).toBe(true);
+        expect(result.topRightPositionMatches).toBeGreaterThan(0);
     });
 });

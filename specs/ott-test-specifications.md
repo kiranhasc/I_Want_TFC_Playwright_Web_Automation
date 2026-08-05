@@ -69,6 +69,58 @@
   - `searchResultsVisible === true`
   - `detailsPageVisible === true`
 
+### IW3-T2088 - Verify that exact title matches appear at the top of the search results
+  - User is logged in with valid credentials
+  - A content item is available from the Collection GraphQL API
+  1. Login to OTT.
+  2. Wait for the Collection GraphQL API response and select a content title from the returned assets.
+  3. Open search, enter the exact collection title, and submit.
+  4. Wait for the Search GraphQL API response and capture the ordered result titles.
+  5. Capture the ordered search result titles rendered on the search results screen.
+  6. Verify the first result is an exact (case/punctuation-insensitive) match of the searched title.
+  7. Verify the remaining results are partial or related matches (ranked below the exact match).
+  - `isLoggedIn === true`
+  - `collectionTitle` is not empty
+  - `searchQueryTyped === true`
+  - `searchResultsVisible === true`
+  - `firstResultTitle` equals `collectionTitle` (normalized)
+  - `exactMatchAtTop === true`
+  - `exactMatchIndex === 0`
+
+  **Business Function:** `verifySearchExactTitleMatchAtTop` (src/businessFunction/ott-auth-bfs.ts)
+  **Test data key:** `tc-nav-020-search-exact-title-match-top` in `src/data/ott-test-cases.json`
+  **Page Object additions:** `OTTAuthPage.getSearchResultTitles()` (ordered rendered result titles)
+
+### IW3-T2089 - Verify that trending results are shown when the user taps on the Search icon without entering any query
+  - User is logged in with valid credentials.
+  1. Login to OTT.
+  2. Open the Search experience without typing a query.
+  3. Clear any pre-populated search input and wait for the search results area to stabilize.
+  4. Verify that multiple trending-style result titles are rendered automatically.
+  - `isLoggedIn === true`
+  - `searchQueryTyped === true`
+  - `searchInputCleared === true`
+  - `trendingResultsVisible === true`
+  - `trendingResultTitles.length > 0`
+
+  **Business Function:** `verifySearchTrendingResults` (src/businessFunction/ott-auth-bfs.ts)
+  **Test data key:** `tc-nav-021-search-trending-results` in `src/data/ott-test-cases.json`
+  **Page Object additions:** `OTTAuthPage.getSearchResultTitles()` for retrieving the visible result list
+
+### IW3-T2090 - Verify Trending search/Top picks near you title displayed on navigating to the search tab
+  - User is logged in with valid credentials.
+  1. Login to OTT.
+  2. Open the Search experience without typing a query.
+  3. Clear the search input and wait for the empty search state to render.
+  4. Verify the page displays the `Top Picks Near You` heading.
+  - `isLoggedIn === true`
+  - `searchInputCleared === true`
+  - `headingVisible === true`
+  - `headingText` contains `Top Picks Near You`
+
+  **Business Function:** `verifySearchTopPicksNearYouTitle` (src/businessFunction/ott-auth-bfs.ts)
+  **Test data key:** `tc-nav-022-search-top-picks-title` in `src/data/ott-test-cases.json`
+  **Page Object additions:** `OTTAuthPage.isSearchSectionHeadingVisible()` and `OTTAuthPage.getSearchSectionHeadingText()`
 
 **Business Function:** `verifySearchSmoothScrolling` (src/businessFunction/ott-auth-bfs.ts)
 

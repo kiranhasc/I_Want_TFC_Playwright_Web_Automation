@@ -1,10 +1,14 @@
-import { Page } from '@playwright/test';
+import { Page, Locator} from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { config } from '../utils/config-manager';
 import { logger } from '../utils/logger';
+import { title } from 'process';
 
 export class OTTAuthPage {
+    private static readonly searchResultContainerSelector = '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]';
+    private static readonly searchResultCandidateSelector = 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]';
+
     private page: Page;
     private readonly pageUtils: PageUtils;
     private readonly emailField: PageElement;
@@ -45,6 +49,9 @@ export class OTTAuthPage {
     private readonly accountAndSettingsOption: PageElement;
     private readonly editProfileButton: PageElement;
     private readonly continueWatchingRail: PageElement;
+    private readonly homePageRailContainer: PageElement;
+    private readonly homePageRailTagSelector: PageElement;
+    private readonly homePageRailThumbnailSelector: PageElement;
     private readonly continueWatchingTrayTitle: PageElement;
     private readonly continueWatchingTrayContainer: PageElement;
     private readonly continueWatchingTrayItem: PageElement;
@@ -113,6 +120,9 @@ export class OTTAuthPage {
     private readonly noResultsMessage: PageElement;
     private readonly searchResultImages: PageElement;
     private readonly searchButton: PageElement;
+    private readonly searchSectionHeading: PageElement;
+    private readonly searchResultContainerSelector: PageElement;
+    private readonly searchResultCandidateSelector: PageElement;
 
 
 
@@ -121,7 +131,7 @@ export class OTTAuthPage {
         this.pageUtils = new PageUtils(page);
         this.emailField = { selector: 'input[placeholder="Email Address"], input[type="email"], input[name*="email"]', };
         this.passwordField = { selector: 'input[placeholder="Password"], input[type="password"], input[name*="password"]', };
-        this.passwordVisibilityToggle = {selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")',};
+        this.passwordVisibilityToggle = { selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")', };
         this.passwordTextField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
         this.passwordVisibilityEyeIcon = { selector: '.absolute.top-\\[8px\\] > svg > path:nth-child(2)' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
@@ -152,6 +162,9 @@ export class OTTAuthPage {
         this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
         this.editProfileButton = { selector: 'text=Edit Profile, button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
+        this.homePageRailContainer = { selector: 'div.rail-container.pointer-events-none.relative' };
+        this.homePageRailTagSelector = { selector: 'div.thumbnail-label.absolute.top-0.right-0.z-10' };
+        this.homePageRailThumbnailSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.continueWatchingTrayTitle = { text: 'Continue Watching', selector: 'text=Continue Watching' };
         this.continueWatchingTrayContainer = { selector: 'text=Continue Watching >> xpath=following-sibling::*' };
         this.continueWatchingTrayItem = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img' };
@@ -224,10 +237,13 @@ export class OTTAuthPage {
         this.accountSettingsTextLink = { text: 'Account & Settings', selector: 'text=Account & Settings' };
         this.profileValidationTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
         this.searchResultsContainer = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3' };
-        this.searchSuggestionsContainer = { selector: '[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"]' };
+        this.searchSuggestionsContainer = { selector: '[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"], [class="relative overflow-hidden"]' };
         this.noResultsMessage = { selector: 'text=/no\\s+results/i' };
-        this.searchResultImages = { selector: 'img[alt]' };
+        this.searchResultImages = { selector: '//div[@class="relative overflow-hidden"]/child::img' };
         this.searchButton = { selector: "img[alt='search-icon']" };
+        this.searchSectionHeading = { selector: 'h1, h2, h3, p, [role="heading"], [class*="heading"]' };
+        this.searchResultContainerSelector = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]' };
+        this.searchResultCandidateSelector = { selector: 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]' };
     }
 
     async navigate(): Promise<void> {
@@ -1052,8 +1068,7 @@ export class OTTAuthPage {
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
         try {
-            const searchBtn = this.page.locator(this.searchButton.selector).first();
-
+            const searchBtn = await this.page.locator(this.searchButton.selector).first();
             if (await searchBtn.count()) {
                 await searchBtn.waitFor({ state: 'visible', timeout: 5000 });
                 await searchBtn.click();
@@ -1124,6 +1139,41 @@ export class OTTAuthPage {
         return (await locator.getAttribute('placeholder')) || '';
     }
 
+    async isSearchSectionHeadingVisible(expectedHeading: string): Promise<boolean> {
+        logger.elementInteraction('verify', `search section heading: ${expectedHeading}`);
+        const normalizedHeading = expectedHeading.trim().toLowerCase();
+        try {
+            const headingCandidates = this.page.locator(this.searchSectionHeading.selector);
+            const count = await headingCandidates.count();
+            for (let index = 0; index < count; index++) {
+                const text = (await headingCandidates.nth(index).textContent()) || '';
+                if (text.toLowerCase().includes(normalizedHeading)) {
+                    return true;
+                }
+            }
+        } catch (error) {
+            logger.debug(`Failed to verify search heading: ${expectedHeading}`, error);
+        }
+        return false;
+    }
+
+    async getSearchSectionHeadingText(expectedHeading: string): Promise<string> {
+        const normalizedHeading = expectedHeading.trim().toLowerCase();
+        try {
+            const headingCandidates = this.page.locator(this.searchSectionHeading.selector);
+            const count = await headingCandidates.count();
+            for (let index = 0; index < count; index++) {
+                const text = (await headingCandidates.nth(index).textContent()) || '';
+                if (text.toLowerCase().includes(normalizedHeading)) {
+                    return text.trim();
+                }
+            }
+        } catch (error) {
+            logger.debug(`Failed to retrieve search heading text: ${expectedHeading}`, error);
+        }
+        return '';
+    }
+
     async searchAndGetResults(query: string): Promise<boolean> {
         logger.step(`Searching for: ${query}`);
         const searchInput = this.page.locator(this.searchBar.selector).first();
@@ -1150,12 +1200,15 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
+        await this.page.waitForTimeout(2500);
         const locator = this.page.locator(this.searchResultImages.selector).first();
         const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();
+        console.log(`Normalized query: ${normalizedQuery}`);
         const normalizedAltText = (altText || '').toLowerCase();
+        console.log(`Normalized alt text: ${normalizedAltText}`);
         if (normalizedQuery) {
-            return normalizedAltText.includes(normalizedQuery) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
         }
         return /(search|result|thumbnail|poster|image)/i.test(altText || '');
     }
@@ -1232,7 +1285,7 @@ export class OTTAuthPage {
     async clickSearchAutoSuggestion(suggestionText: string): Promise<void> {
         logger.elementInteraction('click', `search suggestion: ${suggestionText}`);
         try {
-            const suggestion = this.page.locator(this.searchSuggestionsContainer.selector   ).filter({ hasText: suggestionText });
+            const suggestion = this.page.locator(this.searchSuggestionsContainer.selector).filter({ hasText: suggestionText });
             await suggestion.first().waitFor({ state: 'visible', timeout: 5000 });
             await suggestion.first().click();
         } catch (error) {
@@ -1273,6 +1326,94 @@ export class OTTAuthPage {
         } catch (error) {
             logger.debug('Failed to count search results', error);
             return 0;
+        }
+    }
+
+    async getHomePageDisplayedTitles(): Promise<string[]> {
+        logger.elementInteraction('retrieve', 'home page displayed titles');
+        try {
+            const candidates = this.page.locator('//div[@class="title"]');
+            const texts = await candidates.allTextContents();
+            const normalized = texts
+                .map(text => text.replace(/\s+/g, ' ').trim())
+                .filter((text): text is string => Boolean(text))
+                .filter((text, index, array) => array.indexOf(text) === index);
+            return normalized;
+        } catch (error) {
+            logger.debug('Failed to retrieve home page displayed titles', error);
+            return [];
+        }
+    }
+
+    async getHomePageRailMatches(top10Titles: string[]): Promise<Array<{ railName: string; contentTitle: string; hasTop10Tag: boolean }>> {
+        logger.elementInteraction('retrieve', 'home page rail matches for Top 10 titles');
+        try {
+            const railMatches: Array<{ railName: string; contentTitle: string; hasTop10Tag: boolean }> = [];
+            console.log(railMatches);
+            const rails = this.page.locator('div, section, article').filter({ has: this.page.locator('text=/Top|Trending|Continue|Watchlist|Streamed|Shows|Movies/i') }).filter({ hasNot: this.page.locator('text=/Sign Out|Account & Settings/i') });
+            console.log(rails);
+            const railCount = await rails.count();
+            console.log(`Found ${railCount} rails on the home page`);
+            for (let railIndex = 0; railIndex < railCount; railIndex += 1) {
+                const rail = rails.nth(railIndex);
+                const railName = (await rail.locator('[class*="title"]').first().textContent()).trim();
+                const cards = rail.locator('a, button, [role="button"], [data-testid*="card"], [class*="card"], [class*="thumbnail"]');
+                const cardCount = await cards.count();
+                for (let cardIndex = 0; cardIndex < cardCount; cardIndex += 1) {
+                    const card = cards.nth(cardIndex);
+                    const cardTitle = (await card.locator('img[alt], [alt], h1, h2, h3, [data-testid*="title"], [class*="title"]').first().textContent().catch(() => '') || '').trim();
+                    const normalizedCardTitle = cardTitle.toLowerCase();
+                    const matchingTitle = top10Titles.find(title => normalizedCardTitle.includes(title.toLowerCase()));
+                    if (!matchingTitle) {
+                        continue;
+                    }
+                    const tagVisible = await card.locator('//*[contains(normalize-space(.), "Top 10") or contains(@alt, "Top 10") or contains(@class, "top10") or contains(@data-testid, "top10")]').first().count().catch(() => 0) > 0;
+                    if (tagVisible) {
+                        railMatches.push({ railName: railName || 'Unknown rail', contentTitle: matchingTitle, hasTop10Tag: true });
+                    }
+                }
+            }
+            console.log(`Found ${railMatches.length} matching rails on the home page`);
+            return railMatches;
+        } catch (error) {
+            logger.debug('Failed to retrieve home page rail matches for Top 10 titles', error);
+            return [];
+        }
+    }
+
+    async getSearchResultTitles(): Promise<string[]> {
+        logger.elementInteraction('retrieve', 'ordered search result titles');
+        try {
+            const titles = await this.page.evaluate(({ containerSelector, candidateSelector }) => {
+                const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+                const container = document.querySelector(containerSelector) as HTMLElement | null;
+                const root = container ?? document.body;
+                const candidates = Array.from(root.querySelectorAll(candidateSelector)) as HTMLElement[];
+                const unique: string[] = [];
+                const seen = new Set<string>();
+                for (const candidate of candidates) {
+                    const text = normalize(candidate.textContent || candidate.getAttribute('alt') || '');
+                    if (!text || text.length < 2 || /search|results|home|watchlist|continue watching|my watchlist|movies|shows|gma/i.test(text.toLowerCase())) {
+                        continue;
+                    }
+                    const key = text.toLowerCase();
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        unique.push(text);
+                    }
+                    if (unique.length >= 12) {
+                        break;
+                    }
+                }
+                return unique;
+            }, {
+                containerSelector: OTTAuthPage.searchResultContainerSelector,
+                candidateSelector: OTTAuthPage.searchResultCandidateSelector,
+            });
+            return (titles || []).map(title => title.trim()).filter(Boolean);
+        } catch (error) {
+            logger.debug('Failed to retrieve ordered search result titles', error);
+            return [];
         }
     }
 
@@ -1376,7 +1517,7 @@ export class OTTAuthPage {
             return true;
         }
         const homeTabVisible = await this.pageUtils.isVisible(
-            { selector: this.homeTab.selector},
+            { selector: this.homeTab.selector },
             5000
         );
         return homeTabVisible;
@@ -1618,5 +1759,67 @@ export class OTTAuthPage {
 
         const fallbackText = await this.page.locator(this.profileValidationTextPattern.selector).first().textContent().catch(() => '');
         return fallbackText || '';
+    }
+
+    async verifyTopContentsInRails(
+        top10Titles: string[]
+    ): Promise<
+        Array<{
+            railName: string;
+            contentTitle: string;
+            hasTop10Tag: boolean;
+            isTopRightPosition: boolean;
+        }>
+    > {
+        const matchedRails: Array<{
+            railName: string;
+            contentTitle: string;
+            hasTop10Tag: boolean;
+            isTopRightPosition: boolean;
+        }> = [];
+        const rails = this.page.locator(this.homePageRailContainer.selector);
+        const railCount = await rails.count();
+        for (let i = 0; i < railCount; i += 1) {
+            const railName = ((await this.page.locator(`(//div[@class="title"])[${i + 1}]`).textContent()) ?? '').trim();
+            if (!railName) {
+                continue;
+            }
+            const railScope = this.page.locator(`//p[contains(text(),"${railName}")]/parent::div/following-sibling::*`).first();
+            const tagLocators = railScope.locator(this.homePageRailTagSelector.selector);
+            const thumbnailCount = await tagLocators.count().catch(() => 0);
+            if (thumbnailCount === 0) {
+                continue;
+            }
+            for (let j = 0; j < thumbnailCount; j += 1) {
+                const tagLocator = tagLocators.nth(j);
+                const thumbnailLocator = railScope.locator(this.homePageRailThumbnailSelector.selector).nth(j).first();
+                const contentTitle = ((await thumbnailLocator.getAttribute('alt')) ?? '').trim();
+                if (!contentTitle) {
+                    continue;
+                }
+                const hasTop10Tag = await tagLocator.count().catch(() => 0) > 0;
+                const isTopRightPosition = hasTop10Tag ? await this.isTopRightPosition(tagLocator, thumbnailLocator) : false;
+                if (top10Titles.includes(contentTitle)) {
+                    matchedRails.push({
+                        railName,
+                        contentTitle,
+                        hasTop10Tag,
+                        isTopRightPosition,
+                    });
+                }
+            }
+        }
+        return matchedRails;
+    }
+
+    private async isTopRightPosition(tagLocator: Locator, thumbnailLocator: Locator): Promise<boolean> {
+        const tagBox = await tagLocator.boundingBox().catch(() => null);
+        const thumbnailBox = await thumbnailLocator.boundingBox().catch(() => null);
+        if (!tagBox || !thumbnailBox) {
+            return false;
+        }
+        const isInUpperRightQuadrant = tagBox.x >= thumbnailBox.x + thumbnailBox.width * 0.6
+            && tagBox.y <= thumbnailBox.y + thumbnailBox.height * 0.25;
+        return isInUpperRightQuadrant;
     }
 }

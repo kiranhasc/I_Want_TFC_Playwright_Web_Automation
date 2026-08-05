@@ -1528,7 +1528,7 @@ async addToWatchlistAndGetToast(): Promise<string> {
       await this.page.locator(this.firstSearchResult.selector).first().waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
       await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
 
-      const gql = new GraphQLHelper(this.page);
+      const gql = GraphQLHelper.getInstance(this.page);
       const operation = await gql.waitForOperation('Search', 15000).catch((err) => {
         logger.debug('Search GraphQL operation did not appear', err);
         return null;

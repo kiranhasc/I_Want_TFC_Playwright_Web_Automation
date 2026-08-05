@@ -1135,26 +1135,26 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
 }
 
 export async function verifySearchLiveContentExclusion(page: any, input?: Partial<VerifySearchLiveContentExclusionInput>): Promise<VerifySearchLiveContentExclusionOutput> {
-    const authPage = new OTTAuthPage(page);
-    const gql = GraphQLHelper.getInstance(page);
-    const mode = normalizeLoginMode(input?.mode);
-    const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-    logger.step('Starting live content exclusion verification flow');
-    const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
-    const login = await loginToOTT(page, { mode });
-    if (!login.isLoggedIn) {
-        return {
-            isLoggedIn: false,
-            liveContentTitle: '',
-            searchQueryTyped: false,
-            suggestionsVisible: false,
-            liveContentExcludedFromSuggestions: false,
-            liveContentTitleFoundInSearchResults: false,
-            suggestionsList: [],
-        };
-    }
-    let liveContentTitle = '';
-    try {
+  const authPage = new OTTAuthPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  const mode = normalizeLoginMode(input?.mode);
+  const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
+  logger.step('Starting live content exclusion verification flow');
+  const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
+  const login = await loginToOTT(page, { mode });
+  if (!login.isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      liveContentTitle: '',
+      searchQueryTyped: false,
+      suggestionsVisible: false,
+      liveContentExcludedFromSuggestions: false,
+      liveContentTitleFoundInSearchResults: false,
+      suggestionsList: [],
+    };
+  }
+  let liveContentTitle = '';
+  try {
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
         const rails = parser.getRails();

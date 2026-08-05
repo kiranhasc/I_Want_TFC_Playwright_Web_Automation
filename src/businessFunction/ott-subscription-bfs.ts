@@ -2,15 +2,29 @@ import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTPlaybackPage } from '../pom/OTTPlaybackPage';
 import { logger } from '../utils/logger';
-import { loginToOTT } from './ott-auth-bfs';
-import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
+import { loginToOTT } from './ott-auth-bfs';
+import { config } from '../utils/config-manager';
 import { TVShowEpisodesParser } from '../utils/graphql/parsers/tv-show-episodes-parser';
 
 export interface VerifySubscribeToWatchInput {
   mode?: string;
+  graphqlQueryName?: string;
   searchTerm?: string;
+}
+
+export interface VerifyPremiumCrownIconOnSearchResultsInput {
+  mode?: string;
+  graphqlQueryName?: string;
+  expectedMonetizationType?: string;
+}
+
+export interface VerifyPremiumCrownIconOnSearchResultsOutput {
+  searchResultsVisible: boolean;
+  premiumCrownIconVisible: boolean;
+  firstSearchResultMonetizationType: string;
+  premiumAssetTitle: string;
 }
 
 export interface VerifySubscribeToWatchOutput {
@@ -42,6 +56,21 @@ export interface VerifyGuestSubscribeNavigationInput {
 
 export interface VerifyGuestSubscribeNavigationOutput {
   //isTryAgainVisible: boolean;
+  isLoginScreenVisible: boolean;
+  headingText: string;
+  isEmailFieldVisible: boolean;
+  isPasswordFieldVisible: boolean;
+}
+
+export interface VerifyGuestSubscribeCarouselNavigationInput {
+  expectedHeading?: string;
+  query?: string;
+  graphqlQueryName?: string;
+}
+
+export interface VerifyGuestSubscribeCarouselNavigationOutput {
+  resultsVisible: boolean;
+  isDetailsPageVisible: boolean;
   isLoginScreenVisible: boolean;
   headingText: string;
   isEmailFieldVisible: boolean;
@@ -105,7 +134,6 @@ export async function verifySubscribeCtaOnGmaDetailsPage(
     };
   }
 
-  await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await detailsPage.scrollContinueWatchingTrayIntoView();
@@ -148,7 +176,7 @@ export async function verifySubscribeToWatchCTA(
   const authPage = new OTTAuthPage(page);
   logger.step('Starting subscribe-to-watch CTA verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  await authPage.acceptCookieSettingsIfVisible();
+  // await authPage.acceptCookieSettingsIfVisible();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -174,29 +202,133 @@ export async function verifySubscribeToWatchCTA(
   };
 }
 
+export async function verifyPremiumCrownIconOnSearchResults(
+  page: any,
+  input?: VerifyPremiumCrownIconOnSearchResultsInput
+): Promise<VerifyPremiumCrownIconOnSearchResultsOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  const mode = input?.mode;
+  logger.step('Starting premium crown icon validation flow on search results');
+
+  await authPage.navigate();
+  logger .info('NAVIGATED TO OTT HOME PAGE');
+  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+  const parser = new CollectionParser(collectionResponse as any);
+  const premiumAsset = parser.findAsset((asset: any) => {
+    const monetType = asset.monetization?.type
+      ?? asset.monetizationType
+      ?? asset.pricing?.type
+      ?? asset.pricing?.pricingType
+      ?? '';
+    return /premium|paid|subscription|paywall|purchase/i.test(String(monetType));
+  });
+
+  const premiumAssetTitle = premiumAsset?.asset?.title ?? '';
+  const firstSearchResultMonetizationType = premiumAssetTitle
+    ? String(premiumAsset?.asset?.monetization?.type
+      ?? premiumAsset?.asset?.monetizationType
+      ?? premiumAsset?.asset?.pricing?.type
+      ?? premiumAsset?.asset?.pricing?.pricingType
+      ?? '')
+    : '';
+
+  if (!premiumAssetTitle) {
+    logger.assertion('Premium asset title found in Collection GraphQL', false);
+    return {
+      searchResultsVisible: false,
+      premiumCrownIconVisible: false,
+      firstSearchResultMonetizationType,
+      premiumAssetTitle: '',
+    };
+  }
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchText(premiumAssetTitle);
+  await authPage.submitSearch();
+
+  const searchResultsVisible = await authPage.isSearchResultsVisible(premiumAssetTitle);
+  const searchResultMonetizationType = await detailsPage.getFirstSearchResultMonetizationType().catch(() => '');
+  const premiumCrownIconVisible = await detailsPage.isPremiumCrownIconVisibleOnFirstSearchResult().catch(() => false);
+
+  logger.assertion('Search results visible for premium content query', searchResultsVisible);
+  logger.assertion(
+    `Search result monetization type is premium: ${searchResultMonetizationType}`,
+    /premium|paid|subscription|paywall|purchase/i.test(searchResultMonetizationType)
+  );
+  logger.assertion('Premium crown icon visible on first search result thumbnail', premiumCrownIconVisible);
+
+  return {
+    searchResultsVisible,
+    premiumCrownIconVisible,
+    firstSearchResultMonetizationType: searchResultMonetizationType,
+    premiumAssetTitle,
+  };
+}
+
 export async function verifySubscribeToWatchRedirectsToAccountScreen(
   page: any,
   input?: VerifySubscribeToWatchInput
 ): Promise<VerifySubscribeToWatchRedirectToAccountOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
-  logger.step('Starting subscribe-to-watch redirect to account screen verification flow');
+  const gql = GraphQLHelper.getInstance(page);
+  const mode = input?.mode;
 
+  logger.step('Starting subscribe-to-watch redirect to account screen verification flow');
+  
   const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'freeUser' });
   const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('Free user is logged in before subscribe CTA redirect validation', isLoggedIn);
+  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+  const parser = new CollectionParser(collectionResponse as any);
 
-  await authPage.acceptCookieSettingsIfVisible();
+  const premiumAsset = parser.findAsset((asset: any) => {
+  const monetType = String(
+    asset.monetType ??
+    asset.monetization?.type ??
+    asset.monetizationType ??
+    asset.pricing?.type ??
+    asset.pricing?.pricingType ??
+    ''
+  ).toLowerCase();
 
-  if (input?.searchTerm) {
+  const contentOwner = String(
+    asset.contentOwner ??
+    asset.owner ??
+    asset.provider ??
+    asset.network ??
+    ''
+  ).toLowerCase();
+
+  return monetType === 'paid' && contentOwner === 'gma';
+});
+
+const premiumAssetTitle = premiumAsset?.asset?.title ?? '';
+
+const firstSearchResultMonetizationType = premiumAssetTitle
+  ? String(
+      premiumAsset?.asset?.monetization?.type ??
+      premiumAsset?.asset?.monetizationType ??
+      premiumAsset?.asset?.pricing?.type ??
+      premiumAsset?.asset?.pricing?.pricingType ??
+      ''
+    )
+  : '';
+
+if (!premiumAssetTitle) {
+  logger.assertion('Premium asset title found in Collection GraphQL', false);
+}
     await authPage.clickSearchBar();
-    await authPage.enterSearchText(input.searchTerm);
+    await authPage.enterSearchText(premiumAssetTitle);
     await authPage.submitSearch();
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await detailsPage.waitForPlayback(2);
 
     await detailsPage.clickFirstSearchResult();
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  }
+  
 
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
   let subscribeCtaClicked = false;

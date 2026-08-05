@@ -1046,7 +1046,7 @@ This test plan covers validation of application launch behavior for the OTT plat
    10. Navigate to the Home page.
    11. Tap on any content under Continue Watching.
    12. Play the content
-      * except The content should play directly without prompting for PIN
+      * expect The content should play directly without prompting for PIN
 
 ### 8.14. Verify that the selected episode from the Continue Watching tray resumes playback from the last watched position, and not from the beginning or the first episode when the parental pin is enabled.
 **File:** `tests/home/parential-pin.spec.ts`
@@ -1260,31 +1260,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 13. Add wait for 90sec
 14. Verify the playback is playing by asserting the title of the episode   
 
-#### 2.10 IW3-T3978 Verify that pause ad appears on player screen for all type of contents during pause state
-
-**File:** `tests/home/playback.spec.ts`
-
-**Steps:**
-
-1. Open the browser.
-2. Enter the URL(https://iwanttfc.com/)
-3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-3. Click on Email field
-4. Enter valid email as "abhilash584@gmail.com" in email field.
-5. Click on Password field
-6. Enter valid password as "Test1234" in password field
-7. Tap on "Continue" button.
-8. Click on the search icon 
-9. Type "Nurse the dead" in the search box and Click "Enter"
-10. Click on the first content from first rail
-11. Click the play button
-12. Verify there is a ADD tag on the play screen 
-13. Add wait for 90sec
-14. Verify the playback is playing by asserting the title of the episode   
-15. Add wait for 10sec and pause the content 
-16. Verify the 3 dot on the banner screen is visible   
-
-#### 2.11 IW3-T1974 Verify that the video playback pauses immediately when the pause action is triggered by the user .
+#### 2.10 IW3-T1974 Verify that the video playback pauses immediately when the pause action is triggered by the user .
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1306,7 +1282,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 13. Store the time value and wait for 10sec 
 14. Again store the time value and both the stored value should be same  
 
-#### 2.12 IW3-T1975 Verify that the video playback resumes smoothly from the paused position when the user triggers the resume action.
+#### 2.11 IW3-T1975 Verify that the video playback resumes smoothly from the paused position when the user triggers the resume action.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1329,7 +1305,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 14. Click paly button and wait for 10sec
 15. Again store the time value and both the stored value should be same  
 
-#### 2.13 IW3-T1977 Verify that the forward and backward button controls function correctly even when the video is in a paused state.
+#### 2.12 IW3-T1977 Verify that the forward and backward button controls function correctly even when the video is in a paused state.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1351,9 +1327,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 12. Click on forward 10sec and store the time value
 13. both stored value should not be equal 
 
-IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips the video playback ahead or back by exactly 10 seconds in movies or TV shows.
-
-#### 2.14 IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips the video playback ahead or back by exactly 10 seconds in movies or TV shows.
+#### 2.13 IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips the video playback ahead or back by exactly 10 seconds in movies or TV shows.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1374,7 +1348,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click on forward 10sec and store the time value
 13. both stored value should not be equal 
 
-#### 2.15 IW3-T1980 Verify that "Full screen" icon is displayed on the player screen.
+#### 2.14 IW3-T1980 Verify that "Full screen" icon is displayed on the player screen.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1394,7 +1368,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button 
 12. Verify full screen button is visible  
 
-#### 2.16 IW3-T1978 Verify that the video player displays the timestamp in HH:MM:SS format when the total video duration exceeds one hour.
+#### 2.15 IW3-T1978 Verify that the video player displays the timestamp in HH:MM:SS format when the total video duration exceeds one hour.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1415,7 +1389,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Drag the seek  bar upto 60% and click pause
 13. Store the time value and verify stored time value is in format HH:MM:SS 
 
-#### 2.17 IW3-T1979 Verify that the video player displays the playback time in MM:SS format when the total video duration is less than one hour.
+#### 2.16 IW3-T1979 Verify that the video player displays the playback time in MM:SS format when the total video duration is less than one hour.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1436,7 +1410,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Drag the seek  bar upto 20% and click pause
 13. Store the time value and verify stored time value is in format MM:SS 
 
-#### 2.18 IW3-T1981 Verify that user can able to select the available subtitle during playback.
+#### 2.17 IW3-T1981 Verify that user can able to select the available subtitle during playback.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1458,7 +1432,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. click on English(Phillippines) language option
 14. verify subtitle is selected.
 
-#### 2.19 IW3-T1982 Verify that selected subtitle option from the current episode continues for the next epiosde.
+#### 2.18 IW3-T1982 Verify that selected subtitle option from the current episode continues for the next epiosde.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1482,7 +1456,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 15. Click on Sub title button
 16. Just Verify English(Phillippines) language is selected
 
-#### 2.20 IW3-T1983 Verify that selected subtitle option from one content carry to any other content if the same subtitle is available.
+#### 2.19 IW3-T1983 Verify that selected subtitle option from one content carry to any other content if the same subtitle is available.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1510,7 +1484,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 19. Click on Sub title button
 20. verify English(Phillippines) language is already selected
 
-#### 2.21 IW3-T1984 Verify that subtitles are set to 'Off' by default.
+#### 2.20 IW3-T1984 Verify that subtitles are set to 'Off' by default.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1531,7 +1505,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click on Sub title button
 13. Verify off option is set by default 
 
-#### 2.22 IW3-T1985 Verify that selected subtitles are displayed on the player screen.
+#### 2.21 IW3-T1985 Verify that selected subtitles are displayed on the player screen.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1553,7 +1527,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. click on English(Phillippines) language option 
 14. verify subtitle is visible post selecting the language on playback screen
 
-#### 2.23 IW3-T1986 Verify that subtitles display correctly and remain synchronized with the video during seeking operations.
+#### 2.22 IW3-T1986 Verify that subtitles display correctly and remain synchronized with the video during seeking operations.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1577,7 +1551,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 15. Click on forward button, rewind button and drag the seek bar
 16. Verify subtitle is visible post selecting each button and dragging seek bar (wait till the subtitle is displayed)
 
-#### 2.24 IW3-T1987	Verify the functioNFlity on tapping "Full screen" icon .
+#### 2.23 IW3-T1987	Verify the functioNFlity on tapping "Full screen" icon .
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1597,10 +1571,10 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button 
 12. Click on full screen button
 13. Verify the title of content is visible 
-14. store the time value and wait for 10sec 
+14. Store the time value and wait for 10sec 
 15. Store the time value and verify both time should not be equal  
 
-#### 2.25 IW3-T1988 Verify the UI of the player screen .
+#### 2.24 IW3-T1988 Verify the UI of the player screen .
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1629,28 +1603,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
    - Next episode (Condition: If visible)
    - Content duration time in HH:MM:SS or MM:SS
  
-#### 2.26 IW3-T1927 Verify the Continue Watching tray on the "Home Page" for the new users upon watching 5% of the content.
-
-**File:** `tests/home/playback.spec.ts`
-
-**Steps:**
-
-1. Open the browser.
-2. Enter the URL(https://iwanttfc.com/)
-3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-3. Click on Email field
-4. Enter valid email as "abhilash584@gmail.com" in email field.
-5. Click on Password field
-6. Enter valid password as "Test1234" in password field
-7. Tap on "Continue" button.
-8. Click the content in Kapamilya Show Picks rail which is have only play button by hovering on the content 
-9. Click on the play button
-9. Drag the seek  bar upto 5%
-10. Click back button 
-11. navigate to home page
-12. Verify that played content is visible in the first place of continue watching rail in home page 
-
-#### 2.27 IW3-T1989 Verify that the 'Next Episode' CTA appears under the seek bar of the player scree when next episode exists.
+#### 2.25 IW3-T1989 Verify that the 'Next Episode' CTA appears under the seek bar of the player scree when next episode exists.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1670,7 +1623,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button 
 12. Verify the Next episode buttons are visible(have a condition)
 
-#### 2.28 IW3-T1990 Verify that the "Up Next" binge marker appears at the end of the content playback.
+#### 2.26 IW3-T1990 Verify that the "Up Next" binge marker appears at the end of the content playback.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1691,7 +1644,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Drag the seek  bar till end 
 13. Verify for the appearance of the 'Up next wedge' button CTA at the end
 
-#### 2.29 IW3-T1992	Verify that user Navigates to previous screen on tapping back button
+#### 2.27 IW3-T1992	Verify that user Navigates to previous screen on tapping back button
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1712,7 +1665,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click the back button 
 13. Verify that post clicking the back button goes to back screen 
 
-#### 2.30 IW3-T1997 Verify that the player controls auto-dismiss automatically after a 5 seconds of infectivity during video playback
+#### 2.28 IW3-T1997 Verify that the player controls auto-dismiss automatically after a 5 seconds of infectivity during video playback
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1733,7 +1686,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Wait for 5sec
 13. Verify that player control is not visible after 5sec of playing content 
 
-#### 2.31 IW3-T1998 Verify that the player controls are dismissed when the user hovers on the screen while controls are visible 
+#### 2.29 IW3-T1998 Verify that the player controls are dismissed when the user hovers on the screen while controls are visible 
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1754,7 +1707,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Verify that player control is not visible after 5sec
 13. Verify that player control is visible after hover the screen 
 
-#### 2.32 IW3-T2005 Verify that user can increase or decrease the volume using volume button .
+#### 2.30 IW3-T2005 Verify that user can increase or decrease the volume using volume button .
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1775,7 +1728,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click on volume button 
 14. Verify you volume can mute and unmute by clicking on volume button
 
-#### 2.32. End-To-End: launch, login, navigation across tabs, search and playback of a content
+#### 2.31. End-To-End: launch, login, navigation across tabs, search and playback of a content
 
 **File:** `tests/home/EndToEnd.spec.ts`
 
@@ -1785,7 +1738,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 2. Enter the URL
 3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
 4. Login with valid Email and Password
-* except - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+      * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
 5. When user is on "Home" tab
       * expect "Continue Watching" rail should be displayed
 6. When user is on "Movies" tab
@@ -1815,7 +1768,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 18. Click on back button
       * expect Navigates to content details screen.
 
-#### 2.34 IW3-T2009 Verify the "LIVE" tag is displayed on the player screen during live streaming.
+#### 2.32 IW3-T2009 Verify the "LIVE" tag is displayed on the player screen during live streaming.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1832,7 +1785,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 8. Click on the "TFC Asia" live channel content in the home screen
 9. Verify "live" tag is visible  
 
-#### 2.35 IW3-T2014 Verify the UI of the player screen during Ad playback.
+#### 2.33 IW3-T2014 Verify the UI of the player screen during Ad playback.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1852,7 +1805,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button
 12. Verify there is a AD tag on the play screen 
 
-#### 2.36 IW3-T2017 Verify that all ads do not exceed a maximum duration of 90 seconds.
+#### 2.34 IW3-T2017 Verify that all ads do not exceed a maximum duration of 90 seconds.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1874,7 +1827,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. Add wait for 90sec
 14. Verify there is no AD tag visible after 90 sec on the play screen
 
-#### 2.37 IW3-T2003 Verify that the content gets paused on tapping the player screen when the player controls are visible.
+#### 2.35 IW3-T2003 Verify that the content gets paused on tapping the player screen when the player controls are visible.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1895,7 +1848,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Player should pause on tapping the player screen
 12. Verify that player control is visible 
 
-#### 2.38 IW3-T2001 Verify that the seekbar displays thumbNFil previews when scrubbing through the content. 
+#### 2.36 IW3-T2001 Verify that the seekbar displays thumbNFil previews when scrubbing through the content. 
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1916,7 +1869,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Hover on the screen 
 13. Thumbnail should displayed when seek bar is hovered on player screen.
 
-#### 2.39 IW3-T1991 Verify that tapping the 'Up Next binge" marker Navigates and starts the next episode playback.
+#### 2.37 IW3-T1991 Verify that tapping the 'Up Next binge" marker Navigates and starts the next episode playback.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1938,7 +1891,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. Click the 'Up next wedge' button CTA
 14. Verify the content has navigated to the next episode playback. 
 
-#### 2.40 IW3-T2004 Verify that the player automatically Navigates and starts playback of the next episode immediately after the current episode ends without requiring user intervention.
+#### 2.38 IW3-T2004 Verify that the player automatically Navigates and starts playback of the next episode immediately after the current episode ends without requiring user intervention.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1960,7 +1913,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. Wait till player navigates to next episode
 14. Verify the content has navigated to the next episode playback 
 
-#### 2.41 IW3-T2020 Verify that a clear and visible label is displayed on the player screen whenever an ad is playing.
+#### 2.39 IW3-T2020 Verify that a clear and visible label is displayed on the player screen whenever an ad is playing.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -1980,7 +1933,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button
 12. Verify yellow color tag with name 'Ad' with a timer is displayed whenever an ad is playing.
 
-#### 2.42 IW3-T2022 Verify that the seek bar is not visible on the player screen during ad playback.
+#### 2.40 IW3-T2022 Verify that the seek bar is not visible on the player screen during ad playback.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -2000,7 +1953,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 11. Click the play button
 12. Verify the seek bar is not visible on the player screen during ad playback.
 
-#### 2.43 IW3-T2023 Verify user Navigates to content details screen when the last season last episode completely watched 
+#### 2.41 IW3-T2023 Verify user Navigates to content details screen when the last season last episode completely watched 
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -2023,7 +1976,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 14. Drag the seek bar till end of the episode 
 15. Verify the screen is navigated to the content details page after dragging the seek bar till end of the episode.
 
-#### 2.44 IW3-T2024 Verify user Navigates to content details screen post completely watching movie content.
+#### 2.42 IW3-T2024 Verify user Navigates to content details screen post completely watching movie content.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -2045,7 +1998,7 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 13. Drag the seek bar till end of movie episode 
 15. Verify the screen is navigated to the content details page after the complete play of movie.  
 
-#### 2.45 IW3-T2027 Verify that clicking "Subscribe to watch" redirects to "Account" screen.
+#### 2.43 IW3-T2027 Verify that clicking "Subscribe to watch" redirects to "Account" screen.
 
 **File:** `tests/home/playback.spec.ts`
 
@@ -2066,6 +2019,548 @@ IW3-T1976 Verify that tapping the seek forward or backward button (CTA) skips th
 12. Click on the subscribe to watch in the player screen 
 13. Verify that post clicking the subscribe to watch button in the player screen should navigate the account page 
 14. Verify account page is displayed with iwant icon and "Account" name  
+
+#### 2.44 IW3-T3679 Verify that "Early Access" content with the tag is not displayed on "Continue Watching" tray upon partially watching.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@yopmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Get Early Access tagged content from Collection graphQL API
+9. Click on the search icon
+10. Enter content name returned from Collection graphQL API
+    * expect Assert content searched with first content displayed in search screen
+11. Store and Print First content title
+12. Click on the first content searched
+    * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast disaplyed in details page)
+13. Scroll the content details page till early access tag is visible on the episode thumbnail
+14. Click on the episode which has the early access tag.
+15. Drag the seek bar upto 10%
+16. Click back button and navigate to home page 
+17. Verify Early access tag is not diplayed on the content titled that was stored in continue watching rail.
+
+#### 2.45 IW3-T2016 Verify that the 'Skip Ad' CTA appears at the correct timestamp during pre-roll ad playback and functions as expected by tapping the "Skip Ad".
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. Return a free content and premium content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+   * expect Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Wait for some sec so that Ad plays 
+10. Verify Ad tag is visible on the ad player screen.
+11. wait for skip Ad button visible till ad tag is on the screen 
+12. If skipAd button appears click on the skipAd button, else return as the skipAd is not visible(Validate if skipad visible and clicked else return as skipad button not visible)
+
+#### 2.46 IW3-T2018 Verify that the ad duration countdown and the skip button countdown are displayed correctly during ad playback.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. Return a free content and premium content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+   * expect Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Wait for some sec so that Ad plays 
+10. Verify Ad tag is visible on the ad player screen.
+11. wait for skip Ad button visible till ad tag is on the screen, else return as the skipAd is not visible(Validate if skipad visible else return as skipad button not visible)
+
+#### 2.47 IW3-T2019 Verify that the mid-roll ad interrupts the main content playback exactly at each midroll Ad.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. Return a free content and premium content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+   * expect Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Wait for some sec so that Ad plays 
+10. Verify Ad tag is visible on the ad player screen.
+11. Add wait for 90sec
+12. Verify the playback is playing by asserting the title of the episode 
+13. Drag the seek bar upto 50%
+14. Verify ad interrupts the player content with the Ad tag displayed on the Ad player screen
+
+#### 2.48 IW3-T2021 Verify that tapping 'Learn More' during playback redirects the user to the ad-related link 
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+5. Return a free content and premium content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+   * expect Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Wait for some sec so that Ad plays 
+10. Verify Ad tag is visible on the ad player screen.
+11. Tap on the Ad player screen
+    *expect: User should be navigated to the **Ad-realted** page and the **page title** should be validated and printed in the logger.
+
+#### 2.49 IW3-T3685 Verify that a subscribed user can access early access episodes via Up Next binge marker or Next Episode CTA from the player screen.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Return a Early access tag content from collection graphQL API
+6. Click on search icon
+7. Search/Type Early access tag content returned
+   * expect Thumbnails should show correct 'Early access' tags on search page (Use search graphql api response to validate field name : type, should be equal to Early access)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Scroll the content details page till early access tag is visible on the episode thumbnail
+10. Click on the previous episode of the early access tag
+11. Drag the seek bar till 95%
+12. Click on Up Next binge marker or Next Episode CTA
+13. Content should play without after clicking next episode.
+
+#### 2.50 IW3-T3686 Verify that a free user can initiate the subscription flow from an Early Access episode
+
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Return a Early access tag content from collection graphQL API
+6. Click on search icon
+7. Search/Type Early access tag content returned
+   * expect Thumbnails should show correct 'Early access' tags on search page (Use search graphql api response to validate field name : type, should be equal to Early access)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Scroll the content details page till early access tag is visible on the episode thumbnail
+10. Click on the episode which has the early access tag
+11. Verify "Unlock Early Access" displayed on the screen and Click on "Update to Watch now" button
+12. Verify user navigates to the Account page with "Account" and "Subscription" title displayed on screen.
+
+#### 2.51 IW3-T4707 Verify that user navigates to content details screen on tapping "May be later" CTA from the "Unlock Early Access" screen.
+
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Return a Early access tag content from collection graphQL API
+6. Click on search icon
+7. Search/Type Early access tag content returned
+   * expect Thumbnails should show correct 'Early access' tags on search page (Use search graphql api response to validate field name : type, should be equal to Early access)
+8. Click on the first content searched
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+9. Scroll the content details page till early access tag is visible on the episode thumbnail
+10. Click on the episode which has the early access tag
+11. Verify "Unlock Early Access" displayed on the screen and Click on "May be later" button
+12. Verify user navigates to the content details page.
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page).
+
+#### 2.52 IW3-T2113 Verify functionality of Skip Intro marker.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the play button 
+12. Verify "Skip Intro" button is visible and Store the time value
+13. Click on "Skip Intro" button and store the time value after clicking
+14. Print the both time value and validate both are not same 
+
+#### 2.53 IW3-T2115 Verify functionality of Skip Recap marker.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the second episode in the details page
+    * expect content title, and S1 E2 is displayed on the player screen 
+12. Click on "Skip Intro"    
+13. Verify "Skip Recap" button is visible and Store the time value
+14. Click on "Skip Recap" button and store the time value after clicking
+15. Print the both time value and validate both are not same 
+
+#### 2.54 IW3-T2120 Verify that the markers remains visible after pausing or resuming the content playback.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the second episode in the details page
+    * expect content title, and S1 E2 is displayed on the player screen 
+12. Drag the seek bar till 95% 
+    *expect Up Next binge is visible on the player screen
+13. Pause/Resume the player by taping on player screen
+14. Verify Up Next binge is visible on the player screen.
+
+#### 2.55 IW3-T2121 Verify clicking on "Skip Intrio" , "Skip Recap"  skip the content playback for a specified duration
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the second episode in the details page
+    * expect content title, and S1 E2 is displayed on the player screen 
+12. Verify "Skip Recap" button is visible and Store the initial skip Recap time value
+13. Click on "Skip Recap" button and store the updated skip Recap time value after clicking
+14. Print and validate both initial skip recap time value and updated skip recap time are not same
+15. Verify "Skip Intro" button is visible and Store the initial skip intro time value
+16. Click on "Skip Intro" button and store the updated skip intro time value after clicking
+17. Print and validate both initial skip intro time value and updated skip intro time are not same 
+
+#### 2.56 IW3-T2122 Verify that markers reappear after they have been displayed and the content is rewound.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the second episode in the details page
+    * expect content title, and S1 E2 is displayed on the player screen 
+12. Verify "Skip Recap" button is visible and Store the initial skip Recap time value
+13. Click on "Skip Recap" button and store the updated skip Recap time value after clicking
+14. Print and validate both initial skip intro time value and updated skip intro time are not same 
+15. Verify "Skip Intro" button is visible and Store the initial skip intro time value
+16. Click on "Skip Intro" button and store the updated skip intro time value after clicking
+17. Print and validate both initial skip recap time value and updated skip recap time are not same
+18. Drag the seek bar till 95%
+    *expect Up Next binge is visible on the player screen
+19. Drag the seek bar back to the initial position from first
+    *expect validate the time value is 00:00
+20. Verify skip Recap button is visible
+
+#### 2.57 IW3-T2116 Verify presence of Skip Outro(Up Next) binge marker at end of the content playback.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Click on the search icon 
+6. Type "YSpeak 2.0" in the search box and Click "Enter"
+7. Click on the first content from first rail
+8. Click the play button 
+9. Drag the seek  bar till 99%
+10. Verify for the appearance of the 'Up next wedge' button CTA at the end.
+
+#### 2.58 IW3-T2117 Verify functionality of Skip Outro(Up Next) binge marker.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Click on the search icon 
+6. Type "Unbreak My Heart" in the search box and Click "Enter"
+7. Click on the first content from first rail
+8. Click the play button 
+9. Drag the seek  bar till 98%
+10. Verify for the appearance of the 'Up next wedge' button CTA at the end.
+11. Store the time value of the content when 'Up next wedge' button is visible 
+12. Click on the 'Up next wedge' button
+    * expect - Content should navigate to next episode and Stored time value before 'Up next wedge' clicked should be not equal to after clicked 'Up next wedge'.
+
+#### 2.59 IW3-T2118 Verify that "X" button is displayed on the "Up Next" binge marker to close the "Outro"
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Click on the search icon
+6. Type "Araw Gabi" in the search box and Click "Enter"
+7. Click on the first content from first rail
+8. Click the play button
+9. Drag the seek  bar till 98%
+10. Verify for the appearance of the 'Up next wedge' button CTA at the end.
+11. Verify "X" button is displayed on the "Up Next" binge marker
+12. Click on the "X" button on the "Up Next" binge marker
+    * expect content should continue play after clicking on the "X" button
+
+#### 2.60 IW3-T2119 Verify clicking "Skip Outro(Up Next) binge marker" moves to next episode when user clicks.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Click on the search icon
+6. Type "Araw Gabi" in the search box and Click "Enter"
+7. Click on the first content from first rail
+8. Click the play button
+9. Drag the seek  bar till 98%
+10. Verify for the appearance of the 'Up next wedge' button CTA at the end.
+11. Click the 'Up next wedge' button CTA only
+12. Verify the content has navigated to the next episode playback
+    * expect next episode should play smoothly after clicking on the "Up Next Wedge"
+
+#### 2.61 IW3-T4338 Verify search result will be displayed based on the search input text
+
+**File:** `tests/home/home-page-launch.spec.ts`
+
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL.
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Terms and Conditions** link.  
+   *expect:* User should be navigated to the **Terms and Conditions** page.
+   6. Tap the **Search Documentation** search field displayed at the top-right corner.
+   7. Enter a search query (e.g., **Terms & Conditions of Subscription and/or use for Customers in the Philippines**).
+   8. Verify that the corresponding search results are displayed.  
+   *expect:* Search results relevant to the entered query should be displayed successfully.
+   9. Verify that the user is able to search for any page using the search field.  
+   *expect:* The user should be able to search any page via the search field, and the corresponding results should be displayed correctly.
+
+#### 2.62 IW3-T4335 Verify application version will be displayed at the bottom of the page
+
+**File:** `tests/home/home-page-launch.spec.ts`
+
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL.
+   3. Login with valid credentials.
+   4. Scroll to the bottom of the page.
+   5. Tap the **Terms and Conditions** link.
+   *expect:* User should be navigated to the **Terms and Conditions** page.
+   6. Scroll to the bottom of the page.
+   7. Verify application version will be displayed at the bottom of the page and print the version displayed
+   *expect:* The user should be able to see the application version.
+
+#### 2.63 IW3-T2123 Verify ""Skip Intro or Skip Recap"" markers not displayed for the contents under CW tray.
+
+**File:** `tests/home/skip_intro/outro.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with valid Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Click on the search icon 
+6. Type "Unbreak My Heart" in the search box and Click "Enter"
+7. Click on the first content from first rail
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the search icon 
+9. Type "Lavender fields" in the search box and Click "Enter"
+10. Click on the first content from first rail
+11. Click the third episode in the details page
+    * expect content title, and S1 E3 is displayed on the player screen 
+12. Click on "Skip Recap" button and store the updated skip Recap time value after clicking
+13. Click on "Skip Intro" button and store the updated skip intro time value after clicking
+    * expect validate both initial skip recap time value and updated skip recap time are not same
+14. Drag the seek bar till 50% and click on back button 
+15. Navigate to home page and click on the first content in the continue watching rail
+16. Verify "Skip Recap" and "Skip Intro" is not visible on the player screen 
+
+#### 2.64 IW3-T1873 Verify the details screen share functionality for the PH region guest user.
+
+**File:** `tests/home/ph_region.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Double click on any content on the home page 
+   * expect App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast displayed in details page)
+4. Click on Share icon button in the content details page
+5. "Share link copied to clipboard" message is displayed post clicking on the share icon.
+
+#### 2.65 IW3-T1891 Verify login page will be display when user tap on Add to Watchlist icon via mouse hover on any tray content from PH region.
+
+**File:** `tests/home/ph_region.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Return a free content from collection graphQL API
+4. Click on search icon
+5. Search/Type free content returned
+   * expect Thumbnails should show correct 'Free' tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+6. Hover on the first content searched
+   *expect content details should pop-up with the Play/Resume, add to watchlist button icon and meta data related to the content 
+7. Click on the "Add to watchlist" button which is displayed on the pop-up screen
+   *expect user should be navigated to the login page.
+   
+#### 2.66 IW3-T2132 Verfiy the spacing between the contents and other rails post configuring the Mid rail banner Ad
+
+**File:** `tests/home/landing-page-launch.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Login with Free user Email and Password
+   * expect - successfully navigated to home page with "Home", "Movies", "Shows", "My Watchlist", "GMA", "Search", "Account" icon
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+   * Expect mid rail ad banner is visible
+7. Verify the Spacing between the contents and other rails should be proper without breaking the UI in mid rail Ad
+8. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+9. Verify the Spacing between the contents and other rails should be proper without breaking the UI in mid rail Ad
+10. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+11. Verify the Spacing between the contents and other rails should be proper without breaking the UI in mid rail Ad
+
+#### 2.66 IW3-T1889 Verify that carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines.
+
+**File:** `tests/home/ph_region.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. When user is on "Home" tab
+      * expect "Continue Watching" rail should be displayed
+4. Scroll the page slowly till end of the page
+     * expect all the rails are loaded and user able to scroll the page till end with ad displayed in mid rail 
+5. When user is on "Movies" tab
+      * expect "Trending Movies Worldwide" rail should be displayed
+6. Scroll the page slowly till end of the page
+     * expect all the rails are loaded and user able to scroll the page till end with ad displayed in mid rail
+7. When user is on "Shows" tab
+      * expect "Trending Shows Worldwide" rail should be displayed
+8. Scroll the page slowly till end of the page
+     * expect all the rails are loaded and user able to scroll the page till end with ad displayed in mid rail
+
+#### 2.67 IW3-T2034 Verify that crown icon is displayed on the content thumbnail for premium contents.
+
+**File:** `tests/home/subscription.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Return a premium content from collection graphQL API
+3. Click on search icon
+4. Search/Type free content returned
+   * except Thumbnails should show correct 'Premium' Crown on search page (Use search graphql api response to validate field name : type, should be equal to Premium).
+5. Verify "crown" icon is displayed on the first content thumbnail  after search
 
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"

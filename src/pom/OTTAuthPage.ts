@@ -142,6 +142,8 @@ export class OTTAuthPage {
     private readonly continueWatchingContent: PageElement;
     private continueWatchingGraphQL?: GraphQLResult<ContinueWatchingResponse>;
     private continueWatchingListenerRegistered = false;
+    private readonly myWatchListPage: PageElement;
+    private readonly appVersionText: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -173,7 +175,7 @@ export class OTTAuthPage {
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
         this.moviesTab = { selector: 'div#movies' };
         this.showsTab = { text: 'Shows', selector: 'div#shows' };
-        this.myWatchlistTab = { text: 'My Watchlist', selector: 'div#my_watchlist' };
+        this.myWatchlistTab = {  selector: 'div#my_watchlist' };
         this.gmaTab = { selector: 'div#gma' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
@@ -206,6 +208,7 @@ export class OTTAuthPage {
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
+        this.myWatchListPage = { selector: '.min-h-screen' };
         this.tvProviderLoginOption = { selector: 'role=button[name="Login with TV Provider"]' };
         this.providerFrontierOption = { selector: 'role=button[name="Frontier, a Verizon Company"]' };
         this.providerEmailField = { selector: 'role=textbox[name="Username"]' };
@@ -224,9 +227,6 @@ export class OTTAuthPage {
         this.marketingCheckbox = { selector: '//input[@id="cem"]/following-sibling::label/span' };
         this.createAccountMarketingText = { selector: 'text=I agree to receive marketing communications', text: 'I agree to receive marketing communications' };
         this.marketingCheckboxDescription = { selector: 'form' };
-        // this.verifyOTPMessage = { selector: 'text=A verification OTP was sent to, text=/A verification OTP was sent to/i' };
-        // this.verifyOTPEmail = { selector: 'text=@' };
-        // this.verifyOTPInstructionText = { selector: 'text=Input the code below to proceed, text=/Input the code below to proceed/i' };
         this.verifyOTPContainer = { selector: 'span.text-white\\/60' };
         this.verifyOTPMessage = { selector: 'text=/A verification OTP was sent to/i' };
         this.verifyOTPEmail = { selector: 'span.text-white\\/60 span.italic' };
@@ -276,6 +276,8 @@ export class OTTAuthPage {
         this.searchResultCandidateSelector = { selector: 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]' };
         this.searchResultImages = { selector: '[class*="flex flex-wrap gap-[1rem]"] img[alt]' };
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
+        this.searchButton = { selector: "img[alt='search-icon']" };
+        this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
     }
 
     async navigate(): Promise<void> {
@@ -480,6 +482,44 @@ export class OTTAuthPage {
 
     async scrollToSupportLinks(): Promise<void> {
         await this.pageUtils.scrollIntoView(this.helpAndSupportLink);
+    }
+
+    async scrollToBottomOfPage(): Promise<void> {
+    logger.elementInteraction('scroll', 'Scroll to page footer');
+
+    const footer = this.page.locator('footer');
+    const scrollStep = 300;
+
+    while (!(await footer.isVisible().catch(() => false))) {
+
+        await this.page.mouse.wheel(0, scrollStep);
+
+        await this.page.waitForTimeout(400);
+
+        const isBottom = await this.page.evaluate(() => {
+            return window.innerHeight + window.scrollY >= document.body.scrollHeight;
+        });
+
+        if (isBottom) {
+            break;
+        }
+    }
+
+    logger.info('Reached page footer.');
+}
+
+    async getApplicationVersionText(): Promise<string> {
+        const locator = this.page.locator(this.appVersionText.selector).first();
+        const text = await locator.textContent().catch(() => '');
+        return (text || '').trim();
+    }
+
+    async isApplicationVersionDisplayed(): Promise<boolean> {
+        const versionText = await this.getApplicationVersionText();
+        const normalizedText = versionText.toLowerCase();
+        const hasVersionLabel = normalizedText.includes('version');
+        const hasVersionNumber = /\d/.test(versionText);
+        return hasVersionLabel && hasVersionNumber;
     }
 
     async isHomeTabVisible(): Promise<boolean> {
@@ -788,10 +828,11 @@ export class OTTAuthPage {
 
     async clickMyWatchlistTab(): Promise<void> {
         logger.elementInteraction('click', 'My Watchlist tab');
-        const locator = this.page.locator(this.myWatchlistTab.selector).first();
+        const locator = this.page.locator(this.myWatchlistTab.selector);
         await locator.waitFor({ state: 'attached', timeout: 15000 });
         await locator.waitFor({ state: 'visible', timeout: 15000 });
-        await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+        await locator.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.myWatchlistTab);
     }
 
@@ -809,11 +850,11 @@ export class OTTAuthPage {
         try {
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
             for (let attempt = 0; attempt < 8; attempt += 1) {
-                if (await locator.isVisible().catch(() => false)) {
+                if (await locator.isVisible()) {
                     return true;
                 }
-                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
-                await this.page.mouse.wheel(0, 600).catch(() => undefined);
+                await locator.scrollIntoViewIfNeeded();
+                await this.page.mouse.wheel(0, 600);
                 await this.page.waitForTimeout(1000);
             }
             await locator.waitFor({ state: 'visible', timeout: 15000 });
@@ -1260,6 +1301,10 @@ export class OTTAuthPage {
 
     async isMyWatchlistRailVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.myWatchlistRail, 10000);
+    }
+
+    async isMyWatchlistPageVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.myWatchListPage, 10000);
     }
 
     async isTopStreamedRailVisible(): Promise<boolean> {

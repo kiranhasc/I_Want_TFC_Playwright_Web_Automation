@@ -31,6 +31,9 @@
         "providerName": "Frontier, a Verizon Company",
         "mode": "provider"
     },
+    "tc-ad-001-mid-rail-spacing": {
+        "mode": "freeUser"
+    },
     "tc-disc-001-show-details-navigation": {
         "mode": "valid",
         "expectedYear": "2026",
@@ -104,6 +107,15 @@
     "tc-auth-011-terms-search": {
         "mode": "valid",
         "searchQuery": "For the customers in the Philippines",
+        "expectedResultsPresent": true
+    },
+    "tc-auth-016-application-version": {
+        "mode": "valid",
+        "expectedTermsHeading": "Welcome to the ABS-CBN’s terms & conditions."
+    },
+    "tc-auth-013-terms-search-results": {
+        "mode": "valid",
+        "searchQuery": "Terms & Conditions of Subscription and/or use for Customers in the Philippines",
         "expectedResultsPresent": true
     },
     "tc-auth-012-terms-page-details": {
@@ -188,6 +200,18 @@
         "labelText": "Early Access",
         "earlyAccessAttributeValue": "early_access"
     },
+    "tc-002-early-access-may-be-later": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue" : "early_access"
+    },
+    "tc-003-early-access-subscription-flow": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue" : "early_access"
+    },
     "tc-auth-009-welcome-screen-navigation": {
         "expectedHeading": "Welcome to iWant",
         "expectedSubheading": "Home of Filipino Stories"
@@ -238,12 +262,28 @@
         "mode": "valid",
         "searchTerm": "Incognito"
     },
+    "tc-disc-006-skip-recap": {
+        "mode": "valid",
+        "searchTerm": "Lavender Fields"
+    },
+    "tc-disc-007-skip-outro": {
+        "mode": "valid",
+        "searchTerm": "Incognito"
+    },
+    "tc-disc-008-skip-markers-continue-watching": {
+        "mode": "valid",
+        "searchTerm": "Incognito"
+    },
     "tc-sub-001-subscribe-to-watch": {
         "mode": "freeUser",
         "searchTerm": "Karnal"
     },
     "tc-sub-002-upgrade-plan": {
         "mode": "freeUser"
+    },
+    "tc-sub-004-premium-crown-icon": {
+        "graphqlQueryName": "Collection",
+        "expectedMonetizationType": "Premium"
     },
     "tc-sub-003-gma-subscribe-popup": {
         "mode": "freeUser"
@@ -348,6 +388,16 @@
     "tc-auth-019-ph-region-guest-subscribe": {
         "expectedHeading": "Welcome to iWant"
     },
+    "tc-auth-020-ph-region-guest-share": {
+        "expectedShareMessage": "Share link copied to clipboard"
+    },
+    "tc-auth-021-ph-region-guest-watchlist-hover": {
+        "graphqlQueryName": "Collection",
+        "expectedHeading": "Welcome to iWant"
+    },
+    "tc-auth-022-ph-region-guest-carousel-tab-tray": {
+        "mode": "guest"
+    },
     "tc-auth-017-edit-profile-name-validation": {
         "mode": "valid",
         "firstName": "Abhilash123",
@@ -444,21 +494,15 @@
     },
     "tc-sub-003-play-content": {
         "mode": "valid",
-        "query": "A family affair",
-        "expectedTitle": "A Family AffairS1 E1 · The",
-        "expectedEpisode": "A Family AffairS1 E1 · The"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-005-smooth-playback": {
         "mode": "valid",
-        "query": "The Blood Sisters",
-        "expectedTitle": "The Blood SistersS1 E1 ·",
-        "expectedEpisode": "The Blood SistersS1 E1 ·"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-006-seek-bar-drag": {
         "mode": "valid",
-        "query": "A love to last",
-        "expectedTitle": "A Love To LastS1 E1 · Episode",
-        "expectedEpisode": "A Love To LastS1 E1 · Episode",
+        "graphqlQueryName": "Collection",
         "seekPercent": 0.35
     },
     "tc-sub-007-live-stream-seek-restriction": {
@@ -467,16 +511,12 @@
     },
     "tc-sub-008-browser-seek-bar": {
         "mode": "valid",
-        "query": "I am your daughter",
-        "expectedTitle": "I Am Your DaughterS1 E1",
-        "expectedEpisode": "I Am Your DaughterS1 E1",
+        "graphqlQueryName": "Collection",
         "seekPercent": 0.35
     },
     "tc-sub-009-player-controls": {
         "mode": "valid",
-        "query": "A love to last",
-        "expectedTitle": "A Love To LastS1 E1 · Episode",
-        "expectedEpisode": "A Love To LastS1 E1 · Episode"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-010-go-live-playback": {
         "mode": "valid",
@@ -484,21 +524,17 @@
     },
     "tc-sub-011-pre-roll-ad": {
         "mode": "freeUser",
-        "query": "Eva Fonda",
-        "expectedTitle": "Eva Fonda",
-        "expectedEpisode": "Eva Fonda"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-037-ad-label-visible": {
         "mode": "freeUser",
-        "query": "Biniverse and Chorus",
-        "expectedTitle": "Biniverse and Chorus",
-        "expectedEpisode": "Biniverse and Chorus"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-038-ad-seekbar-hidden": {
         "mode": "freeUser",
-        "query": "Biniverse and Chorus",
-        "expectedTitle": "Biniverse and Chorus",
-        "expectedEpisode": "Biniverse and Chorus"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-012-pause-ad": {
         "mode": "freeUser",
@@ -508,27 +544,20 @@
     },
     "tc-sub-013-pause-playback": {
         "mode": "valid",
-        "query": "Tatlong Bituin sa Hilaga",
-        "expectedTitle": "Tatlong Bituin sa Hilaga",
-        "expectedEpisode": "Tatlong Bituin sa Hilaga"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-014-pause-resume": {
         "mode": "valid",
-        "query": "Nurse the dead",
-        "expectedTitle": "Nurse The Dead",
-        "expectedEpisode": "Nurse The Dead"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-015-pause-seek-buttons": {
         "mode": "valid",
-        "query": "Anak",
-        "expectedTitle": "Anak",
-        "expectedEpisode": "Anak"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-016-fullscreen-icon": {
         "mode": "valid",
-        "query": "Momay",
-        "expectedTitle": "Momay",
-        "expectedEpisode": "Momay"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-025-fullscreen-functionality": {
         "mode": "valid",
@@ -556,9 +585,8 @@
     },
     "tc-sub-029-back-button-navigation": {
         "mode": "valid",
-        "query": "Ghosting",
-        "expectedTitle": "Ghosting",
-        "expectedEpisode": "Ghosting"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-035-up-next-marker-navigation": {
         "mode": "valid",
@@ -572,29 +600,42 @@
         "expectedTitle": "Annaliza",
         "expectedEpisode": "Annaliza"
     },
+    "tc-sub-037-up-next-marker-functionality": {
+        "mode": "valid",
+        "query": "Mirabella",
+        "expectedTitle": "Mirabella",
+        "expectedEpisode": "Mirabella"
+    },
+    "tc-sub-038-up-next-close-button": {
+        "mode": "valid",
+        "query": "Araw Gabi",
+        "expectedTitle": "Araw Gabi",
+        "expectedEpisode": "Araw Gabi"
+    },
+    "tc-sub-039-up-next-marker-click-navigation": {
+        "mode": "valid",
+        "query": "Araw Gabi",
+        "expectedTitle": "Araw Gabi",
+        "expectedEpisode": "Araw Gabi"
+    },
     "tc-sub-030-player-controls-autodismiss": {
         "mode": "valid",
-        "query": "ekstra",
-        "expectedTitle": "ekstra",
-        "expectedEpisode": "ekstra"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-031-player-controls-hover-dismiss": {
         "mode": "valid",
-        "query": "Ma",
-        "expectedTitle": "Ma",
-        "expectedEpisode": "Ma"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-032-volume-button-control": {
         "mode": "valid",
-        "query": "Ma",
-        "expectedTitle": "Ma",
-        "expectedEpisode": "Ma"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-033-end-to-end-launch-login-search-playback": {
         "mode": "valid",
-        "query": "BLOOD VS DUTY",
-        "expectedTitle": "BLOOD VS DUTY",
-        "expectedEpisode": "BLOOD VS DUTY"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",
@@ -610,9 +651,7 @@
     },
     "tc-sub-019-subtitle-selection": {
         "mode": "valid",
-        "query": "Sin Island",
-        "expectedTitle": "Sin Island",
-        "expectedEpisode": "Sin Island"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-020-subtitle-next-episode": {
         "mode": "valid",
@@ -647,9 +686,8 @@
     },
     "tc-sub-034-seekbar-preview": {
         "mode": "valid",
-        "query": "oh my gan",
-        "expectedTitle": "Oh My Gan",
-        "expectedEpisode": "Oh My Gan"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-settings-001-parental-controls": {
         "mode": "freeUser"
@@ -828,7 +866,7 @@
     },
     "tc-sub-041-subscribe-to-watch-redirect-account": {
         "mode": "freeUser",
-        "searchTerm": "Everything About Her",
+        "graphqlQueryName": "Collection",
         "expectedAccountHeading": "Account"
     },
     "tc-auth-028-continue-watching-fifty-percent": {
@@ -883,5 +921,10 @@
     },
     "tc-live-2010-pause-resume-live-playback": {
         "mode": "valid"
+    },
+    "tc-sub-042-subscribed-early-access-up-next": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access"
     }
 }

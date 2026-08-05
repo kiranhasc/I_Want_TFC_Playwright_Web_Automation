@@ -1,8 +1,10 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { loginWithTVProvider, verifyTop10TagOnContentThumbnail } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyMidRailAdSpacingAcrossTabs } from '../../src/businessFunction/ott-playback-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Home Page Landing', () => {
+
     test('@High - IW3-T1867: Verify the "Login with TV Provider" functionality', async ({ page }) => {
         const data = testCaseData['tc-auth-005-tv-provider-login'];
         const result = await loginWithTVProvider(page, {
@@ -31,5 +33,16 @@ test.describe('Home Page Landing', () => {
         expect(result.top10Titles.length).toBeGreaterThan(0);
         expect(result.matchedRails.some((entry) => entry.hasTop10Tag && entry.isTopRightPosition)).toBe(true);
         expect(result.topRightPositionMatches).toBeGreaterThan(0);
+    });
+    test('@High - IW3-T2132: Verify the spacing between the contents and other rails post configuring the Mid rail banner Ad', async ({ page }) => {
+        test.setTimeout(120000);
+        const data = testCaseData['tc-ad-001-mid-rail-spacing'];
+        const result = await verifyMidRailAdSpacingAcrossTabs(page, {
+            mode: data.mode
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeSpacingValid).toBe(true);
+        expect(result.moviesSpacingValid).toBe(true);
+        expect(result.showsSpacingValid).toBe(true);
     });
 });

@@ -25,7 +25,7 @@ pipeline {
                 'test:medium',
                 'test:low'
             ],
-            description: 'Select Playwright test suite to execute'
+            description: 'Select Playwright test suite'
         )
 
     }
@@ -34,11 +34,39 @@ pipeline {
     stages {
 
 
+        stage('Checkout Repo B') {
+
+            steps {
+
+                echo "Repo B checkout handled by Pipeline from SCM"
+
+            }
+
+        }
+
+
+        stage('Check Environment') {
+
+            steps {
+
+                echo "Checking Windows environment"
+
+                bat 'node -v'
+
+                bat 'npm -v'
+
+                bat 'npx playwright --version'
+
+            }
+
+        }
+
+
         stage('Install Dependencies') {
 
             steps {
 
-                echo "Installing npm packages"
+                echo "Installing npm dependencies"
 
                 bat 'npm install'
 
@@ -47,7 +75,7 @@ pipeline {
         }
 
 
-        stage('Install Playwright Browser') {
+        stage('Install Playwright Browsers') {
 
             steps {
 
@@ -60,11 +88,11 @@ pipeline {
         }
 
 
-        stage('Run Playwright Test') {
+        stage('Run Selected Playwright Test') {
 
             steps {
 
-                echo "Running: npm run ${params.PLAYWRIGHT_TEST}"
+                echo "Selected Test: ${params.PLAYWRIGHT_TEST}"
 
                 bat "npm run ${params.PLAYWRIGHT_TEST}"
 
@@ -81,7 +109,7 @@ pipeline {
 
         always {
 
-            echo "Publishing Playwright Report"
+            echo "Publishing Playwright HTML Report"
 
             publishHTML([
 
@@ -104,14 +132,14 @@ pipeline {
 
         success {
 
-            echo "Tests completed successfully"
+            echo "Playwright execution completed successfully"
 
         }
 
 
         failure {
 
-            echo "Tests failed"
+            echo "Playwright execution failed"
 
         }
 

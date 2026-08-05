@@ -154,8 +154,7 @@ test.describe('Parental controls', () => {
     const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
     const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {
       mode: data.mode,
-      email: env.VALID_LOGIN_EMAIL,
-      password: env.VALID_LOGIN_PASSWORD,
+      password: data.password,
       parentalPin: data.pin,
     });
     expect(result.itemFound).toBe(true);

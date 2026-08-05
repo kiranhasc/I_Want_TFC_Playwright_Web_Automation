@@ -290,15 +290,17 @@ This test plan covers validation of application launch behavior for the OTT plat
 
 1. **Precondition:** The user should have partially watched a movie so that it appears in the **Continue Watching** tray.
 2. Open the browser.
-3. Enter the URL (https://uat.iwanttfc.com/).
+3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
-6. Select the partially watched movie from the **Continue Watching** tray.
+6. Using **continue watching** graphQL API get movie from continue watching tray.
+    - Save the content name such that it can be used for validation.
+7. Select and navigate to content details page.
 7. Click the **Play** button to resume playback.
-8. Watch the movie until playback is completed.
-9. Return to the **Home** page
+8. Drag the seek bar until end.
+9. Return to the **Home** page and refresh the page
 10. Osbserve the **Continue Watching** tray.
-   - **Expect:** Once the movie has been watched completely, it should be removed from the **Continue Watching** tray.
+   - **Expect:** Once the movie has been watched completely, it should be removed from the **Continue Watching** tray using **continue watching** graphQL API.
 
 ### 1.13. IW3-T2025 Verify the message displayed when user try to play premium content.
 
@@ -446,30 +448,19 @@ This test plan covers validation of application launch behavior for the OTT plat
 3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
-6. Locate the series in the **Continue Watching** tray.
-7. Click the **X** icon on the content card.
-8. Open the same series from the Home page or Search and navigate to the **Content Details** page.
-9. Observe the playback action and episode information.
+6. Search for a content.
+7. Extract the content name and episode number. 
+8. Click on play on 4th episode.
+9. Drag the seekbar until 40% and let it play for 10 seconds.
+10. Navigate back to homepage and refresh the page.
+11. Locate the series in the **Continue Watching** tray if it exists or not.
+    - **Expect:** series should be in the continue watching tray 
+12. Hover on the content and extract Season and episode number. 
+12. Hover on the content and Click the **X** icon on the content card.
+13. Search and navigate to the **Content Details** page of the extracted content.
+14. Observe the playback action and episode information.
     - **Expect:** The **"Resume"** button should be replaced with the **"Play"** button.
     - **Expect:** The series should revert to the **default season and episode** instead of the previously watched episode.
-
-### 1.22. IW3-T1960 Verify that movie content gets removed from CW tray post completely watching the same content.
-
-**File:** `tests/home/continue-watching.spec.ts`
-
-**Steps**
-
-1. **Precondition:** The user should have a partially watched movie available in the **Continue Watching** tray.
-2. Open the browser.
-3. Enter the URL (https://iwanttfc.com/).
-4. Log in with valid user credentials.
-5. Navigate to the **Home** page.
-6. Select the partially watched movie from the **Continue Watching** tray.
-7. Click the **Resume** button to continue playback.
-8. Drag the seekbar at the end and let the movie finish.
-9. Return to the **Home** page.
-10. Observe the **Continue Watching** tray.
-    - **Expect:** The completed movie should no longer be displayed in the **Continue Watching** tray.
 
 ### 7.1. IW3-T2060 VVerify the Search icon is visible in the top navigation bar on all pages (Home, Movies,Shows,My Watchlist, GMA)
 **File:** `tests/home/search.spec.ts`
@@ -2745,10 +2736,14 @@ Click on the Email Address field.
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
 6. Select a content item from the **Continue Watching** tray.
-7. Verify that playback resumes from the last watched position.
-8. Continue watching the content for a short duration without completing it.
-9. Exit the player and return to the **Home** page.
-10. Observe the content in the **Continue Watching** tray.
+    - **Extract** the content name
+7. Play/resume the content and drag for 2 minutes.
+    - **Extract** the player timer.
+8. Navigate to **Home** page 
+9. Click on the same content again.
+10. Exit the player.
+11. Navigate to the **Home** page.
+12. Observe the content in the **Continue Watching** tray.
     - **Expect:** The content should remain in the **Continue Watching** tray.
     - **Expect:** The progress bar should accurately reflect the updated playback position where the user stopped watching.
 
@@ -2835,6 +2830,250 @@ Click on the Email Address field.
 7. Click the **"Resume"** button.
 8. Observe the player screen.
    - **Expect:** The content should resume playback from the previously watched position when the **"Resume"** button is clicked.
+
+### 5.10 IW3-T1927 Verify the Continue Watching tray on the "Home Page" for the new users upon watching 5% of the content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to **Movies** tab.
+5. Click on a movie.
+6. Click the **Play** button to start playback.
+7. Drag the seekbar to 5% of the seekbar.
+8. Exit the player
+9. Navigate to the **Home** page.
+10. Observe the available content trays.
+   - **Expect:** A **Continue Watching** tray should be created.
+   - **Expect:** The partially watched content should be displayed in the **Continue Watching** tray.
+
+### 5.11 IW3-T1928 Verify the Continue Watching tray  on the "Home Page" for the new users upon watching less than 5% of the content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to **Home** tab.
+5. Search for a content and click on the content.
+6. Click the **Play** button to start playback.
+7. Drag the seekbar to **less than 5%** of the seekbar.
+8. Exit the player
+9. Navigate to the **Home** page.
+10. Observe the available content trays.
+   - **Expect:** The **Continue Watching** tray should not be created for a user who watches less than **5%** of the content.
+   - **Expect:** The partially watched content should not appear in the **Continue Watching** tray.
+
+### 5.12 IW3-T1929 Verify the Continue Watching tray upon watching 50% of the content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with new user credentials.
+4. Search and select a content.
+5. Extract the content name.
+6. Click the **Play** button to start playback.
+7. Drag the seekbar to **50%** of the seekbar.
+8. Exit the player
+9. Navigate to the **Home** page.
+10. Observe the **Continue Watching** tray.
+   - **Expect:** The watched content should be displayed in the **Continue Watching** tray after reaching **50%** playback.
+   - **Expect:** The progressbar should be filled till 50% of the content.
+
+### 5.13 IW3-T1964 Verify the content from the CW tray when user partially watches the content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched content item available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Select the content from the **Continue Watching** tray.
+7. Drag the seekbar for 75% of the Seekbar.
+8. Exit the player and return to the **Home** page.
+9. Observe the **Continue Watching** tray.
+    - **Expect:** The content should remain in the **Continue Watching** tray.
+    - **Expect:** The watch progress should be updated based on the latest viewing history.
+    - **Expect:** The content should not be removed from the **Continue Watching** tray.
+
+### 5.14 IW3-T1954 Verify that the Up Next binge marker appears and the next episode plays automatically after the current episode ends when resuming content from the Continue Watching (CW) tray.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched show available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Get only **show** content from Collection graphQL API
+7. Select the **show** from the **Continue Watching** tray.
+8. Resume playback of the current episode.
+9. Drag the seekbar until it reaches the end.
+10. Observe the end-of-playback behavior.
+   - **Expect:** An **Up Next** binge marker should be displayed near the end of the current episode.
+   - **Expect:** After the current episode ends, the next episode should automatically begin playback.
+
+### 5.15 IW3-T1955 Verify "Next Episode" starts playing post tapping on "Next Episode" CTA.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched show available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Get only **show** content from Collection graphQL API
+7. Select the **show** from the **Continue Watching** tray.
+8. Resume playback of the current episode.
+9. Drag the seekbar until it reaches the end.
+10. Click on the **Up next** popup.
+10. Observe the end-of-playback behavior.
+   - **Expect:** An **Up Next** binge marker should be displayed near the end of the current episode.
+   - **Expect:** After the current episode ends, the next episode should automatically begin playback.
+
+### 5.16 IW3-T1956 Verify next season first episode starts playing automatically upon completing last episode of the first season.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched multi-season show in the **Continue Watching** tray, with the last episode of **Season 1** available to resume.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
+6. Select the show from the **Continue Watching** tray.
+7. Scroll and Select the last episode of **Season 1**.
+8. Drag the seekbar until it reaches the end.
+9. Observe the playback after the episode ends.
+   - **Expect:** The first episode of **Season 2** should automatically start playing after the last episode of **Season 1** is completed.
+
+### 5.17 IW3-T1942 Verify that Ad gets played for the free user on resuming the content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have content available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid **free user** credentials.
+5. Navigate to the **Home** page.
+6. Hover or the first content under **Continue Watching** tray.
+7. Resume playback of the content.
+8. Observe the player before the content resumes.
+   - **Expect:** An advertisement should play before the content resumes for a free user.
+   - **Expect:** After the advertisement finishes, the content should resume from the last watched position.
+
+### 5.18 IW3-T1930 Verify that latest watched episode/movies of a season gets updated in the Continue watching tray.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Search and navigate to a **show** content.
+5. Start playback of an episode.
+6. Watch the episode until at least **50%** of its duration has been played.
+7. Exit the player and return to the **Home** page.
+8. Locate the **Continue Watching** tray.
+9. Observe the series card.
+   - **Expect:** The **Continue Watching** tray should be updated with the **latest watched episode** from the series.
+   - **Expect:** after Hover on The series card, it should display the latest episode based on the user's watch progress.
+
+### 5.19 IW3-T1947 Verify that the subscription popup appears when attempting to play a premium episode of content listed under the Continue Watching tray.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a freemium series available in the **Continue Watching** tray, where the next episode requires a premium subscription.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid **free user** credentials.
+5. Navigate to the **Home** page.
+6. Get premium contents from continue watching graphQL API.
+7. Click on the content in the continue watching tray.
+8. Get premium episode list from the tvshow episodes API using graphQL API.
+9. Select episode before the 1st premium episode. 
+10. Add wait for 90 seconds for Ads to be completed.
+11. Drag the seekbar until end.
+12. Observe the behavior after the episode ends.
+   - **Expect:** A subscription screen should be displayed before the next premium episode starts.
+   - **Expect:** The user should be prompted to subscribe to continue watching the premium episode.
+
+### 5.20 IW3-T1948 Verify that the 'Continue Watching' tray is displayed with content of all types (free and premium).
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Get **Continue watching** API response from graphQL API parser. 
+   - **Expect:** Both the partially watched **free** content and **paid** content should be displayed in the **Continue Watching** tray.
+
+### 5.21 IW3-T1961 Verify that show content gets removed from CW tray post completely watching show content.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have a partially watched show available in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate to the **Home** page.
+6. Using graphQL API response for continue watching collect only **shows**.
+7. Click on the content and play Last episode.
+8. Drag the seekbar until the end.
+9. Navigate to the **Home** page and refresh.
+10. Observe the **Continue Watching** tray.
+    - **Expect:** Once all episodes of the show have been watched completely, the show should be automatically removed from the **Continue Watching** tray.
+
+### 5.22 IW3-T1946 Verify that the season number and episode number are updated after completing the last episode of the current season and partially playing an episode from the next season.
+
+**File:** `tests/home/continue-watching.spec.ts`
+
+**Steps**
+
+1. **Precondition:** The user should have partially watched episodes from **Season 1** of a multi-season show so that it appears in the **Continue Watching** tray.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid **valid user** credentials.
+5. Navigate to the **Home** page.
+6. Using graphQL API response for continue watching collect only **shows** which has **2 seasons**.
+7. Search and select the content name.
+8. Play episode 5 of season 1.
+9. Drag the seekbar until 50%.
+10. Exit the player and return to the **Home** page.
+11. Select the same content that was played from **continue watching** tray.
+12. Select the last Episode from season 1.
+13. Drag the seekbar until end.
+14. Add wait for 20 seconds.
+15. Drag the seekbar until 20%.
+16. Exit the player and return to the **Home** page.
+17. Observe the **Continue Watching** tray.
+    - **Expect:** The **Continue Watching** tray should display the updated **Season** and **Episode** number corresponding to the partially watched episode from **Season 2**.
 
 ### 6.1 IW3-T1895 Verify the user Navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
 
@@ -3297,3 +3536,150 @@ Click on the Email Address field.
 14. Enter the OTP captured.
 15. Click on Verify button
     *expect:* User should be navigated to "Home" screen
+
+### 6.14 IW3-T1910 Verify that user auto redirect back to detail page post completion of movie/last Episode from last Season playback.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **valid user** credentials.
+4. Navigate to **Movies** tab.
+5. Navigate to the **Content Details** page of any playable content.
+6. Click the **Play** button and drag the seekbar to the end.
+7. Observe the post-playback behavior.
+   - **Expect:** After the video finishes playing, the user should be automatically redirected back to the corresponding **Content Details** page.
+
+### 6.15 IW3-T1897 Verify the redirection to the Detail Page via shared Deeplink URL
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid **valid user** credentials.
+4. Extract asset's first content ID, Name, ShortDescription from graphQL API collection.
+5. Append content ID with details URL (https://iwanttfc.com/details/).
+    - **Expect:** The URL should navigate to the details page.
+    - **Expect:** Asset name and shortDescription should be reflected as same from the API.
+
+### 6.16 IW3-T1900 Verfiy auto playback of preview/trailer on detail page.
+
+**File:** `tests/home/details-page.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/)
+3. Log in with valid user credentials.
+4. Using collection parser collect list of contents that has trailers
+5. search and Navigate to the Content Details page of a content that has a preview/trailer.
+6. Verify the content details page is displayed successfully.
+7. Wait for 1–3 seconds without interacting with the page.
+8. Observe the preview area.
+    - **Expect:** The Preview/Trailer should start playing automatically without any user interaction.
+    - **Expect:** The preview/video element should be visible and playback should begin automatically.
+
+### 10.1 IW3-T4702 Verify that contents are played for the VPN whitelisted countries.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps**
+
+1. **Precondition:** Connect the test device/system to a VPN endpoint located in a **whitelisted country**.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Search and Navigate to any show content from the graphQL collection API.
+6. Click the **Play** button to start playback.
+7. Observe the player behavior.
+   - **Expect:** The content should start playing successfully.
+   - **Expect:** Playback should be allowed while the user is connected to a VPN from a **whitelisted country**.
+
+### 11.1 IW3-T5810 Verify iWant Originals Rail displayed on the "Home" page.
+
+**File:** `tests/home/iwant-originals.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Home** page.
+5. Scroll down until the **"iWant Originals"** rail is visible.
+6. Observe the **"iWant Originals"** rail.
+   - **Expect:** The **"iWant Originals"** rail should be displayed on the **Home** page.
+   - **Expect:** The rail should contain content cards associated with **iWant Originals**.
+
+### 11.2 IW3-T5814 Verify that "iWant Originals" tray contents are scrollable on tapping right or left arrow mark.
+
+**File:** `tests/home/iwant-originals.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Home** page.
+5. Scroll down until the **"iWant Originals"** rail is visible.
+6. Click the **Right** arrow on the **"iWant Originals"** rail.
+7. Verify that the content thumbnails vertical scroll to the right.
+8. Click the **Left** arrow on the **"iWant Originals"** rail.
+9. Verify that the content thumbnails vertical scroll to the left.
+   - **Expect:** The **"iWant Originals"** rail should scroll smoothly in both directions when the **Left** or **Right** arrow is clicked.
+   - **Expect:** The user should be able to browse all content available in the **"iWant Originals"** rail.
+
+### 11.3 IW3-T5812 Verify preview playback starts on Mouse hover on the content thumbnail under iWant Originals content
+
+**File:** `tests/home/iwant-originals.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Home** page.
+5. Scroll down until the **"iWant Originals"** rail is visible.
+6. Hover the mouse over the first content thumbnail in the **"iWant Originals"** rail.
+7. Observe the content thumbnail.
+   - **Expect:** The content preview should start playing automatically when the mouse is hovered over the thumbnail.
+
+### 11.4 IW3-T5813 Verify preview playback on Content Detail Page when user selects the content from the  iWant Originals tray.
+
+**File:** `tests/home/iwant-originals.spec.ts`
+
+**Steps**
+
+1. Open the browser.
+2. Enter the URL (https://iwanttfc.com/).
+3. Log in with valid user credentials.
+4. Navigate to the **Home** page.
+5. Scroll down until the **"iWant Originals"** rail is visible.
+6. Hover the mouse over first content thumbnail in the **"iWant Originals"** rail.
+7. Click the content thumbnail to open the **Content Details** page.
+8. Observe the preview area on the **Content Details** page.
+   - **Expect:** The user should be navigated to the **Content Details** page successfully.
+   - **Expect:** The **Preview/Trailer** should start playing automatically on the **Content Details** page without any user interaction.
+
+### 7.1 IW3-T2129 Verify Mid rail banner ads are from GAM.
+
+**File:** `tests/home/landing-page.spec.ts`
+
+**Steps**
+
+1. **Precondition:** Mid-rail banner ads are configured and enabled in the test environment.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Catch API through network logs which has this URL (https://securepubads.g.doubleclick.net/gampad/ads)
+6. Navigate to the **Home**.
+7. Scroll through each page until the mid-rail banner ad is displayed.
+8. Navigate to the **Movies**.
+9. Scroll through each page until the mid-rail banner ad is displayed.
+10. Navigate to the **Shows**.
+11. Scroll through each page until the mid-rail banner ad is displayed.
+12. Observe the network requests generated for the banner ad.
+   - **Expect:** The mid-rail banner advertisements displayed across all landing pages should be from this URL https://securepubads.g.doubleclick.net/gampad/ads.

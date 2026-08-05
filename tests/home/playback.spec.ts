@@ -4,6 +4,7 @@ import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewF
 import { verifyLastSeasonLastEpisodeCompletionNavigationFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifySubscribeToWatchRedirectsToAccountScreen } from '../../src/businessFunction/ott-subscription-bfs';
 import testData from '../../src/data/ott-test-cases.json';
+import { verifyPremiumContentDeepLinkSubscriptionBlocker } from '../../src/businessFunction/ott-subscription-bfs';
 
 test.describe('Play Back', () => {
   test('@High IW3-T1967 - Play content from details page', async ({ page }) => {
@@ -215,7 +216,6 @@ test.describe('Play Back', () => {
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
     });
-
     expect(result.detailsVisible).toBeTruthy();
     expect(result.subtitleSelectionSuccessful).toBeTruthy();
     expect(result.nextEpisodeSubtitleVisible).toBeTruthy();
@@ -223,9 +223,9 @@ test.describe('Play Back', () => {
 
   test('@High IW3-T2010: Verify that the pause and resume buttons function correctly during live playback', async ({ page }) => {
         test.setTimeout(180000);
+        const data = testData['tc-live-2010-pause-resume'] as Record<string, any>;
         const result = await verifyLivePlaybackPauseResume(page, {
-            email: process.env.VALID_LOGIN_EMAIL,
-            password: process.env.VALID_LOGIN_PASSWORD,
+          mode: data.mode,
         });
 
         expect(result.liveSectionSelected).toBeTruthy();
@@ -606,5 +606,17 @@ test.describe('Play Back', () => {
     expect(result.accountScreenVisible).toBeTruthy();
     expect(result.iWantIconVisible).toBeTruthy();
     expect(result.urlContainsAccount).toBeTruthy();
+  });
+
+  test('@High IW3-2029: Verify that the subscription blocker screen is displayed when a non-subscriber user accesses premium content via a deep link', async ({ page }) => {
+    test.setTimeout(240000);
+    const data = testData['tc-sub-004-deeplink-premium-blocker'];
+    const result = await verifyPremiumContentDeepLinkSubscriptionBlocker(page, {
+      mode: data.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.isDetailsPageVisible).toBe(true);
+    expect(result.isSubscribeToWatchCtaVisible).toBe(true);
+    expect(result.isPlaybackBlocked).toBe(true);
   });
 });

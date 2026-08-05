@@ -6,6 +6,11 @@ export interface CollectionAssetResult {
     asset: any;
 }
 
+export interface CollectionTrailerInfo {
+    title: string;
+    trailerUrls: Record<string, string>;
+}
+
 export class CollectionParser {
    constructor(
         private readonly collection: GraphQLResult<CollectionResponse>
@@ -80,6 +85,78 @@ export class CollectionParser {
 
         return [];
     }
+    getContentId(asset?: Asset | null): string | undefined {
+        if (!asset) {
+            return undefined;
+        }
+        const assetWithContent = asset as Asset & {
+            contentId?: string;
+            content?: { id?: string };
+        };
+        return assetWithContent.contentId
+            ?? assetWithContent.content?.id
+            ?? assetWithContent.id;
+    }
+
+    getContentIdByIndex(railIndex: number, cardIndex: number): string | undefined {
+        return this.getContentId(this.getCard(railIndex, cardIndex));
+    }
+
+    getTotalSeasons(asset?: Asset | null): number | undefined {
+        if (!asset) {
+            return undefined;
+        }
+
+        const assetWithTvShowDetails = asset as Asset & {
+            tvShowDetails?: {
+                totalSeasons?: number | null;
+            } | null;
+        };
+
+        return assetWithTvShowDetails.tvShowDetails?.totalSeasons ?? undefined;
+    }
+
+    getTotalSeasonsByIndex(railIndex: number, cardIndex: number): number | undefined {
+        return this.getTotalSeasons(this.getCard(railIndex, cardIndex));
+    }
+
+    getTrailerUrls(asset?: Asset | null): Record<string, string> | undefined {
+        if (!asset) {
+            return undefined;
+        }
+
+        const assetWithTrailer = asset as Asset & {
+            trailerUrls?: Record<string, { url?: string }>;
+        };
+
+        const trailerUrls = assetWithTrailer.trailerUrls;
+        if (!trailerUrls) {
+            return undefined;
+        }
+
+        return Object.entries(trailerUrls).reduce<Record<string, string>>((urls, [key, value]) => {
+            if (value?.url) {
+                urls[key] = value.url;
+            }
+            return urls;
+        }, {});
+    }
+
+    getTrailerInfo(asset?: Asset | null): CollectionTrailerInfo | undefined {
+        const trailerUrls = this.getTrailerUrls(asset);
+        if (!asset || !trailerUrls || Object.keys(trailerUrls).length === 0) {
+            return undefined;
+        }
+
+        return {
+            title: asset.title,
+            trailerUrls,
+        };
+    }
+
+    getTrailerInfoByIndex(railIndex: number, cardIndex: number): CollectionTrailerInfo | undefined {
+        return this.getTrailerInfo(this.getCard(railIndex, cardIndex));
+    }
 
     findAsset(predicate: (asset: Asset) => boolean): CollectionAssetResult | undefined {
         for (const rail of this.getRails()) {
@@ -101,5 +178,7 @@ export class CollectionParser {
             ) ?? false
         );
     }
+
+    
 }
 

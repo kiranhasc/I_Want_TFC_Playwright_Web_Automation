@@ -48,6 +48,18 @@
     "tc-disc-010-subscribe-cta-on-details-page": {
         "mode": "freeUser"
     },
+    "tc-disc-011-movie-completion-redirect": {
+        "mode": "valid"
+    },
+    "tc-disc-012-shared-deeplink-redirect": {
+        "mode": "valid"
+    },
+    "tc-disc-013-trailer-autoplay": {
+        "mode": "valid"
+    },
+    "tc-disc-014-episode-playback-on-details-page": {
+        "mode": "valid"
+    },
     "tc-disc-002-episode-playback": {
         "mode": "valid",
         "searchTerm": "The Blood Sisters"
@@ -135,6 +147,9 @@
     "tc-home-top10-tag": {
         "mode": "valid"
     },
+    "tc-auth-020-vpn-whitelisted-playback": {
+        "mode": "valid"
+    },
     "tc-discovery-001-early-access": {
         "mode": "valid",
         "graphqlQueryName": "Collection",
@@ -216,6 +231,9 @@
         "mode": "valid",
         "searchTerm": "Lavender Fields"
     },
+    "tc-disc-004-player-close-return": {
+        "mode": "valid"
+    },
     "tc-disc-005-skip-recap": {
         "mode": "valid",
         "searchTerm": "Incognito"
@@ -228,6 +246,9 @@
         "mode": "freeUser"
     },
     "tc-sub-003-gma-subscribe-popup": {
+        "mode": "freeUser"
+    },
+    "tc-sub-004-deeplink-premium-blocker": {
         "mode": "freeUser"
     },
     "tc-auth-015-account-subscriptions": {
@@ -258,6 +279,9 @@
         "mode": "provider",
         "providerName": "Frontier, a Verizon Company"
     },
+    "tc-cw-1948-free-and-paid-content": {
+        "mode": "valid"
+    },
     "tc-auth-023-continue-watching-playback": {
         "mode": "valid"
     },
@@ -272,6 +296,21 @@
         "mode": "valid"
     },
     "tc-auth-026-continue-watching-resume-playback": {
+        "mode": "valid"
+    },
+    "tc-auth-027-continue-watching-five-percent": {
+        "mode": "valid"
+    },
+    "tc-home-001-iwant-originals-rail": {
+        "mode": "valid"
+    },
+    "tc-home-002-iwant-originals-rail-scroll": {
+        "mode": "valid"
+    },
+    "tc-home-003-iwant-originals-hover-preview": {
+        "mode": "valid"
+    },
+    "tc-home-004-iwant-originals-preview-details": {
         "mode": "valid"
     },
     "tc-auth-020-free-tag-watchlist": {
@@ -669,11 +708,12 @@
     },
     "tc-settings-014-parental-pin-resume-continue-watching": {
         "mode": "valid",
+        "password": "Test1234",
         "pin": "1234",
         "expectedParentalPinPromptText": "Enter the PIN to Access"
     },
     "tc-auth-009-continue-watching-no-history": {
-        "mode": "valid",
+        "mode": "unwatched",
         "expectedContinueWatchingVisible": false
     },
     "tc-auth-010-continue-watching-tray-ui": {
@@ -688,11 +728,18 @@
     "tc-auth-013-continue-watching-removal-after-playback": {
         "mode": "valid"
     },
+    "tc-cw-1961-show-removal": {
+        "mode": "valid"
+    },
     "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
     },
     "tc-play-001-free-asset-playback": {},
+    "tc-auth-014-continue-watching-persistence": {
+        "mode": "valid"
+    },
     "tc-play-002-premium-content-gate": {
+        "mode": "freeUser",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
@@ -700,11 +747,13 @@
     "tc-live-001-pause-resume-live-playback": {},
     "tc-watch-001-play-from-watchlist": {},
     "tc-sub-001-carousel-subscribe-cta": {
+        "mode": "freeUser",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
     },
     "tc-sub-002-premium-carousel-subscribe-cta": {
+        "mode": "freeUser",
         "expectedMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
         "expectedMaybeLaterText": "Maybe Later",
         "expectedSubscribeText": "Subscribe to watch"
@@ -765,8 +814,7 @@
     },
     "tc-disc-005-share-link-copied": {
         "mode": "valid"
-    }
-    ,
+    },
     "tc-sub-039-last-season-last-episode": {
         "mode": "valid",
         "query": "Can't buy me love",
@@ -782,5 +830,58 @@
         "mode": "freeUser",
         "searchTerm": "Everything About Her",
         "expectedAccountHeading": "Account"
+    },
+    "tc-auth-028-continue-watching-fifty-percent": {
+        "mode": "valid",
+        "searchTerm": "You Got Me"
+    },
+    "tc-auth-029-continue-watching-less-than-five-percent": {
+        "mode": "valid",
+        "searchTerm": "altar"
+    },
+        "tc-auth-030-continue-watching-resume-to-play-after-removal": {
+        "mode": "valid",
+        "searchTerm": "Tayong Dalawa",
+        "season": "Season 1",
+        "episodeName": "E4"
+    },
+    "tc-cw-1930-latest-watched-episode": {
+        "mode": "valid",
+        "searchTerm": "Lobo",
+        "expectedSeasonNumber": "1",
+        "expectedEpisodeNumber": "6"
+    },
+    "tc-cw-1941-content-updated-in-tray": {
+        "mode": "valid",
+        "seekMinutes": 1
+    },
+    "tc-cw-1947-continue-watching-subscription-prompt": {
+        "mode": "freeUser",
+        "season": "Season 1",
+        "episodeName": "E1"
+    },
+    "tc-cw-1946-season-episode-update": {
+        "mode": "valid",
+        "query": "Can't Buy Me Love",
+        "seasonOneEpisode": "E5",
+        "seasonOneSeekPosition": 0.5,
+        "seasonTwoSeekPosition": 0.2,
+        "expectedSeasonNumber": "2",
+        "expectedEpisodeNumber": "1"
+    },
+    "tc-cw-1942-free-user-ad-resume": {
+        "mode": "freeUser"
+    },
+    "tc-cw-1955-next-episode-playback": {
+        "mode": "valid"
+    }
+    ,
+    "tc-sub-046-iw3-t1956-next-season-autoplay": {
+        "mode": "valid",
+        "query": "Can't Buy Me Love",
+        "expectedTitle": "Can't Buy Me Love"
+    },
+    "tc-live-2010-pause-resume-live-playback": {
+        "mode": "valid"
     }
 }

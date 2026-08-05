@@ -1,6 +1,8 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { loginToOTT } from './ott-auth-bfs';
 
 export interface ManageWatchlistItemInput {
@@ -14,6 +16,19 @@ export interface VerifyGuestWatchlistNavigationInput {
 }
 
 export interface VerifyGuestWatchlistNavigationOutput {
+  isLoginScreenVisible: boolean;
+  headingText: string;
+  isEmailFieldVisible: boolean;
+  isPasswordFieldVisible: boolean;
+}
+
+export interface VerifyGuestWatchlistHoverNavigationInput {
+  expectedHeading?: string;
+  query?: string;
+  graphqlQueryName?: string;
+}
+
+export interface VerifyGuestWatchlistHoverNavigationOutput {
   isLoginScreenVisible: boolean;
   headingText: string;
   isEmailFieldVisible: boolean;
@@ -144,6 +159,67 @@ export async function verifyGuestWatchlistNavigationFromFreeAsset(
   const isEmailFieldVisible = await authPage.isEmailFieldVisible();
   const isPasswordFieldVisible = await authPage.isPasswordFieldVisible();
   logger.assertion('Login screen visible after guest watchlist action', isLoginScreenVisible);
+  return {
+    isLoginScreenVisible,
+    headingText,
+    isEmailFieldVisible,
+    isPasswordFieldVisible,
+  };
+}
+
+export async function verifyGuestWatchlistHoverNavigationFromFreeAsset(
+  page: any,
+  input?: Partial<VerifyGuestWatchlistHoverNavigationInput>
+): Promise<VerifyGuestWatchlistHoverNavigationOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const query = (input?.query ?? '').trim();
+  const gql = GraphQLHelper.getInstance(page);
+
+  logger.step('Starting guest watchlist hover navigation validation flow');
+
+  const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
+  await authPage.navigate();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  
+  const collectionResponse = await collectionWait;
+  const parser = new CollectionParser(collectionResponse as any);
+  const rails = parser.getRails();
+
+const freeAsset = rails
+    .flatMap((rail) => rail.assets?.items ?? [])
+    .find((asset: any) => {
+      const labels = asset.labels ?? [];
+      if (labels.some((label: any) => /free/i.test(label?.text ?? ''))) return true;
+      const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
+      return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
+    });
+
+  const freeContentTitle = (freeAsset?.title ?? query).trim();
+  logger.assertion('Free content title resolved from Collection GraphQL', Boolean(freeContentTitle));
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(freeContentTitle);
+  await authPage.submitSearchQuery();
+  const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
+  logger.assertion('Search results visible for free content from collection API', resultsVisible);
+
+  const freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeContentTitle).catch(() => false);
+  logger.assertion('Search result is tagged as Free content', freeLabelVisible);
+
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.hoverOverFirstContent();
+  await detailsPage.clickWatchlistIcon();
+  
+  logger.info(`Clicked Add to Watchlist icon for free content: ${freeContentTitle}`);
+
+  const isLoginScreenVisible = await authPage.isWelcomeHeadingVisible();
+  const headingText = isLoginScreenVisible ? await authPage.getWelcomeHeadingText() : '';
+  const isEmailFieldVisible = await authPage.isEmailFieldVisible();
+  const isPasswordFieldVisible = await authPage.isPasswordFieldVisible();
+  logger.assertion('Login screen visible after guest watchlist hover action', isLoginScreenVisible);
+
   return {
     isLoginScreenVisible,
     headingText,

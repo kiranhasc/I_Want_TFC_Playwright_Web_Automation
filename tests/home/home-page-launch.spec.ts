@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { loginWithInvalidCredentials, loginToOTT, loginWithMobileNumber, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs, verifySupportAndPolicyLinks, navigateToTermsAndConditionsSection, searchFromTermsPage, verifyTermsPageDetails } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithInvalidCredentials, loginToOTT, loginWithMobileNumber, navigateToForgotPassword, submitForgotPasswordEmail, submitForgotPasswordMobileNumber, verifyWelcomeScreenUI, navigateAndVerifyTabs, verifySupportAndPolicyLinks, verifyApplicationVersion, navigateToTermsAndConditionsSection, searchFromTermsPage, verifyTermsPageDetails } from '../../src/businessFunction/ott-auth-bfs';
 import { playFreeAsset } from '../../src/businessFunction/ott-playback-bfs.js'
 import testCaseData from '../../src/data/ott-test-cases.json';
 
@@ -138,6 +138,27 @@ test.describe('Home Page Launch', () => {
             searchQuery: data.searchQuery,
         });
         expect(result.searchResultsDisplayed).toBe(data.expectedResultsPresent);
+    });
+
+    test('@High IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
+    test.setTimeout(70000)    
+        const data = testCaseData['tc-auth-016-application-version'];
+        const result = await verifyApplicationVersion(page, {
+            mode: data.mode,
+            expectedTermsHeading: data.expectedTermsHeading,
+        });
+        expect(result.termsPageVisible).toBe(true);
+        expect(result.versionDisplayed).toBe(true);
+    });
+
+    test('@High IW3-T4338: Verify search result will be displayed based on the search input text', async ({ page }) => {
+        const data = testCaseData['tc-auth-013-terms-search-results'];
+        const result = await searchFromTermsPage(page, {
+            mode: data.mode,
+            searchQuery: data.searchQuery,
+        });
+        expect(result.searchResultsDisplayed).toBe(data.expectedResultsPresent);
+        expect(result.searchResultsVisible).toBe(true);
     });
 
     test('@High IW3-T4339: Verify that the respective page is displayed when the user taps any link in the Introduction page', async ({ page }) => {

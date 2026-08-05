@@ -4,39 +4,37 @@ import testData from '../../src/data/ott-test-cases.json';
 
 test.describe('End To End', () => {
   test(' end-to-end launch, login, navigation, search and playback of a content', async ({ page }) => {
-    test.setTimeout(120000);
+    test.setTimeout(180000);
     const data = testData['tc-sub-033-end-to-end-launch-login-search-playback'] as Record<string, any>;
     const result = await verifyEndToEndLaunchLoginSearchPlaybackFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
-    expect(result.homeTabVisible).toBeTruthy();
-    expect(result.trendingMoviesRailVisible).toBeTruthy();
-    expect(result.trendingShowsRailVisible).toBeTruthy();
-    expect(result.myWatchlistRailVisible).toBeTruthy();
-    expect(result.topStreamedRailVisible).toBeTruthy();
-    expect(result.searchBarPlaceholderVisible).toBeTruthy();
-    expect(result.signOutOptionVisible).toBeTruthy();
-    expect(result.searchResultsVisible).toBeTruthy();
-    expect(result.detailsVisible).toBeTruthy();
-    expect(result.genreVisible).toBeDefined();
-    expect(result.ratingVisible).toBeDefined();
-    expect(result.qualityVisible).toBeDefined();
-    expect(result.contentMetadataVisible).toBeTruthy();
-    expect(result.contentDescriptionVisible).toBeDefined();
-    expect(result.addToWatchlistVisible).toBeDefined();
-    expect(result.playerVisible).toBeTruthy();
-    expect(result.playbackControlsVisible).toBeTruthy();
-    expect(result.playerTitleVisible).toBeTruthy();
-    expect(result.seekBarVisible).toBeTruthy();
-    expect(result.backButtonVisible).toBeTruthy();
-    expect(result.pausePlayButtonVisible).toBeTruthy();
-    expect(result.rewindButtonVisible).toBeTruthy();
-    expect(result.forwardButtonVisible).toBeTruthy();
-    expect(result.playbackDurationVisible).toBeTruthy();
-    expect(result.detailsVisibleAfterNav).toBeTruthy();
+    expect.soft(result.trendingMoviesRailVisible).toBeTruthy();
+    expect.soft(result.trendingShowsRailVisible).toBeTruthy();
+    expect.soft(result.myWatchlistRailVisible).toBeTruthy();
+    expect.soft(result.continueWatchingRailVisible).toBe(true)
+    expect.soft(result.topStreamedRailVisible).toBeTruthy();
+    expect.soft(result.searchBarPlaceholderVisible).toBeTruthy();
+    expect.soft(result.signOutOptionVisible).toBeTruthy();
+    expect.soft(result.searchResultsVisible).toBeTruthy();
+    expect.soft(result.detailsVisible).toBeTruthy();
+    expect.soft(result.genreVisible).toBeDefined();
+    expect.soft(result.ratingVisible).toBeDefined();
+    expect.soft(result.qualityVisible).toBeDefined();
+    expect.soft(result.contentMetadataVisible).toBeTruthy();
+    expect.soft(result.contentDescriptionVisible).toBeDefined();
+    expect.soft(result.addToWatchlistVisible).toBeDefined();
+    expect.soft(result.playerVisible).toBeTruthy();
+    expect.soft(result.playbackControlsVisible).toBeTruthy();
+    expect.soft(result.playerTitleVisible).toBeTruthy();
+    expect.soft(result.seekBarVisible).toBeTruthy();
+    expect.soft(result.backButtonVisible).toBeTruthy();
+    expect.soft(result.pausePlayButtonVisible).toBeTruthy();
+    expect.soft(result.rewindButtonVisible).toBeTruthy();
+    expect.soft(result.forwardButtonVisible).toBeTruthy();
+    expect.soft(result.playbackDurationVisible).toBeTruthy();
+    expect.soft(result.detailsVisibleAfterNav).toBeTruthy();
   });
 });

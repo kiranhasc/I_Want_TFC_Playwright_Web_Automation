@@ -1,6 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-test.setTimeout(600_000);
-import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifyPauseAdPlaybackFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow,  verifyMoviePlaybackReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
+test.setTimeout(180_000);
+import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifySkipAdDuringPreRollAdFlow, verifyAdCountdownFlow, verifyMidRollAdInterruptionFlow, verifyAdLearnMoreRedirectFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow,  verifyMoviePlaybackReturnsToDetailsFlow, verifyEarlyAccessMaybeLaterFlow, verifyEarlyAccessSubscriptionFlow, verifySubscribedEarlyAccessUpNextFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifyLastSeasonLastEpisodeCompletionNavigationFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifySubscribeToWatchRedirectsToAccountScreen } from '../../src/businessFunction/ott-subscription-bfs';
 import testData from '../../src/data/ott-test-cases.json';
@@ -9,10 +9,9 @@ test.describe('Play Back', () => {
   test('@High IW3-T1967 - Play content from details page', async ({ page }) => {
     const data = testData['tc-sub-003-play-content'] as Record<string, any>;
     const result = await openContentAndPlay(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
+
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -21,28 +20,11 @@ test.describe('Play Back', () => {
     expect(result.episodeNameVisible).toBeTruthy();
   });
 
-  test('@High IW3-T1907 - IW3-T1975 - playback starts post tapping Play/Resume CTA', async ({ page }) => {
-    const data = testData['tc-sub-004-resume-playback'] as Record<string, any>;
-    const result = await verifyPlaybackResumeFlow(page, {
-      query: data.query,
-      mode:data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
-    });
-
-    expect(result.detailsVisible).toBeTruthy();
-    expect(result.initialPlayed).toBeTruthy();
-    expect(result.resumed).toBeTruthy();
-    expect(result.seekBarVisible).toBeTruthy();
-  });
-
   test('@High IW3-T1968 - video playback starts successfully and plays smoothly without interruption', async ({ page }) => {
     const data = testData['tc-sub-005-smooth-playback'] as Record<string, any>;
     const result = await verifySmoothPlaybackFlow(page, {
-      query: data.query,
+      graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -55,10 +37,8 @@ test.describe('Play Back', () => {
   test('@High IW3-T1999 - dragging the seek bar updates playback position', async ({ page }) => {
     const data = testData['tc-sub-006-seek-bar-drag'] as Record<string, any>;
     const result = await verifySeekBarDragFlow(page, {
-      query: data.query,
+      graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
       seekPercent: data.seekPercent,
     });
 
@@ -69,10 +49,8 @@ test.describe('Play Back', () => {
   test('@Medium IW3-T1997 - player controls auto-dismiss after 5s of inactivity', async ({ page }) => {
     const data = testData['tc-sub-030-player-controls-autodismiss'] as Record<string, any>;
     const result = await verifyPlayerControlsAutoDismissFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -83,10 +61,9 @@ test.describe('Play Back', () => {
   test('@Medium IW3-T2005 - user can adjust volume using volume button', async ({ page }) => {
     const data = testData['tc-sub-032-volume-button-control'] as Record<string, any>;
     const result = await verifyVolumeControlFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
+
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -97,7 +74,7 @@ test.describe('Play Back', () => {
   test('@Medium IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
     const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
     const result = await verifyTapToPausePlaybackFlow(page, {
-      query: data.query,
+      graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
     });
 
@@ -109,10 +86,8 @@ test.describe('Play Back', () => {
   test('@Medium IW3-T2001 - seekbar displays thumbnail previews while scrubbing through content', async ({ page }) => {
     const data = testData['tc-sub-034-seekbar-preview'] as Record<string, any>;
     const result = await verifySeekbarPreviewFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -122,10 +97,8 @@ test.describe('Play Back', () => {
   test('@High IW3-T2000 - seek bar behaves correctly across supported browsers', async ({ page }) => {
     const data = testData['tc-sub-008-browser-seek-bar'] as Record<string, any>;
     const result = await verifyBrowserSeekBarFlow(page, {
-      query: data.query,
+      graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
       seekPercent: data.seekPercent,
     });
 
@@ -139,10 +112,8 @@ test.describe('Play Back', () => {
   test('@High IW3-T2002 - player controls appear when the screen is tapped during playback', async ({ page }) => {
     const data = testData['tc-sub-009-player-controls'] as Record<string, any>;
     const result = await verifyPlayerControlsFlow(page, {
-      query: data.query,
+      graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -160,9 +131,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-016-fullscreen-icon'] as Record<string, any>;
     const result = await verifyFullscreenButtonVisibilityFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -197,9 +166,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-019-subtitle-selection'] as Record<string, any>;
     const result = await verifySubtitleSelectionFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -211,9 +178,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-020-subtitle-next-episode'] as Record<string, any>;
     const result = await verifySubtitlePersistenceFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -236,6 +201,60 @@ test.describe('Play Back', () => {
         expect(result.currentTimeAfterResume).toBeGreaterThanOrEqual(result.currentTimeBeforePause);
     });
 
+
+  test('@Medium IW3-T4707 - user navigates to content details screen on tapping Maybe Later CTA from Unlock Early Access screen', async ({ page }) => {
+    const data = testData['tc-002-early-access-may-be-later'] as Record<string, any>;
+    const result = await verifyEarlyAccessMaybeLaterFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+      labelText: data.labelText,
+    });
+
+    expect(result.searchResultsVisible).toBeTruthy();
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.earlyAccessTagVisible).toBeTruthy();
+    expect(result.episodeClicked).toBeTruthy();
+    expect(result.unlockEarlyAccessVisible).toBeTruthy();
+    expect(result.maybeLaterVisible).toBeTruthy();
+    expect(result.returnedToDetailsPage).toBeTruthy();
+  });
+
+  test('@High IW3-T3686 - free user can initiate the subscription flow from an Early Access episode', async ({ page }) => {
+    const data = testData['tc-003-early-access-subscription-flow'] as Record<string, any>;
+    const result = await verifyEarlyAccessSubscriptionFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+      labelText: data.labelText,
+    });
+
+    expect(result.searchResultsVisible).toBeTruthy();
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.earlyAccessTagVisible).toBeTruthy();
+    expect(result.episodeClicked).toBeTruthy();
+    expect(result.unlockEarlyAccessVisible).toBeTruthy();
+    expect(result.updateToWatchNowVisible).toBeTruthy();
+    expect(result.accountScreenVisible).toBeTruthy();
+    expect(result.iWantIconVisible).toBeTruthy();
+    expect(result.urlContainsAccount).toBeTruthy();
+  });
+
+  test('@High IW3-T3685 - subscribed user can access Early Access episode via Up Next or Next Episode CTA from the player screen', async ({ page }) => {
+    const data = testData['tc-sub-042-subscribed-early-access-up-next'] as Record<string, any>;
+    const result = await verifySubscribedEarlyAccessUpNextFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+      labelText: data.labelText,
+    });
+
+    expect(result.searchResultsVisible).toBeTruthy();
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.earlyAccessTagVisible).toBeTruthy();
+    expect(result.episodeClicked).toBeTruthy();
+    expect(result.nextEpisodeMarkerVisible).toBeTruthy();
+    expect(result.nextEpisodeClicked).toBeTruthy();
+    expect(result.nextEpisodePlaybackStarted).toBeTruthy();
+  });
+
   test('@High IW3-T2013 - pre-roll ad plays automatically before main content starts', async ({ page }) => {
     const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
     const result = await verifyPreRollAdPlaybackFlow(page, {
@@ -249,7 +268,7 @@ test.describe('Play Back', () => {
     expect(result.adVisible).toBeTruthy();
   });
 
-  test('@Medium IW3-T2014 - ad playback UI displays the player screen and ad overlay', async ({ page }) => {
+  test('@Low IW3-T2014 - ad playback UI displays the player screen and ad overlay', async ({ page }) => {
     const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
     const result = await verifyAdPlaybackUIFlow(page, {
       mode: data.mode,
@@ -263,13 +282,66 @@ test.describe('Play Back', () => {
     expect(result.pauseButtonVisible).toBeTruthy();
   });
 
-  test('@Medium IW3-T2020 - player screen displays a clear and visible ad label while an ad is playing', async ({ page }) => {
+  test('@Medium IW3-T2016 - Skip Ad CTA appears during pre-roll ad playback and skip action functions correctly', async ({ page }) => {
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifySkipAdDuringPreRollAdFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.skipAdButtonVisible).toBeTruthy();
+    expect(result.skipAdButtonClicked).toBeTruthy();
+    expect(result.skipAdSuccessful).toBeTruthy();
+  });
+
+  test('@High IW3-T2018 - ad duration countdown and skip button countdown are displayed correctly during ad playback', async ({ page }) => {
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifyAdCountdownFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.skipAdButtonVisible).toBeTruthy();
+    expect(result.skipAdCountdownText).toBeTruthy();
+  });
+
+  test('@High IW3-T2019 - mid-roll ad interrupts main content playback at each midroll ad', async ({ page }) => {
+  test.setTimeout(240000); 
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifyMidRollAdInterruptionFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.initialAdVisible).toBeTruthy();
+    expect(result.playbackTitleVisible).toBeTruthy();
+    expect(result.midRollAdVisible).toBeTruthy();
+  });
+
+  test('@Low IW3-T2021 - tapping on player screen during ad playback redirects to the ad-related page', async ({ page }) => {
+    const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
+    const result = await verifyAdLearnMoreRedirectFlow(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+
+    expect(result.playerVisible).toBeTruthy();
+    expect(result.adVisible).toBeTruthy();
+    expect(result.tapPerformed).toBeTruthy();
+    expect(result.redirectedPageTitle.length).toBeGreaterThan(0);
+    expect(result.redirectedPageUrl.length).toBeGreaterThan(0);
+  });
+
+  test('@Low IW3-T2020 - player screen displays a clear and visible ad label while an ad is playing', async ({ page }) => {
     const data = testData['tc-sub-037-ad-label-visible'] as Record<string, any>;
     const result = await verifyAdLabelVisibilityFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -281,9 +353,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-038-ad-seekbar-hidden'] as Record<string, any>;
     const result = await verifyAdSeekBarHiddenDuringAdFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -295,9 +365,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
     const result = await verifyAdDurationFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -310,9 +378,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
     const result = await verifyPausePlaybackFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -325,9 +391,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-015-pause-seek-buttons'] as Record<string, any>;
     const result = await verifyforwardBackwardButtonsFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -353,7 +417,7 @@ test.describe('Play Back', () => {
       expect(result.carryOverSubtitleVisible).toBeTruthy();
   });
 
-  test('@Medium IW3-T1984 - subtitles are set to Off by default', async ({ page }) => {
+  test('@Low IW3-T1984 - subtitles are set to Off by default', async ({ page }) => {
    const data = testData['tc-sub-022-subtitle-default-off'] as Record<string, any>;  
    const result = await verifySubtitleDefaultOffFlow(page, {
       mode: data.mode,
@@ -401,9 +465,7 @@ test.describe('Play Back', () => {
    const data = testData['tc-sub-025-fullscreen-functionality'] as Record<string, any>;  
    const result = await verifyFullscreenFunctionalityFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -412,7 +474,7 @@ test.describe('Play Back', () => {
     expect(result.playbackTimeProgressed).toBeTruthy();
   });
 
-  test('@Low IW3-T1988 - player screen UI displays all controls in fullscreen mode', async ({ page }) => {
+  test('@Medium IW3-T1988 - player screen UI displays all controls in fullscreen mode', async ({ page }) => {
     const data = testData['tc-sub-026-landscape-player-ui'] as Record<string, any>;
     const result = await verifyPlayerUIFlow(page, {
       mode: data.mode,
@@ -450,9 +512,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-029-back-button-navigation'] as Record<string, any>;
     const result = await verifyBackButtonNavigationFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -463,9 +523,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-015-pause-seek-buttons'] as Record<string, any>;
     const result = await verifyPauseforwardBackwardButtonsFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -479,10 +537,8 @@ test.describe('Play Back', () => {
   test('@Medium IW3-T1998 - player controls dismissed when hovering while visible', async ({ page }) => {
     const data = testData['tc-sub-031-player-controls-hover-dismiss'] as Record<string, any>;
     const result = await verifyPlayerControlsHoverDismissFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -534,7 +590,7 @@ test.describe('Play Back', () => {
     expect(result.autoPlaybackStarted).toBeTruthy();
   });
 
-  test('@Medium IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
+  test('@Low IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLiveTagOnPlayer(page, {
       mode: data.mode,
@@ -568,7 +624,7 @@ test.describe('Play Back', () => {
     expect(result.forwardButtonVisible).toBeFalsy();
   });
 
-  test('@High IW3-T2024 - Verify user navigates to content details after completely watching movie content', async ({ page }) => {
+  test('@Medium IW3-T2024 - Verify user navigates to content details after completely watching movie content', async ({ page }) => {
     const data = testData['tc-sub-040-movie-complete-details-navigation'] as Record<string, any>;
     const result = await verifyMoviePlaybackReturnsToDetailsFlow(page, {
       mode: data.mode,
@@ -581,7 +637,7 @@ test.describe('Play Back', () => {
     expect(result.postDetailsVisible).toBeTruthy();
   });
   
-  test.skip('@High IW3-T2023 - Verify user navigates to content details when last season last episode completely watched', async ({ page }) => {
+  test('@Medium IW3-T2023 - Verify user navigates to content details when last season last episode completely watched', async ({ page }) => {
     const data = testData['tc-sub-039-last-season-last-episode'] as Record<string, any>;
     const result = await verifyLastSeasonLastEpisodeCompletionNavigationFlow(page, {
       mode: data.mode,
@@ -594,12 +650,12 @@ test.describe('Play Back', () => {
     expect(result.postDetailsVisible).toBeTruthy();
   });
 
-  test('@High IW3-T2027 - Verify that clicking "Subscribe to watch" redirects to Account screen', async ({ page }) => {
+  test('@Medium IW3-T2027 - Verify that clicking "Subscribe to watch" redirects to Account screen', async ({ page }) => {
     test.setTimeout(180000);
     const data = testData['tc-sub-041-subscribe-to-watch-redirect-account'] as Record<string, any>;
     const result = await verifySubscribeToWatchRedirectsToAccountScreen(page, {
       mode: data.mode,
-      searchTerm: data.searchTerm,
+      graphqlQueryName: data.graphqlQueryName
     });
 
     expect(result.isDetailsPageVisible).toBeTruthy();

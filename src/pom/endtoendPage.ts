@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Page, selectors } from '@playwright/test';
 import { PageElement } from '../types/index';
 
 export class EndToEndPage {
@@ -11,6 +11,8 @@ export class EndToEndPage {
   private readonly resumeButton: PageElement;
   private readonly shareIcon: PageElement;
   private readonly pausePlayButton: PageElement;
+  private readonly logoIcon: PageElement;
+  
 
   constructor(page: Page) {
     this.page = page;
@@ -18,9 +20,16 @@ export class EndToEndPage {
     this.ratingText = { selector: '//div[contains(@class,"age-rating")]//p' };
     this.playerQualityText = { selector: '//div[contains(@class,"video-quality")]//p' };
     this.contentDescriptionText = { selector: '//div[contains(@class,"desc")]' };
-    this.playButton = { selector: '#play, #play div, button' };
-    this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
-    this.shareIcon = { selector: 'button[aria-label*=share], button:has-text("Share"), [data-testid*=share]' };
+    // this.playButton = { selector: '#play, #play div, button' };
+    this.playButton = { selector: '#play div' };
+    this.logoIcon = { selector : '.logo'}
+
+    // this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
+    this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
+
+    this.shareIcon = { selector: '//*[@id="share"]' };
+    
+    // this.shareIcon = { selector: 'button[aria-label*=share], button:has-text("Share"), [data-testid*=share]' };
     this.pausePlayButton = { selector: 'button[aria-label*=pause], button[aria-label*=play], [data-testid*=pause], [data-testid*=play]' };
   }
 
@@ -66,9 +75,10 @@ export class EndToEndPage {
 
   async isPlayButtonVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator(this.playButton.selector).filter({ hasText: /play/i }).first();
-      await locator.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-      return await locator.isVisible().catch(() => false);
+      //const locator = this.page.locator(this.playButton.selector).filter({ hasText: /play/i }).first();
+      const locator = this.page.locator(`//div[@id="play"]`);
+      await locator.waitFor({ state: 'visible', timeout: 10000 });
+      return await locator.isVisible();
     } catch {
       return false;
     }
@@ -76,9 +86,10 @@ export class EndToEndPage {
 
   async isResumeButtonVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator(this.resumeButton.selector).first();
-      await locator.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-      return await locator.isVisible().catch(() => false);
+     // const locator = this.page.locator(this.resumeButton.selector).first();
+     const locator = this.page.locator(`//div[@id="play"]`);
+      await locator.waitFor({ state: 'visible', timeout: 10000 });
+      return await locator.isVisible();
     } catch {
       return false;
     }
@@ -87,8 +98,8 @@ export class EndToEndPage {
   async isShareIconVisible(): Promise<boolean> {
     try {
       const locator = this.page.locator(this.shareIcon.selector).first();
-      await locator.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-      return await locator.isVisible().catch(() => false);
+      await locator.waitFor({ state: 'visible', timeout: 10000 });
+      return await locator.isVisible();
     } catch {
       return false;
     }
@@ -103,4 +114,49 @@ export class EndToEndPage {
       return false;
     }
   }
+
+  async scrollUntilElementVisible(){
+    await this.scrollUntilVisible(this.logoIcon.selector)
+  }
+
+async scrollUntilVisible(selector: string): Promise<void> {
+    const locator = this.page.locator(selector);
+
+    while (!(await locator.isVisible())) {
+
+        // Smoothly scroll 100px
+        await this.page.evaluate(async () => {
+            await new Promise<void>((resolve) => {
+                const start = window.scrollY;
+                const target = start + 100;
+                const duration = 500; // milliseconds
+                const startTime = performance.now();
+
+                function animate(currentTime: number) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    window.scrollTo(0, start + (target - start) * progress);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        resolve();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            });
+        });
+
+        // Pause before checking
+        await this.page.waitForTimeout(500);
+
+        if (await locator.isVisible()) {
+            break;
+        }
+    }
+
+    await locator.scrollIntoViewIfNeeded();
+}
 }

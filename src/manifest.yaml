@@ -273,6 +273,20 @@
     - "IW3-T2035"
   dependsOn: []
 
+- id: "verify-mid-rail-ad-spacing"
+  name: "Verify spacing around the mid-rail ad banner on Home, Movies, and Shows"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyMidRailAdSpacingAcrossTabs"
+  tags:
+    - playback
+    - ui
+    - mid-rail-ad
+    - positive
+  testCases:
+    - "IW3-T2132"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-continue-watching-tray-ui"
   name: "Verify the Continue Watching tray UI and content cards"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -883,6 +897,20 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-premium-crown-icon-on-search-results"
+  name: "Verify crown icon is displayed on the premium content thumbnail in search results"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifyPremiumCrownIconOnSearchResults"
+  tags:
+    - subscription
+    - search
+    - premium
+    - ui
+  testCases:
+    - "IW3-T2034"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-episodes-grouped-by-season"
   name: "Verify episodes are grouped under their respective seasons"
   path: "src/businessFunction/ott-details-bfs.ts"
@@ -948,6 +976,20 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-skip-intro-functionality"
+  name: "Verify functionality of Skip Intro marker during playback"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifySkipIntroFunctionalityDuringPlayback"
+  tags:
+    - playback
+    - skip-intro
+    - positive
+  testCases:
+    - "IW3-T2113"
+  dataKey: "tc-disc-004-skip-intro"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-skip-recap-marker"
   name: "Verify skip recap marker during playback"
   path: "src/businessFunction/ott-details-bfs.ts"
@@ -958,6 +1000,80 @@
     - positive
   testCases:
     - "IW3-T2114"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-recap-functionality"
+  name: "Verify functionality of Skip Recap marker during playback"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifySkipRecapFunctionalityDuringPlayback"
+  tags:
+    - playback
+    - skip-recap
+    - positive
+  testCases:
+    - "IW3-T2115"
+  dataKey: "tc-disc-005-skip-recap"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-marker-visibility-after-pause-resume"
+  name: "Verify skip markers remain visible after pausing or resuming playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySkipMarkerVisibilityAfterPauseResume"
+  tags:
+    - playback
+    - skip-marker
+    - pause-resume
+    - positive
+  testCases:
+    - "IW3-T2120"
+  dataKey: "tc-disc-005-skip-recap"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-intro-and-recap-advance-playback-duration"
+  name: "Verify Skip Intro and Skip Recap advance playback by a measurable duration"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifySkipIntroAndRecapAdvancePlaybackDuration"
+  tags:
+    - playback
+    - skip-intro
+    - skip-recap
+    - positive
+  testCases:
+    - "IW3-T2121"
+  dataKey: "tc-disc-006-skip-recap"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-markers-reappear-after-rewind"
+  name: "Verify skip markers reappear after rewinding playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySkipMarkersReappearAfterRewind"
+  tags:
+    - playback
+    - skip-marker
+    - rewind
+    - positive
+  testCases:
+    - "IW3-T2122"
+  dataKey: "tc-disc-006-skip-recap"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-skip-markers-not-visible-in-continue-watching"
+  name: "Verify Skip Intro and Skip Recap markers are not visible for Continue Watching content"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySkipMarkersNotVisibleInContinueWatching"
+  tags:
+    - playback
+    - skip-marker
+    - continue-watching
+    - positive
+  testCases:
+    - "IW3-T2123"
+  dataKey: "tc-disc-008-skip-markers-continue-watching"
   dependsOn:
     - "login-to-ott"
 
@@ -1055,6 +1171,20 @@
     - "IW3-T1872"
   dependsOn: []
 
+- id: "verify-guest-watchlist-hover-navigation"
+  name: "Verify guest watchlist hover navigation from a tray content"
+  path: "src/businessFunction/ott-watchlist-bfs.ts"
+  export: "verifyGuestWatchlistHoverNavigationFromFreeAsset"
+  tags:
+    - watchlist
+    - guest
+    - ph-region
+    - hover
+    - negative
+  testCases:
+    - "IW3-T1891"
+  dependsOn: []
+
 - id: "verify-live-content-watchlist-absence"
   name: "Verify Add to Watchlist option is not displayed for live content"
   path: "src/businessFunction/ott-watchlist-bfs.ts"
@@ -1065,6 +1195,20 @@
     - negative
   testCases:
     - "IW3-T2047"
+  dependsOn: []
+
+- id: "verify-guest-share-functionality"
+  name: "Verify guest share functionality on content details from a free asset"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyGuestShareFunctionalityFromFreeAsset"
+  tags:
+    - details
+    - guest
+    - ph-region
+    - share
+    - positive
+  testCases:
+    - "IW3-T1873"
   dependsOn: []
 
 - id: "verify-guest-search-navigation"
@@ -1080,6 +1224,19 @@
     - "IW3-T1876"
   dependsOn: []
 
+- id: "verify-guest-ph-carousel-tab-tray-load"
+  name: "Verify PH guest carousel, sub-navigation tabs and trays load properly"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyGuestPHCarouselTabTrayLoad"
+  tags:
+    - discovery
+    - guest
+    - ph-region
+    - ui
+  testCases:
+    - "IW3-T1889"
+  dependsOn: []
+
 - id: "verify-guest-subscribe-navigation"
   name: "Verify guest subscribe CTA navigation from a free asset"
   path: "src/businessFunction/ott-subscription-bfs.ts"
@@ -1090,7 +1247,7 @@
     - ph-region
     - negative
   testCases:
-    - "1.14"
+    - "IW3-T1875"
   dependsOn: []
 
 - id: "manage-watchlist-item"
@@ -1196,6 +1353,19 @@
     - "IW3-T1856"
   dependsOn: []
 
+- id: "verify-application-version"
+  name: "Verify application version is displayed at the bottom of the page"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyApplicationVersion"
+  tags:
+    - auth
+    - navigation
+    - ui
+  testCases:
+    - "IW3-T4335"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "search-from-terms-page"
   name: "Search from the Terms and Conditions page"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -1206,6 +1376,7 @@
     - search
   testCases:
     - "IW3-T4337"
+    - "IW3-T4338"
   dependsOn:
     - "login-to-ott"
 
@@ -1281,11 +1452,66 @@
   tags:
     - discovery
     - ui
+
+- id: "verify-early-access-content-not-in-continue-watching"
+  name: "Verify Early Access content is not shown in Continue Watching after partial playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyEarlyAccessContentNotInContinueWatching"
+  tags:
+    - playback
+    - continue-watching
+    - discovery
     - smoke
   testCases:
     - "IW3-T3679"
   dependsOn:
     - "login-to-ott"
+
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-early-access-maybe-later-navigation"
+  name: "Verify tapping Maybe Later on Unlock Early Access returns user to content details page"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyEarlyAccessMaybeLaterFlow"
+  tags:
+    - playback
+    - discovery
+    - navigation
+  testCases:
+    - "IW3-T4707"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-early-access-subscription-initiation"
+  name: "Verify free user can initiate subscription flow from Early Access episode"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyEarlyAccessSubscriptionFlow"
+  tags:
+    - playback
+    - subscription
+    - discovery
+  testCases:
+    - "IW3-T3686"
+  dataKey: "tc-003-early-access-subscription-flow"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-subscribed-early-access-up-next"
+  name: "Verify subscribed user can access Early Access episode via Up Next or Next Episode CTA from player screen"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySubscribedEarlyAccessUpNextFlow"
+  tags:
+    - playback
+    - subscription
+    - discovery
+  testCases:
+    - "IW3-T3685"
+  dataKey: "tc-sub-042-subscribed-early-access-up-next"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
 
 - id: "verify-vpn-playback-restriction"
   name: "Verify VPN playback restriction prevents playback and shows an error message"
@@ -1452,6 +1678,7 @@
     - positive
   testCases:
     - "IW3-T1990"
+    - "IW3-T2116"
   dependsOn:
     - "login-to-ott"
 
@@ -1464,6 +1691,42 @@
     - positive
   testCases:
     - "IW3-T1991"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-up-next-marker-functionality"
+  name: "Verify Up Next binge marker functionality navigates to next episode playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyUpNextMarkerFunctionalityFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2117"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-up-next-close-button"
+  name: "Verify the Up Next binge marker displays an X button that closes the outro"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyUpNextCloseButtonFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2118"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-up-next-marker-click-navigation"
+  name: "Verify clicking the Up Next binge marker navigates to the next episode"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyUpNextMarkerClickNavigationFlow"
+  tags:
+    - playback
+    - positive
+  testCases:
+    - "IW3-T2119"
   dependsOn:
     - "login-to-ott"
 
@@ -1638,6 +1901,20 @@
     - "login-to-ott"
   specFile: "tests/home/playback.spec.ts"
 
+- id: "verify-pre-roll-ad-skip-cta"
+  name: "Verify Skip Ad CTA appears during pre-roll ad playback and skip action functions correctly"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySkipAdDuringPreRollAdFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2016"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
 - id: "verify-ad-label-visibility"
   name: "Verify the player screen displays a clear and visible ad label while an ad is playing"
   path: "src/businessFunction/ott-playback-bfs.ts"
@@ -1676,6 +1953,48 @@
     - positive
   testCases:
     - "IW3-T2017"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-ad-countdown-display"
+  name: "Verify ad duration countdown and skip button countdown are displayed correctly during ad playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdCountdownFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2018"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-ad-learn-more-redirect"
+  name: "Verify Learn More during ad playback redirects to the ad-related page"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyAdLearnMoreRedirectFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2021"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
+
+- id: "verify-mid-roll-ad-interruption"
+  name: "Verify mid-roll ad interrupts main content playback at each mid-roll ad"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyMidRollAdInterruptionFlow"
+  tags:
+    - playback
+    - ad
+    - positive
+  testCases:
+    - "IW3-T2019"
   dependsOn:
     - "login-to-ott"
   specFile: "tests/home/playback.spec.ts"

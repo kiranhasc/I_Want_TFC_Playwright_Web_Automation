@@ -17,6 +17,16 @@ export interface OpenContentAndPlayInput {
   seekPercent?: number;
 }
 
+export interface VerifyPauseSeekButtonsOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  pausedPlaybackTime: string;
+  forwardPlaybackTime: string;
+  rewindPlaybackTime: string;
+  forwardChanged: boolean;
+  rewindChanged: boolean;
+}
+
 export interface OpenContentAndPlayOutput {
   isLoggedIn: boolean;
   detailsVisible: boolean;
@@ -769,6 +779,23 @@ export interface VerifySubtitlePersistenceOutput {
   nextEpisodeSubtitleVisible: boolean;
 }
 
+export interface PlayContentFromWatchlistInput {
+    email?: string;
+    password?: string;
+}
+
+export interface PlayContentFromWatchlistOutput {
+    isLoggedIn: boolean;
+    watchlistOpened: boolean;
+    contentSelected: boolean;
+    playClicked: boolean;
+    playbackStarted: boolean;
+    playbackCompleted: boolean;
+    contentPlayed: boolean;
+    currentTime: number;
+    duration: number;
+}
+
 export interface VerifySubtitleCarryOverInput extends OpenContentAndPlayInput {
   secondQuery?: string;
 }
@@ -801,6 +828,18 @@ export interface VerifySubtitleSynchronizationOutput {
   subtitleVisibleAfterForward: boolean;
   subtitleVisibleAfterRewind: boolean;
   subtitleVisibleAfterSeek: boolean;
+}
+
+export interface PlayFreeAssetInput {
+    email?: string;
+    password?: string;
+}
+
+export interface PlayFreeAssetOutput {
+    isLoggedIn: boolean;
+    isPlayableContentDetected: boolean;
+    playAttempted: boolean;
+    playbackStarted: boolean;
 }
 
 export interface VerifyLastSeasonLastEpisodeCompletionOutput {
@@ -869,6 +908,136 @@ export interface VerifyMoviePlaybackDetailsAfterCompletionOutput {
   playbackStarted: boolean;
   playbackCompleted: boolean;
   postDetailsVisible: boolean;
+}
+
+export interface VerifyLivePlaybackGoLiveOutput {
+  isLoggedIn: boolean;
+  liveChannelOpened: boolean;
+  goLiveVisible: boolean;
+}
+
+export interface VerifyPreRollAdPlaybackOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+}
+
+export interface VerifyPauseAdPlaybackOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  pauseAdVisible: boolean;
+  mainContentVisible: boolean;
+}
+
+export interface VerifyPausePlaybackOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  initialPlaybackTime: string;
+  pausedPlaybackTime: string;
+  playbackPaused: boolean;
+}
+
+export interface VerifyTapToPausePlaybackInput {
+  query?: string;
+  mode?: string;
+}
+
+export interface VerifyTapToPausePlaybackOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playerVisible: boolean;
+  initialPlaybackTime: string;
+  pausedPlaybackTime: string;
+  playbackPaused: boolean;
+}
+
+export interface VerifyAdPlaybackUIOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  pauseButtonVisible: boolean;
+}
+
+export interface VerifyAdLabelVisibilityOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  adLabelVisible: boolean;
+  adLabelText: string;
+}
+
+export interface VerifyAdDurationOutput {
+  isLoggedIn: boolean;
+  playerVisible: boolean;
+  adVisible: boolean;
+  adDurationSeconds: number;
+  exceedsMaxDuration: boolean;
+}
+
+export interface VerifyMovieCompletionRedirectToDetailsOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playbackStarted: boolean;
+  playbackCompleted: boolean;
+  postDetailsVisible: boolean;
+  playButtonVisible: boolean;
+  resumeButtonVisible: boolean;
+}
+
+export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyMovieCompletionRedirectToDetailsOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const mode = input?.mode;
+  logger.step('Starting dedicated movie completion redirect to details validation flow');
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before validating movie completion redirect', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      detailsVisible: false,
+      playbackStarted: false,
+      playbackCompleted: false,
+      postDetailsVisible: false,
+      playButtonVisible: false,
+      resumeButtonVisible: false,
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  await authPage.clickMoviesTab();
+  // Ensure movies page finished navigation/rendering
+  await authPage.waitForMoviesPageReady(15000).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  await detailsPage.clickFirstMovieContent();
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  logger.assertion('Content details page visible before playback', detailsVisible);
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForPlayback(3);
+  const playbackStarted = await detailsPage.isPlayerScreenVisible();
+  logger.assertion('Playback started for the selected movie', playbackStarted);
+  await detailsPage.dragSeekBarToPosition(1.0);
+  const playbackCompleted = await authPage.finishPlaybackFromCurrentItem().catch(() => false);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+  const playButtonVisible = postDetailsVisible ? await detailsPage.isPrimaryPlaybackActionVisible().catch(() => false) : false;
+  const resumeButtonVisible = postDetailsVisible ? await detailsPage.isResumeButtonVisible().catch(() => false) : false;
+  logger.assertion('Playback completed', playbackCompleted);
+  logger.assertion('Content details page visible after playback completion', postDetailsVisible);
+  logger.assertion('Primary play button visible after completion', playButtonVisible);
+  logger.assertion('Resume button not visible after completion', !resumeButtonVisible);
+  return {
+    isLoggedIn,
+    detailsVisible,
+    playbackStarted,
+    playbackCompleted,
+    postDetailsVisible,
+    playButtonVisible,
+    resumeButtonVisible,
+  };
 }
 
 export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any,
@@ -1872,11 +2041,11 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
 
   await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(query || 'Abandoned');
+  await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
+  await page.waitForTimeout(3000);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -3563,16 +3732,6 @@ export async function verifyTapToPausePlaybackFlow(page: any, input?: VerifyTapT
   };
 }
 
-export interface VerifyPauseSeekButtonsOutput {
-  isLoggedIn: boolean;
-  playerVisible: boolean;
-  pausedPlaybackTime: string;
-  forwardPlaybackTime: string;
-  rewindPlaybackTime: string;
-  forwardChanged: boolean;
-  rewindChanged: boolean;
-}
-
 export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPauseSeekButtonsOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
@@ -3684,12 +3843,6 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   };
 }
 
-export interface VerifyLivePlaybackGoLiveOutput {
-  isLoggedIn: boolean;
-  liveChannelOpened: boolean;
-  goLiveVisible: boolean;
-}
-
 export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: string; channelName?: string }): Promise<VerifyLivePlaybackGoLiveOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
@@ -3752,18 +3905,6 @@ export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { m
   };
 }
 
-export interface PlayFreeAssetInput {
-    email?: string;
-    password?: string;
-}
-
-export interface PlayFreeAssetOutput {
-    isLoggedIn: boolean;
-    isPlayableContentDetected: boolean;
-    playAttempted: boolean;
-    playbackStarted: boolean;
-}
-
 export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Promise<PlayFreeAssetOutput> {
     const playbackPage = new OTTPlaybackPage(page);
     const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || '';
@@ -3795,8 +3936,7 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
 }
 
 export interface VerifyPremiumContentGateInput {
-    email?: string;
-    password?: string;
+    mode?: string;
     expectedMessage?: string;
     expectedMaybeLaterText?: string;
     expectedSubscribeText?: string;
@@ -3811,8 +3951,7 @@ export interface VerifyPremiumContentGateOutput {
 }
 
 export interface VerifySubscribeToWatchCarouselMessageInput {
-    email?: string;
-    password?: string;
+    mode?: string;
     expectedMessage?: string;
     expectedMaybeLaterText?: string;
     expectedSubscribeText?: string;
@@ -3830,33 +3969,24 @@ export interface VerifySubscribeToWatchCarouselMessageOutput {
 
 export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumContentGateInput): Promise<VerifyPremiumContentGateOutput> {
     const playbackPage = new OTTPlaybackPage(page);
-    const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || '';
-    const password = input?.password || process.env.FREE_USER_LOGIN_PASSWORD || '';
-
+    const mode = input?.mode;
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     logger.step('Starting premium content gate validation flow');
-    await playbackPage.loginWithFreeUser(email, password);
-
-    const isLoggedIn = await playbackPage.isHomeScreenReady();
     logger.assertion('Free user loaded the home screen for premium content gate check', isLoggedIn);
-
     const premiumContentSelected = await playbackPage.clickFirstPremiumContentCard();
     logger.assertion('Premium content card selected', premiumContentSelected);
-
     const laterEpisodeSelected = await playbackPage.clickLaterEpisodeFromPremiumContent();
     logger.assertion('Later episode selected for premium content', laterEpisodeSelected);
-
     const playAttempted = laterEpisodeSelected;
     logger.assertion('Attempted playback on premium content', playAttempted);
-
     const premiumGateDisplayed = await playbackPage.isPremiumContentGateVisible();
     const gateMessage = premiumGateDisplayed ? await playbackPage.getPremiumGateMessageText() : '';
     const maybeLaterVisible = await playbackPage.isMaybeLaterVisible();
     const subscribeToWatchVisible = await playbackPage.isSubscribeToWatchVisible();
-
     logger.assertion('Premium content gate displayed', premiumGateDisplayed);
     logger.assertion('Maybe Later action visible', maybeLaterVisible);
     logger.assertion('Subscribe to watch action visible', subscribeToWatchVisible);
-
     return {
         playAttempted,
         premiumGateDisplayed,
@@ -3867,8 +3997,7 @@ export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumC
 }
 
 export interface VerifyLivePlaybackPauseResumeInput {
-    email?: string;
-    password?: string;
+    mode?: string;
 }
 
 export interface VerifyLivePlaybackPauseResumeOutput {
@@ -3913,32 +4042,22 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
 
 export async function verifyLivePlaybackPauseResume(page: any, input?: VerifyLivePlaybackPauseResumeInput): Promise<VerifyLivePlaybackPauseResumeOutput> {
     const playbackPage = new OTTPlaybackPage(page);
-    const email = input?.email || process.env.VALID_LOGIN_EMAIL || process.env.FREE_USER_LOGIN_EMAIL || '';
-    const password = input?.password || process.env.VALID_LOGIN_PASSWORD || process.env.FREE_USER_LOGIN_PASSWORD || '';
-
+    const mode = input?.mode;
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     logger.step('Starting live playback pause and resume validation flow');
-    await playbackPage.loginWithFreeUser(email, password);
-
-    const isLoggedIn = await playbackPage.isHomeScreenReady();
     logger.assertion('User loaded the home screen before live TV playback', isLoggedIn);
-
     const liveSectionSelected = await playbackPage.selectLiveTVSection();
     logger.assertion('Live TV section selected', liveSectionSelected);
-
     const channelSelected = await playbackPage.selectLiveChannel();
     logger.assertion('Live TV channel selected', channelSelected);
-
     const playbackStarted = await playbackPage.waitForPlaybackToStart();
     logger.assertion('Live playback started', playbackStarted);
-
     const pauseResumeState = playbackStarted
         ? await playbackPage.pauseAndResumePlayback()
         : { pauseClicked: false, resumeClicked: false, playbackCompleted: false, currentTimeBeforePause: 0, currentTimeAfterResume: 0 };
-
     const pauseResumeWorked = playbackStarted && (pauseResumeState.playbackCompleted || (pauseResumeState.pauseClicked && pauseResumeState.resumeClicked));
-
     logger.assertion('Pause/resume interaction completed for live playback', pauseResumeWorked);
-
     return {
         isLoggedIn,
         liveSectionSelected,
@@ -3955,22 +4074,18 @@ export async function verifyLivePlaybackPauseResume(page: any, input?: VerifyLiv
 
 export async function verifySubscribeToWatchCarouselMessage(page: any, input?: VerifySubscribeToWatchCarouselMessageInput): Promise<VerifySubscribeToWatchCarouselMessageOutput> {
     const playbackPage = new OTTPlaybackPage(page);
-    const email = input?.email || process.env.FREE_USER_LOGIN_EMAIL || process.env.VALID_LOGIN_EMAIL || '';
-    const password = input?.password || process.env.FREE_USER_LOGIN_PASSWORD || process.env.VALID_LOGIN_PASSWORD || '';
-
+    const mode = input?.mode;
     logger.step('Starting subscribe-to-watch home-page CTA validation flow');
-    await playbackPage.loginWithFreeUser(email, password);
-
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     const loginSuccessful = await playbackPage.isHomeScreenReady();
     logger.assertion('User loaded the home screen for the CTA check', loginSuccessful);
-
     let carouselChecked = false;
     let promptObserved = false;
     let message = '';
     let maybeLaterVisible = false;
     let subscribeToWatchVisible = false;
     let playbackStarted = false;
-
     const homePageResult = await playbackPage.tryHomePageContentForSubscribeCTA();
     carouselChecked = homePageResult.found;
     promptObserved = homePageResult.premiumGateVisible || homePageResult.maybeLaterVisible || homePageResult.subscribeToWatchVisible;
@@ -3978,10 +4093,8 @@ export async function verifySubscribeToWatchCarouselMessage(page: any, input?: V
     maybeLaterVisible = homePageResult.maybeLaterVisible;
     subscribeToWatchVisible = homePageResult.subscribeToWatchVisible;
     playbackStarted = await playbackPage.isPlaybackStarted();
-
     console.log('homePageCTACheck', { carouselChecked, promptObserved, maybeLaterVisible, subscribeToWatchVisible, message, playbackStarted });
     logger.assertion('Home-page subscribe CTA surfaced the premium gate prompt', promptObserved);
-
     return {
         loginSuccessful,
         carouselChecked,
@@ -3991,23 +4104,6 @@ export async function verifySubscribeToWatchCarouselMessage(page: any, input?: V
         subscribeToWatchVisible,
         playbackStarted,
     };
-}
-
-export interface PlayContentFromWatchlistInput {
-    email?: string;
-    password?: string;
-}
-
-export interface PlayContentFromWatchlistOutput {
-    isLoggedIn: boolean;
-    watchlistOpened: boolean;
-    contentSelected: boolean;
-    playClicked: boolean;
-    playbackStarted: boolean;
-    playbackCompleted: boolean;
-    contentPlayed: boolean;
-    currentTime: number;
-    duration: number;
 }
 
 export async function playContentFromWatchlist(page: any, input?: PlayContentFromWatchlistInput): Promise<PlayContentFromWatchlistOutput> {

@@ -101,6 +101,7 @@ export default defineConfig({
         '**/vpn-page-launch.spec.ts',
         '**/details-page.spec.ts',
         '**/registration-launch.spec.ts',
+        '**/iwant-originals.spec.ts',
       ],
     },
 

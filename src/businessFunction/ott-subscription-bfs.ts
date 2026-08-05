@@ -5,6 +5,8 @@ import { logger } from '../utils/logger';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { loginToOTT } from './ott-auth-bfs';
+import { config } from '../utils/config-manager';
+import { TVShowEpisodesParser } from '../utils/graphql/parsers/tv-show-episodes-parser';
 
 export interface VerifySubscribeToWatchInput {
   mode?: string;
@@ -98,6 +100,18 @@ export interface VerifySubscribeCtaOnGmaDetailsPageOutput {
   isSubscribeToWatchCtaVisible: boolean;
 }
 
+export interface VerifyPremiumContentDeepLinkSubscriptionBlockerInput {
+  mode?: string;
+}
+
+export interface VerifyPremiumContentDeepLinkSubscriptionBlockerOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  isSubscribeToWatchCtaVisible: boolean;
+  isPlaybackBlocked: boolean;
+  detailHeadingText: string;
+}
+
 export async function verifySubscribeCtaOnGmaDetailsPage(
   page: any,
   input?: VerifySubscribeCtaOnGmaDetailsPageInput
@@ -107,7 +121,7 @@ export async function verifySubscribeCtaOnGmaDetailsPage(
   const playbackPage = new OTTPlaybackPage(page);
   logger.step('Starting GMA details-page subscribe CTA validation flow');
 
-  const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'freeUser' });
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('Free user is logged in before GMA details CTA validation', isLoggedIn);
 
@@ -194,7 +208,7 @@ export async function verifyPremiumCrownIconOnSearchResults(
 ): Promise<VerifyPremiumCrownIconOnSearchResultsOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
-  const gql = new GraphQLHelper(page);
+  const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   logger.step('Starting premium crown icon validation flow on search results');
 
@@ -340,6 +354,109 @@ if (!premiumAssetTitle) {
     accountScreenVisible,
     iWantIconVisible,
     urlContainsAccount,
+  }
+}
+
+export async function verifyPremiumContentDeepLinkSubscriptionBlocker(
+  page: any,
+  input?: VerifyPremiumContentDeepLinkSubscriptionBlockerInput
+): Promise<VerifyPremiumContentDeepLinkSubscriptionBlockerOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  const playbackPage = new OTTPlaybackPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  logger.step('Starting premium deep-link subscription blocker validation flow');
+  const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'valid' });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before premium deep-link validation', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      isSubscribeToWatchCtaVisible: false,
+      isPlaybackBlocked: false,
+      detailHeadingText: '',
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  logger.step('Waiting for collection GraphQL data to identify premium content');
+  const collectionResponse = await gql.waitForOperation('Collection');
+  const collectionParser = new CollectionParser(collectionResponse as any);
+  let premiumAsset: any | null = null;
+  for (let railIndex = 0; railIndex < collectionParser.getRails().length; railIndex += 1) {
+    const cards = collectionParser.getCards(railIndex);
+    premiumAsset = cards.find((card: any) => card?.monetization?.type === 'paid') || null;
+    if (premiumAsset) {
+      break;
+    }
+  }
+  const premiumContentId = premiumAsset ? collectionParser.getContentId(premiumAsset) : undefined;
+  logger.assertion('Premium content ID was resolved from collection GraphQL data', !!premiumContentId);
+  if (!premiumContentId) {
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      isSubscribeToWatchCtaVisible: false,
+      isPlaybackBlocked: false,
+      detailHeadingText: '',
+    };
+  }
+  const baseUrl = config.getBaseURL();
+  const detailsUrl = `${baseUrl}/details/${premiumContentId}`;
+  logger.step('Opening premium content details deep link');
+  await page.goto(detailsUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  logger.step('Waiting for TV show episode GraphQL data for the premium content');
+  const episodeResponse = await gql.waitForOperationMatching(
+    ({ response }: any) => {
+      const episodeItems = response?.data?.tvShowEpisodes?.items || response?.data?.tvShow?.episodes || [];
+      return Array.isArray(episodeItems) && episodeItems.some((episode: any) => episode?.monetization?.type === 'paid');
+    },
+    60000
+  );
+  const episodeParser = new TVShowEpisodesParser(episodeResponse as any);
+  const paidEpisode = episodeParser.findEpisode((episode) => episode.monetization?.type === 'paid');
+  const paidEpisodeId = episodeParser.getContentId(paidEpisode);
+  logger.assertion('Premium episode ID was resolved from TV show episodes GraphQL data', !!paidEpisodeId);
+  if (!paidEpisodeId) {
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      isSubscribeToWatchCtaVisible: false,
+      isPlaybackBlocked: false,
+      detailHeadingText: '',
+    };
+  }
+  const playerUrl = `${baseUrl}/player/${paidEpisodeId}`;
+  logger.step('Opening premium episode player deep link');
+  await page.goto(playerUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  await detailsPage.clickPlayVideoOverlayButton();
+  await page.waitForTimeout(3000);
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+  const isSubscribeToWatchCtaVisible = await detailsPage.isSubscribeToWatchCtaVisible().catch(() => false);
+  const premiumGateVisible = await playbackPage.isPremiumContentGateVisible().catch(() => false);
+  const maybeLaterVisible = await playbackPage.isMaybeLaterVisible().catch(() => false);
+  const subscribeToWatchVisible = await playbackPage.isSubscribeToWatchVisible().catch(() => false);
+  const blockerVisible = isSubscribeToWatchCtaVisible || premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible;
+  const isPlaybackBlocked = blockerVisible;
+  const detailHeadingText = isDetailsPageVisible || blockerVisible
+    ? await detailsPage.getShowDetailsHeadingText().catch(() => '')
+    : '';
+  logger.assertion('Details page is visible after premium deep-link navigation', isDetailsPageVisible);
+  logger.assertion('Subscribe to watch CTA is visible for premium deep-link content', isSubscribeToWatchCtaVisible);
+  logger.assertion('Premium deep-link access is blocked for a non-subscriber', isPlaybackBlocked);
+
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    isSubscribeToWatchCtaVisible,
+    isPlaybackBlocked,
+    detailHeadingText,
   };
 }
 
@@ -434,7 +551,7 @@ export async function navigateToUpgradePlanFromSubscriptionBlocker(
   const authPage = new OTTAuthPage(page);
   logger.step('Starting upgrade plan navigation flow');
 
-  const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'freeUser' });
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('Free user logged in before upgrade-plan navigation validation', isLoggedIn);
 

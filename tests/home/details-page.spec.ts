@@ -8,9 +8,11 @@ import {
   verifyShowEpisodeListScrollableToEnd,
   verifyEpisodePlaybackStartsFromDetailsPage,
   verifyPremiumIconOnDetailsPage,
+  verifySharedDeeplinkRedirectToDetailsPage,
+  verifyAutoPlaybackOfPreviewOnDetailsPage,
 } from '../../src/businessFunction/ott-details-bfs';
 import { manageWatchlistItemOnDetailsPage } from '../../src/businessFunction/ott-watchlist-bfs';
-import { verifyPlaybackResumeFlow, verifyPlayerCloseReturnsToDetailsFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { verifyPlayerCloseReturnsToDetailsFlow, verifyMovieCompletionRedirectToDetailsFlow, verifyPlaybackResumeFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifySubscriptionInstructionPopupOnGmaContent, verifySubscribeCtaOnGmaDetailsPage, navigateToUpgradePlanFromSubscriptionBlocker } from '../../src/businessFunction/ott-subscription-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
@@ -23,7 +25,6 @@ test.describe('Content details navigation', () => {
       expectedYear: data.expectedYear,
       expectedGenre: data.expectedGenre,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.showDetailsHeading).toBeTruthy();
@@ -35,7 +36,6 @@ test.describe('Content details navigation', () => {
     const result = await verifyContentDetailsPageUi(page, {
       mode: data.mode,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.isContentDetailsPageVisible).toBe(true);
     expect(result.contentDetailsHeading).toBeTruthy();
@@ -57,7 +57,6 @@ test.describe('Content details navigation', () => {
     const result = await verifyPremiumIconOnDetailsPage(page, {
       mode: data.mode,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
@@ -65,12 +64,11 @@ test.describe('Content details navigation', () => {
   });
 
   test('@Medium IW3-T1903: Verify Subscribe CTA is displayed on detail page for Non premium users', async ({ page }) => {
-    test.setTimeout(180000);
+    test.setTimeout(120000);
     const data = testCaseData['tc-disc-010-subscribe-cta-on-details-page'] as Record<string, any>;
     const result = await verifySubscribeCtaOnGmaDetailsPage(page, {
       mode: data.mode,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
@@ -80,21 +78,16 @@ test.describe('Content details navigation', () => {
 
   test('@Medium IW3-T1905: Verify that Free users navigate to plans page post tapping on Subscribe CTA', async ({ page }) => {
     const data = testCaseData['tc-sub-002-upgrade-plan'];
-    const result = await navigateToUpgradePlanFromSubscriptionBlocker(page, {
-      mode: data.mode,
-    });
-
+    const result = await navigateToUpgradePlanFromSubscriptionBlocker(page, { mode: data.mode });
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isUpgradePlanVisible).toBe(true);
     expect(result.isPlansPageVisible).toBe(true);
   });
 
   test('@Medium IW3-T1906: Verify subscription instruction popup is displayed post tapping on Subscribe CTA for GMA contents', async ({ page }) => {
+    test.setTimeout(60000);
     const data = testCaseData['tc-sub-003-gma-subscribe-popup'] as Record<string, any>;
-    const result = await verifySubscriptionInstructionPopupOnGmaContent(page, {
-      mode: data.mode,
-    });
-
+    const result = await verifySubscriptionInstructionPopupOnGmaContent(page, { mode: data.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isPremiumContentOpened).toBe(true);
@@ -108,7 +101,6 @@ test.describe('Content details navigation', () => {
     const result = await manageWatchlistItemOnDetailsPage(page, {
       mode: data.mode,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.isRemovedFromWatchlist).toBe(true);
@@ -118,22 +110,55 @@ test.describe('Content details navigation', () => {
   test('@Medium IW3-T1909: Verify that user redirect back to detail page post killing/closing the player', async ({ page }) => {
     const data = testCaseData['tc-disc-004-player-close-return'] as Record<string, any>;
     const result = await verifyPlayerCloseReturnsToDetailsFlow(page, {
-      mode: data?.mode ?? 'valid',
-      query: data?.query ?? 'Abandoned',
+      mode: data?.mode ,
+      query: data?.query,
     });
-
     expect(result.isLoggedIn).toBe(true);
     expect(result.detailsVisible).toBe(true);
     expect(result.playerVisibleBeforeClose).toBe(true);
     expect(result.returnedToDetails).toBe(true);
   });
 
+  test('@Low IW3-T1910: Verify that user auto redirects back to the details page after a movie completes playback', async ({ page }) => {
+    test.setTimeout(90000);
+    const data = testCaseData['tc-disc-011-movie-completion-redirect'] as Record<string, any>;
+    const result = await verifyMovieCompletionRedirectToDetailsFlow(page, {
+      mode: data?.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.detailsVisible).toBe(true);
+    expect(result.playbackStarted).toBe(true);
+    expect(result.playbackCompleted).toBe(true);
+    expect(result.postDetailsVisible).toBe(true);
+    expect(result.playButtonVisible).toBe(true);
+    expect(result.resumeButtonVisible).toBe(false);
+  });
+
+  test('@High IW3-T1900: Verify auto playback of preview/trailer on detail page', async ({ page }) => {
+    const data = testCaseData['tc-disc-013-trailer-autoplay'] as Record<string, any>;
+    const result = await verifyAutoPlaybackOfPreviewOnDetailsPage(page, {
+      mode: data?.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.isDetailsPageVisible).toBe(true);
+    expect(result.previewVideoVisible).toBe(true);
+    expect(result.previewPlaybackStarted).toBe(true);
+  });
+
+  test('@Medium IW3-T1897: Verify the redirection to the Detail Page via shared Deeplink URL', async ({ page }) => {
+    const data = testCaseData['tc-disc-012-shared-deeplink-redirect'] as Record<string, any>;
+    const result = await verifySharedDeeplinkRedirectToDetailsPage(page, {
+      mode: data?.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.isDetailsPageVisible).toBe(true);
+    expect(result.titleMatchesAsset).toBe(true);
+    expect(result.shortDescriptionMatchesAsset).toBe(true);
+  });
+
   test('@Medium IW3-T1913: Verify on tapping "Share" icon "Share link copied to clipboard" message is displayed', async ({ page }) => {
     const data = testCaseData['tc-disc-005-share-link-copied'] as Record<string, any>;
-    const result = await verifyShareLinkCopiedToClipboardMessage(page, {
-      mode: data?.mode ?? 'valid',
-    });
-
+    const result = await verifyShareLinkCopiedToClipboardMessage(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isContentDetailsPageVisible).toBe(true);
     expect(result.isShareIconVisible).toBe(true);
@@ -142,10 +167,7 @@ test.describe('Content details navigation', () => {
 
   test('@Medium IW3-T1914: Verify episodes lists are divided and displayed by respective seasons', async ({ page }) => {
     const data = testCaseData['tc-disc-006-seasons-grouped'] as Record<string, any>;
-    const result = await verifyEpisodesGroupedBySeason(page, {
-      mode: data?.mode ?? 'valid',
-    });
-
+    const result = await verifyEpisodesGroupedBySeason(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.seasonLabelsVisible).toBe(true);
@@ -157,10 +179,7 @@ test.describe('Content details navigation', () => {
   test('@Medium IW3-T1915: Verify detail page and All episodes list is scrollable till the end for show contents', async ({ page }) => {
     test.setTimeout(60000);
     const data = testCaseData['tc-disc-007-episode-list-scrollable'] as Record<string, any>;
-    const result = await verifyShowEpisodeListScrollableToEnd(page, {
-      mode: data?.mode ?? 'valid',
-    });
-
+    const result = await verifyShowEpisodeListScrollableToEnd(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.episodeListScrollableToEnd).toBe(true);
@@ -171,10 +190,7 @@ test.describe('Content details navigation', () => {
   test('@Medium IW3-T1916: Verify episodes are displayed/listed in ascending order for all the show content', async ({ page }) => {
     test.setTimeout(60000);
     const data = testCaseData['tc-disc-008-episode-order'] as Record<string, any>;
-    const result = await verifyEpisodesDisplayedInAscendingOrder(page, {
-      mode: data?.mode ?? 'valid',
-    });
-
+    const result = await verifyEpisodesDisplayedInAscendingOrder(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.seasonLabelsText.length >= 0).toBe(true);
@@ -184,10 +200,8 @@ test.describe('Content details navigation', () => {
   });
 
   test('@Medium IW3-T1921: Verify that respective episode playback starts post tapping on episode cards in detail page', async ({ page }) => {
-    const result = await verifyEpisodePlaybackStartsFromDetailsPage(page, {
-      mode: 'valid',
-    });
-
+    const data = testCaseData['tc-disc-014-episode-playback-on-details-page'] as Record<string, any>;
+    const result = await verifyEpisodePlaybackStartsFromDetailsPage(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.showName.length).toBeGreaterThan(0);

@@ -136,4 +136,42 @@ export class GraphQLHelper {
             `GraphQL operation '${operationName}' was not captured after retry`
         );
     }
+
+    public async waitForOperationMatching<T>(
+        predicate: (result: GraphQLResult<T>) => boolean,
+        timeout = 60000,
+        retry = true
+    ): Promise<GraphQLResult<T>> {
+        logger.info('Waiting for a GraphQL operation that matches the requested predicate');
+        const waitForCache = async (): Promise<GraphQLResult<T> | null> => {
+            const startTime = Date.now();
+            while (Date.now() - startTime < timeout) {
+                for (const cached of this.responses.values()) {
+                    if (predicate(cached as GraphQLResult<T>)) {
+                        logger.info('Returning cached GraphQL operation that matched the predicate');
+                        return cached as GraphQLResult<T>;
+                    }
+                }
+                await new Promise(resolve =>
+                    setTimeout(resolve, 200)
+                );
+            }
+            return null;
+        };
+        let result = await waitForCache();
+        if (result) {
+            return result;
+        }
+        if (retry) {
+            logger.warn('No matching GraphQL operation found. Refreshing page and retrying...');
+            await this.page.reload({
+                waitUntil: 'networkidle'
+            });
+            result = await waitForCache();
+            if (result) {
+                return result;
+            }
+        }
+        throw new Error('No GraphQL operation matched the requested predicate after retry');
+    }
 }

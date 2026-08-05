@@ -35,6 +35,8 @@ export class OTTPlaybackPage {
     private readonly paidContentBadge: PageElement;
     private readonly subscribePromptText: PageElement;
     private readonly seekBar: PageElement;
+    private readonly titleSelector: PageElement;
+    private readonly episodeSelector: PageElement;
     private readonly unlockEarlyAccessButton: PageElement;
     private readonly updateToWatchNowButton: PageElement;
 
@@ -70,6 +72,8 @@ export class OTTPlaybackPage {
         this.paidContentBadge = { selector: 'img[alt*="paid"], [alt*="paid"], [data-testid*="paid"]' };
         this.subscribePromptText = { selector: 'text=/Subscribe to watch|Subscribe to Watch/i' };
         this.seekBar = { selector: '.player-progress-indicator' };
+        this.titleSelector = { selector: '[data-testid="player-title"], .player-title, .video-title, .player-header h1, h1' };
+        this.episodeSelector = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode")' };
         this.unlockEarlyAccessButton = { selector: '//div[text()="Unlock Early Access"]' };
         this.updateToWatchNowButton = { selector: '//p[text()="Upgrade to Watch Now"]' };
     }
@@ -86,12 +90,10 @@ export class OTTPlaybackPage {
             Movies: this.moviesTab,
             GMA: this.gmaTab,
         };
-
         const targetTab = tabMap[tabName];
         if (!targetTab) {
             return false;
         }
-
         try {
             await this.pageUtils.safeClick(targetTab, 15000);
             await this.pageUtils.waitForNetworkIdle(60000);
@@ -153,7 +155,6 @@ export class OTTPlaybackPage {
         if (!isVisible) {
             return false;
         }
-
         await playTarget.scrollIntoViewIfNeeded();
         await playTarget.hover();
         return true;
@@ -165,7 +166,6 @@ export class OTTPlaybackPage {
         if (!isVisible) {
             return false;
         }
-
         await playTarget.click({ force: true });
         await this.page.waitForURL(/\/player\//, { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -179,39 +179,51 @@ export class OTTPlaybackPage {
             .filter({ has: this.page.locator('img[alt], img[title]') })
             .filter({ hasNot: this.page.locator('img[alt*="arrow"], img[alt*="logo"], img[alt*="icon"], img[title*="arrow"], img[title*="logo"], img[title*="icon"]') });
         const cardCount = await cardCandidates.count().catch(() => 0);
-
         for (let index = 0; index < Math.min(8, cardCount); index += 1) {
             const card = cardCandidates.nth(index);
             const visible = await card.isVisible().catch(() => false);
             if (!visible) {
                 continue;
             }
-
             await card.scrollIntoViewIfNeeded().catch(() => undefined);
             await card.hover().catch(() => undefined);
             await card.dblclick({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
             await this.page.waitForTimeout(1500);
-
             const navigated = await this.page.waitForURL(/\/player\/|\/show\/|\/movie\/|\/detail\//, { timeout: 5000 }).catch(() => false);
             if (navigated) {
                 return true;
             }
-
             const detailsHeadingVisible = await this.page.locator('main h1').first().isVisible().catch(() => false);
             if (detailsHeadingVisible) {
                 return true;
             }
         }
-
         return false;
     }
 
+    async clickSubscribeOrSubscribeToWatchButton(): Promise<boolean> {
+        const subscribeTargets = this.page.locator('button, a, [role="button"]').filter({ hasText: /subscribe/i });
+        const targetCount = await subscribeTargets.count().catch(() => 0);
+        for (let index = 0; index < Math.min(targetCount, 10); index += 1) {
+            const target = subscribeTargets.nth(index);
+            const targetVisible = await target.isVisible().catch(() => false);
+            if (!targetVisible) {
+                continue;
+            }
+            await target.scrollIntoViewIfNeeded();
+            await target.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+            await this.page.waitForTimeout(4000);
+            return true;
+        }
+        return false;
+    }
 
     async clickLaterEpisodeFromPremiumContent(): Promise<boolean> {
         const episodeItems = this.page.locator('.episodes-list .episode-info, .episodes-list [data-testid*="episode"], .seasons-container .episode-info, .episodes-list li, [data-testid*="episode-item"]');
         const itemsCount = await episodeItems.count().catch(() => 0);
-
         if (itemsCount > 0) {
             const targetIndex = Math.min(4, Math.max(0, itemsCount - 1));
             const item = episodeItems.nth(targetIndex);
@@ -219,7 +231,6 @@ export class OTTPlaybackPage {
             if (!itemVisible) {
                 return false;
             }
-
             const clickable = item.locator('img, button, a, [role="button"]').first();
             const clickableVisible = await clickable.isVisible().catch(() => false);
             if (clickableVisible) {
@@ -229,13 +240,11 @@ export class OTTPlaybackPage {
                 await item.scrollIntoViewIfNeeded();
                 await item.click({ force: true, timeout: 30000 }).catch(() => undefined);
             }
-
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
             return true;
         }
-
         const episodeButton = this.page.getByText(/Play\s*S\d+\s*E([5-9]|[1-9]\d+)/i).first();
         const isVisible = await episodeButton.isVisible().catch(() => false);
         if (!isVisible) {
@@ -244,14 +253,12 @@ export class OTTPlaybackPage {
             if (!fallbackVisible) {
                 return false;
             }
-
             await fallbackButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
             return true;
         }
-
         await episodeButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -262,14 +269,12 @@ export class OTTPlaybackPage {
     async clickHomePagePaidContentCard(): Promise<boolean> {
         const paidBadges = this.page.locator('img[alt*="paid"], [alt*="paid"], [data-testid*="paid"], [class*="paid"]');
         const paidCount = await paidBadges.count().catch(() => 0);
-
         for (let index = 0; index < Math.min(paidCount, 8); index += 1) {
             const badge = paidBadges.nth(index);
             const badgeVisible = await badge.isVisible().catch(() => false);
             if (!badgeVisible) {
                 continue;
             }
-
             const clicked = await badge.evaluate((node: HTMLElement) => {
                 let current = node.parentElement;
                 while (current) {
@@ -287,39 +292,32 @@ export class OTTPlaybackPage {
                 (node as HTMLElement).click();
                 return true;
             });
-
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
             await this.page.waitForTimeout(5000);
             return clicked;
         }
-
         return false;
     }
 
     async tryHomePageContentForSubscribeCTA(): Promise<{ found: boolean; message: string; maybeLaterVisible: boolean; subscribeToWatchVisible: boolean; premiumGateVisible: boolean }> {
         await this.pageUtils.waitForNetworkIdle(60000);
-
         const paidIndicators = this.page.locator(this.paidContentBadge.selector);
         const paidCount = await paidIndicators.count().catch(() => 0);
-
         for (let index = 0; index < Math.min(paidCount, 6); index += 1) {
             const paidIndicator = paidIndicators.nth(index);
             const indicatorVisible = await paidIndicator.isVisible().catch(() => false);
             if (!indicatorVisible) {
                 continue;
             }
-
             await paidIndicator.hover({ force: true }).catch(() => undefined);
             await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
             await this.pageUtils.waitForNetworkIdle(60000);
             await this.page.waitForTimeout(3000);
-
             const premiumGateVisible = await this.isPremiumContentGateVisible();
             const maybeLaterVisible = await this.isMaybeLaterVisible();
             const subscribeToWatchVisible = await this.isSubscribeToWatchVisible();
             const message = premiumGateVisible ? await this.getPremiumGateMessageText() : (subscribeToWatchVisible ? 'Subscribe to watch' : '');
-
             if (premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible) {
                 return {
                     found: true,
@@ -330,7 +328,6 @@ export class OTTPlaybackPage {
                 };
             }
         }
-
         return {
             found: false,
             message: '',
@@ -519,18 +516,13 @@ export class OTTPlaybackPage {
 
     async pauseAndResumePlayback(): Promise<{ pauseClicked: boolean; resumeClicked: boolean; playbackCompleted: boolean; currentTimeBeforePause: number; currentTimeAfterResume: number }> {
         const videoElement = this.page.locator(this.videoElement.selector).first();
-
         let pauseClicked = false;
         let resumeClicked = false;
         let playbackCompleted = false;
-
         const currentTimeBeforePause = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
-
         await this.page.waitForTimeout(8000);
-
         await this.page.mouse.move(700, 400).catch(() => undefined);
         await this.page.waitForTimeout(2000);
-
         const pauseButton = this.page.getByRole('button', { name: 'Pause' }).first();
         await pauseButton.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
         if (await pauseButton.isVisible().catch(() => false)) {
@@ -540,10 +532,8 @@ export class OTTPlaybackPage {
             await this.page.waitForTimeout(8000);
             pauseClicked = true;
         }
-
         await this.page.mouse.move(700, 400).catch(() => undefined);
         await this.page.waitForTimeout(2000);
-
         const playButton = this.page.getByRole('button', { name: 'Play' }).first();
         await playButton.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
         if (await playButton.isVisible().catch(() => false)) {
@@ -553,10 +543,8 @@ export class OTTPlaybackPage {
             await this.page.waitForTimeout(8000);
             resumeClicked = true;
         }
-
         const currentTimeAfterResume = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
         playbackCompleted = await videoElement.evaluate((node: HTMLVideoElement) => node.ended).catch(() => false);
-
         return {
             pauseClicked,
             resumeClicked,
@@ -565,6 +553,7 @@ export class OTTPlaybackPage {
             currentTimeAfterResume,
         };
     }
+
     async dragSeekBarToPosition(targetPercent: number): Promise<void> {
         const seekBar = this.page.locator(this.seekBar.selector).first();
         await seekBar.waitFor({ state: 'visible', timeout: 15000 });
@@ -573,12 +562,10 @@ export class OTTPlaybackPage {
         if (!box) {
         return;
         }
-    
         const startX = box.x + box.width * 0.2;
         const startY = box.y + box.height / 2;
         const endX = box.x + box.width * Math.min(Math.max(targetPercent, 0.05), 0.95);
         const endY = startY;
-    
         await this.page.mouse.move(startX, startY);
         await this.page.mouse.down();
         await this.page.mouse.move(endX, endY, { steps: 8 });

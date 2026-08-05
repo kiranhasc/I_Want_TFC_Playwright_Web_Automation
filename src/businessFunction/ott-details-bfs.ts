@@ -3,6 +3,9 @@ import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTPlaybackPage } from '../pom/OTTPlaybackPage';
 import { loginToOTT } from './ott-auth-bfs';
 import { logger } from '../utils/logger';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
+import { config } from '../utils/config-manager';
 
 export interface VerifyShareLinkCopiedToClipboardInput {
   mode?: string;
@@ -106,6 +109,182 @@ export interface VerifyVPNPlaybackRestrictionOutput {
   vpnErrorVisible: boolean;
   errorMessage: string;
   playbackStarted: boolean;
+}
+
+export interface VerifyIWantOriginalsPreviewOnDetailsPageInput {
+  mode?: string;
+}
+
+export interface VerifyIWantOriginalsPreviewOnDetailsPageOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  previewVideoVisible: boolean;
+  previewPlaybackStarted: boolean;
+}
+
+export interface VerifySkipIntroMarkerInput {
+  mode?: string;
+  searchTerm?: string;
+}
+
+export interface VerifySkipIntroMarkerOutput {
+  isDetailsPageVisible: boolean;
+  isSkipIntroMarkerVisible: boolean;
+}
+
+export interface VerifySkipRecapMarkerInput {
+  mode?: string;
+  searchTerm?: string;
+}
+
+export interface VerifySkipRecapMarkerOutput {
+  isDetailsPageVisible: boolean;
+  isSkipRecapMarkerVisible: boolean;
+}
+
+export interface VerifyGuestSearchNavigationInput {
+  searchTerm?: string;
+  expectedTitle?: string;
+}
+
+export interface VerifyGuestSearchNavigationOutput {
+  isSearchInputPopulated: boolean;
+  isDetailsPageVisible: boolean;
+  headingText: string;
+  titleMatchesSearchTerm: boolean;
+}
+
+export interface PlayEpisodeFromDetailsInput {
+  mode?: string;
+  searchTerm?: string;
+}
+
+export interface PlayEpisodeFromDetailsOutput {
+  isDetailsPageVisible: boolean;
+  isEpisodeListVisible: boolean;
+  isPlayerVisible: boolean;
+  showDetailsHeading: string;
+  playbackContentTitle: string;
+  selectedEpisodeTitle: string;
+  playerTopLeftVisible: boolean;
+  playerContainsTitleEpisode: boolean;
+}
+
+export interface VerifyEpisodePlaybackStartsFromDetailsInput {
+  mode?: string;
+}
+
+export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  seasonSectionVisible: boolean;
+  selectedEpisodeTitle: string;
+  showName: string;
+  seasonNumber: string;
+  episodeNumber: string;
+  playerVisible: boolean;
+  playbackStarted: boolean;
+  playerEpisodeTitleVisible: boolean;
+  playerSeasonVisible: boolean;
+  playerEpisodeVisible: boolean;
+  playerMetadataText: string;
+}
+
+export interface VerifySharedDeeplinkRedirectInput {
+  mode?: string;
+}
+
+export interface VerifySharedDeeplinkRedirectOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  headingText: string;
+  summaryText: string;
+  titleMatchesAsset: boolean;
+  shortDescriptionMatchesAsset: boolean;
+}
+
+export interface VerifyAutoPlaybackOfPreviewOnDetailsPageInput {
+  mode?: string;
+}
+
+export interface VerifyAutoPlaybackOfPreviewOnDetailsPageOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  previewVideoVisible: boolean;
+  previewPlaybackStarted: boolean;
+}
+
+export interface VerifyVPNWhitelistedPlaybackInput {
+  mode?: string;
+}
+
+export interface VerifyVPNWhitelistedPlaybackOutput {
+  isLoggedIn: boolean;
+  detailsVisible: boolean;
+  playerVisible: boolean;
+  playbackStarted: boolean;
+}
+
+export async function verifyVPNWhitelistedPlayback(
+  page: any,
+  input: VerifyVPNWhitelistedPlaybackInput
+): Promise<VerifyVPNWhitelistedPlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  logger.step('Starting VPN whitelisted-country playback flow');
+  const loginResult = await loginToOTT(page, { mode: input.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before VPN whitelisted playback check', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      detailsVisible: false,
+      playerVisible: false,
+      playbackStarted: false,
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  logger.step('Fetching GraphQL collection data to select a show-backed content item');
+  const collectionResponse = await gql.waitForOperation('Collection');
+  const parser = new CollectionParser(collectionResponse as any);
+  const selectedShowAsset = parser.findAsset((asset: any) => {
+    const assetType = String(asset?.assetType || '').toLowerCase();
+    const hasShowLikeMetadata = Boolean(asset?.tvShowDetails || asset?.showInfo || asset?.seasons?.length);
+    return assetType === 'show' || assetType === 'tvshow' || assetType === 'tv_show' || hasShowLikeMetadata;
+  });
+  const selectedShowTitle = selectedShowAsset?.asset?.title?.trim();
+  logger.step(`Selected show title from collection data: ${selectedShowTitle}`);
+  logger.step('Opening the search bar');
+  await authPage.clickSearchBar();
+  logger.step('Searching for the selected show title');
+  await authPage.enterSearchQuery(selectedShowTitle);
+  logger.step('Submitting the search query');
+  await authPage.submitSearchQuery();
+  await page.waitForTimeout(5000);
+  await detailsPage.clickFirstSearchResult();
+  logger.step('Waiting for content details to render');
+  const detailsVisible = await detailsPage.isShowDetailsPageVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  logger.assertion('Content details page visible', detailsVisible);
+  logger.step('Starting playback from the details page');
+  await detailsPage.clickPlayButton();
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(10000);
+  const playerVisible = await detailsPage.isPlayerScreenVisible();
+  const playbackStarted = await detailsPage.isPlaybackStarted();
+  logger.assertion('Player screen visible', playerVisible);
+  logger.assertion('Playback started successfully for whitelisted VPN country', playbackStarted);
+  return {
+    isLoggedIn,
+    detailsVisible,
+    playerVisible,
+    playbackStarted,
+  };
 }
 
 export async function verifyVPNPlaybackRestriction(
@@ -349,6 +528,69 @@ export async function verifyContentDetailsPageUi(
   };
 }
 
+export async function verifyIWantOriginalsPreviewOnDetailsPage(
+  page: any,
+  input?: VerifyIWantOriginalsPreviewOnDetailsPageInput
+): Promise<VerifyIWantOriginalsPreviewOnDetailsPageOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting iWant Originals preview on details page validation flow');
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before opening the iWant Originals preview details flow', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  logger.step('Scrolling to the iWant Originals rail and locating the first content card');
+  const railVisible = await authPage.ensureIWantOriginalsRailInView(30000);
+  logger.assertion('iWant Originals rail visible on the home page', railVisible);
+  if (!railVisible) {
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
+  const firstCardVisible = await authPage.isIWantOriginalsFirstCardVisible();
+  logger.assertion('First iWant Originals content card visible', firstCardVisible);
+  if (!firstCardVisible) {
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
+  logger.step('Hovering over the first iWant Originals content card');
+  await authPage.hoverIWantOriginalsFirstCardCentered();
+  logger.step('Clicking the selected content card to open the content details page');
+  await authPage.clickFirstIWantOriginalsCard();
+  await page.waitForURL(/\/details\//, { timeout: 20000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  const isDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  logger.assertion('Content details page visible after selecting the iWant Originals content', isDetailsPageVisible);
+  const previewVideoVisible = isDetailsPageVisible ? await detailsPage.isPreviewVideoVisible() : false;
+  logger.assertion('Preview or trailer video visible on the details page', previewVideoVisible);
+  const previewPlaybackStarted = await detailsPage.isPreviewPlaybackStarted(30000);
+  logger.assertion('Preview or trailer playback started automatically', previewPlaybackStarted);
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    previewVideoVisible,
+    previewPlaybackStarted,
+  };
+}
+
 export interface VerifyGuestShareFunctionalityInput {
   expectedShareMessage?: string;
 }
@@ -369,47 +611,141 @@ export interface VerifyGuestSearchNavigationInput {
   expectedTitle?: string;
 }
 
-export interface VerifyGuestSearchNavigationOutput {
-  isSearchInputPopulated: boolean;
-  isDetailsPageVisible: boolean;
-  headingText: string;
-  titleMatchesSearchTerm: boolean;
+export async function verifyAutoPlaybackOfPreviewOnDetailsPage(
+  page: any,
+  input?: VerifyAutoPlaybackOfPreviewOnDetailsPageInput
+): Promise<VerifyAutoPlaybackOfPreviewOnDetailsPageOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  logger.step('Starting preview/trailer auto playback verification flow');
+  const collectionPromise = gql.waitForOperation('Collection');
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before preview validation', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  logger.step('Fetching collection GraphQL data to locate a content item with a trailer');
+  const collectionResponse = await collectionPromise;
+  const parser = new CollectionParser(collectionResponse as any);
+  const trailerAssetResult = parser.findAsset((asset) => Boolean(parser.getTrailerUrls(asset)));
+  const trailerTitle = trailerAssetResult?.asset?.title ?? '';
+  logger.step(`Trailer-backed content selected from the API response: ${trailerTitle || 'none found'}`);
+  if (!trailerTitle) {
+    logger.assertion('A trailer-backed content title was found from the API response', false);
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(trailerTitle);
+  await authPage.submitSearchQuery();
+  await page.waitForTimeout(3000);
+  const searchResultsVisible = await authPage.isSearchResultsVisible(trailerTitle);
+  logger.assertion('Search results visible for the trailer-backed title', searchResultsVisible);
+  const resultLocator = page.locator(`img[alt="${trailerTitle}"], a:has-text("${trailerTitle}")`).first();
+  await resultLocator.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  await resultLocator.click({ timeout: 10000 }).catch(async () => {
+    await page.getByText(trailerTitle, { exact: true }).first().click({ timeout: 10000 }).catch(() => undefined);
+  });
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  const isDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  logger.assertion('Content details page visible', isDetailsPageVisible);
+  const previewVideoVisible = await detailsPage.isPreviewVideoVisible();
+  logger.assertion('Preview or trailer video visible on details page', previewVideoVisible);
+  const previewPlaybackStarted = await detailsPage.isPreviewPlaybackStarted(30000);
+  logger.assertion('Preview or trailer playback started automatically', previewPlaybackStarted);
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    previewVideoVisible,
+    previewPlaybackStarted,
+  };
 }
 
-export interface PlayEpisodeFromDetailsInput {
-  mode?: string;
-  searchTerm?: string;
-}
-
-export interface PlayEpisodeFromDetailsOutput {
-  isDetailsPageVisible: boolean;
-  isEpisodeListVisible: boolean;
-  isPlayerVisible: boolean;
-  showDetailsHeading: string;
-  playbackContentTitle: string;
-  selectedEpisodeTitle: string;
-  playerTopLeftVisible: boolean;
-  playerContainsTitleEpisode: boolean;
-}
-
-export interface VerifyEpisodePlaybackStartsFromDetailsInput {
-  mode?: string;
-}
-
-export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
-  isLoggedIn: boolean;
-  isDetailsPageVisible: boolean;
-  seasonSectionVisible: boolean;
-  selectedEpisodeTitle: string;
-  showName: string;
-  seasonNumber: string;
-  episodeNumber: string;
-  playerVisible: boolean;
-  playbackStarted: boolean;
-  playerEpisodeTitleVisible: boolean;
-  playerSeasonVisible: boolean;
-  playerEpisodeVisible: boolean;
-  playerMetadataText: string;
+export async function verifySharedDeeplinkRedirectToDetailsPage(
+  page: any,
+  input?: VerifySharedDeeplinkRedirectInput
+): Promise<VerifySharedDeeplinkRedirectOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  logger.step('Starting shared deeplink redirect verification flow');
+  const collectionPromise = gql.waitForOperation('Collection');
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before deeplink validation', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      headingText: '',
+      summaryText: '',
+      titleMatchesAsset: false,
+      shortDescriptionMatchesAsset: false,
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  logger.step('Waiting for collection GraphQL data to identify a shared asset');
+  const collectionResponse = await collectionPromise; // ✅ resolve the promise
+  const parser = new CollectionParser(collectionResponse as any);
+  // First rail (index 0), first item (index 0) - per collection.rails[0].assets.items[0]
+  const firstAsset = parser.getCard(0, 0);
+  const assetId = parser.getContentId(firstAsset);
+  const assetTitle = firstAsset?.title || '';
+  const assetShortDescription = (firstAsset as any)?.shortDescription || '';
+  if (!assetId || !assetTitle) {
+    logger.assertion('GraphQL asset data available for deeplink validation', false);
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      headingText: '',
+      summaryText: '',
+      titleMatchesAsset: false,
+      shortDescriptionMatchesAsset: false,
+    };
+  }
+  const baseUrl = config.getBaseURL();
+  const deeplinkUrl = `${baseUrl}/details/${assetId}`;
+  logger.step(`Opening shared deeplink URL for asset ${assetTitle} (id: ${assetId})`);
+  await page.goto(deeplinkUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForTimeout(5000);
+  const isDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  const headingText = await detailsPage.getDeeplinkDetailsHeadingText();
+  const summaryText = await detailsPage.getDeeplinkSummaryText();
+  const titleMatchesAsset =
+    assetTitle.length > 0 &&
+    headingText.toLowerCase().includes(assetTitle.toLowerCase());
+  const shortDescriptionMatchesAsset =
+    assetShortDescription.length > 0 &&
+    summaryText.toLowerCase().includes(assetShortDescription.toLowerCase());
+  logger.assertion('Details page visible after opening shared deeplink', isDetailsPageVisible);
+  logger.assertion('Details heading matches asset title from GraphQL', titleMatchesAsset);
+  logger.assertion('Details summary matches asset short description from GraphQL', shortDescriptionMatchesAsset);
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    headingText,
+    summaryText,
+    titleMatchesAsset,
+    shortDescriptionMatchesAsset,
+  };
 }
 
 export async function verifyEpisodePlaybackStartsFromDetailsPage(
@@ -424,39 +760,31 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
       throw new Error(`Assertion failed: ${description}`);
     }
   };
-
   logger.step('Starting episode playback verification from details page');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   if (!isLoggedIn) {
     throw new Error('User is logged in before episode playback validation');
   }
   assertOrThrow('User is logged in before episode playback validation', isLoggedIn);
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.scrollContinueWatchingTrayIntoView();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.clickShowsSection();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   assertOrThrow('Details page visible before episode playback action', isDetailsPageVisible);
   await detailsPage.scrollToSeasonsSection();
   const seasonSectionVisible = await detailsPage.getSeasonLabelsText();
   const seasonSectionHasLabels = seasonSectionVisible.length > 0;
   assertOrThrow('Season section visible for content', seasonSectionHasLabels);
-
   const showName = await detailsPage.getShowDetailsHeadingText().catch(() => '');
   let selectedEpisodeTitle = '';
   let seasonNumber = '';
@@ -467,27 +795,24 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
   let playerSeasonVisible = false;
   let playerEpisodeVisible = false;
   let playerMetadataText = '';
-
   if (seasonSectionHasLabels) {
     const firstSeasonLabel = seasonSectionVisible[0];
     await detailsPage.clickSeasonLabel(firstSeasonLabel);
     await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   }
-
   try {
     await detailsPage.scrollToEpisodeList();
   } catch {
+    logger.info('Episode list not found; skipping episode selection and playback validation');
     // ignore and continue; the test will still report the failed expectation below
   }
-
   const selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
   const metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
   selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
   seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';
   episodeNumber = metadata.episodeNumber || selectedEpisode.episodeText || '';
   assertOrThrow('Episode title extracted from episode list', selectedEpisodeTitle.length > 0);
-
   await page.waitForTimeout(5000);
   playerVisible = await detailsPage.isVideoPlayerVisible();
   playbackStarted = playerVisible && seasonNumber.length > 0 && episodeNumber.length > 0;
@@ -501,12 +826,10 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
   assertOrThrow('Selected episode title visible in player metadata', playerEpisodeTitleVisible);
   assertOrThrow('Selected season number visible in player metadata', playerSeasonVisible);
   assertOrThrow('Selected episode number visible in player metadata', playerEpisodeVisible);
-
   console.log(`[IW3-T1921] Show Name: ${showName || 'N/A'}`);
   console.log(`[IW3-T1921] Episode Title: ${selectedEpisodeTitle || 'N/A'}`);
   console.log(`[IW3-T1921] Season Number: ${seasonNumber || 'N/A'}`);
   console.log(`[IW3-T1921] Episode Number: ${episodeNumber || 'N/A'}`);
-
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -579,11 +902,9 @@ export async function verifyShareLinkCopiedToClipboardMessage(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting share link copied toast verification flow');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before share link verification', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -592,32 +913,26 @@ export async function verifyShareLinkCopiedToClipboardMessage(
       shareMessageText: '',
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   const continueWatchingTray = page.locator('text=Continue Watching').first();
   if (await continueWatchingTray.count().catch(() => 0)) {
     await continueWatchingTray.scrollIntoViewIfNeeded().catch(() => undefined);
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
   }
-
   await detailsPage.clickMoviesSection();
   await detailsPage.clickFirstMovieContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   const isContentDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   const isShareIconVisible = await detailsPage.isContentShareIconVisible();
   await detailsPage.clickContentShareIcon();
   const shareMessageText = await detailsPage.getShareCopyConfirmationMessage();
-
   logger.assertion('Content details page visible before share action', isContentDetailsPageVisible);
   logger.assertion('Share icon visible', isShareIconVisible);
   logger.assertion('Share copy confirmation message present', shareMessageText.toLowerCase().includes('share link copied'));
-
   return {
     isLoggedIn,
     isContentDetailsPageVisible,
@@ -633,11 +948,9 @@ export async function verifyEpisodesGroupedBySeason(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting season and episode grouping verification flow');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before season grouping verification', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -649,31 +962,26 @@ export async function verifyEpisodesGroupedBySeason(
       allSeasonsValidated: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   const continueWatchingTray = page.locator('text=Continue Watching').first();
   if (await continueWatchingTray.count().catch(() => 0)) {
     await continueWatchingTray.scrollIntoViewIfNeeded().catch(() => undefined);
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
   }
-
   await detailsPage.clickShowsSection();
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
   await detailsPage.scrollToSeasonsSection();
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const seasonLabelsText = await detailsPage.getSeasonLabelsText();
   const seasonLabelsVisible = seasonLabelsText.length > 0;
   const seasonLabelsCount = seasonLabelsText.length;
   let episodeItemsCount = 0;
   let allSeasonsValidated = false;
-
   if (seasonLabelsVisible) {
     const validationResults: boolean[] = [];
     for (const seasonLabel of seasonLabelsText) {
@@ -684,11 +992,9 @@ export async function verifyEpisodesGroupedBySeason(
     }
     allSeasonsValidated = validationResults.every(Boolean);
   }
-
   logger.assertion('Details page visible before season validation', isDetailsPageVisible);
   logger.assertion('Season labels present', seasonLabelsVisible);
   logger.assertion('Episode items present for each season label', allSeasonsValidated);
-
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -708,11 +1014,9 @@ export async function verifyPremiumIconOnDetailsPage(
   const authPage = new OTTAuthPage(page);
   const playbackPage = new OTTPlaybackPage(page);
   logger.step('Starting premium icon visibility validation on details page');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode ?? 'freeUser' });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('Free user is logged in before premium icon validation', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -721,34 +1025,28 @@ export async function verifyPremiumIconOnDetailsPage(
       premiumIconVisible: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await detailsPage.scrollContinueWatchingTrayIntoView();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await authPage.clickGMATab();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isGmaTabVisible = await authPage.isTopStreamedRailVisible();
   const premiumContentOpened = await playbackPage.clickFirstPremiumContentCard();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   let premiumIconVisible = false;
   if (isDetailsPageVisible) {
     premiumIconVisible = await detailsPage.isPremiumTagVisible().catch(() => false);
   }
-
   logger.assertion('GMA rail visible', isGmaTabVisible);
   logger.assertion('Premium content opened', premiumContentOpened);
   logger.assertion('Details page visible for premium content', isDetailsPageVisible);
   logger.assertion('Premium icon visible on detail page', premiumIconVisible);
-
   return {
     isLoggedIn,
     isGmaTabVisible,
@@ -764,11 +1062,9 @@ export async function verifyEpisodesDisplayedInAscendingOrder(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting ascending episode order verification flow');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before episode order validation', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -780,27 +1076,22 @@ export async function verifyEpisodesDisplayedInAscendingOrder(
       ascendingEpisodesVerified: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.scrollContinueWatchingTrayIntoView();
   await page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.clickShowsSection();
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   await detailsPage.scrollToSeasonsSection();
   const seasonLabelsText = await detailsPage.getSeasonLabelsText();
   const seasonLabelsVisible = seasonLabelsText.length > 0;
   const episodeSequenceValidations: EpisodeSequenceValidation[] = [];
   let allSeasonsValidated = false;
-
   if (seasonLabelsVisible) {
     for (const seasonLabel of seasonLabelsText) {
       await detailsPage.clickSeasonLabel(seasonLabel);
@@ -827,13 +1118,10 @@ export async function verifyEpisodesDisplayedInAscendingOrder(
     });
     allSeasonsValidated = validation.isAscending;
   }
-
   const ascendingEpisodesVerified = allSeasonsValidated;
-
   logger.assertion('Details page visible before episode order validation', isDetailsPageVisible);
   logger.assertion('Season section is available before episode order validation', seasonLabelsVisible || episodeSequenceValidations.length > 0);
   logger.assertion('Episodes are displayed in ascending order', ascendingEpisodesVerified);
-
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -852,11 +1140,9 @@ export async function verifyShowEpisodeListScrollableToEnd(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting episode list scroll-to-end verification flow');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before episode list scroll validation', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -870,20 +1156,17 @@ export async function verifyShowEpisodeListScrollableToEnd(
       iWantElementVisible: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.scrollContinueWatchingTrayIntoView();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   await detailsPage.clickShowsSection();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   await detailsPage.scrollToSeasonsSection();
   const seasonLabelsText = await detailsPage.getSeasonLabelsText();
@@ -892,7 +1175,6 @@ export async function verifyShowEpisodeListScrollableToEnd(
   let episodeItemsCount = 0;
   let allSeasonsValidated = false;
   let episodeListScrollableToEnd = false;
-
   if (seasonLabelsVisible) {
     const validationResults: boolean[] = [];
     for (const seasonLabel of seasonLabelsText) {
@@ -912,14 +1194,11 @@ export async function verifyShowEpisodeListScrollableToEnd(
     episodeListScrollableToEnd = await detailsPage.scrollEpisodeListToEnd();
     allSeasonsValidated = currentEpisodeCount > 0 && episodeListScrollableToEnd;
   }
-
   const iWantElementVisible = await detailsPage.isIWantElementVisible();
-
   logger.assertion('Details page visible before episode list scroll validation', isDetailsPageVisible);
   logger.assertion('Season labels present when available', seasonLabelsVisible || seasonLabelsCount === 0);
   logger.assertion('Episode list scrollable to the end', episodeListScrollableToEnd);
   logger.assertion('iWant element visible after scrolling', iWantElementVisible);
-
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -940,10 +1219,9 @@ export async function verifyGuestSearchNavigationFromFreeAsset(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting guest search navigation validation flow');
-
   const searchTerm = input?.searchTerm ?? 'Lavender Fields';
   const expectedTitle = input?.expectedTitle ?? searchTerm;
-console.log(" Title", expectedTitle);
+  logger.info(" Title", expectedTitle);
   await authPage.navigate();
   await authPage.acceptCookieSettingsIfVisible();
   await authPage.clickSearchBar();
@@ -961,7 +1239,6 @@ console.log(" Title", expectedTitle);
   console.log(" Title", titleMatchesSearchTerm);
   logger.assertion('Search input accepts guest search term', isSearchInputPopulated);
   logger.assertion('Details page visible after guest search', isDetailsPageVisible);
-
   return {
     isSearchInputPopulated,
     isDetailsPageVisible,
@@ -977,7 +1254,6 @@ export async function playEpisodeFromDetailsPage(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting episode playback flow from detail page');
-
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -988,16 +1264,13 @@ export async function playEpisodeFromDetailsPage(
     await detailsPage.clickShowsSection();
     await detailsPage.clickFirstShowContent();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const showDetailsHeading = isDetailsPageVisible
     ? await detailsPage.getShowDetailsHeadingText()
     : '';
-
   const isEpisodeListVisible = await detailsPage.isEpisodeListVisible();
   const selectedEpisodeTitle = await detailsPage.getFirstEpisodeCardTitleText();
   await detailsPage.clickFirstEpisodeCard();
-
   let playerTopLeftVisible = false;
   try {
     if (!page.isClosed()) {
@@ -1009,16 +1282,13 @@ export async function playEpisodeFromDetailsPage(
   } catch (err) {
     logger.debug('Immediate title visibility check failed', err);
   }
-
   const isPlayerVisible = await detailsPage.isVideoPlayerVisible();
   const isPlaybackStarted = isPlayerVisible
     ? await detailsPage.isPlaybackStarted()
     : false;
-
   const playbackEpisodeTitle = isPlayerVisible
     ? await detailsPage.getPlaybackEpisodeTitleText()
     : '';
-
   let playerContainsTitleEpisode = false;
   try {
     if (!page.isClosed()) {
@@ -1028,11 +1298,9 @@ export async function playEpisodeFromDetailsPage(
   } catch (err) {
     logger.debug('Player content text check failed', err);
   }
-
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Playback started after episode tap', isPlaybackStarted);
   logger.assertion('Playback episode title visible', playbackEpisodeTitle.length > 0);
-
   return {
     isDetailsPageVisible,
     isEpisodeListVisible,
@@ -1100,16 +1368,14 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro marker verification flow');
-
   const searchTerm = input?.searchTerm ?? '';
-
+  await authPage.acceptCookieSettingsIfVisible();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
     await detailsPage.clickFirstSearchResult();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickFirstEpisodeCard();
@@ -1119,10 +1385,8 @@ export async function verifySkipIntroMarkerDuringPlayback(
   await detailsPage.clickNextEpisodeButton();
   await detailsPage.clickSkipRecapMarker();
   const isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
-
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip intro marker visible', isSkipIntroMarkerVisible);
-
   return {
     isDetailsPageVisible,
     isSkipIntroMarkerVisible,
@@ -1192,27 +1456,21 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap marker verification flow');
-
   const searchTerm = input?.searchTerm ?? '';
-
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
     await detailsPage.clickFirstSearchResult();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
     await page.waitForTimeout(3000);
   }
-
   const isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
-
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
-
   return {
     isDetailsPageVisible,
     isSkipRecapMarkerVisible,

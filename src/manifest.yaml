@@ -299,6 +299,17 @@
     - "IW3-T1932"
   dependsOn: []
 
+- id: "verify-continue-watching-free-and-paid-content"
+  name: "Verify Continue Watching tray contains both free and paid content"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingShowsFreeAndPaidContent"
+  tags:
+    - continue-watching
+    - content-types
+  testCases:
+    - "IW3-T1948"
+  dependsOn: []
+
 - id: "verify-continue-watching-removal-after-playback"
   name: "Verify a watched movie is removed from the Continue Watching tray"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -361,6 +372,18 @@
   dataKey: "tc-sub-041-subscribe-to-watch-redirect-account"
   dependsOn: []
 
+- id: "verify-next-season-first-episode-autoplay"
+  name: "Verify next season first episode auto-plays after last episode completes"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyNextSeasonFirstEpisodeAutoPlayFlow"
+  tags:
+    - playback
+    - continue-watching
+    - positive
+  testCases:
+    - "IW3-T1956"
+  dependsOn: []
+
 - id: "verify-movie-playback-completion-details-navigation"
   name: "Verify navigation to content details after movie playback completion"
   path: "src/businessFunction/ott-playback-bfs.ts"
@@ -370,6 +393,19 @@
     - positive
   testCases:
     - "IW3-T2024"
+- id: "verify-continue-watching-tray-persistence"
+  name: "Verify Continue Watching tray persists across logout and relogin"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingTrayPersistence"
+  tags:
+    - continue-watching
+    - authentication
+    - positive
+  testCases:
+    - "IW3-T1951"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-continue-watching-playback-from-tray"
   name: "Verify Continue Watching content resumes from the tray and playback is restored"
   path: "src/businessFunction/ott-continue-watching-bfs.ts"
@@ -395,6 +431,17 @@
     - "IW3-T2110"
   dependsOn:
     - "verify-continue-watching-playback-from-tray"
+- id: "verify-continue-watching-five-percent-playback"
+  name: "Verify Continue Watching tray creation after 5% playback"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingTrayForNewUserAfterFivePercentPlayback"
+  tags:
+    - continue-watching
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1927"
+  dependsOn: []
 
 - id: "verify-resume-cta-on-details-page"
   name: "Verify Resume CTA visibility on content details page for partially watched content"
@@ -897,6 +944,31 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-auto-preview-playback"
+  name: "Verify auto playback of preview or trailer on the details page"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyAutoPlaybackOfPreviewOnDetailsPage"
+  tags:
+    - discovery
+    - preview
+    - playback
+    - positive
+  testCases:
+    - "IW3-T1900"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-iwant-originals-preview-on-details"
+  name: "Verify preview playback on the details page from the iWant Originals rail"
+  path: "src/businessFunction/ott-details-bfs.ts"
+  export: "verifyIWantOriginalsPreviewOnDetailsPage"
+  tags:
+    - discovery
+    - preview
+    - playback
+    - positive
+  testCases:
+    - "IW3-T5813"
 - id: "verify-premium-crown-icon-on-search-results"
   name: "Verify crown icon is displayed on the premium content thumbnail in search results"
   path: "src/businessFunction/ott-subscription-bfs.ts"
@@ -1090,6 +1162,20 @@
   dependsOn:
     - "login-to-ott"
     - "navigate-show-details-from-shows"
+
+- id: "verify-premium-content-deeplink-subscription-blocker"
+  name: "Verify premium content deep link shows a subscription blocker for non-subscribers"
+  path: "src/businessFunction/ott-subscription-bfs.ts"
+  export: "verifyPremiumContentDeepLinkSubscriptionBlocker"
+  tags:
+    - subscription
+    - premium
+    - deeplink
+    - positive
+  testCases:
+    - "IW3-2029"
+  dependsOn:
+    - "login-to-ott"
 
 - id: "verify-subscribe-to-watch-cta"
   name: "Verify subscribe to watch CTA on premium content"
@@ -2085,5 +2171,44 @@
     - positive
   testCases:
     - "IW3-T2008"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-continue-watching-fifty-percent"
+  name: "Verify the Continue Watching tray upon watching 50% of the content"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContinueWatchingTrayAfterFiftyPercentPlayback"
+  tags:
+    - continue-watching
+    - home
+    - positive
+  testCases:
+    - "IW3-T1929"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "validate-continue-watching-progress-bar-percentage"
+  name: "Validate Continue Watching progress bar percentage with player seekbar progress"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "validateContinueWatchingProgressBarPercentage"
+  tags:
+    - continue-watching
+    - progress-bar
+    - positive
+  testCases:
+    - "IW3-T1929"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-content-updated-in-continue-watching-tray"
+  name: "Verify content is updated in Continue Watching tray when user partially watches it"
+  path: "src/businessFunction/ott-continue-watching-bfs.ts"
+  export: "verifyContentUpdatedInContinueWatchingTray"
+  tags:
+    - continue-watching
+    - partial-playback
+    - positive
+  testCases:
+    - "IW3-T1941"
   dependsOn:
     - "login-to-ott"

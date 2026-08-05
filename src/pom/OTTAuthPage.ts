@@ -1,9 +1,12 @@
-import { Page, Locator} from '@playwright/test';
+import { Page, Locator, ElementHandle } from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { config } from '../utils/config-manager';
 import { logger } from '../utils/logger';
 import { title } from 'process';
+import { GraphQLResult } from '../utils/graphql/graphql-helper';
+import { ContinueWatchingResponse, ContinueWatchingItem } from '../utils/graphql/graphql-types';
+import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
 
 export class OTTAuthPage {
     private static readonly searchResultContainerSelector = '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]';
@@ -36,6 +39,10 @@ export class OTTAuthPage {
     private readonly createAccountLink: PageElement;
     private readonly cookieConfirmButton: PageElement;
     private readonly homeTab: PageElement;
+    private readonly homeTabFallbackById: PageElement;
+    private readonly homeTabFallbackByText: PageElement;
+    private readonly homeTabFallbackByHref: PageElement;
+    private readonly homeTabSelectors: PageElement[];
     private readonly loadingIndicator: PageElement;
     private readonly moviesTab: PageElement;
     private readonly showsTab: PageElement;
@@ -63,6 +70,9 @@ export class OTTAuthPage {
     private readonly continueWatchingCard: PageElement;
     private readonly continueWatchingImageWithAlt: PageElement;
     private readonly continueWatchingProgressSelector: PageElement;
+    private readonly continueWatchingProgressBarFill: PageElement;
+    private readonly continueWatchingProgressBarContainer: PageElement;
+    private readonly continueWatchingCardAncestor: PageElement;
     private readonly continueWatchingRecentMarkerSelector: PageElement;
     private readonly resumeButton: PageElement;
     private readonly seekBar: PageElement;
@@ -70,6 +80,12 @@ export class OTTAuthPage {
     private readonly trendingShowsRail: PageElement;
     private readonly myWatchlistRail: PageElement;
     private readonly topStreamedRail: PageElement;
+    private readonly railAncestorSelector: PageElement;
+    private readonly iWantOriginalsRailName: string;
+    private readonly iWantOriginalsArrowSelectorTemplate: PageElement;
+    private readonly iWantOriginalsCardSelector: PageElement;
+    private readonly iWantOriginalsClickableCardSelector: PageElement;
+    private readonly iWantOriginalsTitleContainerSelector: PageElement;
     private readonly profileLink: PageElement;
     private readonly profileSectionTextElement: PageElement;
     private readonly accountDetailsTextElement: PageElement;
@@ -123,6 +139,9 @@ export class OTTAuthPage {
     private readonly searchSectionHeading: PageElement;
     private readonly searchResultContainerSelector: PageElement;
     private readonly searchResultCandidateSelector: PageElement;
+    private readonly continueWatchingContent: PageElement;
+    private continueWatchingGraphQL?: GraphQLResult<ContinueWatchingResponse>;
+    private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
 
@@ -148,7 +167,11 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { text: 'Home', selector: '//div[@id="home"]/p' };
+        this.homeTab = { text: 'Home', selector: 'div#home' };
+        this.homeTabFallbackById = { selector: 'div#home' };
+        this.homeTabFallbackByText = { selector: 'a:has-text("Home"), button:has-text("Home"), [aria-label="Home"], [data-testid*="home"], text=Home' };
+        this.homeTabFallbackByHref = { selector: 'a[href="/"], [href="/"], [role="link"][aria-label*="home" i]' };
+        this.homeTabSelectors = [this.homeTab, this.homeTabFallbackById, this.homeTabFallbackByText, this.homeTabFallbackByHref];
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
         this.moviesTab = { selector: 'div#movies' };
         this.showsTab = { text: 'Shows', selector: 'div#shows' };
@@ -176,6 +199,9 @@ export class OTTAuthPage {
         this.continueWatchingCard = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.continueWatchingImageWithAlt = { selector: 'img[alt]' };
         this.continueWatchingProgressSelector = { selector: '.progress, [aria-label*="progress"], [data-testid*="progress"], [class*="resume"]' };
+        this.continueWatchingProgressBarFill = { selector: '.bg-iw-primary-gradient, [class*="bg-iw-primary-gradient"], div[style*="width"]' };
+        this.continueWatchingProgressBarContainer = { selector: '.bg-iw-btn-bg, [class*="bg-iw-btn-bg"]' };
+        this.continueWatchingCardAncestor = { selector: 'xpath=ancestor::div[contains(@class,"relative") or contains(@class,"card") or contains(@class,"cursor-pointer") or contains(@class,"group")][1]' };
         this.continueWatchingRecentMarkerSelector = { selector: 'img[alt*="recently"], img[src*="recently"], [class*="recent"]' };
         this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
         this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
@@ -212,6 +238,12 @@ export class OTTAuthPage {
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
         this.emptyCredentialsErrorMessage = { selector: 'text=/Email is required/i' };
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
+        this.railAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "rail")][1]' };
+        this.iWantOriginalsRailName = 'iWant Originals';
+        this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
+        this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
+        this.iWantOriginalsClickableCardSelector = { selector: 'a, button, [role="button"], li, article, figure' };
+        this.iWantOriginalsTitleContainerSelector = { selector: 'xpath=ancestor::div[contains(@class, "relative") and contains(@class, "w-auto") and .//img[contains(@class, "title")]][1]' };
         this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]' };
         this.countryCodeDropdown = { selector: 'select, [role="combobox"]' };
         this.countryCodeOption = { selector: 'text=63' };
@@ -243,6 +275,7 @@ export class OTTAuthPage {
         this.searchResultContainerSelector = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]' };
         this.searchResultCandidateSelector = { selector: 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]' };
         this.searchResultImages = { selector: '[class*="flex flex-wrap gap-[1rem]"] img[alt]' };
+        this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
         this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
     }
@@ -493,6 +526,44 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
 
+    async clickHomeTab(): Promise<void> {
+        logger.info('click', 'Home tab');
+
+        let clicked = false;
+        for (const selector of this.homeTabSelectors) {
+            try {
+                const locator = this.page.locator(selector.selector).first();
+                await locator.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
+                if (await locator.count()) {
+                    await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                    await locator.click({ timeout: 10000, force: true }).catch(async () => {
+                        await locator.evaluate((element: HTMLElement) => element.click()).catch(() => undefined);
+                    });
+                    await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+                    await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+                    await this.page.waitForTimeout(2000);
+                    clicked = true;
+                    break;
+                }
+            } catch (error) {
+                logger.debug('Home tab fallback selector failed', error);
+            }
+        }
+
+        if (!clicked) {
+            logger.debug('Home tab was not reachable through the normal selectors; falling back to a full home navigation');
+            await this.page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' })).catch(() => undefined);
+            await this.page.waitForTimeout(1000);
+            await this.navigateHome();
+        }
+    }
+
+    async refreshPage(): Promise<void> {
+        logger.step('Refreshing current page');
+        await this.page.reload({ waitUntil: 'networkidle', timeout: 60000 }).catch(() => undefined);
+        await this.page.waitForTimeout(3000);
+    }
+
     async isMoviesTabVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.moviesTab, 10000);
     }
@@ -501,7 +572,7 @@ export class OTTAuthPage {
         try {
             await this.pageUtils.waitForElementToDisappear(this.loadingIndicator, timeout);
         } catch {
-
+            logger.debug('Loading indicator did not disappear within the timeout, proceeding anyway.');
         }
     }
 
@@ -511,7 +582,48 @@ export class OTTAuthPage {
 
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
-        await this.pageUtils.safeClick(this.moviesTab);
+        // Try clicking the Movies tab and ensure the navigation/route change happens.
+        const maxAttempts = 3;
+        let lastErr: any = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                await this.pageUtils.safeClick(this.moviesTab);
+                // wait briefly for client-side navigation
+                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
+                await this.pageUtils.waitForNetworkIdle(10000).catch(() => undefined);
+                const ready = await this.isMoviesPageReady();
+                if (ready) return;
+                // if not ready, try a forced click
+                lastErr = `Movies page not ready after click attempt ${attempt}`;
+            } catch (err) {
+                lastErr = err;
+            }
+            // short pause before retry
+            await this.page.waitForTimeout(1000);
+        }
+        logger.warn(`clickMoviesTab: could not confirm navigation to Movies page: ${String(lastErr)}`);
+    }
+
+    async isMoviesPageReady(): Promise<boolean> {
+        // Prefer a reliable movie-page indicator: trendingMoviesRail or URL contains '/movies'
+        try {
+            const url = this.page.url();
+            if (url && url.toLowerCase().includes('/movies')) return true;
+        } catch { }
+        try {
+            return await this.pageUtils.isVisible(this.trendingMoviesRail, 5000);
+        } catch {
+            return false;
+        }
+    }
+
+    async waitForMoviesPageReady(timeout: number = 15000): Promise<boolean> {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            if (await this.isMoviesPageReady()) return true;
+            await this.page.waitForTimeout(500);
+        }
+        return false;
     }
 
     async openHelpAndSupportPage(expectedHeading?: string): Promise<boolean> {
@@ -757,7 +869,11 @@ export class OTTAuthPage {
     }
 
     private getContinueWatchingRailLocator() {
-        return this.getContinueWatchingTitleLocator().locator('xpath=ancestor::div[contains(@class, "rail")][1]').first();
+        return this.getContinueWatchingTitleLocator().locator(this.railAncestorSelector.selector).first();
+    }
+
+    private getRailContainerFromHeading(heading: Locator) {
+        return heading.locator(this.railAncestorSelector.selector).first();
     }
 
     private getContinueWatchingArrowLocator(direction: 'left' | 'right') {
@@ -855,6 +971,10 @@ export class OTTAuthPage {
         return await section.locator(this.continueWatchingCard.selector).count();
     }
 
+    getContinueWatchingCardSelector(): string {
+        return this.continueWatchingCard.selector;
+    }
+
     async getContinueWatchingTrayItemDetails(): Promise<Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }>> {
         const title = this.getContinueWatchingTitleLocator();
         if (!await title.count()) return [];
@@ -881,57 +1001,6 @@ export class OTTAuthPage {
         const hours = hoursMatch ? parseInt(hoursMatch[1], 10) * 60 : 0;
         const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
         return hours + minutes;
-    }
-
-    async getExplicitMovieContinueWatchingItem(): Promise<{ title: string; locator: any } | null> {
-        const section = this.getContinueWatchingRailLocator();
-        if (!await section.count()) {
-            return null;
-        }
-        const cards = section.locator(this.continueWatchingCard.selector);
-        const count = await cards.count().catch(() => 0);
-        const preferredMovieTitles = ['ang panday', 'bagong buwan', 'abandoned', 'unang bastardo', 'odd encounter', 'collatz conjecture'];
-        const excludedPatterns = [
-            /\bepisode\b/i,
-            /\bseason\b/i,
-            /\bseries\b/i,
-            /\bshow\b/i,
-            /\btv\b/i,
-            /\blive\b/i,
-            /\bchannel\b/i,
-            /\bnews\b/i,
-            /\bsports\b/i,
-            /new_episode|next_episode|recently_added|early_access|top_10|paid/i,
-        ];
-
-        for (let index = 0; index < count; index += 1) {
-            const card = cards.nth(index);
-            const alt = ((await card.getAttribute('alt')) || '').trim();
-            const text = ((await card.locator('xpath=ancestor::div[1]').textContent()) || '').trim();
-            const combined = `${alt} ${text}`.toLowerCase();
-            const isExcluded = excludedPatterns.some((pattern) => pattern.test(combined));
-            const hasMeaningfulTitle = alt.length > 2 && !/^\d+$/.test(alt);
-            const isPreferredMovie = preferredMovieTitles.some((title) => combined.includes(title));
-            if (!hasMeaningfulTitle || isExcluded) {
-                continue;
-            }
-            await card.scrollIntoViewIfNeeded();
-            await card.click({ force: true, timeout: 30000 }).catch(() => undefined);
-            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-            await this.page.waitForTimeout(5000);
-            const pageText = `${(await this.page.locator('body').innerText()).toLowerCase()} ${(await this.page.title()).toLowerCase()}`;
-            const durationMinutes = this.parseDurationMinutes(pageText);
-            const looksLikeMovie = isPreferredMovie
-                && durationMinutes >= 60
-                && !/\bepisode\b|\bseason\b|\bseries\b|\bshow\b|\bs1\b|\bs2\b|\bep\b/i.test(pageText);
-            await this.page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
-            await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-            if (looksLikeMovie) {
-                logger.step(`Selected explicit movie candidate from Continue Watching: ${alt}`);
-                return { title: alt, locator: card };
-            }
-        }
-        return null;
     }
 
     async isContinueWatchingItemVisible(title: string): Promise<boolean> {
@@ -1042,6 +1111,139 @@ export class OTTAuthPage {
         await this.page.waitForTimeout(5000);
     }
 
+    private normalizeTitle(value: string): string {
+        return (value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    async matchesContinueWatchingTitle(candidateTitle: string, searchTerm?: string): Promise<boolean> {
+        const normalizedCandidate = this.normalizeTitle(candidateTitle);
+        const normalizedSearch = this.normalizeTitle(searchTerm || '');
+        if (!normalizedSearch) {
+            return Boolean(normalizedCandidate);
+        }
+        if (normalizedCandidate.includes(normalizedSearch)) {
+            return true;
+        }
+        const searchTokens = normalizedSearch.split(' ').filter(Boolean);
+        if (searchTokens.length === 0) {
+            return false;
+        }
+        return searchTokens.every((token) => normalizedCandidate.includes(token));
+    }
+
+    async waitForContinueWatchingItemToAppear(searchTerm: string, timeoutMs: number = 30000): Promise<boolean> {
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+            await this.ensureContinueWatchingTrayInView(15000);
+            const trayItemTitles = await this.getContinueWatchingTrayItemTitles();
+            const matchedTitle = await Promise.all(
+                trayItemTitles.map((title) => this.matchesContinueWatchingTitle(title, searchTerm))
+            );
+            if (matchedTitle.some(Boolean)) {
+                return true;
+            }
+            await this.page.waitForTimeout(2000);
+        }
+        return false;
+    }
+
+    async getContinueWatchingTrayItemTitles(): Promise<string[]> {
+        const traySection = await this.getContinueWatchingTraySection();
+        const titleCandidates = await traySection.evaluate((section: HTMLElement) => {
+            const values = new Set<string>();
+            const walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT, null);
+            let node: Node | null;
+            while ((node = walker.nextNode())) {
+                const text = node.textContent?.replace(/\s+/g, ' ').trim();
+                if (text && text.length > 1) {
+                    values.add(text);
+                }
+            }
+            this.page.evaluate((selector) => {
+                const section = document.querySelector('...');
+                const values = new Set<string>();
+
+            section?.querySelectorAll(selector).forEach((element) => {
+                    const value = (
+                        element.getAttribute('alt') ||
+                        element.getAttribute('aria-label') ||
+                        element.getAttribute('title') ||
+                        ''
+                    ).replace(/\s+/g, ' ').trim();
+
+                    if (value) values.add(value);
+            });
+
+                return [...values];
+            }, this.continueWatchingContent.selector); // or the string directly
+            return Array.from(values).filter((value) => value.length > 1);
+        }).catch(() => [] as string[]);
+
+        if (titleCandidates.length) {
+            return titleCandidates;
+        }
+
+        const imageTitles = await traySection.locator(this.continueWatchingImageWithAlt.selector).evaluateAll((images) => images.map((img) => (img.getAttribute('alt') || '').trim())).catch(() => [] as string[]);
+        return imageTitles.filter(Boolean);
+    }
+
+    async getContinueWatchingProgressBarPercentage(contentTitle?: string): Promise<number> {
+        logger.elementInteraction('get', 'Continue Watching progress bar percentage');
+        try {
+            const widthPercent: number = await this.page.evaluate(
+                ({ title, fillClass, containerClass }: { title?: string; fillClass: string; containerClass: string }) => {
+                    // Strategy 1: find bg-iw-primary-gradient fill elements with style.width %
+                    const fills = Array.from(document.querySelectorAll(`[class*="${fillClass}"]`)) as HTMLElement[];
+                    const validFills = fills.filter(f => f.style.width && f.style.width.includes('%'));
+
+                    if (validFills.length === 0) {
+                        // Fallback: scan all divs document-wide for style.width with %
+                        const allDivs = Array.from(document.querySelectorAll('div')) as HTMLElement[];
+                        const widthDivs = allDivs.filter(d => {
+                            const w = d.style.width;
+                            return w && w.includes('%') && parseFloat(w) > 0;
+                        });
+                        // Prefer one that has bg-iw-btn-bg as parent (the progress bar container)
+                        const inContainer = widthDivs.find(d =>
+                            d.parentElement?.className?.includes(containerClass)
+                        );
+                        const picked = inContainer || widthDivs[0];
+                        return picked ? parseFloat(picked.style.width) : 0;
+                    }
+
+                    if (!title || validFills.length === 1) {
+                        return parseFloat(validFills[0].style.width);
+                    }
+
+                    // If title given, find the fill inside the card containing the image with that alt
+                    for (const fill of validFills) {
+                        let ancestor: HTMLElement | null = fill;
+                        for (let i = 0; i < 15; i++) {
+                            if (!ancestor) break;
+                            const img = ancestor.querySelector(`img[alt*="${title}" i]`);
+                            if (img) return parseFloat(fill.style.width);
+                            ancestor = ancestor.parentElement;
+                        }
+                    }
+
+                    // fallback: first valid fill
+                    return parseFloat(validFills[0].style.width);
+                },
+                {
+                    title: contentTitle,
+                    fillClass: this.continueWatchingProgressBarFill.selector.split(',')[0].replace('.', '').trim(),
+                    containerClass: this.continueWatchingProgressBarContainer.selector.split(',')[0].replace('.', '').trim(),
+                }
+            ).catch(() => 0);
+
+            logger.debug(`getContinueWatchingProgressBarPercentage: extracted ${widthPercent}%`);
+            return widthPercent;
+        } catch (error) {
+            logger.debug('Failed to get Continue Watching progress bar percentage', error);
+        }
+        return 0;
+    }
+
     async getContinueWatchingItemsCount(): Promise<number> {
         const header = this.page.locator(this.continueWatchingRail.selector).first();
         if (!await header.count()) return 0;
@@ -1109,6 +1311,174 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.topStreamedRail, 10000);
     }
 
+    async isIWantOriginalsRailVisible(): Promise<boolean> {
+        try {
+            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async getIWantOriginalsRailTitle(): Promise<string> {
+        const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.scrollIntoViewIfNeeded();
+        return (await locator.textContent()) || '';
+    }
+
+    async getIWantOriginalsRailCardCount(): Promise<number> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        await heading.waitFor({ state: 'visible', timeout: 15000 });
+        await heading.scrollIntoViewIfNeeded();
+        const rail = this.getRailContainerFromHeading(heading);
+        if (!await rail.count()) {
+            return 0;
+        }
+        await rail.scrollIntoViewIfNeeded();
+        return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
+    }
+
+    async ensureIWantOriginalsRailInView(timeout: number = 30000): Promise<boolean> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        try {
+            await heading.waitFor({ state: 'visible', timeout });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) return false;
+            await rail.scrollIntoViewIfNeeded();
+            await rail.waitFor({ state: 'visible', timeout });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private async getFirstVisibleIWantOriginalsCard(): Promise<Locator | null> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = this.getRailContainerFromHeading(heading);
+        if (!await rail.count()) return null;
+
+        const cardImage = rail.locator(this.iWantOriginalsCardSelector.selector).first();
+        const imageVisible = await cardImage.isVisible().catch(() => false);
+        if (!imageVisible) return null;
+
+        return cardImage;
+    }
+
+    private async getIWantOriginalsCardInteractionTarget(card: Locator): Promise<{ x: number; y: number; width: number; height: number } | null> {
+        const titleContainer = card.locator(this.iWantOriginalsTitleContainerSelector.selector).first();
+        const titleVisible = await titleContainer.isVisible().catch(() => false);
+        if (titleVisible) {
+            const box = await titleContainer.boundingBox().catch(() => null);
+            if (box) {
+                return { x: box.x + box.width / 2, y: box.y + box.height / 2, width: box.width, height: box.height };
+            }
+        }
+
+        return await card.evaluate((element: HTMLElement) => {
+            const rect = element.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0
+                ? { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, width: rect.width, height: rect.height }
+                : null;
+        }).catch(() => null);
+    }
+
+    async hoverIWantOriginalsFirstCardCentered(): Promise<{ visible: boolean; hovered: boolean }> {
+        const card = await this.getFirstVisibleIWantOriginalsCard();
+        if (!card) return { visible: false, hovered: false };
+
+        await card.scrollIntoViewIfNeeded();
+        const target = await this.getIWantOriginalsCardInteractionTarget(card);
+        if (!target) return { visible: false, hovered: false };
+
+        await this.page.mouse.move(target.x, target.y);
+        await this.page.waitForTimeout(800);
+        return { visible: true, hovered: true };
+    }
+
+    async isIWantOriginalsFirstCardVisible(): Promise<boolean> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = this.getRailContainerFromHeading(heading);
+        if (!await rail.count()) return false;
+        const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
+        return (await cards.count()) > 0;
+    }
+
+    async clickFirstIWantOriginalsCard(): Promise<boolean> {
+        const card = await this.getFirstVisibleIWantOriginalsCard();
+        if (!card) return false;
+
+        await card.scrollIntoViewIfNeeded();
+        const target = await this.getIWantOriginalsCardInteractionTarget(card);
+        if (!target) return false;
+
+        await this.page.mouse.move(target.x, target.y);
+        await this.page.waitForTimeout(400);
+
+        logger.elementInteraction('click', 'first iWant Originals content card');
+        try {
+            await this.page.mouse.dblclick(target.x, target.y, { delay: 100 });
+        } catch {
+            await card.dblclick({ force: true, timeout: 20000 }).catch(() => undefined);
+        }
+
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+        await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+        return true;
+    }
+
+    private getIWantOriginalsArrowLocator(direction: 'left' | 'right') {
+        const positionClass = direction === 'right' ? 'right-0' : 'left-0';
+        const selector = this.iWantOriginalsArrowSelectorTemplate.selector.replace('{positionClass}', positionClass);
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = heading.locator(this.railAncestorSelector.selector).first();
+        return rail.locator(selector).first();
+    }
+
+    async getIWantOriginalsRailScrollLeft(): Promise<number> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = this.getRailContainerFromHeading(heading);
+        await rail.waitFor({ state: 'visible', timeout: 15000 });
+        return await rail.evaluate((element: HTMLElement) => element.scrollLeft as number).catch(() => 0);
+    }
+
+    async getIWantOriginalsRailFirstCardX(): Promise<number> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = this.getRailContainerFromHeading(heading);
+        await rail.waitFor({ state: 'visible', timeout: 15000 });
+        const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
+        if (!await cards.count()) {
+            return 0;
+        }
+        const card = cards.first();
+        const box = await card.boundingBox();
+        return box?.x ?? 0;
+    }
+
+    async clickIWantOriginalsRailArrow(direction: 'left' | 'right'): Promise<boolean> {
+        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const rail = this.getRailContainerFromHeading(heading);
+        if (!await rail.count()) {
+            return false;
+        }
+
+        await rail.scrollIntoViewIfNeeded();
+        const arrowLocator = this.getIWantOriginalsArrowLocator(direction);
+        const arrowVisible = await arrowLocator.isVisible().catch(() => false);
+        if (!arrowVisible) {
+            return false;
+        }
+
+        await arrowLocator.hover({ timeout: 5000 }).catch(() => undefined);
+        await arrowLocator.click({ timeout: 10000 }).catch(() => undefined);
+        await this.page.waitForTimeout(1500);
+        await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
+        return true;
+    }
+
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
         try {
@@ -1136,6 +1506,60 @@ export class OTTAuthPage {
         const input = this.page.locator(this.searchBar.selector).first();
         await input.waitFor({ state: 'visible', timeout: 10000 });
         await input.click();
+    }
+
+    async hoverIWantOriginalsFirstCardAndDetectPreview(timeout: number = 20000): Promise<boolean> {
+        try {
+            const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await heading.waitFor({ state: 'visible', timeout: 15000 });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) return false;
+            const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
+            if (!await cards.count()) return false;
+            const firstCard = cards.first();
+            await firstCard.scrollIntoViewIfNeeded();
+            await firstCard.hover({ timeout }).catch(() => undefined);
+            // give the preview some time to start
+            await this.page.waitForTimeout(1500);
+
+            // Try to detect a video element within the card's ancestor
+            const ancestor = firstCard.locator('xpath=ancestor::div[1]');
+            const video = ancestor.locator('video').first();
+            const hasVideo = (await video.count().catch(() => 0)) > 0;
+            if (hasVideo) {
+                const visible = await video.isVisible().catch(() => false);
+                if (!visible) return false;
+                const playing = await video.evaluate((v: HTMLVideoElement) => {
+                    try {
+                        return (!v.paused && !v.ended) || (v.currentTime > 0);
+                    } catch {
+                        return false;
+                    }
+                }).catch(() => false);
+                return playing;
+            }
+
+            // Fallback: detect any visible video element on the page that has started playing
+            const anyVideo = this.page.locator('video').first();
+            if ((await anyVideo.count().catch(() => 0)) > 0) {
+                const visible = await anyVideo.isVisible().catch(() => false);
+                if (!visible) return false;
+                const playing = await anyVideo.evaluate((v: HTMLVideoElement) => {
+                    try {
+                        return (!v.paused && !v.ended) || (v.currentTime > 0);
+                    } catch {
+                        return false;
+                    }
+                }).catch(() => false);
+                return playing;
+            }
+
+            return false;
+        } catch (error) {
+            logger.debug('hoverIWantOriginalsFirstCardAndDetectPreview failed', error);
+            return false;
+        }
     }
 
     async enterSearchQuery(query: string): Promise<void> {
@@ -1529,17 +1953,6 @@ export class OTTAuthPage {
         await providerLocator.click();
     }
 
-    async login(email: string, password: string): Promise<void> {
-        logger.step('Performing login with provided credentials');
-        await this.clickEmailField();
-        await this.enterEmail(email);
-        await this.clickPasswordField();
-        await this.enterPassword(password);
-        await this.clickContinue();
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
-            logger.debug('Page did not reach networkidle after login');
-        });
-    }
     async enterProviderEmail(email: string): Promise<void> {
         logger.elementInteraction('type', 'TV Provider email field');
         await this.pageUtils.safeType(this.providerEmailField, email);
@@ -1865,5 +2278,277 @@ export class OTTAuthPage {
         const isInUpperRightQuadrant = tagBox.x >= thumbnailBox.x + thumbnailBox.width * 0.6
             && tagBox.y <= thumbnailBox.y + thumbnailBox.height * 0.25;
         return isInUpperRightQuadrant;
+    }
+
+    async registerContinueWatchingListener(): Promise<void> {
+        if (this.continueWatchingListenerRegistered) {
+            return;
+        }
+        this.continueWatchingListenerRegistered = true;
+        this.page.on('response', async response => {
+            try {
+                if (!response.url().includes('/graphql')) {
+                    return;
+                }
+                const json = await response.json().catch(() => null);
+                if (!json?.data?.continueWatching?.items) {
+                    return;
+                }
+                this.continueWatchingGraphQL = {
+                    request: response.request().postDataJSON(),
+                    response: json
+                };
+                logger.info(
+                    `[CW] Captured Continue Watching GraphQL with ${json.data.continueWatching.items.length} items`
+                );
+                json.data.continueWatching.items.forEach((item: any, index: number) => {
+                    logger.info(
+                        `[CW] ${index}: ${item.showInfo?.title ?? ''} | ${item.title}`
+                    );
+                });
+            } catch (e) {
+                logger.debug('Unable to capture ContinueWatching GraphQL', e);
+            }
+        });
+    }
+
+    async getContinueWatchingGraphQLItems(): Promise<ContinueWatchingItem[]> {
+        if (!this.continueWatchingListenerRegistered) {
+            this.registerContinueWatchingListener();
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            await this.page.waitForTimeout(5000);
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            return [];
+        }
+
+        const parser = new ContinueWatchingParser(this.continueWatchingGraphQL);
+        return parser.getItems();
+    }
+
+    async getContinueWatchingGraphQLShows(): Promise<Array<{ showTitle?: string; episodeTitle?: string; assetType?: string }>> {
+        if (!this.continueWatchingListenerRegistered) {
+            this.registerContinueWatchingListener();
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            await this.page.waitForTimeout(5000);
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            return [];
+        }
+
+        const parser = new ContinueWatchingParser(this.continueWatchingGraphQL);
+        return parser.getItems()
+            .filter((item) => Boolean(item.showInfo?.title) && item.assetType === 'episode')
+            .map((item) => ({
+                showTitle: item.showInfo?.title,
+                episodeTitle: item.title,
+                assetType: item.assetType,
+            }));
+    }
+
+    async clickContinueWatchingItemUsingGraphQL(searchTerm: string, timeoutMs = 30000): Promise<boolean> {
+        logger.step(`Searching Continue Watching GraphQL for '${searchTerm}'`);
+        if (!this.continueWatchingListenerRegistered) {
+            this.registerContinueWatchingListener();
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            const end = Date.now() + timeoutMs;
+            while (!this.continueWatchingGraphQL && Date.now() < end) {
+                await this.page.waitForTimeout(500);
+            }
+        }
+
+        if (!this.continueWatchingGraphQL) {
+            logger.info("Continue Watching GraphQL was never captured.");
+            return false;
+        }
+        const parser = new ContinueWatchingParser(this.continueWatchingGraphQL);
+        const items = parser.getItems();
+        logger.info(`Parser returned ${items.length} items`);
+        if (!items.length) {
+            return false;
+        }
+        items.forEach((item, index) => {
+            logger.info(
+                `${index}. Show="${item.showInfo?.title}" Episode="${item.title}"`
+            );
+        });
+        const search = this.normalizeTitle(searchTerm);
+        const found = parser.findItemWithIndex(item => {
+            const episodeTitle = this.normalizeTitle(item.title ?? "");
+            const showTitle = this.normalizeTitle(item.showInfo?.title ?? "");
+            return (
+                episodeTitle.includes(search) ||
+                showTitle.includes(search)
+            );
+        });
+        if (!found) {
+            logger.info(`No matching item found for ${searchTerm}`);
+            return false;
+        }
+        logger.info(
+            `Matched GraphQL Item : ${found.item.showInfo?.title} -> ${found.item.title} (Index=${found.index})`
+        );
+        await this.ensureContinueWatchingTrayInView();
+        const section = this.getContinueWatchingRailLocator();
+        const cards = section.locator(this.continueWatchingCard.selector);
+        const cardIndex = await this.findContinueWatchingCardIndex(found.item);
+        const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
+
+        if (await cards.count() <= selectedIndex) {
+            logger.info("GraphQL index exceeds available UI cards.");
+            return false;
+        }
+
+        const card = cards.nth(selectedIndex);
+        await card.scrollIntoViewIfNeeded();
+
+        const cardElement = await card.elementHandle().catch(() => null);
+        const targetElement = cardElement
+            ? await cardElement.evaluateHandle((element) => {
+                let current = element as HTMLElement | null;
+                while (current) {
+                    const tagName = current.tagName.toLowerCase();
+                    const role = current.getAttribute('role');
+                    const className = current.className?.toString() || '';
+                    const isLikelyCardWrapper = tagName === 'button' || tagName === 'a' || role === 'button' || role === 'link'
+                        || /relative|card|cursor-pointer|group/i.test(className);
+                    if (isLikelyCardWrapper) {
+                        return current;
+                    }
+                    current = current.parentElement;
+                }
+                return element;
+            }).catch(() => null)
+            : null;
+        const target = targetElement?.asElement() || cardElement;
+        if (target) {
+            await target.click({ force: true, timeout: 30000 });
+        } else {
+            await card.click({ force: true, timeout: 30000 });
+        }
+
+        await this.page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => undefined);
+        await this.page.waitForTimeout(3000);
+        logger.info("Continue Watching content opened successfully.");
+        return true;
+    }
+
+    async hoverContinueWatchingItemUsingGraphQL(searchTerm: string, timeoutMs = 30000): Promise<{ season?: number; episode?: number; raw?: string } | null> {
+        logger.step(`Hovering Continue Watching GraphQL item for '${searchTerm}'`);
+        if (!this.continueWatchingListenerRegistered) {
+            this.registerContinueWatchingListener();
+        }
+        if (!this.continueWatchingGraphQL) {
+            const end = Date.now() + timeoutMs;
+            while (!this.continueWatchingGraphQL && Date.now() < end) {
+                // wait for the GraphQL to be captured
+                // eslint-disable-next-line no-await-in-loop
+                await this.page.waitForTimeout(500);
+            }
+        }
+        if (!this.continueWatchingGraphQL) {
+            logger.info('Continue Watching GraphQL was never captured for hover.');
+            return null;
+        }
+        const parser = new ContinueWatchingParser(this.continueWatchingGraphQL);
+        const items = parser.getItems();
+        if (!items.length) return null;
+        const search = this.normalizeTitle(searchTerm);
+        const found = parser.findItemWithIndex(item => {
+            const episodeTitle = this.normalizeTitle(item.title ?? '');
+            const showTitle = this.normalizeTitle(item.showInfo?.title ?? '');
+            return episodeTitle.includes(search) || showTitle.includes(search);
+        });
+        if (!found) return null;
+        await this.ensureContinueWatchingTrayInView();
+        const section = this.getContinueWatchingRailLocator();
+        const cards = section.locator(this.continueWatchingCard.selector);
+        const cardIndex = await this.findContinueWatchingCardIndex(found.item);
+        const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
+
+        const count = await cards.count().catch(() => 0);
+        if (selectedIndex >= count) {
+            logger.info('GraphQL index exceeds available UI cards for hover.');
+            return null;
+        }
+        const card = cards.nth(selectedIndex);
+        await card.scrollIntoViewIfNeeded();
+        await card.hover().catch(() => undefined);
+        await this.page.waitForTimeout(600);
+        const hoverInfo = await card.evaluate((el: HTMLElement) => {
+            const texts: string[] = [];
+            const collect = (root: HTMLElement | null) => {
+                if (!root) return;
+                root.querySelectorAll('*').forEach((n) => {
+                    try {
+                        const t = (n.textContent || n.getAttribute('aria-label') || n.getAttribute('title') || '').trim();
+                        if (t) texts.push(t);
+                    } catch (e) { /* ignore */ }
+                });
+            };
+            collect(el);
+            let p: HTMLElement | null = el.parentElement;
+            for (let j = 0; j < 3 && p; j++, p = p.parentElement) collect(p);
+            const re = /S(?:eason\s*)?(\d+)\D+E(?:pisode\s*)?(\d+)/i;
+            const reShort = /S\s*(\d+)\s*E\s*(\d+)/i;
+            for (const t of texts) {
+                const m = t.match(re) || t.match(reShort);
+                if (m) return { season: m[1], episode: m[2], raw: t };
+            }
+            return null;
+        }).catch(() => null as any);
+        if (!hoverInfo) return null;
+        return { season: Number(hoverInfo.season), episode: Number(hoverInfo.episode), raw: hoverInfo.raw };
+    }
+
+    private async findContinueWatchingCardIndex(item: ContinueWatchingItem): Promise<number | undefined> {
+        const normalizedItemTitle = this.normalizeTitle(item.title ?? '');
+        const normalizedShowTitle = this.normalizeTitle(item.showInfo?.title ?? '');
+        const normalizedCombined = this.normalizeTitle([
+            item.showInfo?.title,
+            item.title
+        ].filter(Boolean).join(' '));
+
+        const section = this.getContinueWatchingRailLocator();
+        const cards = section.locator(this.continueWatchingCard.selector);
+        const count = await cards.count().catch(() => 0);
+
+        for (let index = 0; index < count; index += 1) {
+            const card = cards.nth(index);
+            const altText = (await card.getAttribute('alt')) || '';
+            const ariaText = (await card.getAttribute('aria-label')) || '';
+            const textContent = (await card.textContent().catch(() => '')) || '';
+            const cardText = this.normalizeTitle([
+                altText,
+                ariaText,
+                textContent
+            ].filter(Boolean).join(' '));
+
+            if (!cardText) {
+                continue;
+            }
+
+            if (
+                (normalizedCombined && cardText.includes(normalizedCombined)) ||
+                (normalizedItemTitle && cardText.includes(normalizedItemTitle)) ||
+                (normalizedShowTitle && cardText.includes(normalizedShowTitle))
+            ) {
+                return index;
+            }
+
+            const searchTokens = normalizedCombined.split(' ').filter(Boolean);
+            if (searchTokens.length > 1 && searchTokens.every(token => cardText.includes(token))) {
+                return index;
+            }
+        }
+        return undefined;
     }
 }

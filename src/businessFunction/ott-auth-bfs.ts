@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { SearchParser } from '../utils/graphql/parsers/search-parser';
+import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
 import { CollectionResponse } from '../utils/graphql/graphql-types';
 export interface InvalidLoginInput {
     email?: string;
@@ -202,6 +203,31 @@ export interface VerifyCreateAccountScreenOutput {
     isLoginLinkVisible: boolean;
 }
 
+export interface VerifyIWantOriginalsRailScrollabilityInput {
+    mode?: string;
+}
+
+export interface VerifyIWantOriginalsRailScrollabilityOutput {
+    isLoggedIn: boolean;
+    railVisible: boolean;
+    railTitle: string;
+    contentCardsCount: number;
+    scrolledRight: boolean;
+    scrolledLeft: boolean;
+}
+
+export interface VerifyIWantOriginalsHoverPreviewInput {
+    mode?: string;
+}
+
+export interface VerifyIWantOriginalsHoverPreviewOutput {
+    isLoggedIn: boolean;
+    railVisible: boolean;
+    firstCardVisible: boolean;
+    previewStarted: boolean;
+    previewEnded: boolean;
+}
+
 export interface EnterCreateAccountCredentialsInput {
     email: string;
     password: string;
@@ -212,6 +238,32 @@ export interface EnterCreateAccountCredentialsOutput {
     isPasswordFieldVisible: boolean;
     emailFieldValue: string;
     passwordFieldValue: string;
+}
+
+export interface VerifyPasswordVisibilityToggleInput {
+    email: string;
+    password: string;
+}
+
+export interface VerifyPasswordVisibilityToggleOutput {
+    isToggleVisible: boolean;
+    initialPasswordType: string;
+    afterTogglePasswordType: string;
+    isPasswordTextVisible: boolean;
+}
+
+export interface VerifyAccountAndSubscriptionDetailsInput {
+    mode?: string;
+    providerName?: string;
+    expectedSectionName?: string;
+    expectedSubscriptionText?: string;
+}
+
+export interface VerifyAccountAndSubscriptionDetailsOutput {
+    isProfileSectionVisible: boolean;
+    isAccountAndSubscriptionDetailsVisible: boolean;
+    profileSectionText: string;
+    accountDetailsText: string;
 }
 
 export interface EmptyCredentialsInput {
@@ -244,7 +296,6 @@ function resolveLoginCredentials(
     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
     const mobileNumberContryCode = String(config.get(`${prefix}COUNTRYCODE`, input.mobileNumberContryCode ?? '')).trim();
     const mobileNumber = String(config.get(`${prefix}MOBILENUMBER`, input.mobileNumber ?? '')).trim();
-
     return { email, password, mobileNumberContryCode, mobileNumber };
 }
 
@@ -567,6 +618,17 @@ export interface NavigateTabsOutput {
     signOutOptionVisible: boolean;
 }
 
+export interface VerifyIWantOriginalsRailInput {
+    mode?: string;
+}
+
+export interface VerifyIWantOriginalsRailOutput {
+    isLoggedIn: boolean;
+    homePageVisible: boolean;
+    railTitleVisible: boolean;
+    railTitle: string;
+    contentCardsCount: number;
+}
 export interface VerifyGuestPHCarouselTabTrayLoadInput {
     mode?: string;
 }
@@ -587,10 +649,227 @@ export interface LogoutFromOTTInput {
     mode?: string;
 }
 
+export interface LogoutFromOTTOutput {
+    isLoggedOut: boolean;
+    welcomeScreenVisible: boolean;
+}
+
+export interface VerifySynacorProfileEditRestrictionInput {
+    providerName?: string;
+    mode?: string;
+}
+
+export interface VerifySynacorProfileEditRestrictionOutput {
+    isLoggedIn: boolean;
+    accountSettingsVisible: boolean;
+    editProfileVisible: boolean;
+    isRestricted: boolean;
+}
+
+export interface SearchIconVisibilityInput {
+    mode?: string;
+}
+
+export interface SearchIconVisibilityOutput {
+    isLoggedIn: boolean;
+    homePageSearchIconVisible: boolean;
+    moviesPageSearchIconVisible: boolean;
+    showsPageSearchIconVisible: boolean;
+    watchlistPageSearchIconVisible: boolean;
+    gmaPageSearchIconVisible: boolean;
+}
+
+export interface SearchQueryInput {
+    mode?: string;
+    query?: string;
+}
+
+export interface SearchQueryOutput {
+    isLoggedIn: boolean;
+    searchInputValue: string;
+    queryTyped: boolean;
+}
+
+export interface SearchResultsOutput {
+    isLoggedIn: boolean;
+    queryTyped: boolean;
+    resultsVisible: boolean;
+}
+
+export interface VerifySearchAutoSuggestionsInput {
+    mode?: string;
+    query: string;
+}
+
+export interface VerifySearchAutoSuggestionsOutput {
+    isLoggedIn: boolean;
+    suggestionsVisible: boolean;
+    suggestionsCount: number;
+    suggestionsList: string[];
+    suggestionsContainQuery: boolean;
+}
+
+export interface VerifySearchNoResultsMessageInput {
+    mode?: string;
+    searchQuery?: string;
+}
+
+export interface VerifySearchNoResultsMessageOutput {
+    isLoggedIn: boolean;
+    searchQueryTyped: boolean;
+    noResultsMessageVisible: boolean;
+    messageText: string;
+    contentCardsPresent: number;
+}
+
+export interface ParentalPinVisibilityOutput {
+    isLoggedIn: boolean;
+    parentalControlsVisible: boolean;
+}
+
+export interface ParentalPinToggleStateOutput {
+    isLoggedIn: boolean;
+    parentalControlsVisible: boolean;
+    toggleDisabled: boolean;
+}
+
+export interface ParentalPinPasswordFieldOutput {
+    isLoggedIn: boolean;
+    parentalControlsVisible: boolean;
+    passwordFieldVisible: boolean;
+}
+
+export async function verifyIWantOriginalsRail(page: any, input?: Partial<VerifyIWantOriginalsRailInput>): Promise<VerifyIWantOriginalsRailOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} iWant Originals rail verification flow`);
+    const loginResult = await loginToOTT(page, { mode });
+    const homePageVisible = loginResult.isLoggedIn;
+    const isTitleVisible = await authPage.isIWantOriginalsRailVisible();
+    const railTitle = isTitleVisible ? await authPage.getIWantOriginalsRailTitle() : '';
+    const contentCardsCount = isTitleVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
+    logger.assertion('iWant Originals rail title visible', isTitleVisible);
+    logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
+    return {
+        isLoggedIn: homePageVisible,
+        homePageVisible,
+        railTitleVisible: isTitleVisible,
+        railTitle,
+        contentCardsCount,
+    };
+}
+
+export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partial<VerifyIWantOriginalsHoverPreviewInput>): Promise<VerifyIWantOriginalsHoverPreviewOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} iWant Originals hover preview verification flow`);
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in before hover preview validation', isLoggedIn);
+    if (!isLoggedIn) {
+        return { isLoggedIn: false, railVisible: false, firstCardVisible: false, previewStarted: false, previewEnded: false };
+    }
+    await authPage.acceptCookieSettingsIfVisible();
+    await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+    const railVisible = await authPage.ensureIWantOriginalsRailInView(30000);
+    logger.assertion('iWant Originals rail visible', railVisible);
+    const firstCardVisible = railVisible ? await authPage.isIWantOriginalsFirstCardVisible() : false;
+    logger.assertion('First content card in iWant Originals visible', firstCardVisible);
+    if (!firstCardVisible) {
+        return { isLoggedIn: true, railVisible, firstCardVisible, previewStarted: false, previewEnded: false };
+    }
+    const hoverResult = await authPage.hoverIWantOriginalsFirstCardCentered();
+    logger.step('Hovered over first iWant Originals card');
+    // Check for preview video playback - look for a visible video element and playback state
+    let previewStarted = false;
+    let previewEnded = false;
+    try {
+        const heading = page.getByText('iWant Originals', { exact: true }).first();
+        const rail = heading.locator('xpath=ancestor::div[contains(@class, "rail")][1]').first();
+        const card = rail.locator('img[alt]:not([alt="arrow-right"])').first();
+        const cardBox = await card.boundingBox();
+        const overlapsCard = async (videoLocator: any) => {
+            try {
+                const vbox = await videoLocator.boundingBox();
+                if (!vbox || !cardBox) return false;
+                const xOverlap = Math.max(0, Math.min(vbox.x + vbox.width, cardBox.x + cardBox.width) - Math.max(vbox.x, cardBox.x));
+                const yOverlap = Math.max(0, Math.min(vbox.y + vbox.height, cardBox.y + cardBox.height) - Math.max(vbox.y, cardBox.y));
+                const overlapArea = xOverlap * yOverlap;
+                const cardArea = cardBox.width * cardBox.height;
+                return cardArea > 0 && overlapArea / cardArea >= 0.25; // at least 25% overlap
+            } catch {
+                return false;
+            }
+        };
+        const startDeadline = Date.now() + 15000;
+        while (Date.now() < startDeadline) {
+            const videos = page.locator('video');
+            const count = await videos.count().catch(() => 0);
+            for (let i = 0; i < count; i += 1) {
+                const videoLocator = videos.nth(i);
+                const visible = await videoLocator.isVisible().catch(() => false);
+                if (!visible) continue;
+                const isOverlap = await overlapsCard(videoLocator);
+                if (!isOverlap) continue;
+                const state = await videoLocator.evaluate((el: HTMLVideoElement) => ({ paused: el.paused, currentTime: el.currentTime, readyState: el.readyState, src: el.currentSrc || el.src })).catch(() => null);
+                if (state && (state.src || state.currentTime > 0 || state.readyState >= 2)) {
+                    previewStarted = true;
+                    break;
+                }
+            }
+            if (previewStarted) break;
+            await page.waitForTimeout(500);
+        }
+    } catch (error) {
+        logger.debug('Error while detecting preview video start', error);
+    }
+    logger.assertion('Preview playback detected after hover', previewStarted);
+    // Per test requirement: do not wait for preview to finish — only verify preview started
+    previewEnded = false;
+    logger.debug('Skipping wait-for-preview-end by test instruction; returning previewStarted only');
+    return {
+        isLoggedIn,
+        railVisible,
+        firstCardVisible,
+        previewStarted,
+        previewEnded,
+    };
+}
+
+export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
+    const loginResult = await loginToOTT(page, { mode });
+    const railVisible = loginResult.isLoggedIn && await authPage.isIWantOriginalsRailVisible();
+    const railTitle = railVisible ? await authPage.getIWantOriginalsRailTitle() : '';
+    const contentCardsCount = railVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
+    logger.assertion('iWant Originals rail title visible', railVisible);
+    logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
+    const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
+    logger.step('Clicking the right arrow on the iWant Originals rail');
+    const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+    const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
+    const scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
+    logger.assertion('iWant Originals rail scrolled right', scrolledRight);
+    logger.step('Clicking the left arrow on the iWant Originals rail');
+    const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
+    const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
+    const scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
+    logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    return {
+        isLoggedIn: loginResult.isLoggedIn,
+        railVisible,
+        railTitle,
+        contentCardsCount,
+        scrolledRight,
+        scrolledLeft,
+    };
+}
+
 export interface VerifyContinueWatchingInput {
     mode?: string;
-    email?: string;
-    password?: string;
 }
 
 export interface VerifyContinueWatchingOutput {
@@ -600,8 +879,6 @@ export interface VerifyContinueWatchingOutput {
 }
 
 export interface VerifyContinueWatchingTrayUIInput {
-    email?: string;
-    password?: string;
     mode?: string;
 }
 
@@ -629,11 +906,15 @@ export interface VerifyContinueWatchingRemoveItemOutput {
     reason?: string;
 }
 
+export interface VerifyContinueWatchingRemovalAfterPlaybackInput {
+    mode?: string;
+}
+
 export interface VerifyContinueWatchingRemovalAfterPlaybackOutput {
     isValid: boolean;
     initiallyVisible: boolean;
     finallyVisible: boolean;
-    removedItemTitle: string;
+    removedItemTitle?: string;
     reason?: string;
 }
 
@@ -2541,6 +2822,96 @@ export async function verifySynacorProfileEditRestriction(page: any, input?: Par
         accountSettingsVisible,
         editProfileVisible,
         isRestricted: !editProfileVisible,
+    }
+}
+
+export async function verifyContinueWatchingRemovalAfterPlayback(page: any, input?: VerifyContinueWatchingRemovalAfterPlaybackInput): Promise<VerifyContinueWatchingRemovalAfterPlaybackOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting IW3-T1960 flow for watched movie removal from Continue Watching');
+    const loginResult = await loginToOTT(page, { mode });
+    if (!loginResult.isLoggedIn) {
+        return {
+            isValid: false,
+            initiallyVisible: false,
+            finallyVisible: false,
+            reason: 'Login was not successful before the Continue Watching removal flow started',
+        };
+    }
+    await authPage.registerContinueWatchingListener();
+    logger.step('Waiting for Continue Watching tray and GraphQL data');
+    await authPage.waitForContinueWatchingTrayToBeReady();
+    let graphQLItems: any[] = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+        graphQLItems = await authPage.getContinueWatchingGraphQLItems().catch(() => []);
+        if (graphQLItems.length) {
+            break;
+        }
+        await page.waitForTimeout(2000);
+    }
+    const selectedMovie = graphQLItems.find((item: any) => item?.assetType === 'movie' && Boolean(item?.title || item?.showInfo?.title))
+        || graphQLItems.find((item: any) => Boolean(item?.title || item?.showInfo?.title));
+    const selectedContentTitle = selectedMovie?.title?.trim() || selectedMovie?.showInfo?.title?.trim() || '';
+    if (!selectedContentTitle) {
+        return {
+            isValid: false,
+            initiallyVisible: false,
+            finallyVisible: false,
+            reason: 'No movie item was available in the Continue Watching response for IW3-T1960',
+        };
+    }
+    logger.step(`Selected Continue Watching movie from GraphQL: ${selectedContentTitle}`);
+    const initialVisibility = await authPage.waitForContinueWatchingItemToAppear(selectedContentTitle, 30000).catch(() => false);
+    if (!initialVisibility) {
+        logger.warn(`The selected movie was not visible in the Continue Watching UI: ${selectedContentTitle}`);
+    }
+    logger.step('Opening the selected Continue Watching movie from the tray');
+    const searchTerms = [selectedMovie?.title, selectedMovie?.showInfo?.title].filter(Boolean) as string[];
+    let openedFromTray = false;
+    for (const term of searchTerms) {
+        openedFromTray = await authPage.clickContinueWatchingItemUsingGraphQL(term, 30000);
+        if (openedFromTray) {
+            break;
+        }
+    }
+    if (!openedFromTray) {
+        return {
+            isValid: false,
+            initiallyVisible: initialVisibility,
+            finallyVisible: false,
+            removedItemTitle: selectedContentTitle,
+            reason: 'The selected Continue Watching movie could not be opened from the tray',
+        };
+    }
+    logger.step('Waiting for the content details page and initiating playback');
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+    await page.waitForTimeout(5000);
+    await detailsPage.clickPlayButton();
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+    await page.waitForTimeout(4000);
+    logger.step('Completing playback by moving the seek bar to the end');
+    await detailsPage.hoverPlaybackControls();
+    await detailsPage.dragSeekBarToPosition(0.99);
+    await page.waitForTimeout(20000);
+    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+    logger.step('Returning to Home and refreshing the page');
+    await detailsPage.hoverPlaybackControls();
+    await detailsPage.clickBackButton();
+    await authPage.clickHomeTab();
+    await authPage.refreshPage();
+    await authPage.waitForContinueWatchingTrayToBeReady();
+    await page.waitForTimeout(5000);
+    const finalVisibility = await authPage.isContinueWatchingItemVisible(selectedContentTitle).catch(() => false);
+    const isValid = initialVisibility && !finalVisibility;
+    logger.assertion('Continue Watching movie was present before playback', initialVisibility);
+    logger.assertion('Continue Watching movie was removed after playback completion', !finalVisibility);
+    return {
+        isValid,
+        initiallyVisible: initialVisibility,
+        finallyVisible: finalVisibility,
+        removedItemTitle: selectedContentTitle,
+        reason: isValid ? undefined : 'The movie remained in the Continue Watching tray after playback completion',
     };
 }
 
@@ -2548,21 +2919,8 @@ export async function verifyContinueWatchingTrayUI(page: any, input?: VerifyCont
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting Continue Watching tray UI validation');
-    const envEmail = process.env.VALID_LOGIN_EMAIL;
-    const envPassword = process.env.VALID_LOGIN_PASSWORD;
-    const providedEmail = (input as any)?.email || envEmail || '';
-    const providedPassword = (input as any)?.password || envPassword || '';
-    const credentials = providedEmail && providedPassword
-        ? { email: providedEmail, password: providedPassword }
-        : resolveLoginCredentials(input ?? {}, mode);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForContinueWatchingTrayToBeReady();
     const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
     const itemCount = await authPage.getContinueWatchingTrayItemCount();
@@ -2590,21 +2948,8 @@ export async function verifyContinueWatchingTrayScroll(page: any, input?: Verify
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting Continue Watching tray scroll validation');
-    const envEmail = process.env.VALID_LOGIN_EMAIL;
-    const envPassword = process.env.VALID_LOGIN_PASSWORD;
-    const providedEmail = (input as any)?.email || envEmail || '';
-    const providedPassword = (input as any)?.password || envPassword || '';
-    const credentials = providedEmail && providedPassword
-        ? { email: providedEmail, password: providedPassword }
-        : resolveLoginCredentials(input ?? {}, mode);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForContinueWatchingTrayToBeReady();
     const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
     if (!isTitleVisible) {
@@ -2635,11 +2980,9 @@ export async function verifyContinueWatchingTrayScroll(page: any, input?: Verify
     const hasScrollableContent = isTitleVisible && itemCountBeforeScroll > 0 && itemCountAfterScroll >= itemCountBeforeScroll;
     const hasVisibleCards = itemDetailsBeforeScroll.some((item) => item.hasThumbnail) || itemDetailsAfterScroll.some((item) => item.hasThumbnail);
     const isValid = Boolean(isTitleVisible && hasScrollableContent && hasVisibleCards && rightScrollWorked && leftScrollWorked);
-
     logger.assertion('Continue Watching tray title visible', isTitleVisible);
     logger.assertion('Continue Watching tray has cards before scroll', itemCountBeforeScroll > 0);
     logger.assertion('Continue Watching tray scroll interaction completed', isValid);
-
     return {
         isValid,
         isTitleVisible,
@@ -2653,47 +2996,26 @@ export async function verifyContinueWatchingRemoveItem(page: any, input?: Verify
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting Continue Watching remove-item validation');
-
-    const envEmail = process.env.VALID_LOGIN_EMAIL;
-    const envPassword = process.env.VALID_LOGIN_PASSWORD;
-    const providedEmail = (input as any)?.email || envEmail || '';
-    const providedPassword = (input as any)?.password || envPassword || '';
-    const credentials = providedEmail && providedPassword
-        ? { email: providedEmail, password: providedPassword }
-        : resolveLoginCredentials(input ?? {}, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForContinueWatchingTrayToBeReady();
-
     const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
     if (!isTitleVisible) {
         return { isValid: false, initialItemCount: 0, confirmationVisible: false, finalItemCount: 0, reason: 'Continue Watching tray title is not visible' };
     }
-
     const initialItemCount = await authPage.getContinueWatchingTrayItemCount();
     if (initialItemCount <= 0) {
         return { isValid: false, initialItemCount: 0, confirmationVisible: false, finalItemCount: 0, reason: 'No items available to remove from Continue Watching tray' };
     }
-
     const removeResult = await authPage.removeFirstContinueWatchingItem();
     if (!removeResult.clicked) {
         return { isValid: false, initialItemCount, finalItemCount: initialItemCount, confirmationVisible: false, reason: 'Unable to remove the first Continue Watching item' };
     }
-
     await authPage.waitForContinueWatchingTrayToBeReady();
     const finalItemCount = await authPage.getContinueWatchingTrayItemCount();
     const isValid = removeResult.confirmationVisible;
-
     logger.assertion('Continue Watching removal confirmation shown', removeResult.confirmationVisible);
     logger.assertion('Continue Watching item removed', isValid);
-
     return {
         isValid,
         initialItemCount,
@@ -2703,107 +3025,23 @@ export async function verifyContinueWatchingRemoveItem(page: any, input?: Verify
     };
 }
 
-export async function verifyContinueWatchingRemovalAfterPlayback(page: any, input?: VerifyContinueWatchingTrayUIInput): Promise<VerifyContinueWatchingRemovalAfterPlaybackOutput> {
-    const authPage = new OTTAuthPage(page);
-    const mode = normalizeLoginMode(input?.mode);
-    logger.step('Starting Continue Watching removal after playback validation');
-
-    const envEmail = process.env.VALID_LOGIN_EMAIL;
-    const envPassword = process.env.VALID_LOGIN_PASSWORD;
-    const providedEmail = (input as any)?.email || envEmail || '';
-    const providedPassword = (input as any)?.password || envPassword || '';
-    const credentials = providedEmail && providedPassword
-        ? { email: providedEmail, password: providedPassword }
-        : resolveLoginCredentials(input ?? {}, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
-    await authPage.waitForContinueWatchingTrayToBeReady();
-
-    const isTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
-    if (!isTitleVisible) {
-        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle: '', reason: 'Continue Watching tray title is not visible' };
-    }
-
-    const explicitMovieItem = await authPage.getExplicitMovieContinueWatchingItem();
-    if (!explicitMovieItem?.title) {
-        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle: '', reason: 'No movie content was available in the Continue Watching tray to validate removal' };
-    }
-
-    const removedItemTitle = explicitMovieItem.title;
-    const initialVisibility = await authPage.isContinueWatchingItemVisible(removedItemTitle);
-    if (!initialVisibility) {
-        return { isValid: false, initiallyVisible: false, finallyVisible: false, removedItemTitle, reason: 'The selected Continue Watching item was not visible before playback' };
-    }
-
-    const playbackStarted = await authPage.openContinueWatchingItemAndStartPlayback(removedItemTitle);
-    if (!playbackStarted) {
-        return { isValid: false, initiallyVisible: true, finallyVisible: false, removedItemTitle, reason: 'The selected Continue Watching item could not be opened for playback' };
-    }
-
-    const playbackCompleted = await authPage.finishPlaybackFromCurrentItem();
-    if (!playbackCompleted) {
-        return { isValid: false, initiallyVisible: true, finallyVisible: false, removedItemTitle, reason: 'The selected content did not reach the completion state' };
-    }
-
-    await authPage.navigateHome();
-    await authPage.waitForContinueWatchingTrayToBeReady();
-
-    const finalVisibility = await authPage.isContinueWatchingItemVisible(removedItemTitle);
-    const isValid = initialVisibility && !finalVisibility;
-
-    logger.assertion('Continue Watching item visible before playback', initialVisibility);
-    logger.assertion('Continue Watching item removed after playback completion', !finalVisibility);
-
-    return {
-        isValid,
-        initiallyVisible: initialVisibility,
-        finallyVisible: finalVisibility,
-        removedItemTitle,
-        reason: isValid ? undefined : 'The selected item remained in the Continue Watching tray after playback completion',
-    };
-}
-
 export async function verifyContinueWatchingAbsent(page: any, input?: VerifyContinueWatchingInput): Promise<VerifyContinueWatchingOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting login flow for Continue Watching absence validation');
     // Prefer explicit input credentials, then UNWATCHED env vars, then resolveLoginCredentials
-    const envEmail = process.env.UNWATCHED_LOGIN_EMAIL;
-    const envPassword = process.env.UNWATCHED_LOGIN_PASSWORD;
-    const providedEmail = (input as any)?.email || envEmail || '';
-    const providedPassword = (input as any)?.password || envPassword || '';
-    const credentials = providedEmail && providedPassword
-        ? { email: providedEmail, password: providedPassword }
-        : resolveLoginCredentials(input ?? {}, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForLoadingToDisappear();
-
     const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
-
     logger.assertion('Continue Watching rail presence', isVisible);
     logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
-
     if (itemsCount > 0) {
         const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
         logger.assertion('All continue-watching items have progress indicators', allHaveProgress);
     }
-
     return { isContinueWatchingVisible: isVisible, continueWatchingItemsCount: itemsCount, continueWatchingItemsDetails: itemsDetails };
 }
 
@@ -3426,32 +3664,6 @@ export async function submitCreateAccountInvalidCredentials(
         isErrorDisplayed,
         errorMessage,
     };
-}
-
-export interface VerifyPasswordVisibilityToggleInput {
-    email: string;
-    password: string;
-}
-
-export interface VerifyPasswordVisibilityToggleOutput {
-    isToggleVisible: boolean;
-    initialPasswordType: string;
-    afterTogglePasswordType: string;
-    isPasswordTextVisible: boolean;
-}
-
-export interface VerifyAccountAndSubscriptionDetailsInput {
-    mode?: string;
-    providerName?: string;
-    expectedSectionName?: string;
-    expectedSubscriptionText?: string;
-}
-
-export interface VerifyAccountAndSubscriptionDetailsOutput {
-    isProfileSectionVisible: boolean;
-    isAccountAndSubscriptionDetailsVisible: boolean;
-    profileSectionText: string;
-    accountDetailsText: string;
 }
 
 export async function verifyAccountAndSubscriptionDetails(

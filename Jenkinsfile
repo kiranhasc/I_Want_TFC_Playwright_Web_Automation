@@ -2,35 +2,6 @@ pipeline {
 
     agent any
 
-
-    parameters {
-
-        choice(
-            name: 'PLAYWRIGHT_TEST',
-            choices: [
-                'test:dev',
-                'test:qa',
-                'test:prod',
-                'test:mweb',
-                'test:file:prod',
-                'test:all',
-                'test:account',
-                'test:playback',
-                'test:launch',
-                'test:search',
-                'test:watchlist',
-                'test:region',
-                'test:registration',
-                'test:high',
-                'test:medium',
-                'test:low'
-            ],
-            description: 'Select Playwright test suite'
-        )
-
-    }
-
-
     stages {
 
 
@@ -92,9 +63,9 @@ pipeline {
 
             steps {
 
-                echo "Selected Test: ${params.PLAYWRIGHT_TEST}"
+                echo "Running QA Playwright tests"
 
-                bat "npm run ${params.PLAYWRIGHT_TEST}"
+                bat "npm run test:prod"
 
             }
 

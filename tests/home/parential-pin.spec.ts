@@ -149,7 +149,7 @@ test.describe('Parental controls', () => {
     expect(result.parentalPinInvalidErrorText).toContain(data.expectedInvalidPinErrorText);
   });
 
-  test.only('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
+  test('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
     test.setTimeout(300000);
     const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
     const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {

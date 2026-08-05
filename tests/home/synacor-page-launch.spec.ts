@@ -1,5 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { loginWithTVProvider, logoutFromOTT, verifySynacorProfileEditRestriction } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyContinueWatchingPlaybackIndependent, verifySynacorLandingPages } from '../../src/businessFunction/ott-continue-watching-independent-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Synacor Logout', () => {
@@ -34,4 +35,34 @@ test.describe('Synacor Logout', () => {
         expect(result.isRestricted).toBe(true);
         expect(result.editProfileVisible).toBe(false);
     });
+
+    test('@High IW3-T3660: Verify partially watched content appears in Continue Watching tray', async ({ page }) => {
+        test.setTimeout(200000);
+        const data = testCaseData['tc-auth-023-continue-watching-playback-synacor'];
+        const result = await verifyContinueWatchingPlaybackIndependent(page, { mode: data?.mode, providerName: data?.providerName });
+        expect(result.isValid).toBeTruthy();
+        expect(result.itemFound).toBeTruthy();
+        expect(result.playerVisible).toBeTruthy();
+        expect(result.progressObserved).toBeTruthy();
+    });
+
+    test('@High IW3-T3666: Verify landing pages display correctly post Synacor login', async ({ page }) => {
+        test.setTimeout(60000);
+        const data = testCaseData['tc-auth-025-synacor-landing-pages'];
+        const result = await verifySynacorLandingPages(page, {
+            mode: data?.mode,
+            providerName: data?.providerName,
+        });
+        expect(result.isLoggedIn).toBeTruthy();
+        expect(result.homeRailVisible).toBeTruthy();
+        expect(result.moviesRailVisible).toBeTruthy();
+        expect(result.showsRailVisible).toBeTruthy();
+        expect(result.watchlistRailVisible).toBeTruthy();
+        expect(result.gmaRailVisible).toBeTruthy();
+        expect(result.searchBarPlaceholder.length).toBeGreaterThan(0);
+        expect(result.searchBarPlaceholderMatches).toBeTruthy();
+        expect(result.signOutOptionVisible).toBeTruthy();
+    });
+
+    
 });

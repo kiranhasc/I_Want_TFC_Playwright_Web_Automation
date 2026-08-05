@@ -160,6 +160,8 @@ export class OTTDetailsPage {
   private readonly genericTextLocator: PageElement;
   private readonly liveTextLabel: PageElement;
   private readonly goLiveButtonElement: PageElement;
+  private readonly playerVideoControls: PageElement;
+  private readonly playerFirstContentTitle: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -313,8 +315,9 @@ export class OTTDetailsPage {
     this.genericTextLocator = { selector: 'text=/.*\\w.*/' };
     this.liveTextLabel = { role: 'button', text: 'Live', selector: 'text=Live' };
     this.goLiveButtonElement = { role: 'button', text: 'Go Live', selector: 'button:has-text("Go Live")' };
-
-  }
+    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
+    this.playerFirstContentTitle = {selector: "//img[@alt='{expectedTitle}']"};
+}
 
   private getRoleLocator(element: PageElement, exact = false) {
     if (element.role && element.text) {
@@ -2192,6 +2195,15 @@ async addToWatchlistAndGetToast(): Promise<string> {
     return true;
   }
 
+  async isPlayerFirstContentTitleVisible(expectedTitle: string): Promise<boolean> {
+    await this.page.waitForTimeout(2000)
+    const locator = await this.pageUtils.parameterizeSelector(
+      this.playerFirstContentTitle,
+      { expectedTitle }
+    );
+    return locator.first().isVisible();
+  }
+
   async hoverPlaybackScreen(): Promise<void> {
     logger.elementInteraction('hover', 'Playback screen');
     const playerScreen = this.page.locator(this.playerScreen.selector).first();
@@ -2589,6 +2601,19 @@ async addToWatchlistAndGetToast(): Promise<string> {
     const match = playbackText.match(/(\d{1,2}:\d{2})/);
     return match?.[1] ?? playbackText;
   }
+
+    async hoverPlaybackControls(): Promise<void> {
+    logger.elementInteraction('hover', 'Playback controls');
+    const controls = this.page.locator(this.playerVideoControls.selector).first();
+    await controls.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    const box = await controls.boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    } else {
+      await controls.hover().catch(() => undefined);
+    }
+  }
+ 
 
   async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();

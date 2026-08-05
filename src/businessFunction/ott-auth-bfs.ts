@@ -4,6 +4,8 @@ import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import * as fs from 'fs';
+import path from 'path';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { SearchParser } from '../utils/graphql/parsers/search-parser';
 import { CollectionResponse } from '../utils/graphql/graphql-types';
@@ -211,12 +213,12 @@ function resolveLoginCredentials(
         mode === 'valid'
             ? 'VALID_LOGIN_'
             : mode === 'provider'
-                ? 'PROVIDER_' 
-            : mode === 'mobile'
-                ? 'MOBILE_LOGIN_'
-            : mode === 'freeUser'
-                ? 'FREE_USER_'
-            :'INVALID_LOGIN_';
+                ? 'PROVIDER_'
+                : mode === 'mobile'
+                    ? 'MOBILE_LOGIN_'
+                    : mode === 'freeUser'
+                        ? 'FREE_USER_'
+                        :'INVALID_LOGIN_';
 
     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
@@ -331,7 +333,82 @@ export async function loginWithMobileNumber(page: any, input?: Partial<MobileLog
     };
 }
 
+// const providerAuthDir = path.join(__dirname, '../playwright/.auth');
+// const PROVIDER_MAX_AGE_MS = 60 * 60 * 1000; // same TTL policy, tune as needed
+
+function getProviderStoragePath(providerName?: string): string {
+  // if you test multiple providers, key the cache file by provider name
+  const safeName = (providerName ?? 'default').replace(/[^a-zA-Z0-9]/g, '_');
+  return path.join(authDir, `provider-${safeName}.json`);
+}
+
 export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
+  const authPage = new OTTAuthPage(page);
+  const mode = normalizeLoginMode(input?.mode);
+  const storagePath = getProviderStoragePath(input.providerName);
+
+  // ---- FAST PATH ----
+  if (fs.existsSync(storagePath)) {
+    const age = Date.now() - fs.statSync(storagePath).mtimeMs;
+    if (age < MAX_AGE_MS) {
+      logger.step(`Reusing saved TV provider session (${input.providerName}) from storageState`);
+      const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
+      await page.context().addCookies(state.cookies ?? []);
+      if (state.origins?.length) {
+        await page.goto(state.origins[0].origin);
+        await page.evaluate((origins: any[]) => {
+          for (const o of origins) {
+            for (const item of o.localStorage ?? []) {
+              window.localStorage.setItem(item.name, item.value);
+            }
+          }
+        }, state.origins);
+      }
+      await page.reload();
+      await authPage.waitForLoadingToDisappear();
+
+      const isLoggedIn = await authPage.isLoginSuccessful();
+      const homeTabVisible = await authPage.isHomeTabVisible();
+      const moviesTabVisible = await authPage.isMoviesTabVisible();
+
+      logger.assertion('TV Provider session restored', isLoggedIn);
+      logger.assertion('Home tab visible after session restore', homeTabVisible);
+      logger.assertion('Movies tab visible after session restore', moviesTabVisible);
+
+      if (isLoggedIn) {
+        return { isLoggedIn, homeTabVisible, moviesTabVisible };
+      }
+      logger.step(`Cached TV provider session invalid, falling back to live login`);
+      // fall through to slow path
+    }
+  }
+
+  // ---- SLOW PATH (your existing code, unchanged) ----
+  logger.step(`Starting ${mode} login flow`);
+  const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+  logger.step('Starting TV Provider login flow');
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.clickLoginWithTVProvider();
+  await authPage.selectTVProvider(input.providerName);
+  await authPage.clickContinue();
+  await authPage.enterProviderEmail(credentials.email);
+  await authPage.enterProviderPassword(credentials.password);
+  await authPage.clickProviderSignIn();
+  const isLoggedIn = await authPage.isLoginSuccessful();
+  const homeTabVisible = await authPage.isHomeTabVisible();
+  const moviesTabVisible = await authPage.isMoviesTabVisible();
+  logger.assertion('TV Provider login successful', isLoggedIn);
+  logger.assertion('Home tab visible after TV provider login', homeTabVisible);
+  logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
+  if (isLoggedIn) {
+    await page.context().storageState({ path: storagePath });
+    logger.step(`Saved TV provider session (${input.providerName}) to storageState`);
+  }
+  return { isLoggedIn, homeTabVisible, moviesTabVisible };
+}
+
+/*export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} login flow`);
@@ -354,12 +431,92 @@ export async function loginWithTVProvider(page: any, input: TVProviderLoginInput
     logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
 
     return { isLoggedIn, homeTabVisible, moviesTabVisible };
-}
+}*/
+
+const authDir = path.join(__dirname, '../playwright/.auth'); // adjust relative path to your repo root
+const MAX_AGE_MS = 60 * 60 * 1000; // tune to your session/token TTL
+
+const modeToFile: Record<string, string | null> = {
+  valid: 'valid.json',
+  provider: 'provider.json',
+  mobile: 'mobile.json',
+  freeUser: 'freeUser.json',
+  invalid: null,
+};
+
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
+    const storageFile = modeToFile[mode];
+    const storagePath = storageFile ? path.join(authDir, storageFile) : null;
+    // ---- FAST PATH ----
+    if (storagePath && fs.existsSync(storagePath)) {
+        const age = Date.now() - fs.statSync(storagePath).mtimeMs;
+        if (age < MAX_AGE_MS) {
+            logger.step(`Reusing saved ${mode} session from storageState`);
+            // clear any existing session state first — prevents mixing across modes
+            await page.context().clearCookies();
+            await page.evaluate(() => {
+                try {
+                    window.localStorage.clear();
+                    window.sessionStorage.clear();
+                } catch (e) {
+                    // no-op if page isn't on a real origin yet
+                }
+            }).catch(() => {});
+            const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
+            await page.context().addCookies(state.cookies ?? []);
+            if (state.origins?.length) {
+                await page.goto(state.origins[0].origin);
+                await page.evaluate((origins: any[]) => {
+                    window.localStorage.clear(); // clear again post-navigation, before setting new values
+                    for (const o of origins) {
+                        for (const item of o.localStorage ?? []) {
+                            window.localStorage.setItem(item.name, item.value);
+                        }
+                    }
+                }, state.origins);
+            }
+            await page.reload();
+            await authPage.waitForLoadingToDisappear();
+            const homeVisible = await authPage.isHomeTabVisible();
+            logger.assertion('Home tab visible after session restore', homeVisible);
+            if (homeVisible) {
+                return { isLoggedIn: homeVisible, homeTabVisible: homeVisible };
+            }
+            logger.step(`Cached ${mode} session invalid, falling back to live login`);    
+        }
+    }
+    // ---- SLOW PATH (original login flow, unchanged) ----
     logger.step(`Starting ${mode} login flow`);
-    const credentials = resolveLoginCredentials(input ?? { email: '', password: '',networkConnection:'' }, mode);
+    await page.context().clearCookies();
+
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after login', homeVisible);
+    if (homeVisible && storagePath) {
+        await page.context().storageState({ path: storagePath });
+        logger.step(`Saved ${mode} session to storageState`);
+    }
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
+}
+
+/*export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.clickEmailField();
@@ -375,7 +532,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         isLoggedIn: homeVisible,
         homeTabVisible: homeVisible,
     };
-}
+}*/
 
 export interface NavigateTabsInput {
     mode?: string;
@@ -697,44 +854,44 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
 }
 
 export async function verifySearchNoResultsMessage(page: any, input?: Partial<VerifySearchNoResultsMessageInput>): Promise<VerifySearchNoResultsMessageOutput> {
-  const authPage = new OTTAuthPage(page);
-  const mode = normalizeLoginMode(input?.mode);
-  const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-  const searchQuery = input?.searchQuery ?? 'tfdiyhujehfdyhglfjh843847';
-  logger.step('Starting search no results message verification flow');
-  await authPage.navigate();
-  await authPage.acceptCookieSettingsIfVisible();
-  await authPage.clickEmailField();
-  await authPage.enterEmail(credentials.email);
-  await authPage.clickPasswordField();
-  await authPage.enterPassword(credentials.password);
-  await authPage.clickContinue();
-  await authPage.waitForLoadingToDisappear();
-  await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(searchQuery);
-  // Wait for search results/message to load - wait for the "No results" message to appear
-  logger.step(`Waiting for no results message to display for irrelevant query: ${searchQuery}`);
-  // Wait for the no results message to become visible (up to 15 seconds)
-  const messageVisible = await authPage.isNoResultsMessageVisible();
-  if (!messageVisible) {
-    logger.step('No results message did not appear, waiting additional time...');
-    await page.waitForTimeout(3000);
-  }
-  const searchInputValue = await authPage.getSearchBarValue();
-  const searchQueryTyped = searchInputValue.includes(searchQuery);
-  // Verify "No results found" message appears
-  const noResultsMessageVisible = messageVisible;
-  const messageText = await authPage.getNoResultsMessageText();
-  const contentCardsPresent = await authPage.getSearchResultsCount();
-  logger.assertion('No results message visible for irrelevant query', noResultsMessageVisible);
-  logger.step(`Search message: ${messageText}; Content cards found: ${contentCardsPresent}`);
-  return {
-    isLoggedIn: true,
-    searchQueryTyped,
-    noResultsMessageVisible,
-    messageText,
-    contentCardsPresent,
-  };
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const searchQuery = input?.searchQuery ?? 'tfdiyhujehfdyhglfjh843847';
+    logger.step('Starting search no results message verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(searchQuery);
+    // Wait for search results/message to load - wait for the "No results" message to appear
+    logger.step(`Waiting for no results message to display for irrelevant query: ${searchQuery}`);
+    // Wait for the no results message to become visible (up to 15 seconds)
+    const messageVisible = await authPage.isNoResultsMessageVisible();
+    if (!messageVisible) {
+        logger.step('No results message did not appear, waiting additional time...');
+        await page.waitForTimeout(3000);
+    }
+    const searchInputValue = await authPage.getSearchBarValue();
+    const searchQueryTyped = searchInputValue.includes(searchQuery);
+    // Verify "No results found" message appears
+    const noResultsMessageVisible = messageVisible;
+    const messageText = await authPage.getNoResultsMessageText();
+    const contentCardsPresent = await authPage.getSearchResultsCount();
+    logger.assertion('No results message visible for irrelevant query', noResultsMessageVisible);
+    logger.step(`Search message: ${messageText}; Content cards found: ${contentCardsPresent}`);
+    return {
+        isLoggedIn: true,
+        searchQueryTyped,
+        noResultsMessageVisible,
+        messageText,
+        contentCardsPresent,
+    };
 }
 
 export async function verifySearchLiveContentExclusion(page: any, input?: Partial<VerifySearchLiveContentExclusionInput>): Promise<VerifySearchLiveContentExclusionOutput> {
@@ -2425,6 +2582,215 @@ export async function enterCreateAccountCredentials(page: any, input: EnterCreat
     };
 }
 
+export interface VerifyRegistrationNavigationInput {
+    email: string;
+    password: string;
+    expectedMarketingText?: string;
+}
+
+export interface VerifyRegistrationNavigationOutput {
+    isHeadingVisible: boolean;
+    headingText: string;
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    isConfirmPasswordFieldVisible: boolean;
+    isTermsCheckboxVisible: boolean;
+    termsText: string;
+    isMarketingCheckboxVisible: boolean;
+    marketingText: string;
+    isContinueButtonVisible: boolean;
+    isVerifyOTPPageVisible: boolean;
+    emailFieldValue: string;
+    passwordFieldValue: string;
+    confirmPasswordFieldValue: string;
+}
+
+export interface VerifyRegistrationOTPScreenInput extends VerifyRegistrationNavigationInput {
+    confirmPassword?: string;
+    expectedOTPMessagePrefix?: string;
+    expectedOTPInputText?: string;
+    expectedVerifyButtonText?: string;
+    expectedBackToLoginText?: string;
+}
+
+export interface VerifyRegistrationOTPScreenOutput extends VerifyRegistrationNavigationOutput {
+    isVerifyOTPMessageVisible: boolean;
+    verifyOTPMessageText: string;
+    isVerifyOTPEmailVisible: boolean;
+    verifyOTPEmailText: string;
+    isInputCodeInstructionVisible: boolean;
+    inputCodeInstructionText: string;
+    isVerifyButtonVisible: boolean;
+    isBackToLoginLinkVisible: boolean;
+}
+
+export async function verifyRegistrationNavigation(
+    page: any,
+    input: VerifyRegistrationNavigationInput
+): Promise<VerifyRegistrationNavigationOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting registration navigation validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password);
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    await authPage.clickCreateAccountContinue();
+
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    const emailFieldValue = await authPage.getCreateAccountEmailValue();
+    const passwordFieldValue = await authPage.getCreateAccountPasswordValue();
+    const confirmPasswordFieldValue = await authPage.getCreateAccountConfirmPasswordValue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+
+    logger.assertion('Create account heading visible', isHeadingVisible);
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+    logger.assertion('Create account password field visible', isPasswordFieldVisible);
+    logger.assertion('Create account confirm password field visible', isConfirmPasswordFieldVisible);
+    logger.assertion('Create account terms checkbox visible', isTermsCheckboxVisible);
+    logger.assertion('Create account marketing checkbox visible', isMarketingCheckboxVisible);
+    logger.assertion('Create account continue button visible', isContinueButtonVisible);
+    logger.assertion('Verify OTP page visible after submitting registration', isVerifyOTPPageVisible);
+
+    return {
+        isHeadingVisible,
+        headingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isConfirmPasswordFieldVisible,
+        isTermsCheckboxVisible,
+        termsText,
+        isMarketingCheckboxVisible,
+        marketingText,
+        isContinueButtonVisible,
+        isVerifyOTPPageVisible,
+        emailFieldValue,
+        passwordFieldValue,
+        confirmPasswordFieldValue,
+    };
+}
+
+export async function verifyRegistrationNavigation1(
+    page: any,
+    input: VerifyRegistrationNavigationInput
+): Promise<VerifyRegistrationNavigationOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting registration navigation validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password);
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    await authPage.clickCreateAccountContinue();
+
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    const emailFieldValue = await authPage.getCreateAccountEmailValue();
+    const passwordFieldValue = await authPage.getCreateAccountPasswordValue();
+    const confirmPasswordFieldValue = await authPage.getCreateAccountConfirmPasswordValue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+
+    logger.assertion('Create account heading visible', isHeadingVisible);
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+    logger.assertion('Create account password field visible', isPasswordFieldVisible);
+    logger.assertion('Create account confirm password field visible', isConfirmPasswordFieldVisible);
+    logger.assertion('Create account terms checkbox visible', isTermsCheckboxVisible);
+    logger.assertion('Create account marketing checkbox visible', isMarketingCheckboxVisible);
+    logger.assertion('Create account continue button visible', isContinueButtonVisible);
+    logger.assertion('Verify OTP page visible after submitting registration', isVerifyOTPPageVisible);
+
+    return {
+        isHeadingVisible,
+        headingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isConfirmPasswordFieldVisible,
+        isTermsCheckboxVisible,
+        termsText,
+        isMarketingCheckboxVisible,
+        marketingText,
+        isContinueButtonVisible,
+        isVerifyOTPPageVisible,
+        emailFieldValue,
+        passwordFieldValue,
+        confirmPasswordFieldValue,
+    };
+}
+
+export async function verifyRegistrationOTPScreen(
+    page: any,
+    input: VerifyRegistrationOTPScreenInput
+): Promise<VerifyRegistrationOTPScreenOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting registration OTP screen validation flow');
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password);
+    await authPage.enterCreateAccountConfirmPassword(input.confirmPassword ?? input.password);
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    await authPage.clickCreateAccountContinue();
+
+    const baseResult = await verifyRegistrationNavigation(page, input);
+    const isVerifyOTPMessageVisible = await authPage.isVerifyOTPMessageVisible();
+    const verifyOTPMessageText = isVerifyOTPMessageVisible ? await authPage.getVerifyOTPMessageText() : '';
+    const isVerifyOTPEmailVisible = await authPage.isVerifyOTPEmailVisible(input.email);
+    const verifyOTPEmailText = isVerifyOTPEmailVisible ? await authPage.getVerifyOTPEmailText(input.email) : '';
+    const isInputCodeInstructionVisible = await authPage.isInputCodeInstructionVisible();
+    const inputCodeInstructionText = isInputCodeInstructionVisible ? await authPage.getInputCodeInstructionText() : '';
+    const isVerifyButtonVisible = await authPage.isVerifyButtonVisible();
+    const isBackToLoginLinkVisible = await authPage.isBackToLoginLinkVisible();
+
+    logger.assertion('Verify OTP message visible', isVerifyOTPMessageVisible);
+    logger.assertion('Verify OTP email visible', isVerifyOTPEmailVisible);
+    logger.assertion('OTP instruction visible', isInputCodeInstructionVisible);
+    logger.assertion('Verify button visible', isVerifyButtonVisible);
+    logger.assertion('Back to Login link visible', isBackToLoginLinkVisible);
+
+    return {
+        ...baseResult,
+        isVerifyOTPMessageVisible,
+        verifyOTPMessageText,
+        isVerifyOTPEmailVisible,
+        verifyOTPEmailText,
+        isInputCodeInstructionVisible,
+        inputCodeInstructionText,
+        isVerifyButtonVisible,
+        isBackToLoginLinkVisible,
+    };
+}
+
 export interface EnterCreateAccountEmailOnlyInput {
     email: string;
 }
@@ -2753,7 +3119,7 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
     const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
     await settingsPage.clickParentalPinToggle();
     const passwordFieldVisible = parentalControlsVisible ? await settingsPage.isParentalPinPasswordFieldVisible() : false;
-    
+
     let passwordSubmitted = false;
     let pinSetupMessageVisible = false;
     let pinSetupMessage = '';
@@ -2761,10 +3127,10 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
     if (passwordFieldVisible && pinPassword) {
         await settingsPage.enterParentalPinPassword(pinPassword);
         await settingsPage.clickParentalPinSubmitButton();
-        
+
         // Wait for the PIN setup message to become visible
         pinSetupMessageVisible = await settingsPage.waitForParentalPinSetupMessageVisible(5000);
-        
+
         if (pinSetupMessageVisible) {
             pinSetupMessage = await settingsPage.getParentalPinSetupMessage();
             passwordSubmitted = true;
@@ -2810,30 +3176,30 @@ export async function verifyParentalPinPasswordVisibility(page: any, input?: Par
     const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
     await settingsPage.clickParentalPinToggle();
     const passwordFieldVisible = parentalControlsVisible ? await settingsPage.isParentalPinPasswordFieldVisible() : false;
-    
+
     let eyeIconVisible = false;
     let passwordVisibleAfterToggle = false;
     let passwordValue = '';
 
     if (passwordFieldVisible && pinPassword) {
         await settingsPage.enterParentalPinPassword(pinPassword);
-        
+
         // Check if eye icon is visible
         eyeIconVisible = await settingsPage.isPasswordVisibilityIconVisible();
         logger.assertion('Password visibility toggle icon is visible', eyeIconVisible);
-        
+
         // Get initial password type (should be 'password')
         const initialType = await settingsPage.getPasswordInputType();
         logger.debug(`Initial password input type: ${initialType}`);
-        
+
         if (eyeIconVisible) {
             // Toggle password visibility
             await settingsPage.togglePasswordVisibility();
-            
+
             // Check if password is now visible
             passwordVisibleAfterToggle = await settingsPage.isPasswordInputValueVisible();
             logger.assertion('Password becomes visible after toggling eye icon', passwordVisibleAfterToggle);
-            
+
             // Get the password value to verify it matches what was entered
             passwordValue = await settingsPage.getPasswordInputValue();
             const passwordMatches = passwordValue === pinPassword;
@@ -2874,7 +3240,7 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
     const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
     await settingsPage.clickParentalPinToggle();
     const passwordFieldVisible = parentalControlsVisible ? await settingsPage.isParentalPinPasswordFieldVisible() : false;
-    
+
     let errorMessageVisible = false;
     let errorMessageText = '';
 
@@ -2882,20 +3248,20 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
         // Enter incorrect password
         await settingsPage.enterParentalPinPassword(invalidPassword);
         logger.step('Entered incorrect password for parental PIN');
-        
+
         // Click submit button
         await settingsPage.clickParentalPinSubmitButton();
         logger.step('Clicked submit button with incorrect password');
-        
+
         // Wait for error message to appear
         errorMessageVisible = await settingsPage.waitForParentalPinErrorMessageVisible(5000);
         logger.assertion('Error message appears after incorrect password submission', errorMessageVisible);
-        
+
         if (errorMessageVisible) {
             // Get error message text
             errorMessageText = await settingsPage.getParentalPinErrorMessage();
             logger.debug(`Error message text: ${errorMessageText}`);
-            
+
             // Verify error message matches expected value
             if (input?.expectedErrorMessage) {
                 const errorMatches = errorMessageText.includes(input.expectedErrorMessage);
@@ -2996,9 +3362,9 @@ export async function verifyParentalPinSaveSuccess(page: any, input?: Partial<Pa
     let successMessageVisible = false;
     let successMessage = '';
     let successHeaderVisible = false;
-    let  successDetails = '';
-    let  successHeader = '';
-    let  continueButtonVisible = false;
+    let successDetails = '';
+    let successHeader = '';
+    let continueButtonVisible = false;
 
     const expectedHeader = (input?.expectedSuccessHeader ?? '').trim();
     const expectedDetails = (input?.expectedSuccessDetails ?? '').trim();
@@ -3216,7 +3582,7 @@ export async function verifyParentalPinPlaybackAllowedWhenDisabled(page: any, in
     logger.assertion('Parental PIN toggle is off before playback', !parentalPinEnabled);
 
     await page.goBack({ waitUntil: 'networkidle' }).catch(() => undefined);
-     const continueRailVisible = await authPage.isContinueWatchingRailVisible();
+    const continueRailVisible = await authPage.isContinueWatchingRailVisible();
     if (continueRailVisible) {
         await detailsPage.clickFirstShowContent();
     } else {
@@ -3484,17 +3850,19 @@ export async function disableParentalPin(page: any, input?: Partial<DisableParen
     let successMessageVisible = false;
     let successMessage = '';
     let successHeaderVisible = false;
-    let  successDetails = '';
-    let  successHeader = '';
-    let  continueButtonVisible = false;
+    let successDetails = '';
+    let successHeader = '';
+    let continueButtonVisible = false;
     await settingsPage.enterParentalPinPassword(pinPassword);
     await settingsPage.clickParentalPinSubmitButton();
     successMessageVisible = await settingsPage.waitForParentalPinSuccessMessageVisible(5000);
     if (successMessageVisible) {
         successMessage = await settingsPage.getParentalPinSuccessMessage();
         // additional checks per updated test case: header, details, Continue button
-        successHeaderVisible = await settingsPage.isParentalPinSuccessHeaderVisible();            successHeader = await settingsPage.getParentalPinSuccessHeader();
-        successDetails = await settingsPage.getParentalPinSuccessDetails();                continueButtonVisible = await settingsPage.isParentalPinSuccessContinueButtonVisible();
+        successHeaderVisible = await settingsPage.isParentalPinSuccessHeaderVisible();
+        successHeader = await settingsPage.getParentalPinSuccessHeader();
+        successDetails = await settingsPage.getParentalPinSuccessDetails();
+        continueButtonVisible = await settingsPage.isParentalPinSuccessContinueButtonVisible();
     }
     const toggleOff = parentalControlsVisible ? await settingsPage.isParentalPinToggleDisabled() : false;
     if(toggleOff) {

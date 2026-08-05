@@ -194,7 +194,7 @@ class Logger {
   /**
      * Log assertion
      */
-  public assertion(description: string, result: boolean): void {
+  public assertion(description: string, result: boolean | string): void {
     const status = result ? 'PASSED' : 'FAILED';
     this.info(`ASSERTION ${status}: ${description}`);
   }

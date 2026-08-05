@@ -132,6 +132,19 @@
     - "IW3-T3657"
   dependsOn: []
 
+- id: "verify-synacor-landing-pages"
+  name: "Verify Synacor landing pages after provider login"
+  path: "src/businessFunction/ott-continue-watching-independent-bfs.ts"
+  export: "verifySynacorLandingPages"
+  tags:
+    - auth
+    - navigation
+    - smoke
+  testCases:
+    - "IW3-T3666"
+  dependsOn:
+    - "login-with-tv-provider-credentials"
+
 - id: "verify-support-and-policy-links"
   name: "Verify support and policy links"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -1015,6 +1028,34 @@
     - "IW3-T1848"
   dependsOn: []
  
+- id: "verify-registration-navigation"
+  name: "Verify Let’s Get Started registration navigation"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyRegistrationNavigation"
+  tags:
+    - auth
+    - registration
+    - smoke
+  testCases:
+    - "IW3-T1852"
+    - "IW3-T1854"
+  dependsOn:
+    - "verify-create-account-navigation"
+ 
+- id: "verify-registration-otp-screen"
+  name: "Verify registration OTP screen after Create Account"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyRegistrationOTPScreen"
+  tags:
+    - auth
+    - registration
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T1852"
+  dependsOn:
+    - "verify-registration-navigation"
+ 
 - id: "enter-create-account-credentials"
   name: "Enter credentials on Create Account screen"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -1076,6 +1117,58 @@
     - smoke
   testCases:
     - "IW3-T3667"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-upgrade-prompt-message"
+  name: "Verify the Early Access upgrade prompt message for free or basic users"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessUpgradePromptMessage"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3672"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-popup"
+  name: "Verify the Early Access popup for free or basic users"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessUpgradePromptMessage"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3670"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-episode-tag"
+  name: "Verify Early Access tag displayed on episode thumbnail in content details"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessEpisodeTag"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3675"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-early-access-continue-watching"
+  name: "Verify Early Access content is not shown in Continue Watching after partial playback"
+  path: "src/businessFunction/ott-early-access-bfs.ts"
+  export: "verifyEarlyAccessNotInContinueWatchingAfterPlayback"
+  tags:
+    - discovery
+    - ui
+    - smoke
+  testCases:
+    - "IW3-T3679"
   dependsOn:
     - "login-to-ott"
 

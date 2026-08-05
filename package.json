@@ -5,7 +5,8 @@
   "scripts": {
     "test:dev": "cross-env TEST_ENV=dev npx playwright test",
     "test:qa": "cross-env TEST_ENV=qa npx playwright test",
-    "test:prod": "cross-env TEST_ENV=prod npx playwright test",
+    "test:prod": "cross-env TEST_ENV=prod npx playwright test --headed --workers=1",
+    "test:mweb": "cross-env TEST_ENV=prod BROWSER=mchrome npx playwright test --headed --workers=1",
     "test:file:prod": "cross-env TEST_ENV=prod npx playwright test",
     "test:all": "cross-env TEST_ENV=prod npx playwright test --workers=1 --headed",
     "test:account": "cross-env TEST_ENV=prod npx playwright test --project=account --workers=1 --headed",
@@ -14,6 +15,7 @@
     "test:search": "cross-env TEST_ENV=prod npx playwright test --project=search --workers=1 --headed",
     "test:watchlist": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed",
     "test:region": "cross-env TEST_ENV=prod npx playwright test --project=region --workers=1 --headed",
+    "test:registration": "cross-env TEST_ENV=prod npx playwright test tests/home/registration-launch.spec.ts --project=launch --workers=1",
     "test:high": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @High",
     "test:medium": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Medium",
     "test:low": "cross-env TEST_ENV=prod npx playwright test --project=watchlist --workers=1 --headed --grep @Low"
@@ -26,9 +28,12 @@
     "@playwright/test": "^1.61.1",
     "@types/node": "^26.0.1",
     "cross-env": "^10.1.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@faker-js/faker": "^10.5.0"
+    "@faker-js/faker": "^10.5.0",
+    "easy-yopmail": "^5.2.2"
   }
 }

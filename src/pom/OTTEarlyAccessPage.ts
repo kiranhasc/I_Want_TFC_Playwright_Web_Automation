@@ -6,21 +6,30 @@ import { logger } from '../utils/logger';
 export class OTTEarlyAccessPage {
     private page: Page;
     private pageUtils: PageUtils;
-    private readonly railTitleSelector: PageElement;
-    private readonly assetTitleSelector: PageElement;
     private readonly defaultLabelText: string;
+    private readonly upgradeIconSelector: PageElement;
+    private readonly upgradeTitleSelector: PageElement;
+    private readonly upgradeDescriptionSelector: PageElement;
+    private readonly maybeLaterSelector: PageElement;
+    private readonly upgradeCtaSelector: PageElement;
+    private readonly earlyAccessLabelSelector: PageElement;
+
 
     constructor(page: Page) {
         this.page = page;
         this.pageUtils = new PageUtils(page);
-        this.railTitleSelector = { selector: 'h2, h3, .rail-title' };
-        this.assetTitleSelector = { selector: '[data-testid="content-card"], [data-testid="show-card"], .thumbnail, img.title-image' };
         this.defaultLabelText = 'Early Access';
+        this.upgradeIconSelector = { selector: '//img[@alt="early-access"]' };
+        this.upgradeTitleSelector = { selector: 'text=/Unlock Early Access/i' };
+        this.upgradeDescriptionSelector = { selector: 'text=/Upgrade to Premium for exclusive early viewing/i' };
+        this.maybeLaterSelector = { selector: 'text=/Maybe later/i' };
+        this.upgradeCtaSelector = { selector: 'text=/Upgrade to watch now/i' };
+        this.earlyAccessLabelSelector = { selector: `(//img[@alt="{assetTitle}"]/parent::div/following-sibling::div//img[@alt="early_access"])[1]` };
     }
 
     async scrollToRail(railTitle: string): Promise<void> {
         logger.step(`Processing rail: ${railTitle}`);
-        if (railTitle.includes('iWant Picks ROW')) {
+        if (railTitle.includes('Hero Banner - ROW')) {
             logger.info(`Skipping scroll for rail: ${railTitle}`);
             return;
         }
@@ -37,17 +46,80 @@ export class OTTEarlyAccessPage {
     async isLabelVisibleForAsset(assetLocator: any, labelText?: string): Promise<boolean> {
         const label = labelText ?? this.defaultLabelText;
         try {
-            const tagLocator = assetLocator.locator(`xpath=parent::div/following-sibling::div/img[@alt="${label}"]`);
-            await tagLocator.waitFor({ state: 'visible', timeout: 8000 });
+            const tagLocator = assetLocator.locator(`xpath=../following-sibling::div//img[@alt="${label}"]`).first();
+            await tagLocator.waitFor({ state: 'visible', timeout: 15000 });
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+
+    async openAssetDetails(assetTitle: string): Promise<void> {
+        const selector = await this.pageUtils.parameterizeSelector(this.earlyAccessLabelSelector, { assetTitle });
+        await selector.click()
+    }
+
+    async isEpisodeLabelVisible(labelText?: string): Promise<boolean> {
+        const label = labelText ?? this.defaultLabelText;
+        try {
+            const episodeLabel = this.page.locator(`//div[@class="episodes-list"]//img[@alt="${label}"]`).first();
+            await episodeLabel.waitFor({ state: 'visible', timeout: 15000 });
             return true;
         } catch {
-            try {
-                const nearby = assetLocator.locator(`xpath=following-sibling::*[1]//*[contains(normalize-space(string()), "${label}")]`);
-                await nearby.waitFor({ state: 'visible', timeout: 3000 });
-                return true;
-            } catch {
-                return false;
-            }
+            return false;
         }
+    }
+
+    async openLatestEarlyAccessEpisode(labelText: string): Promise<boolean> {
+        const episodes = this.page.locator(`//div[@class="episodes-list"]/div/div/div/following-sibling::div/div/p[@class="font-semibold"]`);
+        let previousCount = 0;
+        while (true) {
+            const currentCount = await episodes.count();
+            if (currentCount === previousCount) {
+                break;
+            }
+            previousCount = currentCount;
+            await episodes.nth(currentCount - 1).scrollIntoViewIfNeeded();
+            await this.page.waitForTimeout(1500);
+        }
+        const totalEpisodes = await episodes.count();
+        if (totalEpisodes === 0) {
+            return false;
+        }
+        const latestEpisode = episodes.nth(totalEpisodes - 1);
+        const latestEpisodeName = (await latestEpisode.textContent())?.trim() ?? "";
+        logger.info(`Latest Episode name is : ${latestEpisodeName}`);
+        try {
+            const badge = this.page.locator(`//div[@class="episodes-list"]//p[normalize-space()='${latestEpisodeName}']/parent::div/parent::div/preceding-sibling::div//img`).last();
+            const altValue = await badge.getAttribute("alt");
+            logger.info(`Badge Alt Value: ${altValue} found for episode ${latestEpisodeName}`);
+            if (altValue === labelText) {
+                await latestEpisode.scrollIntoViewIfNeeded();
+                await latestEpisode.click();
+                logger.info(`Clicked latest Early Access episode: ${latestEpisodeName}`);
+                return true;
+            }
+            logger.assertion(`Latest episode does not have '${labelText}' badge.`, false);
+            return false;
+        } catch (error) {
+            logger.error("Early Access badge not found.", error);
+            return false;
+        }
+    }
+
+    async verifyUpgradePromptMessage() {
+        const upgradeIconVisible = await this.pageUtils.isVisible(this.upgradeIconSelector)
+        const titleVisible = await this.pageUtils.getTextContent(this.upgradeTitleSelector);
+        const descriptionVisible = await this.pageUtils.getTextContent(this.upgradeDescriptionSelector);
+        const maybeLaterVisible = await this.pageUtils.getTextContent(this.maybeLaterSelector);
+        const upgradeCtaVisible = await this.pageUtils.getTextContent(this.upgradeCtaSelector);
+        return {
+            upgradeIconVisible,
+            titleVisible,
+            descriptionVisible,
+            maybeLaterVisible,
+            upgradeCtaVisible
+        };
     }
 }

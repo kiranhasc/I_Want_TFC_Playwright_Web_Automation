@@ -70,6 +70,7 @@ export class OTTDetailsPage {
   private readonly freeTagBadge: PageElement;
   private readonly loginCta: PageElement;
   private readonly firstSearchResult: PageElement;
+  private readonly thumbnailLabelOverlay: PageElement;
   private readonly playerScreen: PageElement;
   private readonly seekBar: PageElement;
   private readonly playbackTime: PageElement;
@@ -182,9 +183,8 @@ export class OTTDetailsPage {
     this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
     this.showsSectionLink = { selector: 'nav >> text=Shows'};
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image'};
-    this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item'};
     this.episodesListItems = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
-    this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, main [role="button"], main [cursor="pointer"]' };
+    this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .episode-info, .season-episodes .episode-item, .episode-list .episode-item, main [role="button"], main [cursor="pointer"]' };
     this.videoPlayer = { selector: 'video, [data-testid="video-player"], .video-player video, .player video'};
     this.episodeTitle = { selector: '[data-testid="episode-title"], .episode-title, h2:has-text("Episode")'};
     this.playbackContentTitle = { selector: '[data-testid="player-title"], .player-title, .video-title, .content-title, .player-header h1, h1' };
@@ -224,6 +224,7 @@ export class OTTDetailsPage {
     this.skipIntroMarker = { selector: 'button:has-text("Skip Intro"), [data-testid*="skip-intro"], [aria-label*="Skip Intro"]' };
     this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"]' };
     this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
+    this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '[data-testid="player"], .player-screen, video' };
     this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
@@ -726,10 +727,9 @@ export class OTTDetailsPage {
 
   async clickFirstEpisodeCard(): Promise<void> {
     logger.elementInteraction('click', 'first episode card');
-
-    const episodeCard = this.page.locator(this.firstEpisodeCard.selector).first();
+    const episodeCard = await this.page.locator(this.firstEpisodeCard.selector).first();
     try {
-      if (this.page.isClosed()) return;
+      if (await this.page.isClosed()) return;
       if (await episodeCard.count()) {
         await episodeCard.waitFor({ state: 'visible', timeout: 15000 });
         await episodeCard.scrollIntoViewIfNeeded();
@@ -1649,6 +1649,46 @@ async addToWatchlistAndGetToast(): Promise<string> {
       return isPremium;
     } catch (err) {
       logger.debug('isContentTaggedPremiumInSearchResults (GraphQL) failed', err);
+      return false;
+    }
+  }
+
+  async isSearchResultLabelVisible(contentTitle: string, expectedLabel: string): Promise<boolean> {
+    try {
+      const normalizedTitle = String(contentTitle ?? '').trim();
+      const normalizedLabel = String(expectedLabel ?? '').trim().toLowerCase();
+      if (!normalizedTitle || !normalizedLabel) {
+        return false;
+      }
+      const escapedTitle = await normalizedTitle.replace(/'/g, "\\'");
+      const titleSelectors = await[
+        `img[alt*="${escapedTitle}"]`,
+        `[alt*="${escapedTitle}"]`,
+        `[title*="${escapedTitle}"]`
+      ];
+      const matchingContent = await this.page.locator(titleSelectors.join(', ')).first();
+      const matchingContentCount = await matchingContent.count().catch(() => 0);
+      if (!matchingContentCount) {
+        return false;
+      }
+      const overlayLocator = await this.page.locator(this.thumbnailLabelOverlay.selector).first();
+      const overlayCount = await overlayLocator.count().catch(() => 0);
+      if (!overlayCount) {
+        return false;
+      }
+      const labelImage = await overlayLocator.locator('img').first();
+      const labelImageCount = await labelImage.count().catch(() => 0);
+      if (!labelImageCount) {
+        return false;
+      }
+      const altText = (await labelImage.getAttribute('alt').catch(() => '') || '').trim();
+      logger.info(`Found alt text: "${altText}" for content title: "${normalizedTitle}"`);
+      const combinedText = `${altText}`.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+      logger.info(`Combined text for label check: "${combinedText}"`);
+      logger.info(`Normalized label for check: "${normalizedLabel}"`);
+      return combinedText.includes(normalizedLabel);
+    } catch (err) {
+      logger.debug('isSearchResultLabelVisible failed', err);
       return false;
     }
   }
@@ -2958,12 +2998,18 @@ async addToWatchlistAndGetToast(): Promise<string> {
       await input.waitFor({ state: 'visible', timeout: 10000 });
       await input.fill(digits[index]);
     }
-  }
-  async isParentalPinInvalidErrorVisible(): Promise<boolean> {
+  }  async isParentalPinInvalidErrorVisible(): Promise<boolean> {
     return await this.pageUtils.isVisible(this.parentalPinInvalidErrorMessage, 10000);
   }
 
   async getParentalPinInvalidErrorText(): Promise<string> {
     return await this.pageUtils.getTextContent(this.parentalPinInvalidErrorMessage, 10000);
+  }
+  
+  async clickParentalPlaybackPinSubmitButton(): Promise<void> {
+    logger.elementInteraction('click', 'Parental playback PIN submit button');
+    const submitButton = this.page.locator(this.parentalPinValidateButton.selector).first();
+    await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+    await submitButton.click({ timeout: 15000 });
   }
 }

@@ -105,6 +105,31 @@ This test plan covers validation of application launch behavior for the OTT plat
    6. Click on "Continue" CTA.
       * User should be successfully landed on the "Home" screen.
 
+### 20.1. IW3-T4703 Verify that the “Top 10” tag is displayed on the content thumbnail when Top 10 rail content appears in other rails.
+**File:** `tests/home/landing-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Return a 10 contents title from Top 10 Shows from collection graphQL API.
+      * except : Print 10 contents name in the below format
+         (Ex : Top 10 Shows Content 1 : returned 1st value, Print all 10 values in this format)
+      * except : Check UI of entire home page, wherever these content appears in any rail Print rail name along with Content displayed in that rail.
+         (Ex: Rail Name : Content Name)
+
+### 20.2. IW3-T4704 Verify that "Top 10" tag displayed on the content thumbnail at the top right corner.
+**File:** `tests/home/landing-page-launch.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Observe the "Top 10" tag appears on the content thumbnail
+      * except : The “Top 10” tag should be displayed clearly on the top-right corner of the
+      content thumbnail.
+
+
 ### 1.8. IW3-T1895 Verify the user navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
 **File:** ``tests/details/details-page-validation.spec.ts`
 **Steps:**
@@ -700,21 +725,127 @@ This test plan covers validation of application launch behavior for the OTT plat
       * except App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast disaplyed in details page)
    9. Tap the content back button
    10. Observe the Navigation
-      * except User should be correctly Navigated back to the Search results screen with
-      the previous search term and results still visible.
+      * except User should be correctly Navigated back to the Search results screen with the previous search term and results still visible.
 
-### 8.1. IW3-T2094 Verify Parental pin option will be available is Settings page
-**File:** `tests/home/parential-pin.spec.ts`
+### 7.20. IW3-T2088 Verify that exact title matches appear at the top of the search results.
+
+**File:** `tests/home/search.spec.ts`
 **Steps:**
    1. Open the browser.
    2. Enter the URL(https://iwanttfc.com/)
    3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
    4. Login with valid Email and Password
-   4. Click on "Account" icon.
-   5. Click on "Account & Settings".
-   6. Scroll to bottom of the page.
-      * except Observe "Parental Controls" section in bottom of the page
+   5. Get any content from Collection graphQL API 
+   5. Click on search icon
+   6. Enter content name returned from Collection graphQL API
+      * except The result with the exact title match should appear at the top of the
+      search result list, followed by partial or related matches.
 
+### 7.21. IW3-T2089 Verify that trending results are shown when the user taps on the Search icon without entering any query.
+
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   5. Click on search icon
+   6. Enter content name returned from Collection graphQL API
+   7. Clear the search results.
+   8. Observe the 'trending search' results
+      * except When the user Navigates to the Search screen without entering any query in the search bar, a list of trending results should be automatically
+      displayed
+   
+### 7.22. IW3-T2090 Verify Trending search/Top picks near you title displayed on Navigating to search tab
+
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   6. Click on search icon
+   7. Enter content name returned from Collection graphQL API
+   8. Clear the search results.
+   9. Observe the 'Top Picks Near You' results
+      * except Top Picks Near You header should be displayed on Navigating to search page (Assert header Top Picks Near You)
+
+### 7.23. IW3-T2091 Verify that trending results are not displayed when the user enters any query in the search field.
+
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   6. Click on search icon
+   7. Enter content name returned from Collection graphQL API
+   8. Clear the search results.
+   9. Start entering any other query. (EX : LOVE)
+      * except Once the user starts typing in the search field, Top Picks Near You should disappear and be replaced by search results relevant to the query
+
+
+### 7.24. IW3-T2092 Verify that when the user taps on any trending content from the Search page, Navigated to the corresponding Detail Page.
+
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Get any content from Collection graphQL API 
+   6. Click on search icon
+   7. Enter content name returned from Collection graphQL API
+   8. Tap on 'Clear all' icon
+      * 'Top Picks Near You' screen header should be displayed
+   9. Return first content details from "title": "Top Picks Near You", from search api after clearing search
+   10. Click on First content displayed under Top Picks Near You
+      * except App should redirect to the correct content details page(Validate Content title, shortDescription, genres, cast disaplyed in details page)
+
+### 7.25. IW3-T2080 VVerify search results load even without login to iwanttfc application.
+
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. User will lands on the "Home" page.
+   4. Tap on 'Search' icon
+   5. Search for any content.
+   6. Observe search page
+      * except Search results should appear without login
+
+### 7.26. IW3-T2082 Verify "New Episode", "Coming Soon", "GMA", "Recently Added" display on Search results for applicable content
+**File:** `tests/home/search.spec.ts`
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Return content title name having id has new_episode value form label from Collection graphQL API, if no matching return null
+      * except Print  content name (Ex : New Episode : retuned value)
+   6. Return content title name having id has coming_soon value form label from Collection graphQL API, if no matching return null
+      * except Print coming soon content name (Ex : Coming Soon : retuned value)
+   7. Return content title name having id has recently_added value form label from Collection graphQL API, if no matching return null
+      * except Print recently added content name (Ex : Recently added : retuned value)
+   8. Return content title name having GMA as contentOwner form label from Collection graphQL API, if no matching return null
+      * except Print GMA content name (Ex : GMA : retuned value)
+   9. Click on search icon
+   10. Enter New Episode content name returned from Collection graphQL API
+      * except Assert content tag img alt attribute should have recently_added value
+   11. Click on search icon
+   12. Enter Coming Soon content name returned from Collection graphQL API
+      * except Assert content tag img alt attribute should have coming_soon value   
+   13. Click on search icon
+   14. Enter Recently Added content name returned from Collection graphQL API
+      * except Assert content tag img alt attribute should have recently_added value   
+   15. Click on search icon
+   16. Enter GMA content name returned from Collection graphQL API
+      * except Assert content tag should have monetization 
+
+   
 ### 8.2. IW3-T2095 Verify Parental pin toggle will be in disable state by default
 **File:** `tests/home/parential-pin.spec.ts`
 **Steps:**
@@ -925,6 +1056,21 @@ This test plan covers validation of application launch behavior for the OTT plat
    11. Tap on any content under Continue Watching.
    12. Play the content
       * except The content should play directly without prompting for PIN
+
+### 8.14. Verify that the selected episode from the Continue Watching tray resumes playback from the last watched position, and not from the beginning or the first episode when the parental pin is enabled.
+**File:** `tests/home/parential-pin.spec.ts`
+**Steps:**
+    1. Open the browser.
+   2. Enter the URL (https://uat.iwanttfc.com/).
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Return any show content from collection graphQL api
+   5. Search and navigate to returned show details page 
+   4. Play first Episode partially till the content added to CWT.
+   5. Then Navigate to Continue watching and Content Detail page.
+   6. Click on Resume button.
+   7. Enter the parental pin.
+   8. Observe the Episode number
 
 #### 2.1. IW3-T1967 Verify that tapping the play button from the content detail page NFvigates the user to the player screen.
 

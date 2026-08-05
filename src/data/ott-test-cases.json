@@ -132,6 +132,9 @@
         "searchQuery": "Incognito",
         "expectedVPNErrorMessage": "We detected that you’re using a VPN or proxy. Please disable it and try again."
     },
+    "tc-home-top10-tag": {
+        "mode": "valid"
+    },
     "tc-discovery-001-early-access": {
         "mode": "valid",
         "graphqlQueryName": "Collection",
@@ -348,6 +351,10 @@
         "mode": "valid",
         "graphqlQueryName": "Collection"
     },
+    "tc-nav-026-search-result-label-ui": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
     "tc-nav-012-partial-search": {
         "mode": "valid"
     },
@@ -358,6 +365,33 @@
     "tc-nav-014-search-smooth-scrolling": {
         "mode": "valid",
         "graphqlQueryName": "Collection"
+    },
+    "tc-nav-020-search-exact-title-match-top": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-021-search-trending-results": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-022-search-top-picks-title": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "expectedHeading": "Top Picks Near You"
+    },
+    "tc-nav-023-search-trending-hidden-on-query": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "secondarySearchQuery": "LOVE",
+        "expectedHeading": "Top Picks Near You"
+    },
+    "tc-nav-024-trending-content-detail-navigation": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "expectedHeading": "Top Picks Near You"
+    },
+    "tc-nav-025-search-results-guest": {
+        "searchQuery": "Abandoned"
     },
     "tc-sub-001-free-subscribe": {
         "mode": "freeUser",
@@ -632,6 +666,11 @@
     },
     "tc-settings-013-parental-pin-off-allows-playback": {
         "mode": "freeUser"
+    },
+    "tc-settings-014-parental-pin-resume-continue-watching": {
+        "mode": "valid",
+        "pin": "1234",
+        "expectedParentalPinPromptText": "Enter the PIN to Access"
     },
     "tc-auth-009-continue-watching-no-history": {
         "mode": "valid",

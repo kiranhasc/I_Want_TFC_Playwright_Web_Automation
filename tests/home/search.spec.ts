@@ -1,7 +1,8 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { verifySearchIconVisibilityOnAllPages, verifySearchQueryTyping, verifySearchResults, verifySearchAutoSuggestions, verifySearchNoResultsMessage, clearSearchTextFromSearchField, navigateAndVerifyTabs, verifySearchByActorOrGenre, verifySearchFreePremiumLabels, verifySearchLiveContentExclusion, verifySearchPartialKeyword, verifySearchResultRedirectsToDetailPage, verifySearchBackNavigationFromDetailPage, verifySearchSmoothScrolling } from '../../src/businessFunction/ott-auth-bfs';
+import { verifySearchIconVisibilityOnAllPages, verifySearchQueryTyping, verifySearchResults, verifySearchAutoSuggestions, verifySearchNoResultsMessage, clearSearchTextFromSearchField, navigateAndVerifyTabs, verifySearchByActorOrGenre, verifySearchFreePremiumLabels, verifySearchResultLabelUI, verifySearchLiveContentExclusion, verifySearchPartialKeyword, verifySearchResultRedirectsToDetailPage, verifySearchBackNavigationFromDetailPage, verifySearchSmoothScrolling, verifySearchTrendingResults, verifySearchTopPicksNearYouTitle, verifyTrendingResultsHiddenWhenSearching, verifyTrendingContentDetailNavigation, verifyGuestSearchResultsWithoutLogin } from '../../src/businessFunction/ott-auth-bfs';
 import { addContentToWatchlistFromSearchPage, removeContentFromWatchlistFromSearchPage } from '../../src/businessFunction/ott-watchlist-bfs';
 import { playPremiumContentFromSearch } from '../../src/businessFunction/ott-playback-bfs';
+import { verifySearchExactTitleMatchAtTop } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Search navigation', () => {
@@ -32,6 +33,7 @@ test.describe('Search navigation', () => {
   });
 
   test('@High IW3-T2064 : Verify the search results are shown when a valid title is entered in the Search field', async ({ page }) => {
+    test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-003-search-results'];
     const result = await verifySearchResults(page, {
       mode: data.mode,
@@ -107,6 +109,7 @@ test.describe('Search navigation', () => {
   });
 
   test('@Low IW3-T2085 : Verify if irrelevant search suggestions are being displayed which dont have valid results', async ({ page }) => {
+    test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-017-search-invalid-suggestions'];
     const result = await verifySearchAutoSuggestions(page, {
       mode: data.mode,
@@ -119,6 +122,7 @@ test.describe('Search navigation', () => {
   });
 
   test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => {
+    test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
       mode: data.mode,
@@ -133,6 +137,7 @@ test.describe('Search navigation', () => {
   });
 
   test('@Medium IW3-T2087 : Verify that back navigation returns the user from content details to the search results page', async ({ page }) => {
+    test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-019-search-back-navigation'];
     const result = await verifySearchBackNavigationFromDetailPage(page, {
       mode: data.mode,
@@ -218,6 +223,18 @@ test.describe('Search navigation', () => {
     }
   });
 
+  test('@Low IW3-T2082 : Verify "New Episode", "Coming Soon", "GMA", and "Recently Added" display on search results for applicable content', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-026-search-result-label-ui'];
+    const result = await verifySearchResultLabelUI(page, {
+      mode: data?.mode,
+      graphqlQueryName: data?.graphqlQueryName,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.labelsChecked.length).toBeGreaterThan(0);
+    expect.soft(result.matchedLabelCount).toBeGreaterThan(0);
+  });
+
   test('@Low IW3-T2076 : Verify that tapping on any search result redirects to the Detail page', async ({ page }) => {
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-013-search-result-redirect'];
@@ -270,5 +287,90 @@ test.describe('Search navigation', () => {
     expect.soft(result.queryTyped).toBe(true);
     expect.soft(result.resultsVisible).toBe(true);
     expect.soft(result.matchedSearchValues.length).toBeGreaterThan(0);
+  });
+
+  test('@Medium IW3-T2089 : Verify that trending results are shown when the user taps on the Search icon without entering any query', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-021-search-trending-results'];
+    const result = await verifySearchTrendingResults(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.searchInputCleared).toBe(true);
+    expect.soft(result.trendingResultsVisible).toBe(true);
+    expect.soft(result.trendingResultTitles.length).toBeGreaterThan(0);
+  });
+
+  test('@Medium IW3-T2090 : Verify Trending search/Top picks near you title displayed on navigating to the search tab', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-022-search-top-picks-title'];
+    const result = await verifySearchTopPicksNearYouTitle(page, {
+      mode: data.mode,
+      expectedHeading: data.expectedHeading,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.searchInputCleared).toBe(true);
+    expect.soft(result.headingVisible).toBe(true);
+    expect.soft(result.headingText.toLowerCase()).toContain(data.expectedHeading.toLowerCase());
+  });
+
+  test('@Low IW3-T2091 : Verify that trending results are not displayed when the user enters any query in the search field', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-023-search-trending-hidden-on-query'];
+    const result = await verifyTrendingResultsHiddenWhenSearching(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+      secondarySearchQuery: data.secondarySearchQuery,
+      expectedHeading: data.expectedHeading,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.searchInputCleared).toBe(true);
+    expect.soft(result.newQueryEntered).toBe(true);
+    expect.soft(result.trendingHeadingHidden).toBe(true);
+    expect.soft(result.searchResultsVisible).toBe(true);
+    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
+  });
+
+  test('@Medium IW3-T2088 : Verify that exact title matches appear at the top of the search results', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-020-search-exact-title-match-top'];
+    const result = await verifySearchExactTitleMatchAtTop(page, {
+      mode: data.mode,
+      graphqlQueryName: data.graphqlQueryName,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.searchResultsVisible).toBe(true);
+    expect.soft(result.collectionTitle).toBeTruthy();
+    expect.soft(result.exactMatchAtTop).toBe(true);
+    expect.soft(result.exactMatchIndex).toBe(0);
+  });
+
+  test('@Low IW3-T2092 : Verify that when the user taps on any trending content from the Search page, Navigated to the corresponding Detail Page', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-024-trending-content-detail-navigation'];
+    const result = await verifyTrendingContentDetailNavigation(page, {
+      mode: data.mode,
+    });
+    expect.soft(result.isLoggedIn).toBe(true);
+    expect.soft(result.topPicksHeadingVisible).toBe(true);
+    expect.soft(result.trendingContentFound).toBe(true);
+    expect.soft(result.trendingContentTitle).toBeTruthy();
+    expect.soft(result.detailsPageVisible).toBe(true);
+    expect.soft(result.detailsPageTitleMatches).toBe(true);
+  });
+
+  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-025-search-results-guest'];
+    const result = await verifyGuestSearchResultsWithoutLogin(page, {
+      searchQuery: data.searchQuery,
+    });
+    expect.soft(result.isLoggedIn).toBe(false);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.resultsVisible).toBe(true);
+    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 })

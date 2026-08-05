@@ -58,7 +58,7 @@ export default defineConfig({
 
 
   testIgnore: [
-    '**/parential-pin.spec.ts',
+    // '**/parential-pin.spec.ts',
     '**/vpn-page-launch.spec.ts',
     '**/ph_region.spec.ts',
   ],
@@ -108,7 +108,7 @@ export default defineConfig({
     {
       name: 'search',
       testDir: 'tests/home',
-      testMatch: '**/search.spec.ts',
+      testMatch: '**/search.spec.ts', 
     },
 
 

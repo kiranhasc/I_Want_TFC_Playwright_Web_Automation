@@ -51,7 +51,7 @@ export class OTTSettingsPage {
 
     async clickAccountAndSettings(): Promise<void> {
         logger.elementInteraction('click', 'Account and Settings');
-        await this.page.locator(this.accountAndSettingsLink.selector).first().click().catch(() => undefined);
+        await this.pageUtils.safeClick(this.accountAndSettingsLink);
     }
 
     async scrollToParentalControlsSection(): Promise<void> {
@@ -71,7 +71,6 @@ export class OTTSettingsPage {
                 if (normalizedLabel === 'on') return 'on';
                 if (normalizedLabel === 'off') return 'off';
             }
-
             const thumbClass = await sectionLocator.locator('button > span').first().getAttribute('class').catch(() => '');
             if (thumbClass?.includes('translate-x-full')) {
                 return 'on';

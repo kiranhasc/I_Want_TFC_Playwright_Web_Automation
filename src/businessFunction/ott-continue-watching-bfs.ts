@@ -1,7 +1,11 @@
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { OTTAuthPage } from '../pom/OTTAuthPage';
+import { OTTSettingsPage } from '../pom/OTTSettingsPage';
+import { loginToOTT } from './ott-auth-bfs';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 
 export interface ContinueWatchingPlaybackInput {
   mode?: string;
@@ -20,6 +24,17 @@ export interface ContinueWatchingPlaybackOutput {
   resumedTime: string;
   timeDifferenceSeconds: number;
   reason?: string;
+}
+
+export interface ParentalPinContinueWatchingPlaybackInput extends ContinueWatchingPlaybackInput {
+  parentalPin?: string;
+}
+
+export interface ParentalPinContinueWatchingPlaybackOutput{
+  itemFound: boolean;
+  playerVisible: boolean;
+  parentalPinPromptVisible: boolean;
+  parentalPinSubmitted: boolean;
 }
 
 export interface RemoveFromContinueWatchingInput {
@@ -127,6 +142,49 @@ async function pausePlaybackAfterControlsSettle(page: any, detailsPage: any, wai
   await page.waitForTimeout(waitMs);
   await detailsPage.clickPauseButton().catch(() => undefined);
   await page.waitForTimeout(waitMs);
+}
+
+async function ensureParentalPinIsEnabled(
+  page: any,
+  authPage: OTTAuthPage,
+  settingsPage: OTTSettingsPage,
+  credentials: { email: string; password: string },
+  pin: string
+): Promise<{ parentalPinEnabled: boolean; parentalPinSubmitted: boolean; reason?: string }> {
+  await settingsPage.clickAccountIcon();
+  await settingsPage.clickAccountAndSettings();
+  await settingsPage.scrollToParentalControlsSection();
+  const toggleOff = await settingsPage.isParentalPinToggleOff();
+  let parentalPinSubmitted = false;
+  if (toggleOff) {
+    await settingsPage.clickParentalPinToggle();
+    const passwordFieldVisible = await settingsPage.isParentalPinPasswordFieldVisible();
+    if (!passwordFieldVisible) {
+      return { parentalPinEnabled: false, parentalPinSubmitted: false, reason: 'Parental PIN password field did not appear after enabling the toggle' };
+    }
+    await settingsPage.enterParentalPinPassword(credentials.password);
+    await settingsPage.clickParentalPinSubmitButton();
+    await page.waitForTimeout(10000);
+    const pinInputBoxesVisible = await settingsPage.areParentalPinInputsVisible();
+    if (!pinInputBoxesVisible) {
+      return { parentalPinEnabled: false, parentalPinSubmitted: false, reason: 'Parental PIN digit input boxes were not visible after submitting account password' };
+    }
+    await settingsPage.enterParentalPinDigits(pin);
+    await settingsPage.clickParentalPinSaveButton();
+    await page.waitForTimeout(10000);
+    const successMessageVisible = await settingsPage.waitForParentalPinSuccessMessageVisible(5000);
+    if (successMessageVisible) {
+      await settingsPage.clickParentalPinSuccessContinueButton().catch(() => undefined);
+      parentalPinSubmitted = true;
+    }
+  }
+
+  const parentalPinEnabled = await settingsPage.isParentalPinToggleOn();
+  return {
+    parentalPinEnabled,
+    parentalPinSubmitted,
+    reason: parentalPinEnabled ? undefined : 'Parental PIN was not enabled after setup',
+  };
 }
 
 export async function verifyContinueWatchingPlaybackFromTray(
@@ -335,6 +393,175 @@ export async function verifyContinueWatchingPlaybackFromTray(
   };
 }
 
+export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
+  page: any,
+  input?: ParentalPinContinueWatchingPlaybackInput
+): Promise<ParentalPinContinueWatchingPlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const settingsPage = new OTTSettingsPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Continue Watching playback validation from tray with parental PIN enabled');
+
+  const parentalPin = (input?.parentalPin).trim();
+
+  const modeToUse = input?.mode;
+  const loginResult = await loginToOTT(page, { mode: modeToUse });
+  const email = input?.email;
+  const password = input?.password;
+
+  if (!loginResult?.isLoggedIn) {
+    return {
+      itemFound: false,
+      playerVisible: false,
+      parentalPinPromptVisible: false,
+      parentalPinSubmitted: false,
+    };
+  }
+
+  // Ensure PIN is disabled before seeding Continue Watching content
+  await settingsPage.clickAccountIcon();
+  await settingsPage.clickAccountAndSettings();
+  await settingsPage.scrollToParentalControlsSection();
+  const pinEnabledBeforeSeed = await settingsPage.isParentalPinToggleOn();
+  if (pinEnabledBeforeSeed) {
+    logger.info('Parental PIN is enabled before seed flow; disabling it first');
+    await settingsPage.clickParentalPinToggle();
+    await settingsPage.enterParentalPinPassword(password || '');
+    await page.waitForTimeout(5000);
+    await settingsPage.clickParentalPinSubmitButton();
+    await settingsPage.waitForParentalPinSuccessMessageVisible(5000).catch(() => false);
+    await settingsPage.clickParentalPinSuccessContinueButton().catch(() => undefined);
+    await page.waitForTimeout(3000);
+  }
+ await authPage.navigate();
+ await page.waitForLoadState('networkidle', { timeout: 60000 });
+  // Try to obtain a show title from Collection GraphQL, search it and play first episode partially
+  try {
+    const gql = GraphQLHelper.getInstance(page);
+    const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
+    if (collectionOp && collectionOp.response) {
+      const parser = new CollectionParser(collectionOp as any);
+      let showTitle = parser.getPreferredAssetTitle([/shows/i, 'shows']);
+      if (!showTitle) {
+        const titles = parser.getPreferredRailTitles([/shows/i, 'shows'], 1);
+        showTitle = titles && titles.length ? titles[0] : '';
+      }
+      if (showTitle) {
+        logger.info('Found show title from Collection GraphQL', { showTitle });
+        await authPage.clickSearchBar();
+        await authPage.enterSearchQuery(showTitle);
+        await authPage.submitSearchQuery();
+        await page.waitForLoadState('networkidle', { timeout: 60000 });
+        await page.waitForTimeout(3000);
+        await detailsPage.clickFirstSearchResult();
+        // Ensure details page loaded and click the first episode to start episode playback
+        const detailsVisible = await detailsPage.isContentDetailsPageVisible();
+        if (detailsVisible) {
+          await page.waitForLoadState('networkidle', { timeout: 60000 });
+          await detailsPage.clickFirstEpisodeCard();
+          await page.waitForTimeout(10000);
+          await detailsPage.clickPlayerForwardButton();
+          await page.waitForTimeout(25000);
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug('Failed to seed Continue Watching via Collection->Search flow', err);
+  }
+  await page.goBack({ waitUntil: 'networkidle' });
+  logger.info('Navigated back to Home page after seeding Continue Watching content');
+  const parentalPinResult = await ensureParentalPinIsEnabled(page, authPage, settingsPage, { email, password }, parentalPin);
+  if (!parentalPinResult.parentalPinEnabled) {
+    return {
+      itemFound: false,
+      playerVisible: false,
+      parentalPinPromptVisible: false,
+      parentalPinSubmitted: parentalPinResult.parentalPinSubmitted,
+    };
+  }
+  await authPage.navigate();
+  await authPage.acceptCookieSettingsIfVisible();
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  const titleVisible = await authPage.isContinueWatchingTrayTitleVisible();
+  if (!titleVisible) {
+    return {
+      itemFound: false,
+      playerVisible: false,
+      parentalPinPromptVisible: false,
+      parentalPinSubmitted: parentalPinResult.parentalPinSubmitted,
+    };
+  }
+  const contentItems = page.locator('//p[contains(text(),"Continue Watching")]/parent::div/parent::div/descendant::div[@class="relative overflow-hidden"]/img');
+  const itemCount = await contentItems.count().catch(() => 0);
+  if (!itemCount) {
+    return {
+      itemFound: false,
+      playerVisible: false,
+      parentalPinPromptVisible: false,
+      parentalPinSubmitted: parentalPinResult.parentalPinSubmitted,
+    };
+  }
+  const targetItem = contentItems.nth(0);
+  const altText = ((await targetItem.getAttribute('alt')) || '').trim();
+  const itemVisible = await targetItem.isVisible().catch(() => false);
+  if (!itemVisible || !altText) {
+    return {
+      itemFound: false,
+      playerVisible: false,
+      parentalPinPromptVisible: false,
+      parentalPinSubmitted: parentalPinResult.parentalPinSubmitted,
+    };
+  }
+  await targetItem.scrollIntoViewIfNeeded();
+  await targetItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  const resumeActionVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+  if (resumeActionVisible) {
+    await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
+  }
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  let parentalPinPromptVisible = false;
+  let parentalPinSubmitted = false;
+  if (resumeActionVisible) {
+    parentalPinPromptVisible = await detailsPage.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (parentalPinPromptVisible) {
+      await detailsPage.enterParentalPlaybackPin(parentalPin);
+      await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await page.waitForTimeout(5000);
+      parentalPinSubmitted = true;
+    }
+  }
+  const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  if (playerVisible) {
+    await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
+  }
+  logger.assertion('Continue Watching content title captured', !!altText);
+  logger.assertion('Parental PIN prompt visible when parental PIN is enabled', parentalPinPromptVisible);
+  logger.assertion('Parental playback PIN submitted when prompt is visible', parentalPinSubmitted || !parentalPinPromptVisible);
+  await authPage.navigate();
+  await page.waitForLoadState('networkidle', { timeout: 60000 });
+  await settingsPage.clickAccountIcon();
+  await settingsPage.clickAccountAndSettings();
+  await settingsPage.scrollToParentalControlsSection();
+  const pinEnabled = await settingsPage.isParentalPinToggleOn();
+  if (pinEnabled) {
+    logger.info('Parental PIN is enabled before seed flow; disabling it first');
+    await settingsPage.clickParentalPinToggle();
+    await settingsPage.enterParentalPinPassword(password || '');
+    await page.waitForTimeout(5000);
+    await settingsPage.clickParentalPinSubmitButton();
+    await settingsPage.waitForParentalPinSuccessMessageVisible(5000).catch(() => false);
+    await settingsPage.clickParentalPinSuccessContinueButton().catch(() => undefined);
+    await page.waitForTimeout(3000);
+  }
+  return {
+    itemFound: true,
+    playerVisible,
+    parentalPinPromptVisible,
+    parentalPinSubmitted,
+  };
+}
+
 export interface ContinueWatchingAcrossTabsInput {
   mode?: string;
   email?: string;
@@ -480,19 +707,16 @@ export async function verifyContinueWatchingResumePlayback(
       reason: 'No Continue Watching cards were available to validate resume playback',
     };
   }
-
   const targetCard = trayCards.first();
   await targetCard.scrollIntoViewIfNeeded();
   await targetCard.click({ force: true, timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
-
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   const resumeActionVisible = await detailsPage.isResumeButtonVisible().catch(() => false)
     || await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
   logger.assertion('Details page visible for selected Continue Watching item', detailsPageVisible);
   logger.assertion('Resume CTA visible on the details page', resumeActionVisible);
-
   if (!resumeActionVisible) {
     return {
       isValid: false,
@@ -502,7 +726,6 @@ export async function verifyContinueWatchingResumePlayback(
       reason: 'The Resume CTA was not visible on the details page',
     };
   }
-
   const resumeClicked = await detailsPage.clickResumeAction();
   if (!resumeClicked) {
     return {
@@ -821,7 +1044,6 @@ export async function verifyContinueWatchingDetailsAndMoreNavigation(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching details and more navigation validation');
-
   const mode = input?.mode === 'valid' || input?.mode === undefined ? 'valid' : input.mode;
   const email = input?.email || String(config.get('VALID_LOGIN_EMAIL', '')).trim();
   const password = input?.password || String(config.get('VALID_LOGIN_PASSWORD', '')).trim();

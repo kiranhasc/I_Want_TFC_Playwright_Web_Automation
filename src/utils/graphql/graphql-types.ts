@@ -11,6 +11,8 @@ export interface CollectionResponse {
 export interface Rail {
     id: string;
     title: string;
+    subtitle?: string;
+    description?: string;
     assets: {
         items: Asset[];
     };

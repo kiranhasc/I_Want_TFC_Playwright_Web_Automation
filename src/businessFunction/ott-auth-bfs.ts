@@ -748,7 +748,7 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
 
 export async function verifySearchByActorOrGenre(page: any, input?: Partial<SearchByActorOrGenreInput>): Promise<SearchByActorOrGenreOutput> {
     const authPage = new OTTAuthPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql = GraphQLHelper.getInstance(page);
     const actorQuery = (input?.actorquery ?? '').trim();
     const genreQuery = (input?.genrequery ?? '').trim();
     logger.step('Starting actor or genre search validation flow');
@@ -896,7 +896,7 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
 
 export async function verifySearchLiveContentExclusion(page: any, input?: Partial<VerifySearchLiveContentExclusionInput>): Promise<VerifySearchLiveContentExclusionOutput> {
   const authPage = new OTTAuthPage(page);
-  const gql = new GraphQLHelper(page);
+  const gql =  GraphQLHelper.getInstance(page);
   const mode = normalizeLoginMode(input?.mode);
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting live content exclusion verification flow');
@@ -1081,7 +1081,7 @@ export async function verifySearchResultRedirectsToDetailPage(
 ): Promise<VerifySearchResultRedirectToDetailOutput> {
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql =  GraphQLHelper.getInstance(page);
     const mode = input?.mode;
     logger.step('Starting search result redirect to detail page flow');
     const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
@@ -1220,7 +1220,7 @@ export async function verifySearchBackNavigationFromDetailPage(
 ): Promise<VerifySearchBackNavigationOutput> {
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql =  GraphQLHelper.getInstance(page);
     const mode = input?.mode;
     const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
     logger.step('Starting search back-navigation verification flow');
@@ -1345,7 +1345,7 @@ export async function verifySearchPartialKeyword(
     input?: Partial<VerifySearchPartialKeywordInput>
 ): Promise<VerifySearchPartialKeywordOutput> {
     const authPage = new OTTAuthPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql =  GraphQLHelper.getInstance(page);
     const mode = input?.mode;
 
     logger.step('Starting partial keyword search verification flow');
@@ -1450,7 +1450,7 @@ export async function verifySearchSmoothScrolling(
     input?: Partial<VerifySearchSmoothScrollingInput>
 ): Promise<VerifySearchSmoothScrollingOutput> {
     const authPage = new OTTAuthPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql =  GraphQLHelper.getInstance(page);
     const mode = input?.mode;
     const iterations = input?.iterations ?? 6;
     const pauseMs = input?.pauseMs ?? 800;
@@ -1522,7 +1522,7 @@ export async function verifySearchFreePremiumLabels(
 ): Promise<VerifySearchFreePremiumLabelsOutput> {
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
-    const gql = new GraphQLHelper(page);
+    const gql =  GraphQLHelper.getInstance(page);
     const mode = input?.mode;
     logger.step('Starting verification of free and premium labels in search results');
     // Start waiting for the Collection GraphQL operation before triggering login

@@ -35,6 +35,8 @@ export class OTTPlaybackPage {
     private readonly paidContentBadge: PageElement;
     private readonly subscribePromptText: PageElement;
     private readonly seekBar: PageElement;
+    private readonly unlockEarlyAccessButton: PageElement;
+    private readonly updateToWatchNowButton: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -68,6 +70,8 @@ export class OTTPlaybackPage {
         this.paidContentBadge = { selector: 'img[alt*="paid"], [alt*="paid"], [data-testid*="paid"]' };
         this.subscribePromptText = { selector: 'text=/Subscribe to watch|Subscribe to Watch/i' };
         this.seekBar = { selector: '.player-progress-indicator' };
+        this.unlockEarlyAccessButton = { selector: '//div[text()="Unlock Early Access"]' };
+        this.updateToWatchNowButton = { selector: '//p[text()="Upgrade to Watch Now"]' };
     }
 
     async navigateToHomePage(): Promise<void> {
@@ -351,8 +355,61 @@ export class OTTPlaybackPage {
     }
 
     async isMaybeLaterVisible(): Promise<boolean> {
-        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        const bodyText = await this.page.locator('//p[text()="Maybe Later"]').innerText().catch(() => '');
         return bodyText.toLowerCase().includes('maybe later') || await this.pageUtils.isVisible(this.maybeLaterButton, 10000);
+    }
+
+    async clickMaybeLaterButton(): Promise<boolean> {
+        logger.elementInteraction('click', 'Maybe Later button');
+        try {
+            const locator = this.page.locator(this.maybeLaterButton.selector).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.click({ timeout: 15000 });
+            return true;
+        } catch (error) {
+            logger.debug('Maybe Later button click failed', error);
+            return false;
+        }
+    }
+
+    // async isUnlockEarlyAccessVisible(): Promise<boolean> {
+    //     const bodyText = await this.page.locator('body').innerText().catch(() => '');
+    //     if (/unlock early access/i.test(bodyText)) {
+    //         return true;
+    //     }
+    //     return await this.page.locator('//div[text()="Unlock Early Access"]').first().isVisible();
+    // }
+
+    async isUnlockEarlyAccessVisible(): Promise<boolean> {
+       const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        return bodyText.toLowerCase().includes('unlock early access') || await this.pageUtils.isVisible(this.unlockEarlyAccessButton, 10000);
+    }
+
+    async isUpdateToWatchNowVisible(): Promise<boolean> {
+        const bodyText = await this.page.locator('body').innerText().catch(() => '');
+        return bodyText.toLowerCase().includes('update to watch now') || await this.pageUtils.isVisible(this.updateToWatchNowButton, 10000);
+    }
+
+    async clickUpdateToWatchNowButton(): Promise<boolean> {
+        logger.elementInteraction('click', 'Update to Watch now button');
+        try {
+            const locator = this.page.locator(this.updateToWatchNowButton.selector).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.click({ timeout: 15000, force: true });
+            return true;
+        } catch (error) {
+            logger.debug('Update to Watch now button click failed', error);
+            try {
+                const fallbackLocator = this.page.getByText(/Update to Watch now/i).first();
+                if (await fallbackLocator.count()) {
+                    await fallbackLocator.click({ timeout: 15000, force: true });
+                    return true;
+                }
+            } catch (fallbackError) {
+                logger.debug('Update to Watch now fallback click failed', fallbackError);
+            }
+            return false;
+        }
     }
 
     async isSubscribeToWatchVisible(): Promise<boolean> {
@@ -377,8 +434,8 @@ export class OTTPlaybackPage {
     async selectLiveTVSection(): Promise<boolean> {
         try {
             const tfcImage = this.page.getByRole('img', { name: 'TFC Asia' }).first();
-            await tfcImage.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
-            await tfcImage.click({ force: true, timeout: 30000 }).catch(() => undefined);
+            await tfcImage.waitFor({ state: 'visible', timeout: 30000 });
+            await tfcImage.click({ force: true, timeout: 30000 });
             await this.page.waitForTimeout(10000);
             return true;
         } catch {

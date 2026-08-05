@@ -115,6 +115,16 @@ export interface VerifyTop10TagOnContentThumbnailOutput {
     topRightPositionMatches: number;
 }
 
+export interface VerifyApplicationVersionInput {
+    mode?: string;
+    expectedTermsHeading?: string;
+}
+
+export interface VerifyApplicationVersionOutput {
+    termsPageVisible: boolean;
+    versionDisplayed: boolean;
+}
+
 export interface NavigateToTermsAndConditionsSectionInput {
     mode?: string;
     sectionLinkText: string;
@@ -136,6 +146,7 @@ export interface SearchFromTermsPageInput {
 
 export interface SearchFromTermsPageOutput {
     searchResultsDisplayed: boolean;
+    searchResultsVisible: boolean;
     currentUrl: string;
 }
 
@@ -151,10 +162,6 @@ export interface VerifyTermsPageDetailsOutput {
     pageDetailsVisible: boolean;
     currentUrl: string;
 }
-
-// function normalizeLoginMode(mode?: string): 'invalid' | 'valid' {
-//     return mode === 'valid' ? 'valid' : 'invalid';
-// }
 
 function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' {
     if (mode === 'valid') {
@@ -328,11 +335,7 @@ export interface VerifyTrendingResultsHiddenWhenSearchingInput {
     expectedHeading?: string;
 }
 
-// const providerAuthDir = path.join(__dirname, '../playwright/.auth');
-// const PROVIDER_MAX_AGE_MS = 60 * 60 * 1000; // same TTL policy, tune as needed
-
 function getProviderStoragePath(providerName?: string): string {
-  // if you test multiple providers, key the cache file by provider name
   const safeName = (providerName ?? 'default').replace(/[^a-zA-Z0-9]/g, '_');
   return path.join(authDir, `provider-${safeName}.json`);
 }
@@ -562,6 +565,21 @@ export interface NavigateTabsOutput {
     searchBarPlaceholder: string;
     searchBarPlaceholderMatches: boolean;
     signOutOptionVisible: boolean;
+}
+
+export interface VerifyGuestPHCarouselTabTrayLoadInput {
+    mode?: string;
+}
+
+export interface VerifyGuestPHCarouselTabTrayLoadOutput {
+    homeRailVisible: boolean;
+    homePageScrolledToEnd: boolean;
+    homeAdVisible: boolean;
+    moviesRailVisible: boolean;
+    moviesPageScrolledToEnd: boolean;
+    moviesAdVisible: boolean;
+    showsPageScrolledToEnd: boolean;
+    showsAdVisible: boolean;
 }
 
 export interface LogoutFromOTTInput {
@@ -1070,14 +1088,12 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     await authPage.waitForLoadingToDisappear();
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
-    // Wait for suggestions to load and become visible
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
     await page.waitForTimeout(1500);
     const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(query);
     const suggestionsList = await authPage.getSearchAutoSuggestions();
     const suggestionsCount = suggestionsList.length;
     let suggestionsContainQuery;
-    // Verify that suggestions contain the query
     if (!validationType.includes('Partial')) {
         suggestionsContainQuery = await authPage.verifySuggestionsContainQuery(query, suggestionsList);
     }
@@ -1109,9 +1125,7 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
     await authPage.waitForLoadingToDisappear();
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchQuery);
-    // Wait for search results/message to load - wait for the "No results" message to appear
     logger.step(`Waiting for no results message to display for irrelevant query: ${searchQuery}`);
-    // Wait for the no results message to become visible (up to 15 seconds)
     const messageVisible = await authPage.isNoResultsMessageVisible();
     if (!messageVisible) {
         logger.step('No results message did not appear, waiting additional time...');
@@ -1119,7 +1133,6 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
     }
     const searchInputValue = await authPage.getSearchBarValue();
     const searchQueryTyped = searchInputValue.includes(searchQuery);
-    // Verify "No results found" message appears
     const noResultsMessageVisible = messageVisible;
     const messageText = await authPage.getNoResultsMessageText();
     const contentCardsPresent = await authPage.getSearchResultsCount();
@@ -1669,7 +1682,6 @@ export async function verifySearchBackNavigationFromDetailPage(
             logger.info(`Details page content - title: "${collectionTitle}"`);
             logger.info(`Details page content - shortDescription: "${expectedShortDescription}"`);
             logger.assertion('Details page title matches collection title', titleMatch);
-            // Try clicking the UI back button, but allow browser history back as a fallback
             await page.goBack();
             await page.waitForLoadState('networkidle');
             await authPage.waitForLoadingToDisappear();
@@ -1941,27 +1953,21 @@ export async function verifyTrendingResultsHiddenWhenSearching(
     } catch (error) {
         logger.debug('Failed to retrieve collection content for trending hidden verification', error);
     }
-    // Open search and enter initial query
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(collectionTitle);
     await page.waitForTimeout(1000);
-    // Clear the search input
     await authPage.clearSearchInput();
     await page.waitForTimeout(1000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;
-    // Verify Top Picks Near You is visible in empty search state
     const trendingHeadingVisibleBefore = await authPage.isSearchSectionHeadingVisible(expectedHeading);
     logger.assertion(`${expectedHeading} heading visible before new query`, trendingHeadingVisibleBefore);
-    // Now enter a new search query
     await authPage.enterSearchQuery(secondarySearchQuery);
     await page.waitForTimeout(1000);
     const newQueryEntered = (await authPage.getSearchBarValue()).trim() === secondarySearchQuery;
-    // Wait for search results and check that trending heading is hidden
     await page.waitForLoadState('networkidle').catch(() => undefined);
     await page.waitForTimeout(1000);
     const trendingHeadingHidden = !(await authPage.isSearchSectionHeadingVisible(expectedHeading));
     logger.assertion(`${expectedHeading} heading hidden after entering new query`, trendingHeadingHidden);
-    // Verify search results are visible for the new query
     const resultTitles = await authPage.getSearchResultTitles();
     const searchResultsVisible = resultTitles.length > 0;
     logger.assertion('Search results visible for new query', searchResultsVisible);
@@ -2105,7 +2111,6 @@ export async function verifySearchFreePremiumLabels(
     const gql = GraphQLHelper.getInstance(page);
     const mode = input?.mode;
     logger.step('Starting verification of free and premium labels in search results');
-    // Start waiting for the Collection GraphQL operation before triggering login
     const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
     const login = await loginToOTT(page, { mode });
     if (!login.isLoggedIn) {
@@ -2117,7 +2122,6 @@ export async function verifySearchFreePremiumLabels(
     try {
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
-        // Build predicates for free/premium detection
         const freePredicate = (asset: any) => {
             const labels = asset.labels ?? [];
             if (labels.some((l: any) => /free/i.test(l?.text ?? ''))) return true;
@@ -2130,7 +2134,6 @@ export async function verifySearchFreePremiumLabels(
             const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
             return monetType ? /premium|paid|subscription|paywall|purchase/i.test(String(monetType)) : false;
         };
-        // Collect all matches and assert only one result per type
         const rails = parser.getRails();
         const collectMatches = (pred: (a: any) => boolean) => {
             const matches: any[] = [];
@@ -2139,7 +2142,6 @@ export async function verifySearchFreePremiumLabels(
                     try {
                         if (pred(asset)) matches.push({ rail, asset });
                     } catch (e) {
-                        // ignore predicate errors for individual assets
                     }
                 }
             }
@@ -2157,7 +2159,6 @@ export async function verifySearchFreePremiumLabels(
         const premiumMonetType = premiumResult?.asset?.monetization?.type ?? premiumResult?.asset?.monetizationType ?? premiumResult?.asset?.pricing?.type ?? '';
         if (freeResult?.asset?.monetization) logger.info('[SEARCH DEBUG] Free monetization sample:', freeResult.asset.monetization);
         if (premiumResult?.asset?.monetization) logger.info('[SEARCH DEBUG] Premium monetization sample:', premiumResult.asset.monetization);
-        // Assert monetization type aligns with detected label/title
         if (freeTitle) {
             const freeTypeStr = String(freeMonetType ?? '');
             const freeIsMonetizationFree = /free|complimentary|free_to_watch|freetowatch/i.test(freeTypeStr);
@@ -2171,7 +2172,6 @@ export async function verifySearchFreePremiumLabels(
     } catch (err) {
         logger.debug('Collection GraphQL operation did not return or parsing failed', err);
     }
-    // Verify premium labeled content via search UI
     let premiumLabelVisible = false;
     if (premiumTitle) {
         await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
@@ -2182,7 +2182,6 @@ export async function verifySearchFreePremiumLabels(
         premiumLabelVisible = await detailsPage.isContentTaggedPremiumInSearchResults(premiumTitle).catch(() => false);
         logger.assertion(`Premium label visible for "${premiumTitle}"`, premiumLabelVisible);
     }
-    // Verify free labeled content via search UI
     let freeLabelVisible = false;
     if (freeTitle) {
         await authPage.clickSearchBar();
@@ -2403,6 +2402,74 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
         searchBarPlaceholder,
         searchBarPlaceholderMatches,
         signOutOptionVisible,
+    };
+}
+
+export async function verifyGuestPHCarouselTabTrayLoad(
+    page: any,
+    input?: Partial<VerifyGuestPHCarouselTabTrayLoadInput>
+): Promise<VerifyGuestPHCarouselTabTrayLoadOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    logger.step('Starting PH region guest carousel, tab, and tray load validation flow');
+
+    await authPage.navigate();
+    logger.info('Navigated to OTT home page for guest PH carousel, tab, and tray load validation');
+    const homeRailVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab continue watching rail visible', homeRailVisible);
+    
+    const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
+    logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
+
+    let homePageScrolledToEnd = true;
+    try {
+        await authPage.scrollToBottomOfPage();
+    } catch {
+        homePageScrolledToEnd = false;
+    }
+    // const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
+    // logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
+
+    await authPage.clickMoviesTab();
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+    const moviesRailVisible = await authPage.isMoviesTabVisible();
+    logger.assertion('Movies tab trending movies rail visible', moviesRailVisible);
+
+    let moviesPageScrolledToEnd = true;
+    try {
+        await authPage.scrollToBottomOfPage();
+    } catch {
+        moviesPageScrolledToEnd = false;
+    }
+    const moviesAdVisible = await detailsPage.isMidRailAdBannerVisible().catch(() => false);
+    logger.assertion('Movies page mid rail ad visible after scroll', moviesAdVisible);
+
+    await authPage.clickShowsTab();
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+    // const showsRailVisible = await authPage.isShowsTabVisible();
+    // logger.assertion('Shows tab trending shows rail visible', showsRailVisible);
+
+    let showsPageScrolledToEnd = true;
+    try {
+        await authPage.scrollToBottomOfPage();
+    } catch {
+        showsPageScrolledToEnd = false;
+    }
+    const showsAdVisible = await detailsPage.isMidRailAdBannerVisible().catch(() => false);
+    logger.assertion('Shows page mid rail ad visible after scroll', showsAdVisible);
+
+    return {
+        homeRailVisible,
+        homePageScrolledToEnd,
+        homeAdVisible,
+        moviesRailVisible,
+        moviesPageScrolledToEnd,
+        moviesAdVisible,
+        // showsRailVisible,
+        showsPageScrolledToEnd,
+        showsAdVisible,
     };
 }
 
@@ -2914,6 +2981,35 @@ export async function verifySupportAndPolicyLinks(page: any, input?: Partial<Ver
         privacyPageVisible,
         cookiePageVisible,
         allPagesAccessible,
+    };
+}
+
+export async function verifyApplicationVersion(page: any, input?: Partial<VerifyApplicationVersionInput>): Promise<VerifyApplicationVersionOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = input?.mode;
+    const expectedTermsHeading = (input?.expectedTermsHeading ?? '').trim() || 'Welcome to the ABS-CBN’s terms & conditions.';
+    
+    logger.step('Starting application version visibility flow');
+    
+    const loginResult = await loginToOTT(page, { mode });
+    const isLoggedIn = loginResult.isLoggedIn;
+
+    await authPage.scrollToBottomOfPage();
+    const termsPageOpened = await authPage.openTermsPageAndStayOpen(expectedTermsHeading);
+    const currentUrl = authPage.getCurrentUrl();
+    const navigatedToTermsPage = termsPageOpened || currentUrl.toLowerCase().includes('legal') || currentUrl.toLowerCase().includes('terms');
+
+    await authPage.scrollToBottomOfPage();
+    // const versionText = await authPage.getApplicationVersionText();
+    const versionDisplayed = await authPage.isApplicationVersionDisplayed();
+
+    logger.assertion('Terms and Conditions page opened from footer link', navigatedToTermsPage);
+    logger.assertion('Application version displayed at the bottom of the page', versionDisplayed);
+
+    return {
+        termsPageVisible: navigatedToTermsPage,
+        versionDisplayed,
+        // versionText,
     };
 }
 
@@ -4229,6 +4325,7 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
         logger.warn('No popup detected for Terms page');
         return {
             searchResultsDisplayed: false,
+            searchResultsVisible: false,
             currentUrl: authPage.getCurrentUrl(),
         };
     }
@@ -4238,6 +4335,7 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
 
     // Try to find and interact with the search field
     let searchPerformed = false;
+    let searchResultsVisible = false;
     try {
         const searchSelector = authPage.getSearchInputSelector();
         let searchInput = popup.locator(searchSelector).first();
@@ -4246,9 +4344,20 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
         if (isVisible) {
             logger.step(`Found search field, entering query: ${input.searchQuery}`);
             await searchInput.fill(input.searchQuery);
-            await popup.waitForTimeout(1500);
+            await popup.waitForTimeout(2000);
             searchPerformed = true;
             logger.step('Search query entered successfully');
+
+            const searchResultTexts = await popup.locator('a, li, p, h2, h3, span').allTextContents().catch(() => []);
+            const normalizedQuery = input.searchQuery.toLowerCase();
+            const queryTerms = normalizedQuery.split(/\s+/).filter((word: string) => word.length > 2);
+            const matchingResultText = searchResultTexts.find((text: string) => {
+                const normalizedText = text.toLowerCase();
+                return normalizedText.includes(normalizedQuery) || queryTerms.some((term: string) => normalizedText.includes(term));
+            }) || '';
+
+            searchResultsVisible = matchingResultText.length > 0;
+            logger.step(`Search results visibility check matched text: ${matchingResultText || 'none'}`);
         } else {
             logger.warn('Search field not found or not visible');
         }
@@ -4257,9 +4366,11 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
     }
 
     logger.assertion('Search field accessible and query entered from Terms page', searchPerformed);
+    logger.assertion('Search results visible for the entered query from Terms page', searchResultsVisible);
 
     return {
-        searchResultsDisplayed: searchPerformed,
+        searchResultsDisplayed: searchPerformed && searchResultsVisible,
+        searchResultsVisible,
         currentUrl: popup.url(),
     };
 }

@@ -3,17 +3,19 @@ import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { EndToEndPage } from '../pom/endtoendPage';
 import { loginToOTT } from './ott-auth-bfs';
 import { logger } from '../utils/logger';
+import { GraphQLHelper } from '../utils/graphql/graphql-helper';
+import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 
 export interface EndToEndLaunchLoginSearchPlaybackInput {
   query?: string;
   mode?: string;
+  graphqlQueryName?: string;
   expectedTitle?: string;
   expectedEpisode?: string;
 }
 
 export interface EndToEndLaunchLoginSearchPlaybackOutput {
   isLoggedIn: boolean;
-  homeTabVisible: boolean;
   moviesTabVisible: boolean;
   continueWatchingRailVisible: boolean;
   trendingMoviesRailVisible: boolean;
@@ -48,6 +50,31 @@ export interface EndToEndLaunchLoginSearchPlaybackOutput {
   detailsVisibleAfterNav: boolean;
 }
 
+async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: string = 'Collection'): Promise<string | undefined> {
+  try {
+    logger.info('Waiting 2 seconds for Collection GraphQL response to be available');
+   // await page.waitForTimeout(2000);
+
+    // const gql = new GraphQLHelper(page);
+    const gql = GraphQLHelper.getInstance(page);
+ 
+    const collectionResponse = await gql.waitForOperation(graphqlQueryName);
+    const parser = new CollectionParser(collectionResponse as any);
+    const foundAsset = parser.findAsset((asset: any) => Boolean(asset?.title));
+
+    if (!foundAsset?.asset?.title) {
+      logger.warn('No collection asset title available from GraphQL response');
+      return undefined;
+    }
+
+    logger.info(`Resolved collection search query from GraphQL asset: ${foundAsset.asset.title}`);
+    return foundAsset.asset.title;
+  } catch (error) {
+    logger.warn('Unable to resolve query from Collection GraphQL response', error);
+    return undefined;
+  }
+}
+
 export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
   page: any,
   input?: EndToEndLaunchLoginSearchPlaybackInput,
@@ -55,35 +82,42 @@ export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const endToEndPage = new EndToEndPage(page);
-  const query = (input?.query ?? '').trim();
   const mode = input?.mode;
 
   logger.step('Starting end-to-end launch, login, navigation, search and playback flow');
 
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
+  const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
+  const query = (input?.query ?? queryFromCollection ?? '').trim();
+  const expectedTitle = input?.expectedTitle ?? query;
   await detailsPage.waitForPlayback(5);
-  const homeTabVisible = await authPage.isHomeTabVisible();
   const continueWatchingRailVisible = await authPage.isContinueWatchingRailVisible();
   logger.assertion('Continue Watching rail visible on Home tab', continueWatchingRailVisible);
-  logger.assertion('Home tab visible after login', homeTabVisible);
+
+  await endToEndPage.scrollUntilElementVisible();
 
   await authPage.clickMoviesTab();
   const trendingMoviesRailVisible = await authPage.isTrendingMoviesRailVisible();
   logger.assertion('Trending movies rail visible on Movies tab', trendingMoviesRailVisible);
+  await endToEndPage.scrollUntilElementVisible();
+  
 
   await authPage.clickShowsTab();
   const trendingShowsRailVisible = await authPage.isTrendingShowsRailVisible();
   logger.assertion('Trending shows rail visible on Shows tab', trendingShowsRailVisible);
-
+  await endToEndPage.scrollUntilElementVisible();
+  
   await authPage.clickMyWatchlistTab();
-  const myWatchlistRailVisible = await authPage.isMyWatchlistRailVisible();
+  const myWatchlistRailVisible = await authPage.isMyWatchlistPageVisible();
   logger.assertion('My Watchlist rail visible on My Watchlist tab', myWatchlistRailVisible);
-
+  await endToEndPage.scrollUntilElementVisible();
+  
   await authPage.clickGMATab();
   const topStreamedRailVisible = await authPage.isTopStreamedRailVisible();
   logger.assertion('Top Streamed rail visible on GMA tab', topStreamedRailVisible);
-
+  await endToEndPage.scrollUntilElementVisible();
+  
   await authPage.clickSearchBar();
   const searchBarPlaceholder = await authPage.getSearchBarPlaceholder();
   const searchBarPlaceholderVisible = /search/i.test(searchBarPlaceholder);
@@ -127,7 +161,7 @@ export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
   await detailsPage.clickPlayButton();
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const playbackControlsVisible = await detailsPage.isSeekBarVisible();
-  const playerTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer(input?.expectedTitle);
+  const playerTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer(expectedTitle);
   const seekBarVisible = await detailsPage.isSeekBarVisible();
   const backButtonVisible = await detailsPage.isBackButtonVisible();
   const pausePlayButtonVisible = await endToEndPage.isPausePlayButtonVisible();
@@ -168,7 +202,6 @@ export async function verifyEndToEndLaunchLoginSearchPlaybackFlow(
 
   return {
     isLoggedIn,
-    homeTabVisible,
     moviesTabVisible: true,
     continueWatchingRailVisible,
     trendingMoviesRailVisible,

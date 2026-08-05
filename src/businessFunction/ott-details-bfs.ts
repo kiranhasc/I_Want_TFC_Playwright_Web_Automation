@@ -349,6 +349,21 @@ export async function verifyContentDetailsPageUi(
   };
 }
 
+export interface VerifyGuestShareFunctionalityInput {
+  expectedShareMessage?: string;
+}
+
+export interface VerifyGuestShareFunctionalityOutput {
+  isContentDetailsPageVisible: boolean;
+  headingText: string;
+  isContentMetadataVisible: boolean;
+  isContentTitleImageVisible: boolean;
+  isContentGenreVisible: boolean;
+  isContentCastVisible: boolean;
+  isShareIconVisible: boolean;
+  shareMessageText: string;
+}
+
 export interface VerifyGuestSearchNavigationInput {
   searchTerm?: string;
   expectedTitle?: string;
@@ -506,6 +521,54 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     playerSeasonVisible,
     playerEpisodeVisible,
     playerMetadataText,
+  };
+}
+
+export async function verifyGuestShareFunctionalityFromFreeAsset(
+  page: any,
+  input?: Partial<VerifyGuestShareFunctionalityInput>
+): Promise<VerifyGuestShareFunctionalityOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting guest content-details share functionality flow');
+
+  await authPage.navigate();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+
+  await detailsPage.doubleClickFirstVisibleContentCard();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+
+  const isContentDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
+  const headingText = isContentDetailsPageVisible ? await detailsPage.getShowDetailsHeadingText().catch(() => '') : '';
+  const isContentMetadataVisible = await detailsPage.isContentMetadataVisible();
+  const isContentTitleImageVisible = await detailsPage.isContentTitleImageVisible();
+  const isContentGenreVisible = await detailsPage.isContentGenreVisible();
+  const isContentCastVisible = await detailsPage.isContentCastVisible();
+  const isShareIconVisible = await detailsPage.isContentShareIconVisible();
+  await detailsPage.clickContentShareIcon();
+  const shareMessageText = await detailsPage.getShareCopyConfirmationMessage();
+  const shareMessageMatches = shareMessageText.toLowerCase().includes((input?.expectedShareMessage ?? 'share link copied').toLowerCase());
+
+  logger.assertion('Guest content details page visible', isContentDetailsPageVisible);
+  logger.assertion('Guest content metadata visible', isContentMetadataVisible);
+  logger.assertion('Guest content title image visible', isContentTitleImageVisible);
+  logger.assertion('Guest content genre visible', isContentGenreVisible);
+  logger.assertion('Guest content cast visible', isContentCastVisible);
+  logger.assertion('Guest share icon visible', isShareIconVisible);
+  logger.assertion('Guest share confirmation message displayed', shareMessageMatches);
+  logger.info(`Share confirmation message: ${shareMessageText}`);
+
+  return {
+    isContentDetailsPageVisible,
+    headingText,
+    isContentMetadataVisible,
+    isContentTitleImageVisible,
+    isContentGenreVisible,
+    isContentCastVisible,
+    isShareIconVisible,
+    shareMessageText,
   };
 }
 
@@ -992,6 +1055,14 @@ export interface VerifySkipIntroMarkerOutput {
   isSkipIntroMarkerVisible: boolean;
 }
 
+export interface VerifySkipIntroFunctionalityOutput {
+  isDetailsPageVisible: boolean;
+  isSkipIntroMarkerVisible: boolean;
+  skipIntroClicked: boolean;
+  timeBeforeSkipIntro: string;
+  timeAfterSkipIntro: string;
+}
+
 export interface VerifySkipRecapMarkerInput {
   mode?: string;
   searchTerm?: string;
@@ -1000,6 +1071,26 @@ export interface VerifySkipRecapMarkerInput {
 export interface VerifySkipRecapMarkerOutput {
   isDetailsPageVisible: boolean;
   isSkipRecapMarkerVisible: boolean;
+}
+
+export interface VerifySkipRecapFunctionalityOutput {
+  isDetailsPageVisible: boolean;
+  isSkipRecapMarkerVisible: boolean;
+  skipRecapClicked: boolean;
+  timeBeforeSkipRecap: string;
+  timeAfterSkipRecap: string;
+}
+
+export interface VerifySkipIntroAndRecapAdvancePlaybackDurationOutput {
+  isDetailsPageVisible: boolean;
+  isSkipIntroMarkerVisible: boolean;
+  skipIntroClicked: boolean;
+  timeBeforeSkipIntro: string;
+  timeAfterSkipIntro: string;
+  isSkipRecapMarkerVisible: boolean;
+  skipRecapClicked: boolean;
+  timeBeforeSkipRecap: string;
+  timeAfterSkipRecap: string;
 }
 
 export async function verifySkipIntroMarkerDuringPlayback(
@@ -1011,7 +1102,6 @@ export async function verifySkipIntroMarkerDuringPlayback(
   logger.step('Starting skip intro marker verification flow');
 
   const searchTerm = input?.searchTerm ?? '';
-  await authPage.acceptCookieSettingsIfVisible();
 
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1022,10 +1112,12 @@ export async function verifySkipIntroMarkerDuringPlayback(
 
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
-    await detailsPage.clickPlayButton();
-    await page.waitForTimeout(3000);
+    await detailsPage.clickFirstEpisodeCard();
+    // await page.waitForTimeout(3000);
   }
-
+  // await page.waitForTimeout(2000);
+  await detailsPage.clickNextEpisodeButton();
+  await detailsPage.clickSkipRecapMarker();
   const isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
 
   logger.assertion('Details page visible', isDetailsPageVisible);
@@ -1034,6 +1126,62 @@ export async function verifySkipIntroMarkerDuringPlayback(
   return {
     isDetailsPageVisible,
     isSkipIntroMarkerVisible,
+  };
+}
+
+export async function verifySkipIntroFunctionalityDuringPlayback(
+  page: any,
+  input?: VerifySkipIntroMarkerInput
+): Promise<VerifySkipIntroFunctionalityOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting skip intro functionality verification flow');
+
+  const searchTerm = input?.searchTerm ?? '';
+
+  if (searchTerm) {
+    await authPage.clickSearchBar();
+    await authPage.enterSearchText(searchTerm);
+    await authPage.submitSearch();
+    await detailsPage.clickFirstSearchResult();
+  }
+
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
+  let isSkipIntroMarkerVisible = false;
+  let skipIntroClicked = false;
+  let timeBeforeSkipIntro = '';
+  let timeAfterSkipIntro = '';
+
+  if (isDetailsPageVisible) {
+    await detailsPage.clickFirstEpisodeCard();
+    await detailsPage.clickNextEpisodeButton();
+    await detailsPage.clickSkipRecapMarker();
+    await page.waitForTimeout(2000);
+    isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
+
+    if (isSkipIntroMarkerVisible) {
+      await page.waitForTimeout(5000);
+      timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+      await page.waitForTimeout(5000);
+      // await detailsPage.hoverPlaybackScreen();
+    
+      skipIntroClicked = await detailsPage.clickSkipIntroMarker();
+      timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+      logger.info(`Skip Intro clicked: ${skipIntroClicked}, initial time: ${timeBeforeSkipIntro}, updated time: ${timeAfterSkipIntro}`);
+    }
+  }
+  
+  logger.assertion('Details page visible', isDetailsPageVisible);
+  logger.assertion('Skip intro marker visible', isSkipIntroMarkerVisible);
+  logger.assertion('Skip Intro was clicked successfully', skipIntroClicked);
+  logger.assertion('Playback time advanced after Skip Intro click', timeBeforeSkipIntro !== timeAfterSkipIntro);
+
+  return {
+    isDetailsPageVisible,
+    isSkipIntroMarkerVisible,
+    skipIntroClicked,
+    timeBeforeSkipIntro,
+    timeAfterSkipIntro,
   };
 }
 
@@ -1046,7 +1194,6 @@ export async function verifySkipRecapMarkerDuringPlayback(
   logger.step('Starting skip recap marker verification flow');
 
   const searchTerm = input?.searchTerm ?? '';
-  await authPage.acceptCookieSettingsIfVisible();
 
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1069,5 +1216,137 @@ export async function verifySkipRecapMarkerDuringPlayback(
   return {
     isDetailsPageVisible,
     isSkipRecapMarkerVisible,
+  };
+}
+
+export async function verifySkipRecapFunctionalityDuringPlayback(
+  page: any,
+  input?: VerifySkipRecapMarkerInput
+): Promise<VerifySkipRecapFunctionalityOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting skip recap functionality verification flow');
+
+  const searchTerm = input?.searchTerm ?? '';
+
+  if (searchTerm) {
+    await authPage.clickSearchBar();
+    await authPage.enterSearchText(searchTerm);
+    await authPage.submitSearch();
+    await page.waitForTimeout(2000);
+    await detailsPage.clickFirstSearchResult();
+  }
+
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
+  let isSkipRecapMarkerVisible = false;
+  let skipRecapClicked = false;
+  let timeBeforeSkipRecap = '';
+  let timeAfterSkipRecap = '';
+
+  if (isDetailsPageVisible) {
+    await detailsPage.clickEpisodeTwo();
+    await detailsPage.clickNextEpisodeButton();
+    // await page.waitForTimeout(3000);
+    isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
+
+    if (isSkipRecapMarkerVisible) {
+      timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
+      skipRecapClicked = await detailsPage.clickSkipRecapMarker();
+      await page.waitForTimeout(3000);
+      timeAfterSkipRecap = await detailsPage.getTrimmedPlaybackTime();
+      logger.info(`Skip Recap clicked: ${skipRecapClicked}, initial time: ${timeBeforeSkipRecap}, updated time: ${timeAfterSkipRecap}`);
+
+    }
+  }
+
+  logger.assertion('Details page visible', isDetailsPageVisible);
+  logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
+  logger.assertion('Skip Recap was clicked successfully', skipRecapClicked);
+  logger.assertion('Playback time advanced after Skip Recap click', timeBeforeSkipRecap !== timeAfterSkipRecap);
+
+  return {
+    isDetailsPageVisible,
+    isSkipRecapMarkerVisible,
+    skipRecapClicked,
+    timeBeforeSkipRecap,
+    timeAfterSkipRecap,
+  };
+}
+
+export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
+  page: any,
+  input?: VerifySkipIntroMarkerInput
+): Promise<VerifySkipIntroAndRecapAdvancePlaybackDurationOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const authPage = new OTTAuthPage(page);
+  logger.step('Starting skip intro and recap playback advancement verification flow');
+
+  const searchTerm = input?.searchTerm ?? '';
+
+  if (searchTerm) {
+    await authPage.clickSearchBar();
+    await authPage.enterSearchText(searchTerm);
+    await authPage.submitSearch();
+    await page.waitForTimeout(2000);
+    await detailsPage.clickFirstSearchResult();
+  }
+
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
+  let isSkipIntroMarkerVisible = false;
+  let skipIntroClicked = false;
+  let timeBeforeSkipIntro = '';
+  let timeAfterSkipIntro = '';
+  let isSkipRecapMarkerVisible = false;
+  let skipRecapClicked = false;
+  let timeBeforeSkipRecap = '';
+  let timeAfterSkipRecap = '';
+
+  if (isDetailsPageVisible) {
+    await detailsPage.clickEpisodeTwo();
+    await page.waitForTimeout(3000);
+    isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
+    if (isSkipRecapMarkerVisible) {
+      timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
+      console.log(`[IW3-T2115] Playback time before Skip Recap click: ${timeBeforeSkipRecap}`);
+      skipRecapClicked = await detailsPage.clickSkipRecapMarker();
+      await page.waitForTimeout(2000);
+      timeAfterSkipRecap = await detailsPage.getTrimmedPlaybackTime();
+      console.log(`[IW3-T2115] Playback time after Skip Recap click: ${timeAfterSkipRecap}`);
+      await page.waitForTimeout(3000);
+
+    }
+  }
+    await page.waitForTimeout(3000);
+
+    isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
+    if (isSkipIntroMarkerVisible) {
+      timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+      console.log(`[IW3-T2115] Playback time before Skip Intro click: ${timeBeforeSkipIntro}`);
+      await page.waitForTimeout(2000);
+      skipIntroClicked = await detailsPage.clickSkipIntroMarker();
+      await page.waitForTimeout(2000);
+      timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+      console.log(`[IW3-T2115] Playback time after Skip Intro click: ${timeAfterSkipIntro}`);
+      await page.waitForTimeout(3000);
+
+    }
+
+  logger.assertion('Details page visible', isDetailsPageVisible);
+  logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
+  logger.assertion('Skip Recap was clicked successfully', skipRecapClicked);
+  logger.assertion('Playback time advanced after Skip Recap click', timeBeforeSkipRecap !== timeAfterSkipRecap);
+  logger.assertion('Skip intro marker visible', isSkipIntroMarkerVisible);
+  logger.assertion('Skip Intro was clicked successfully', skipIntroClicked);
+  logger.assertion('Playback time advanced after Skip Intro click', timeBeforeSkipIntro !== timeAfterSkipIntro);
+  return {
+    isDetailsPageVisible,
+    isSkipIntroMarkerVisible,
+    skipIntroClicked,
+    timeBeforeSkipIntro,
+    timeAfterSkipIntro,
+    isSkipRecapMarkerVisible,
+    skipRecapClicked,
+    timeBeforeSkipRecap,
+    timeAfterSkipRecap,
   };
 }

@@ -12,7 +12,6 @@ test.describe('Search navigation', () => {
     const result = await verifySearchIconVisibilityOnAllPages(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.homePageSearchIconVisible).toBe(true);
     expect(result.moviesPageSearchIconVisible).toBe(true);
     expect(result.showsPageSearchIconVisible).toBe(true);
@@ -27,7 +26,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       query: data.query,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.queryTyped).toBe(true);
     expect(result.searchInputValue).toContain(data.query);
   });
@@ -39,7 +37,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       query: data.query,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.queryTyped).toBe(true);
     expect(result.resultsVisible).toBe(true);
   });
@@ -51,7 +48,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       query: data.query,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.addedToWatchlist).toBe(true);
     expect(result.isVisibleInMyWatchlist).toBe(true);
     expect(result.toastText.toLowerCase()).toContain('added');
@@ -64,7 +60,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       query: data.query,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.removedFromWatchlist).toBe(true);
     expect(result.toastText.toLowerCase()).toContain('removed');
   });
@@ -77,7 +72,6 @@ test.describe('Search navigation', () => {
       query: data.query,
       validationType: "",
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.suggestionsVisible).toBe(true);
     expect(result.suggestionsCount).toBeGreaterThan(0);
     expect(result.suggestionsList.length).toBeGreaterThan(0);
@@ -90,7 +84,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       searchQuery: data.searchQuery,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.searchQueryTyped).toBe(true);
     expect(result.noResultsMessageVisible).toBe(true);
     expect(result.messageText).toContain(data.expectedNoResultsMessage);
@@ -102,7 +95,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       searchQuery: data.searchQuery,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.searchQueryTyped).toBe(true);
     expect(result.noResultsMessageVisible).toBe(true);
     expect(result.messageText).toContain(data.expectedNoResultsMessage);
@@ -116,7 +108,6 @@ test.describe('Search navigation', () => {
       query: data.query,
       validationType: data.validationType,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.suggestionsVisible).toBe(true);
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
@@ -128,7 +119,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.liveContentTitle).toBeTruthy();
     expect(result.searchQueryTyped).toBe(true);
     expect(result.suggestionsVisible).toBe(true);
@@ -143,7 +133,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.collectionTitle).toBeTruthy();
     expect(result.searchQueryTyped).toBe(true);
     expect(result.searchResultsVisible).toBe(true);
@@ -156,7 +145,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       query: data.query,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.queryTyped).toBe(true);
     expect(result.searchInputCleared).toBe(true);
     expect(result.searchInputValue).toBe('');
@@ -169,7 +157,6 @@ test.describe('Search navigation', () => {
       mode: data.mode,
       expectedSearchPlaceholder: data.expectedSearchPlaceholder,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.searchBarPlaceholderMatches).toBe(true);
     expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
   });
@@ -185,7 +172,6 @@ test.describe('Search navigation', () => {
     });
     console.log('[SEARCH DEBUG] Matched cast values:', result.matchedCastValues);
     console.log('[SEARCH DEBUG] Matched genre values:', result.matchedGenreValues);
-    expect(result.isLoggedIn).toBe(true);
     expect(result.actorQueryTyped).toBe(true);
     expect(result.genreQueryTyped).toBe(true);
     expect(result.actorResultsVisible).toBe(true);

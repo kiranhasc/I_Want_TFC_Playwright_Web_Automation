@@ -21,6 +21,8 @@ export class OTTDetailsPage {
   private readonly showsSectionLink: PageElement;
   private readonly firstShowContentCard: PageElement;
   private readonly moviesSectionLink: PageElement;
+  private readonly firstShowContentCandidateSelectors: string[];
+  private readonly firstShowContentFallbackSelector: string;
   private readonly playButton: PageElement;
   private readonly videoElement: PageElement;
   private readonly vpnErrorMessage: PageElement;
@@ -37,6 +39,7 @@ export class OTTDetailsPage {
   private readonly episodeTitle: PageElement;
   private readonly playbackContentTitle: PageElement;
   private readonly playbackEpisodeTitle: PageElement;
+  private readonly playbackTitleParagraph: PageElement;
   private readonly playerForwardButton: PageElement;
   private readonly playerBackArrowButton: PageElement;
   private readonly continueWatchingTray: PageElement;
@@ -67,9 +70,14 @@ export class OTTDetailsPage {
   private readonly removeFromWatchlistButton: PageElement;
   private readonly addWatchlistIcon: PageElement;
   private readonly removeWatchlistIcon: PageElement;
+  private readonly watchlistTooltipAdd: PageElement;
+  private readonly watchlistTooltipRemove: PageElement;
+  private readonly watchlistFullPopup: PageElement;
+  private readonly myWatchlistLink: PageElement;
   private readonly watchlistToast: PageElement;
   private readonly cinemaOnePhSection: PageElement;
   private readonly liveChannelsTray: PageElement;
+  private readonly liveChannelsHeadingLabel: PageElement;
   private readonly dzmmTeleradyoItem: PageElement;
   private readonly watchlistContentCard: PageElement;
   private readonly freeTagBadge: PageElement;
@@ -77,7 +85,10 @@ export class OTTDetailsPage {
   private readonly firstSearchResult: PageElement;
   private readonly thumbnailLabelOverlay: PageElement;
   private readonly playerScreen: PageElement;
+  private readonly playerVideoControls: PageElement;
   private readonly seekBar: PageElement;
+  private readonly progressBarContainer: PageElement;
+  private readonly progressBarIndicator: PageElement;
   private readonly playbackTime: PageElement;
   private readonly playerTimeDisplay: PageElement;
   private readonly playbackTimeValue: PageElement;
@@ -93,17 +104,31 @@ export class OTTDetailsPage {
   private readonly nextEpisodeButton: PageElement;
   private readonly upNextMarker: PageElement;
   private readonly backButton: PageElement;
+  private readonly adScreenBackToPlayer: PageElement;
   private readonly fullscreenButton: PageElement;
+  private readonly minimizeButton: PageElement;
   private readonly goLiveButton: PageElement;
   private readonly liveTag: PageElement;
   private readonly adTag: PageElement;
   private readonly pauseAdBanner: PageElement;
+  private readonly pauseAdInteractiveTarget: PageElement;
+  private readonly pauseAdInMaximizedPlayer: PageElement;
+  private readonly pauseAdInMinimizedPlayer: PageElement;
+  private readonly returnToContentText: PageElement;
+  private readonly pauseAdMidBanner: PageElement;
+  private readonly midRollAdBanner: PageElement;
+  private readonly midRollAdOverlay: PageElement;
+  private readonly minimizeIcon: PageElement;
+  private readonly adBanner: PageElement;
+  private readonly thirdPartyAdFrame: PageElement;
+  private readonly pauseBanner: PageElement;
   private readonly firstTitleImageCard: PageElement;
   private readonly titleImageWithAlt: PageElement;
   private readonly contentMetadataDiv: PageElement;
   private readonly contentDescDiv: PageElement;
   private readonly contentDetailsGenres: PageElement;
   private readonly contentDetailsCast: PageElement;
+  private readonly contentMetadataBeforePlay: PageElement;
   private readonly contentCardContainer: PageElement;
   private readonly freeContentBadge: PageElement;
   private readonly contentCardAncestor: PageElement;
@@ -173,11 +198,19 @@ export class OTTDetailsPage {
   private readonly genericTextLocator: PageElement;
   private readonly liveTextLabel: PageElement;
   private readonly goLiveButtonElement: PageElement;
-  private readonly playerVideoControls: PageElement;
   private readonly playerFirstContentTitle: PageElement;
   private readonly movieRailWithPointer: PageElement;
   private readonly continueWatchingFirstContent: PageElement;
-
+  private readonly contentCardImage: PageElement;
+  private readonly contentCardHeading: PageElement;
+  private readonly carouselInfoIcon: PageElement;
+  private readonly becauseYouWatchedHeading: PageElement;
+  private readonly becauseYouWatchedTrayContainer: PageElement;
+  private readonly becauseYouWatchedFirstItem: PageElement;
+  private readonly firstTrayContent: PageElement;
+  private readonly firstCarouselRail: PageElement;
+  private readonly subscriptionBlockerMessage: PageElement;
+  private readonly railThumbnailSelector: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -185,6 +218,9 @@ export class OTTDetailsPage {
     this.showsSectionLink = { selector: 'nav >> text=Shows' };
     this.moviesSectionLink = { selector: 'nav >> text=Movies' };
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
+    this.firstShowContentCandidateSelectors = ['.scrollable-list:first-of-type .thumbnail','.thumbnail','img.title-image','[data-testid="content-card"]','[data-testid="show-card"]','a[href*="/content"]','a[href*="/show"]'];
+    this.firstShowContentFallbackSelector = 'img';
+    this.playButton = { selector: '#play' };
     this.videoElement = { selector: 'video' };
     this.vpnErrorMessage = { selector: 'h2:has-text("We detected that you’re using a VPN or proxy")' };
     this.seasonLabels = { selector: 'h3.season-title, .season-title, [data-testid*="season"], h3:has-text("Season"), text=/Season\\s*\\d+/i' };
@@ -205,6 +241,7 @@ export class OTTDetailsPage {
     this.episodeTitle = { selector: '[data-testid="episode-title"], .episode-title, h2:has-text("Episode")' };
     this.playbackContentTitle = { selector: '[data-testid="player-title"], .player-title, .video-title, .content-title, .player-header h1, h1' };
     this.playbackEpisodeTitle = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode"), text=/Episode\\s+\\d+/i' };
+    this.playbackTitleParagraph = { selector: "//p[contains(@class,'text-start')]" };
     this.playerForwardButton = { selector: 'button[aria-label*="Forward"], button[aria-label*="forward"], [data-testid*="forward"], button:has-text("Forward"), button:has-text(">>"), button:has-text(">")' };
     this.playerBackArrowButton = { selector: 'button[aria-label*="Back"], button[aria-label*="back"], [data-testid*="back"], button:has-text("Back"), button:has-text("←"), button:has-text("<")' };
     this.continueWatchingTray = { selector: 'text=Continue Watching, [data-testid*="continue-watching"], .continue-watching, .cw-tray' };
@@ -237,18 +274,33 @@ export class OTTDetailsPage {
     this.removeWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/remove_watchlist.svg' };
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.cinemaOnePhSection = { selector: 'img[alt="Cinema One PH"]' };
+    this.pauseBanner = { selector: '.pause-banner' };
+    this.addToWatchlistButton = { selector: 'xpath=//*[@id="watchlist"]/div' };
+    this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], [data-testid*="remove-watchlist"]' };
+    this.addWatchlistIcon = { selector: 'img[alt*="add_watchlist"], img[src*="add_watchlist"], img[alt*="add to watchlist"], [data-testid*="add-watchlist"]' };
+    this.removeWatchlistIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], img[alt*="remove from watchlist"], [data-testid*="remove-watchlist"]' };
+    this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
+    this.watchlistFullPopup = { selector: "//p[contains(normalize-space(),'Your watchlist is full')]" };
+    this.myWatchlistLink = { selector: 'div#my_watchlist' };
+    this.cinemaOnePhSection = {selector: 'img[alt="Cinema One PH"]'};
     this.liveChannelsTray = { text: 'Live Channels', selector: 'text=Live Channels' };
+    this.liveChannelsHeadingLabel = { selector: '//p[normalize-space()="Live Channels"]' };
     this.dzmmTeleradyoItem = { text: 'DZMM Teleradyo', selector: 'text=DZMM Teleradyo' };
     this.watchlistContentCard = { selector: 'img[alt="My Illegal Wife"]' };
-    this.freeTagBadge = { selector: 'img[alt="free"]' };
+    this.freeTagBadge = { selector: "img[alt='free'], img[alt='Free'], img[title='free'], img[title='Free'], [aria-label*='free']" };
     this.loginCta = { selector: '#login div' };
-    this.skipIntroMarker = { selector: '//button[@id="player-container-main-skipIntroButton"]' };
-    this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"]' };
+    this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"], //*[@id="player-container-main-skipRecapButton"]' };
+    this.skipIntroMarker = { selector: 'button:has-text("Skip Intro"), [data-testid*="skip-intro"], [aria-label*="Skip Intro"], //button[@id="player-container-main-skipIntroButton"]' };
+    // this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"]' };
     this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
-    this.playerScreen = { selector: '[data-testid="player"], .player-screen, video' };
-    this.seekBar = { selector: '.player-progress-indicator, [class*="progress-bar"], [class*="player-progress"], [class*="seekbar"], [role="slider"], .progress-bar' };
+    this.playerScreen = { selector: '[data-testid="player"], .player-screen, video, //*[@id="player-container-main"], .player-loader' };
+    this.seekBar = { selector: '.player-progress-indicator, [class*="progress-bar"], [class*="player-progress"], [class*="seekbar"], [role="slider"], .progress-bar, //div[contains(@class,"player-progress-container")]' };
+    this.minimizeButton = {selector: '//*[@id="player-container-main-fullscreenButton"]/img'};
+    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
+    this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
+    this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     this.playbackTime = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
     this.playerTimeDisplay = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
     this.playbackTimeValue = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
@@ -264,17 +316,28 @@ export class OTTDetailsPage {
     this.nextEpisodeButton = { selector: 'button[aria-label*="next"], button:has-text("Next"), [data-testid*="next-episode"]' };
     this.upNextMarker = { selector: 'button:has-text("Up Next"), button:has-text("Up next"), [data-testid*="up-next"], [aria-label*="Up Next"], [aria-label*="up next"], text=/up next/i' };
     this.backButton = { selector: 'button[aria-label*="back"], button:has-text("Back"), [data-testid*="back"]' };
+    this.adScreenBackToPlayer = { selector: '//*[@id="player-container-main"]/div[1]/div[1]' };
     this.fullscreenButton = { selector: 'button[aria-label*="fullscreen"], button[title*="fullscreen"], [data-testid*="fullscreen"]' };
     this.goLiveButton = { selector: 'button:has-text("Go Live"), [data-testid*="go-live"], [aria-label*="Go Live"]' };
     this.liveTag = { selector: 'text=/\\bLIVE\\b/i' };
     this.adTag = { selector: '//*[@id="ad-ui-overlay"]' };
     this.pauseAdBanner = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"]' };
+    this.pauseAdInteractiveTarget = { selector: '[data-testid*="pause-ad"], [data-testid*="ad-overlay"], [class*="pause-ad"], [class*="pause-overlay"], [class*="banner"], [role="dialog"], .pause-ad-container' };
+    this.pauseAdInMaximizedPlayer = { selector: '  //*[@alt="Maximize"]/ancestor::div/descendant::div[contains(@class,"pause-ad-container")]' };
+    this.pauseAdInMinimizedPlayer = { selector: '//*[@alt="Minimize"]/ancestor::div/descendant::div[contains(@class,"pause-ad-container")]' };
+    this.returnToContentText = { selector: '//*[@id="player-container-main"]/div[1]/div[1]' };
+    this.pauseAdMidBanner = { selector: '.pause-ad-container' };
+    this.midRollAdBanner = { selector: '.midroll-ad, [data-testid*="midroll"], [class*="mid-roll"], [class*="midroll"], [data-testid*="mid-roll"], [id*="midroll"], [id*="mid-roll"]' };
+    this.midRollAdOverlay = { selector: '//*[@id="ad-ui-overlay"]' };
+    this.minimizeIcon = { selector: '//img[@alt="Minimize"]' };
+    this.thirdPartyAdFrame = { selector: 'iframe[title="3rd party ad content"]' };
     this.firstTitleImageCard = { selector: 'img.title-image' };
     this.titleImageWithAlt = { selector: '//img[contains(@class,"title") and @alt]' };
     this.contentMetadataDiv = { selector: 'div.metadata, [class*="metadata"]' };
     this.contentDescDiv = { selector: 'div.desc, [class*="desc"]' };
     this.contentDetailsGenres = { selector: 'div[class*="genre"], span[class*="genre"], [data-testid*="genre"], [class*="genres"], .genres, .genre' };
     this.contentDetailsCast = { selector: 'div[class*="cast"], span[class*="cast"], [data-testid*="cast"], [class*="actors"], .cast, .actors' };
+    this.contentMetadataBeforePlay = { selector: 'xpath=//p[@class="w-[auto]"] | //div[contains(@class,"metadata") or contains(@class,"meta")]' };
     this.contentCardContainer = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
     this.freeContentBadge = { selector: "//img[@alt='free' and contains(@src,'free.png')]" };
     this.contentCardAncestor = { selector: 'xpath=ancestor::*[self::div or self::a or self::li][1]' };
@@ -308,6 +371,8 @@ export class OTTDetailsPage {
     this.genericTextPattern = { selector: 'text=/.*\\w.*/' };
     this.playerScreenFallback = { selector: '[data-testid*="player"], .player-screen, video' };
     this.watchlistToastContainer = { selector: 'div.toast' };
+    this.watchlistTooltipAdd = { selector: "//div[contains(@class,'tooltip')]//p[normalize-space()='Add to watchlist']" };
+    this.watchlistTooltipRemove = { selector: "//div[contains(@class,'tooltip')]//p[normalize-space()='Remove from watchlist']" };
     this.removeWatchlistFallbackIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"]' };
     this.liveChannelsHeading = { selector: 'text=Live Channels', text: 'Live Channels' };
     this.playerLoaderOverlay = { selector: '.player-loader' };
@@ -345,6 +410,19 @@ export class OTTDetailsPage {
     this.goLiveButtonElement = { role: 'button', text: 'Go Live', selector: 'button:has-text("Go Live")' };
     this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.playerFirstContentTitle = { selector: "//img[@alt='{expectedTitle}']" };
+    this.contentCardImage = { selector: 'img[alt], img[title]' };
+    this.contentCardHeading = { selector: 'h2, h3, h4, [role="heading"]' };
+    this.continueWatchingDetailsAndMore = { selector: 'text=/Details and More|View More|Details/i' };
+    this.contentDetailsHeading = { selector: 'main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]' };
+    this.carouselInfoIcon = { selector: 'button[aria-label*="info"], button[title*="info"], img[alt*="info"], [data-testid*="info-icon"], .info-icon' };
+    this.becauseYouWatchedHeading = { selector: 'xpath=(//*[@class="title"]/p[contains(translate(normalize-space(.),"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz"),"because you watched")])[1]' };
+    this.becauseYouWatchedTrayContainer = { selector: 'xpath=(//*[@class="title"]/p[contains(translate(normalize-space(.),"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz"),"because you watched")])[1]/parent::div/following-sibling::div[1]' };
+    this.becauseYouWatchedFirstItem = { selector: 'xpath=(//*[@class="title"]/p[contains(translate(normalize-space(.),"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz"),"because you watched")])[1]/parent::div/following-sibling::div[1]//img[1]' };
+    this.firstTrayContent = { selector: '(//div[contains(@class,"rail-container")]/div/div)[1]' };
+    this.firstCarouselRail = { selector: '(//div[contains(@class,"rail-container")])[1]' };
+    this.subscriptionBlockerMessage = { selector: "//h2[contains(text(),'A valid subscription is required')]" };
+    this.railThumbnailSelector = { selector: "(//div[contains(@class,'thumbnail') and contains(@class,'cursor-pointer')])[1]" };
+    this.adBanner = { selector: '//a[@id="aw0"]/img' };  
   }
 
   private getRoleLocator(element: PageElement, exact = false) {
@@ -357,6 +435,48 @@ export class OTTDetailsPage {
         : this.page.getByText(element.text).first();
     }
     return this.page.locator(element.selector ?? '').first();
+  }
+
+  private normalizeText(value?: string | null): string {
+    return String(value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  private boxesOverlap(
+    boxA: { x: number; y: number; width: number; height: number },
+    boxB: { x: number; y: number; width: number; height: number },
+  ): boolean {
+    const left = Math.max(boxA.x, boxB.x);
+    const right = Math.min(boxA.x + boxA.width, boxB.x + boxB.width);
+    const top = Math.max(boxA.y, boxB.y);
+    const bottom = Math.min(boxA.y + boxA.height, boxB.y + boxB.height);
+    return left < right && top < bottom;
+  }
+
+  private async findWatchlistCardLocator(contentTitle: string): Promise<Locator | null> {
+    const normalizedTitle = this.normalizeText(contentTitle);
+    const cards = this.page.locator(this.watchlistCardGeneric.selector);
+    const cardCount = await cards.count();
+
+    for (let index = 0; index < cardCount; index += 1) {
+      const card = cards.nth(index);
+      const titleImage = card.locator(this.watchlistCardTitleImage.selector).first();
+      if (await titleImage.count()) {
+        const altText = this.normalizeText(await titleImage.getAttribute('alt'));
+        if (altText === normalizedTitle) {
+          return card;
+        }
+      }
+
+      const heading = card.locator(this.watchlistCardHeading.selector).first();
+      if (await heading.count()) {
+        const headingText = this.normalizeText(await heading.textContent());
+        if (headingText === normalizedTitle) {
+          return card;
+        }
+      }
+    }
+
+    return null;
   }
 
   async navigate(): Promise<void> {
@@ -411,6 +531,36 @@ export class OTTDetailsPage {
     await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
     await this.page.waitForTimeout(5000);
+  }
+
+  async getMetadataBeforePlay(): Promise<string> {
+    logger.elementInteraction('get', 'content metadata before play');
+    const candidateSelectors = [
+      this.contentMetadataBeforePlay.selector,
+      this.contentMetadata.selector,
+      this.contentMetadataDiv.selector,
+      this.contentMetadataContainer.selector,
+    ].filter(Boolean) as string[];
+
+    for (const selector of candidateSelectors) {
+      const metadataLocator = this.page.locator(selector).first();
+      await metadataLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+      await metadataLocator.waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
+      const metadataText = await metadataLocator.textContent().catch(() => '');
+      const trimmedText = metadataText?.trim() ?? '';
+      if (trimmedText) {
+        this.storedContentMetadata = trimmedText;
+        return this.storedContentMetadata;
+      }
+    }
+
+    logger.debug('Unable to locate metadata using standard selectors, attempting broad fallback');
+    const fallbackLocator = this.page.locator('//div[contains(@class,"metadata") or contains(@class,"meta") or contains(@class,"desc") or contains(@class,"details")]').first();
+    await fallbackLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+    await fallbackLocator.waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
+    const fallbackText = await fallbackLocator.textContent().catch(() => '');
+    this.storedContentMetadata = fallbackText?.trim() ?? '';
+    return this.storedContentMetadata;
   }
 
   async clickFirstShowContent(): Promise<void> {
@@ -526,23 +676,54 @@ export class OTTDetailsPage {
       logger.debug('Fallback single-click for home content card failed', error);
     }
   }
+  async getFirstFreeContentTitleOnHome(): Promise<string> {
+    logger.elementInteraction('get', 'first free-tagged content title on home');
+
+    try {
+      const freeBadge = this.page.locator(this.freeTagBadge.selector).first();
+      if (!(await freeBadge.count())) return '';
+      await freeBadge.waitFor({ state: 'visible', timeout: 15000 });
+
+      const cardContainer = freeBadge.locator(this.contentCardContainer.selector ?? '').first();
+      const image = cardContainer.locator(this.contentCardImage.selector ?? '').first();
+      const altText = await image.getAttribute('alt').catch(() => '');
+      if (altText?.trim()) return altText.trim();
+
+      const titleText = await cardContainer.locator(this.contentCardHeading.selector ?? '').first().textContent().catch(() => '');
+      return titleText?.trim() ?? '';
+    } catch (err) {
+      logger.debug('getFirstFreeContentTitleOnHome failed', err);
+      return '';
+    }
+  }
 
   async clickFirstFreeContentOnHome(): Promise<void> {
     logger.elementInteraction('click', 'first free-tagged content on home');
+
+    const freeBadge = this.page.locator(this.freeTagBadge.selector).first();
+
     try {
-      const freeBadge = this.page.locator(this.freeContentBadge.selector).first();
+      if (!(await freeBadge.count())) return;
       await freeBadge.waitFor({ state: 'visible', timeout: 15000 });
-      const contentCard = freeBadge.locator(this.contentCardAncestor.selector).first();
-      const contentTarget = contentCard.locator(this.contentCardInteractiveTarget.selector).first();
-      if (await contentTarget.count()) {
-        await contentTarget.waitFor({ state: 'visible', timeout: 15000 });
-        await contentTarget.click({ timeout: 15000 });
-      } else {
-        await freeBadge.click({ timeout: 15000 });
+
+      const clickTargets = [
+        freeBadge.locator(this.contentCardContainer.selector ?? '').first(),
+        this.page.locator(this.firstTitleImageCard.selector ?? '').first(),
+      ];
+
+      for (const target of clickTargets) {
+        try {
+          if (!(await target.count())) continue;
+          await target.scrollIntoViewIfNeeded();
+          await target.click({ timeout: 15000, force: true });
+          await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+          await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+          await this.page.waitForTimeout(2000);
+          return;
+        } catch {
+          // try the next fallback target
+        }
       }
-      await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-      await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-      await this.page.waitForTimeout(2000);
     } catch (err) {
       logger.debug('clickFirstFreeContentOnHome failed', err);
     }
@@ -1414,6 +1595,54 @@ export class OTTDetailsPage {
     }
   }
 
+  async ensureWatchlistIsAddable(): Promise<void> {
+    logger.elementInteraction('precondition', 'ensure watchlist is addable');
+    try {
+      // If a remove icon is visible, click it to make the item addable
+      const removeIconLocator = this.page.locator(this.removeWatchlistIcon.selector ?? '').first();
+      if ((await removeIconLocator.count().catch(() => 0)) > 0 && (await removeIconLocator.isVisible().catch(() => false))) {
+        await removeIconLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+        await removeIconLocator.click({ timeout: 15000, force: true }).catch(() => undefined);
+        return;
+      }
+
+      // Otherwise, hover the configured add-to-watchlist element (XPath) and check tooltip
+      const addButton = this.page.locator(this.addToWatchlistButton.selector ?? '').first();
+      if ((await addButton.count().catch(() => 0)) > 0) {
+        await addButton.scrollIntoViewIfNeeded().catch(() => undefined);
+        await addButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+        await addButton.hover().catch(() => undefined);
+        await this.page.waitForTimeout(300);
+        const tooltipLocator = this.page.locator(this.watchlistTooltipRemove.selector ?? '').first();
+        if (await tooltipLocator.isVisible().catch(() => false)) {
+          await addButton.click({ timeout: 15000, force: true }).catch(() => undefined);
+        }
+        return;
+      }
+    } catch (error) {
+      logger.debug('ensureWatchlistIsAddable failed', error);
+    }
+  }
+
+  async ensureWatchlistIsRemovable(): Promise<void> {
+    logger.elementInteraction('precondition', 'ensure watchlist is removable');
+    try {
+      const watchlistIcon = this.getRoleLocator(this.addWatchlistIcon);
+      await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+      await watchlistIcon.hover().catch(() => undefined);
+      const tooltipLocator = this.page.locator(this.watchlistTooltipAdd.selector ?? '').first();
+      if (await tooltipLocator.isVisible().catch(() => false)) {
+        // If tooltip shows "Add to watchlist", click the watchlist icon
+        await watchlistIcon.click({ timeout: 15000, force: true }).catch(() => undefined);
+      } else {
+        // Tooltip not present or not matching — nothing to do, continue
+        return;
+      }
+    } catch (error) {
+      logger.debug('ensureWatchlistIsRemovable failed', error);
+    }
+  }
+
   async isWatchlistItemVisible(contentTitle: string): Promise<boolean> {
     logger.elementInteraction('verify', `watchlist item visible ${contentTitle}`);
     try {
@@ -1473,6 +1702,37 @@ export class OTTDetailsPage {
     }
   }
 
+  async ensureWatchlistHasCapacity(): Promise<void> {
+    logger.elementInteraction('precondition', 'ensure watchlist has capacity');
+    try {
+      const fullPopup = this.page.locator(this.watchlistFullPopup.selector).first();
+      if (!(await fullPopup.isVisible().catch(() => false))) {
+        return;
+      }
+
+      logger.step('Watchlist is full, navigating to My Watchlist to remove first content');
+
+      const watchlistLink = this.page.locator(this.myWatchlistLink.selector).first();
+      if (await watchlistLink.isVisible().catch(() => false)) {
+        await watchlistLink.click({ timeout: 15000, force: true });
+      } else {
+        const baseUrl = config.getBaseURL();
+        await this.page.goto(`${baseUrl}/my_watchlist`, { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+      }
+
+      await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+
+      await this.clickFirstContentInWatchlist();
+      const removeButton = this.page.locator(this.removeFromWatchlistButton.selector).first();
+      await removeButton.waitFor({ state: 'visible', timeout: 15000 });
+      await removeButton.click({ timeout: 15000, force: true });
+      await this.page.waitForTimeout(1500);
+    } catch (error) {
+      logger.debug('ensureWatchlistHasCapacity failed', error);
+    }
+  }
+
 
   async clickCinemaOnePhSection(): Promise<void> {
     logger.elementInteraction('click', 'Cinema One PH section');
@@ -1488,8 +1748,8 @@ export class OTTDetailsPage {
 
   async isLiveChannelsTrayVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator(this.liveChannelsHeading.selector).first();
-      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      const liveChannelsHeadingLocator = this.page.locator(this.liveChannelsHeadingLabel.selector ?? '').first();
+      await liveChannelsHeadingLocator.waitFor({ state: 'visible', timeout: 15000 });
       return true;
     } catch {
       return false;
@@ -1524,9 +1784,19 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickFreeContentUnderLiveChannelsTray(contentName: string): Promise<void> {
+    logger.elementInteraction('click', `free content ${contentName} under Live Channels tray`);
+    try {
+      await this.openLiveChannelsTray();
+      await this.clickLiveContentByName(contentName);
+    } catch (error) {
+      logger.debug(`Free content click under Live Channels tray failed for ${contentName}`, error);
+    }
+  }
+
   async isLiveIconVisible(): Promise<boolean> {
     try {
-      const locator = this.getRoleLocator({ text: 'Live', role: 'button' }, true).first();
+      const locator = this.getRoleLocator({ text: 'Live'}, true).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       return true;
     } catch {
@@ -1586,6 +1856,19 @@ export class OTTDetailsPage {
       } catch (fallbackError) {
         logger.debug('Play button fallback click failed', fallbackError);
       }
+    }
+  }
+
+  async getTitleAfterPlayButtonClick(): Promise<string> {
+    logger.elementInteraction('get', 'player title after play button click');
+    try {
+      const playbackTitleLocator = this.getRoleLocator(this.playbackTitleParagraph);
+      await playbackTitleLocator.waitFor({ state: 'visible', timeout: 20000 });
+      const titleText = (await playbackTitleLocator.textContent().catch(() => '')) || '';
+      return titleText.replace(/\s+/g, ' ').trim();
+    } catch (error) {
+      logger.debug('Failed to get title after play button click', error);
+      return '';
     }
   }
 
@@ -1726,6 +2009,15 @@ export class OTTDetailsPage {
       return true;
     } catch (error) {
       logger.debug('Skip Intro marker click failed', error);
+    }
+  }
+
+  async isGoLiveMarkerVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.goLiveButtonElement.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 15000 });
+      return true;
+    } catch {
       return false;
     }
   }
@@ -1878,6 +2170,37 @@ export class OTTDetailsPage {
     } catch (error) {
       logger.debug('Player back arrow not found or click failed', error);
     }
+  }
+
+  async clickEpisodeByNumber(episodeNumber: string): Promise<void> {
+    logger.elementInteraction('click', `episode ${episodeNumber}`);
+    const normalizedEpisode = String(episodeNumber).trim().replace(/^E/i, '');
+    const pattern = new RegExp(`(?:S\\d+\\s*)?E${normalizedEpisode}\\b|Episode\\s*${normalizedEpisode}\\b`, 'i');
+
+    try {
+      const candidate = this.page.locator('button, [role="button"], a, [data-testid*="episode"], .episode-item, .episode-info').filter({ hasText: pattern }).first();
+      await candidate.scrollIntoViewIfNeeded().catch(() => undefined);
+      await candidate.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      await candidate.click({ timeout: 15000, force: true }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+      await this.page.waitForTimeout(2000);
+    } catch (error) {
+      logger.debug(`Episode ${episodeNumber} click failed`, error);
+    }
+  }
+
+  async clickSkipRecapButton(): Promise<void> {
+    logger.elementInteraction('click', 'skip recap button');
+    const button = this.page.locator(this.skipRecapMarker.selector).first();
+    await button.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    await button.click({ timeout: 15000, force: true }).catch(() => undefined);
+  }
+
+  async clickSkipIntroButton(): Promise<void> {
+    logger.elementInteraction('click', 'skip intro button');
+    const button = this.page.locator(this.skipIntroMarker.selector).first();
+    await button.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    await button.click({ timeout: 15000, force: true }).catch(() => undefined);
   }
 
   async clickPremiumTagIcon(): Promise<void> {
@@ -2225,6 +2548,18 @@ export class OTTDetailsPage {
       return false;
     }
   }
+  async clickCarouselInfoIcon(): Promise<void> {
+    logger.elementInteraction('click', 'carousel info icon');
+    try {
+      const locator = this.page.locator(this.carouselInfoIcon.selector).first();
+      await locator.waitFor({ state: 'visible', timeout: 30000 });
+      await locator.click({ force: true, timeout: 30000 });
+      await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      logger.assertion('carousel info icon clicked and page loaded', true);
+    } catch (error) {
+      logger.debug('Carousel info icon click failed', error);
+    }
+  }
 
   async isContentDetailsPageVisible(): Promise<boolean> {
     try {
@@ -2252,52 +2587,76 @@ export class OTTDetailsPage {
       return '';
     }
   }
+async validateAddedToWatchlistPopup(): Promise<string> {
+  logger.elementInteraction('verify', 'Added to Watchlist popup');
 
-  async validateAddedToWatchlistPopup(): Promise<string> {
-    logger.elementInteraction('verify', 'Added to Watchlist popup');
-    const toastCandidates = [
-      this.page.getByText(/Added to watchlist/i).first(),
-      this.page.locator(this.watchlistToastGeneric.selector).filter({ hasText: /added/i }).first(),
-    ];
-    for (const toast of toastCandidates) {
-      try {
-        await toast.waitFor({ state: 'visible', timeout: 15000 });
-        const text = (await toast.textContent()) || '';
-        if (text.toLowerCase().includes('added')) {
-          return text.trim();
-        }
-      } catch {
-        logger.debug('Toast not found or not visible, trying next candidate');
+  const toastCandidates = [
+    this.page.locator(this.watchlistToast.selector).filter({ hasText: /Added to watchlist/i }).first(),
+    this.page.locator(this.watchlistToast.selector).filter({ hasText: /added/i }).first(),
+  ];
+
+  for (const toast of toastCandidates) {
+    try {
+      await toast.waitFor({ state: 'visible', timeout: 15000 });
+      const text = (await toast.textContent()) || '';
+      if (text.toLowerCase().includes('added')) {
+        return text.trim();
       }
+    } catch {
+    logger.debug('Toast not found or not visible');
+      return '';
+    }
+  }
+}
+
+async validateRemovedFromWatchlistPopup(): Promise<string> {
+  logger.elementInteraction('verify', 'Removed from Watchlist popup');
+  try {
+    const toast = this.page.locator(this.watchlistToast.selector).filter({ hasText: /Removed from watchlist/i }).first();
+    await toast.waitFor({ state: 'visible', timeout: 15000 });
+    return (await toast.textContent()) || '';
+  } catch {
+    return '';
+  }
+}
+
+async getContentTitleFromTitleImageLocator(): Promise<string> {
+    logger.elementInteraction('get', 'content title from title image locator');
+    try {
+      const titleImage = this.page.locator(this.titleImageWithAlt.selector).first();
+      await titleImage.waitFor({ state: 'visible', timeout: 15000 });
+      const title = await titleImage.getAttribute('alt').catch(() => '');
+      if (title?.trim()) {
+        logger.assertion('Content title is available from title image locator', true);
+        return title.trim();
+      }
+    } catch (error) {
+      logger.debug('Unable to read content title from title image locator', error);
     }
     return '';
   }
 
-  async validateRemovedFromWatchlistPopup(): Promise<string> {
-    logger.elementInteraction('verify', 'Removed from Watchlist popup');
-    try {
-      const toast = this.page.getByText('Removed from watchlist').first();
-      await toast.waitFor({ state: 'visible', timeout: 15000 });
-      return (await toast.textContent()) || '';
-    } catch {
-      logger.debug('Toast not found or not visible');
-      return '';
-    }
+  async assertContentTitleFromTitleImageLocator(): Promise<string> {
+    const title = await this.getContentTitleFromTitleImageLocator();
+    expect(title).toBeTruthy();
+    return title;
   }
 
-  async addToWatchlistAndGetToast(): Promise<string> {
+async addToWatchlistAndGetToast(): Promise<string> {
     logger.elementInteraction('click', 'Add to Watchlist');
+    const contentTitle = await this.assertContentTitleFromTitleImageLocator();
+    logger.debug(`Asserted add-watchlist title: ${contentTitle}`);
     try {
       const locator = this.page.locator(this.addToWatchlistButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
-      await locator.click({ timeout: 15000 });
+      await locator.click({ timeout: 15000, force: true });
     } catch (error) {
       logger.debug('Add to Watchlist button click failed', error);
     }
 
     try {
-      const toast = this.page.locator(this.watchlistToastAdded.selector).filter({ hasText: 'Added to watchlist' }).nth(1);
-      await toast.waitFor({ state: 'visible', timeout: 10000 });
+      const toast = this.page.locator(this.watchlistToast.selector).filter({ hasText: /Added to watchlist/i }).first();
+      await toast.waitFor({ state: 'visible', timeout: 15000 });
       return (await toast.textContent()) || '';
     } catch {
       logger.debug('Added to Watchlist toast not found or not visible');
@@ -2321,7 +2680,6 @@ export class OTTDetailsPage {
         logger.error('Search GraphQL response not received within timeout.');
         return null;
       }
-
       // If a searchQuery is provided, use the SearchParser to get title matches
       if (searchQuery && typeof searchQuery === 'string' && searchQuery.trim().length > 0) {
         try {
@@ -2482,26 +2840,32 @@ export class OTTDetailsPage {
       console.log('Checking if search result is tagged with label:', normalizedLabel);
       if (!normalizedLabel) return false;
 
-      const firstThumbnailCard = this.page.locator(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`).first();
+      const tagImages = this.page.locator(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
       console.log(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
-      await firstThumbnailCard.waitFor({ state: 'visible', timeout: 20000 });
+      await tagImages.first().waitFor({ state: 'visible', timeout: 20000 });
 
-      console.log('Checking if first thumbnail card is visible :', await firstThumbnailCard.isVisible());
+      const count = await tagImages.count();
+      for (let index = 0; index < count; index += 1) {
+        const currentTag = tagImages.nth(index);
+        const altText = await currentTag.getAttribute('alt');
+        const ariaLabel = await currentTag.getAttribute('aria-label');
+        const titleText = await currentTag.getAttribute('title');
 
-      // const labelFound = await firstThumbnailCard.evaluate((card, expectedLabel) => {
-      //   if (!card || !expectedLabel) return false;
-      //   const labelImages = Array.from(card.querySelectorAll('.thumbnail-label img[alt]')) as HTMLImageElement[];
-      //   return labelImages.some(img => (img.alt || '').trim().toLowerCase() === expectedLabel);
-      // }, normalizedLabel);
+        const formattedValue = [altText, ariaLabel, titleText]
+          .filter(Boolean)
+          .map((value) => String(value)
+            .replace(/[^a-zA-Z0-9]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase())
+          .find(Boolean);
 
-      const altText = await firstThumbnailCard.getAttribute('alt');
-      const formattedValue = altText
-        ?.replace(/[^a-zA-Z0-9]+/g, ' ') // Replace special characters with spaces
-        .replace(/\s+/g, ' ')            // Replace multiple spaces with a single space
-        .trim();
-      console.log(formattedValue);
-      const labelFound = formattedValue?.toLowerCase() === normalizedLabel;
-      return Boolean(labelFound);
+        if (formattedValue === normalizedLabel) {
+          return true;
+        }
+      }
+
+      return false;
     } catch (err) {
       logger.debug('isSearchResultTaggedWithLabel (DOM) failed', err);
       return false;
@@ -2567,7 +2931,8 @@ export class OTTDetailsPage {
       const removeIcon = this.page.locator(this.watchlistRemoveFallbackIcon.selector).first();
       await removeIcon.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
       return (await removeIcon.getAttribute('alt') || await removeIcon.getAttribute('src') || '');
-    } catch {
+    } catch (error) {
+      logger.debug('Remove from Watchlist toast wait failed', error);
       return '';
     }
   }
@@ -2633,11 +2998,32 @@ export class OTTDetailsPage {
   async isContentThumbnailVisibleInWatchlist(contentTitle: string): Promise<boolean> {
     logger.elementInteraction('verify', `content thumbnail visible in watchlist for ${contentTitle}`);
     try {
-      const thumbnail = this.page.getByRole('img', { name: contentTitle }).first();
+      const thumbnail = await this.page.getByRole('img', { name: contentTitle }).first();
       await thumbnail.waitFor({ state: 'visible', timeout: 15000 });
       return await thumbnail.isVisible();
     } catch (error) {
       logger.debug(`Thumbnail visibility check failed for ${contentTitle}`, error);
+      return false;
+    }
+  }
+
+  async isWatchlistItemTaggedWithLabel(contentTitle: string, labelText: string): Promise<boolean> {
+    logger.elementInteraction('verify', `watchlist item tagged with label ${labelText} for ${contentTitle}`);
+    try {
+      const normalizedLabel = this.normalizeText(labelText);
+      const imageTagLocator = await this.page.locator('//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]/img').first();
+      const imageCount = await imageTagLocator.count();
+        const altText = await this.normalizeText(await imageTagLocator.getAttribute('alt')).replace(/[^a-zA-Z0-9\s]/g, ' ');
+        console.log(altText);
+        console.log(normalizedLabel, 'normalizedLabel');
+        if (altText.includes(normalizedLabel)) {
+          if (await imageTagLocator.isVisible().catch(() => false)) {
+            return true;
+          }
+        }
+      return false;
+    } catch (error) {
+      logger.debug(`Watchlist item tag visibility check failed for ${contentTitle} / ${labelText}`, error);
       return false;
     }
   }
@@ -2735,6 +3121,22 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickFirstFreeTaggedContentInWatchlist(): Promise<void> {
+    logger.elementInteraction('click', 'first free-tagged content in watchlist');
+    try {
+      const freeTagLocator = this.page.locator(this.freeTagBadge.selector).first();
+      await freeTagLocator.waitFor({ state: 'visible', timeout: 15000 });
+
+      const cardContainer = freeTagLocator.locator(this.contentCardContainer.selector ?? '').first();
+      await cardContainer.waitFor({ state: 'visible', timeout: 15000 });
+      await cardContainer.click({ timeout: 15000, force: true });
+      logger.debug('Clicked on the first free-tagged content in watchlist');
+    } catch (error) {
+      logger.error(`Failed to click first free-tagged content in watchlist: ${error}`);
+      throw error;
+    }
+  }
+
   async clickFirstContentInWatchlist(): Promise<void> {
     logger.elementInteraction('click', 'first content in watchlist');
     try {
@@ -2777,6 +3179,24 @@ export class OTTDetailsPage {
       logger.debug(`Content title assertion passed - Title: ${imageTitle}, Metadata: ${!!metadataText}, Description: ${!!descText}`);
     } catch (error) {
       logger.error(`Failed to assert content title: ${error}`);
+      throw error;
+    }
+  }
+
+  async assertContentTitleMatchesPlayerTitle(): Promise<void> {
+    logger.elementInteraction('assert', 'content title and player title');
+    try {
+      const storedTitle = this.storedContentTitle.replace(/\s+/g, ' ').trim();
+      const playerTitle = (await this.getTitleAfterPlayButtonClick()).replace(/\s+/g, ' ').trim();
+      const titlesMatch = storedTitle === playerTitle;
+
+      expect(storedTitle).toBeTruthy();
+      expect(playerTitle).toBeTruthy();
+      expect(titlesMatch).toBe(true);
+
+      logger.info(`Titles are same: ${titlesMatch}`);
+    } catch (error) {
+      logger.error(`Failed to assert content title matches player title: ${error}`);
       throw error;
     }
   }
@@ -3032,6 +3452,253 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickFirstTrayContent(): Promise<void> {
+    logger.elementInteraction('click', 'first content from the tray');
+    const contentLocator = this.page.locator(this.firstTrayContent.selector).first();
+    await contentLocator.waitFor({ state: 'visible', timeout: 20000 });
+    await contentLocator.click({ timeout: 20000, force: true });
+    await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {
+      logger.debug('Tray content navigation did not reach networkidle');
+    });
+  }
+
+  async clickFirstContentInRail(contentTitle?: string): Promise<void> {
+    logger.elementInteraction('click', 'first content in the rail');
+
+    const titleImage = contentTitle
+      ? this.page.getByAltText(contentTitle, { exact: false }).first()
+      : this.page.locator(this.railThumbnailSelector.selector).first();
+
+    try {
+      await titleImage.scrollIntoViewIfNeeded().catch(() => undefined);
+      await titleImage.waitFor({ state: 'visible', timeout: 20000 });
+
+      const clickableTarget = titleImage.locator('xpath=ancestor::a[1]').first();
+      const targetToClick = (await clickableTarget.count()) ? clickableTarget : titleImage;
+
+      await targetToClick.hover().catch(() => undefined);
+      await targetToClick.click({ timeout: 20000, force: true });
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {
+        logger.debug('First rail content selection did not reach networkidle');
+      });
+    } catch (error) {
+      logger.debug('Rail content candidate click failed', error);
+      await this.clickFirstTrayContent();
+    }
+  }
+  
+  async clickFirstContentInRailByLocator(): Promise<void> {
+    logger.info('click', 'first content in the Because You Watched tray using the provided locator');
+
+    const railTarget = this.page.locator(this.becauseYouWatchedFirstItem.selector).first();
+
+    try {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        await railTarget.scrollIntoViewIfNeeded().catch(() => undefined);
+        await this.page.waitForTimeout(500);
+        if (await railTarget.isVisible().catch(() => false)) {
+          break;
+        }
+      }
+      await this.page.waitForTimeout(5000);
+      await railTarget.waitFor({ state: 'visible', timeout: 5000 });
+
+      await railTarget.hover().catch(() => undefined);
+      await railTarget.click({ timeout: 20000, force: true });
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {
+        logger.debug('Rail content selection by heading did not reach networkidle');
+      });
+    } catch (error) {
+      logger.debug('Rail content selection by heading failed', error);
+      await this.clickFirstTrayContent();
+    }
+  }
+
+  async scrollBecauseYouWatchedTrayIntoView(): Promise<void> {
+    logger.elementInteraction('scroll', 'Because You Watched tray');
+    const heading = this.page.locator(this.becauseYouWatchedHeading.selector).first();
+    const tray = this.page.locator(this.becauseYouWatchedTrayContainer.selector).first();
+
+    await heading.scrollIntoViewIfNeeded().catch(() => undefined);
+    await tray.scrollIntoViewIfNeeded().catch(() => undefined);
+    await this.page.waitForTimeout(2000);
+  }
+
+  async isBecauseYouWatchedHeadingVisible(): Promise<boolean> {
+    const heading = this.page.locator(this.becauseYouWatchedHeading.selector).first();
+    await heading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await heading.isVisible().catch(() => false);
+  }
+
+  async getBecauseYouWatchedHeadingText(): Promise<string> {
+    try {
+      const heading = this.page.locator(this.becauseYouWatchedHeading.selector).first();
+      await heading.waitFor({ state: 'visible', timeout: 10000 });
+      const text = await heading.textContent();
+      return text?.replace(/\s+/g, ' ').trim() ?? '';
+    } catch (error) {
+      logger.debug('Error getting Because You Watched heading text', error);
+      return '';
+    }
+  }
+
+  private async getVisibleCarouselContentSnapshot(limit: number = 5): Promise<string[]> {
+    const trayContainer = this.page.locator('//body/div/main/div/div/div/div/div[2]/div[2]/div[1]').first();
+    const trayExists = await trayContainer.count().catch(() => 0);
+    if (!trayExists) {
+      return [];
+    }
+
+    const carouselItems = trayContainer.locator('img[alt]:not([alt="arrow-right"])');
+    const count = await carouselItems.count().catch(() => 0);
+    const snapshot: string[] = [];
+
+    for (let index = 0; index < Math.min(count, limit); index += 1) {
+      const item = carouselItems.nth(index);
+      const isVisible = await item.isVisible().catch(() => false);
+      const altText = (await item.getAttribute('alt'))?.trim() || '';
+      if (isVisible && altText) {
+        snapshot.push(altText);
+      }
+    }
+
+    return snapshot;
+  }
+
+  private async getCarouselScrollState(): Promise<{ scrollLeft: number; scrollWidth: number; clientWidth: number; visibleItems: string[] }> {
+    const trayContainer = this.page.locator('//body/div/main/div/div/div/div/div[2]/div[2]/div[1]').first();
+    const trayExists = await trayContainer.count().catch(() => 0);
+    if (!trayExists) {
+      return { scrollLeft: 0, scrollWidth: 0, clientWidth: 0, visibleItems: [] };
+    }
+
+    const state = await trayContainer.evaluate((element: HTMLElement) => ({
+      scrollLeft: element.scrollLeft,
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    })).catch(() => ({ scrollLeft: 0, scrollWidth: 0, clientWidth: 0 }));
+
+    const visibleItems = await this.getVisibleCarouselContentSnapshot();
+    return { ...state, visibleItems };
+  }
+
+  private async hoverCarouselBanner(): Promise<void> {
+    const bannerGradient = this.page.locator('//div[starts-with(@class,"banner-gradient absolute left-0 h-")]').first();
+    if (await bannerGradient.count()) {
+      await bannerGradient.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+      await bannerGradient.hover({ timeout: 10000 }).catch(() => undefined);
+    }
+  }
+
+  private async clickCarouselArrowAndValidate(direction: 'left' | 'right', skipIfMissing: boolean = false): Promise<boolean> {
+    logger.elementInteraction('click', `carousel ${direction} arrow`);
+    try {
+      await this.hoverCarouselBanner();
+      const beforeState = await this.getCarouselScrollState();
+      if (!beforeState.visibleItems.length) {
+        return false;
+      }
+
+      const arrowSelector = direction === 'right'
+        ? "xpath=//img[@alt='arrow-right']"
+        : "xpath=//img[@alt='arrow-left']";
+
+      const arrow = this.page.locator(arrowSelector).first();
+      const arrowExists = await arrow.count().catch(() => 0);
+      if (!arrowExists) {
+        if (skipIfMissing) {
+          logger.debug(`Carousel arrow ${direction} not found for GMA rail; skipping`);
+          return true;
+        }
+        logger.debug(`Carousel arrow ${direction} not found for this rail`);
+        return false;
+      }
+
+      await arrow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+      if (!(await arrow.isVisible().catch(() => false))) {
+        if (skipIfMissing) {
+          logger.debug(`Carousel arrow ${direction} is not visible for GMA rail; skipping`);
+          return true;
+        }
+        logger.debug(`Carousel arrow ${direction} is not visible for this rail`);
+        return false;
+      }
+
+      await arrow.scrollIntoViewIfNeeded().catch(() => undefined);
+      await arrow.hover({ timeout: 10000 }).catch(() => undefined);
+      await arrow.click({ force: true, timeout: 15000 });
+      await this.page.waitForTimeout(1500);
+
+      const afterState = await this.getCarouselScrollState();
+      const scrolledHorizontally = afterState.scrollLeft !== beforeState.scrollLeft || afterState.visibleItems.join('|') !== beforeState.visibleItems.join('|');
+      return scrolledHorizontally;
+    } catch (error) {
+      logger.debug(`Carousel arrow ${direction} validation failed`, error);
+      return false;
+    }
+  }
+
+  async clickLeftCarouselArrowUsingBodyLocator(): Promise<boolean> {
+    logger.elementInteraction('click', 'left carousel arrow using body locator');
+    try {
+      await this.hoverCarouselBanner();
+      const beforeState = await this.getCarouselScrollState();
+      if (!beforeState.visibleItems.length) {
+        return false;
+      }
+
+      const leftArrow = this.page.locator("(//body)[1]//img[@alt='arrow-left']").first();
+      const arrowExists = await leftArrow.count().catch(() => 0);
+      if (!arrowExists) {
+        return false;
+      }
+
+      await leftArrow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+      if (!(await leftArrow.isVisible().catch(() => false))) {
+        return false;
+      }
+
+      await leftArrow.scrollIntoViewIfNeeded().catch(() => undefined);
+      await leftArrow.hover({ timeout: 10000 }).catch(() => undefined);
+      await leftArrow.click({ force: true, timeout: 15000 });
+      await this.page.waitForTimeout(1500);
+
+      const afterState = await this.getCarouselScrollState();
+      return afterState.scrollLeft !== beforeState.scrollLeft || afterState.visibleItems.join('|') !== beforeState.visibleItems.join('|');
+    } catch (error) {
+      logger.debug('Left carousel arrow click using body locator failed', error);
+      return false;
+    }
+  }
+
+  async clickHomePageCarouselArrow(direction: 'left' | 'right'): Promise<boolean> {
+    if (direction === 'left') {
+      return this.clickLeftCarouselArrowUsingBodyLocator();
+    }
+    return this.clickCarouselArrowAndValidate(direction);
+  }
+
+  async clickHomePageCarouselArrowWithRehover(direction: 'left' | 'right'): Promise<boolean> {
+    if (direction === 'left') {
+      return this.clickLeftCarouselArrowUsingBodyLocator();
+    }
+    return this.clickCarouselArrowAndValidate(direction);
+  }
+
+  async clickFirstCarouselArrow(direction: 'left' | 'right', skipIfMissing: boolean = false): Promise<boolean> {
+    if (direction === 'left') {
+      return this.clickLeftCarouselArrowUsingBodyLocator();
+    }
+    return this.clickCarouselArrowAndValidate(direction, skipIfMissing);
+  }
+
+  async isSubscriptionBlockerVisible(): Promise<boolean> {
+    logger.elementInteraction('verify', 'subscription blocker message');
+    const blocker = this.page.locator(this.subscriptionBlockerMessage.selector).first();
+    await blocker.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    return await blocker.isVisible().catch(() => false);
+  }
+
   async verifyPlayerTitle(expectedTitle: string): Promise<boolean> {
     logger.assertion('Verify player title', true);
     await expect(this.page.getByText(expectedTitle).first()).toBeVisible();
@@ -3045,9 +3712,12 @@ export class OTTDetailsPage {
       return true;
     }
 
-    const playerTitle = this.page.getByTestId('video-player').getByText(expectedTitle, { exact: false }).first();
+    const playerTitle = this.page.locator("//div[@class='player-title']").first();
     await playerTitle.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
-    return await playerTitle.isVisible().catch(() => false);
+    const playerTitleText = (await playerTitle.textContent())?.trim() || '';
+    return Boolean(playerTitleText) && Boolean(expectedTitle)
+      ? playerTitleText.toLowerCase().includes(expectedTitle.trim().toLowerCase())
+      : await playerTitle.isVisible().catch(() => false);
   }
 
   async isPlayerScreenVisible(): Promise<boolean> {
@@ -3124,6 +3794,31 @@ export class OTTDetailsPage {
     }
     return false;
   }
+  
+  async hoverPlaybackControls(): Promise<void> {
+    logger.elementInteraction('hover', 'Playback controls');
+    const controls = this.page.locator(this.playerVideoControls.selector).first();
+    await controls.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    const box = await controls.boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    } else {
+      await controls.hover().catch(() => undefined);
+    }
+  }
+
+  async hoverOnPlaybackScreen(): Promise<void> {
+    logger.elementInteraction('hover', 'Playback screen');
+    const playerScreen = this.page.locator(this.playerScreen.selector).first();
+    await playerScreen.waitFor({ state: 'visible', timeout: 15000 });
+    await this.page.locator('.player-loader, .player-mid-spacer').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+    const box = await playerScreen.boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    } else {
+      await playerScreen.hover();
+    }
+  }
 
   async clickResumeButton(): Promise<void> {
     logger.elementInteraction('click', 'Resume button');
@@ -3133,6 +3828,13 @@ export class OTTDetailsPage {
   }
 
   async clickPauseButton(): Promise<void> {
+    logger.elementInteraction('click', 'Pause button');
+    const pauseButton = this.page.locator(this.pauseButton.selector).first();
+    await pauseButton.waitFor({ state: 'visible', timeout: 10000 });
+    await pauseButton.click({ timeout: 10000 });
+  }
+
+  async clickOnPauseButton(): Promise<void> {
     logger.elementInteraction('click', 'Pause button');
     const pauseButton = this.page.locator(this.pauseButton.selector).first();
     await pauseButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -3154,9 +3856,107 @@ export class OTTDetailsPage {
   }
 
   async isPauseAdVisible(): Promise<boolean> {
-    const pauseAd = this.page.locator(this.pauseAdBanner.selector).first();
-    await pauseAd.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-    return await pauseAd.isVisible().catch(() => false);
+      const iframe = this.page.frameLocator(this.thirdPartyAdFrame.selector).first();
+      const pauseAd = iframe.locator(this.pauseAdBanner.selector).first();
+      await pauseAd.waitFor({ state: 'visible', timeout: 10000 });
+      return await pauseAd.isVisible();
+      } 
+  
+async isPauseAdMidBannerVisible(): Promise<boolean> {
+      const pauseBannerAd = this.page.locator(this.pauseAdMidBanner.selector).first();
+      await pauseBannerAd.waitFor({ state: 'visible', timeout: 20000 });
+      return await pauseBannerAd.isVisible();
+      } 
+
+  async isPauseAdOverlappingReturnToContentOrTitle(): Promise<{ overlapWithReturnToContent: boolean; overlapWithTitle: boolean }> {
+    const pauseAd = this.page.locator(this.pauseAdMidBanner.selector).first();
+    const returnToContent = this.page.locator(this.returnToContentText.selector).first();
+    const playerTitle = this.page.locator(this.playbackContentTitle.selector).first();
+
+    const pauseAdBox = await pauseAd.boundingBox().catch(() => null);
+    const returnToContentBox = await returnToContent.boundingBox().catch(() => null);
+    const titleBox = await playerTitle.boundingBox().catch(() => null);
+
+    const overlapWithReturnToContent = Boolean(pauseAdBox && returnToContentBox && this.boxesOverlap(pauseAdBox, returnToContentBox));
+    const overlapWithTitle = Boolean(pauseAdBox && titleBox && this.boxesOverlap(pauseAdBox, titleBox));
+
+    return {
+      overlapWithReturnToContent,
+      overlapWithTitle,
+    };
+  }
+
+  async isPauseAdOverlappingUpNextMarker(): Promise<{ overlapWithUpNextMarker: boolean }> {
+    const pauseAd = this.page.locator(this.pauseAdMidBanner.selector).first();
+    const upNextMarker = this.page.locator(this.upNextMarker.selector).first();
+
+    const pauseAdBox = await pauseAd.boundingBox().catch(() => null);
+    const upNextMarkerBox = await upNextMarker.boundingBox().catch(() => null);
+    const overlapWithUpNextMarker = Boolean(pauseAdBox && upNextMarkerBox && this.boxesOverlap(pauseAdBox, upNextMarkerBox));
+
+    return {
+      overlapWithUpNextMarker,
+    };
+  }
+
+  async isPauseAdOverlappingSeekBar(): Promise<boolean> {
+    const pauseAd = this.page.locator(this.pauseAdMidBanner.selector).first();
+    const seekBar = this.page.locator(this.seekBar.selector).first();
+
+    const pauseAdBox = await pauseAd.boundingBox().catch(() => null);
+    const seekBarBox = await seekBar.boundingBox().catch(() => null);
+    return Boolean(pauseAdBox && seekBarBox && this.boxesOverlap(pauseAdBox, seekBarBox));
+  }
+
+async isPauseBannerVisible(): Promise<boolean> {
+      const pauseBanner = this.page.locator(this.pauseBanner.selector).first();
+      await pauseBanner.waitFor({ state: 'visible', timeout: 10000 });
+      return await pauseBanner.isVisible();
+      } 
+
+  async isMidRollAdOverlayVisible(): Promise<boolean> {
+    const midRollOverlay = this.page.locator(this.midRollAdOverlay.selector).first();
+    await midRollOverlay.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    return await midRollOverlay.isVisible().catch(() => false);
+  }
+
+  async isFullscreenModeMidRollAd(): Promise<boolean> {
+    const minimizeButton = this.page.locator(this.minimizeIcon.selector).first();
+    await minimizeButton.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    return await minimizeButton.isVisible().catch(() => false);
+  }
+
+  async isReturnToContentTextVisible(): Promise<boolean> {
+    const returnToContent = this.page.locator(this.returnToContentText.selector).first();
+    await returnToContent.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    return await returnToContent.isVisible().catch(() => false);
+  }
+
+  async clickReturnToContentText(): Promise<void> {
+    logger.elementInteraction('click', 'return to content text');
+    const returnToContent = this.page.locator(this.returnToContentText.selector).first();
+    await returnToContent.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    await returnToContent.click({ timeout: 10000 }).catch(() => undefined);
+  }
+
+  async isPauseAdBannerVisible(): Promise<boolean> 
+  {
+      const iframe = this.page.frameLocator(this.thirdPartyAdFrame.selector).first();
+      const pauseAd = iframe.locator(this.adBanner.selector).first();
+      await pauseAd.waitFor({ state: 'attached', timeout: 30000 });
+      return await pauseAd.isVisible();
+  }
+
+
+  async pauseAdBannerNotVisible(): Promise<boolean> {
+      try{
+        const iframe = this.page.frameLocator(this.thirdPartyAdFrame.selector).first();
+      const pauseAd = iframe.locator(this.adBanner.selector).first();
+      await pauseAd.waitFor({ state: 'attached', timeout: 30000 });
+      return await pauseAd.isVisible();}
+      catch {
+    return false;
+  }
   }
 
   async isPauseButtonVisible(): Promise<boolean> {
@@ -3170,6 +3970,13 @@ export class OTTDetailsPage {
     await seek.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
     return await seek.isVisible().catch(() => false);
   }
+
+  // async arePlaybackControlsVisible(): Promise<boolean> {
+  //   const controlsVisible = await this.isPauseButtonVisible().catch(() => false);
+  //   const seekBarVisible = await this.isSeekBarVisible().catch(() => false);
+  //   const playbackTimeVisible = await this.isPlaybackTimeVisible().catch(() => false);
+  //   return controlsVisible || seekBarVisible || playbackTimeVisible;
+  // }
 
   async isPlaybackTimeVisible(): Promise<boolean> {
     const timeDisplay = this.page.locator(this.playerTimeDisplay.selector).filter({ hasText: /\d{1,2}:\d{2}/ }).first();
@@ -3362,6 +4169,29 @@ export class OTTDetailsPage {
     return false;
   }
 
+
+async isPauseUpNextMarkerVisible(): Promise<boolean> {
+    const candidateSelectors = [
+      this.upNextMarker.selector,
+      this.nextEpisodeButton.selector,
+      'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
+    ];
+
+    for (const selector of candidateSelectors) {
+      const marker = this.page.locator(selector).first();
+      try {
+        await marker.waitFor({ state: 'visible', timeout: 3000 });
+        if (await marker.isVisible()) {
+          return true;
+        }
+      } catch {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
   async waitForUpNextMarker(timeout: number = 20000): Promise<boolean> {
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
@@ -3412,6 +4242,34 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickPauseAdBanner(): Promise<void> {
+    logger.elementInteraction('click', 'pause ad banner');
+
+    try {
+      await this.page.locator(this.pauseAdMidBanner.selector).click({timeout: 15000,force: true,});
+    } catch (error) {
+      logger.debug('Pause ad banner click via frame failed', error);
+    }
+  }
+
+  async clickBackButtonFromPauseAdScreen(): Promise<void> {
+    logger.elementInteraction('click', 'Back button from pause ad screen');
+    const backButton = this.page.locator(this.backButton.selector).first();
+    await backButton.waitFor({ state: 'visible', timeout: 10000 });
+    await backButton.click({ timeout: 10000 });
+  }
+
+  async isDetailsPageVisibleAfterPauseAdBackNavigation(): Promise<boolean> {
+    return await this.isShowDetailsPageVisible().catch(() => false);
+  }
+
+  async navigateBackToPlayerFromAdScreen(): Promise<void> {
+    logger.elementInteraction('click', 'ad-screen navigation back to player');
+    const adScreenBackToPlayer = this.page.locator(this.adScreenBackToPlayer.selector).first();
+    await adScreenBackToPlayer.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    await adScreenBackToPlayer.click({ timeout: 10000, force: true }).catch(() => undefined);
+  }
+
   async isSubtitleLanguageVisible(): Promise<boolean> {
     try {
       const option = this.page.getByText('English (Philippines)').first();
@@ -3443,8 +4301,32 @@ export class OTTDetailsPage {
   async clickFullscreenButton(): Promise<void> {
     logger.elementInteraction('click', 'Fullscreen button');
     const fullscreenButton = this.page.locator(this.fullscreenButton.selector).first();
-    await fullscreenButton.waitFor({ state: 'visible', timeout: 10000 });
-    await fullscreenButton.click({ timeout: 10000 });
+    await fullscreenButton.waitFor({ state: 'visible', timeout: 20000 });
+    await fullscreenButton.click({ timeout: 20000 });
+  }
+
+async clickMinimizeScreenButton(): Promise<void> {
+    logger.elementInteraction('click', 'Minimize screen button');
+    const minimizeButton = this.page.locator(this.minimizeButton.selector).first();
+    await minimizeButton.waitFor({ state: 'visible', timeout: 10000 });
+    await minimizeButton.click({ timeout: 10000 });
+  }
+
+
+  async isFullscreenModeActive(): Promise<boolean> {
+    return await this.page.evaluate(() => !!document.fullscreenElement).catch(() => false);
+  }
+
+  async isPauseAdVisibleInMaximizedPlayer(): Promise<boolean> {
+    const pauseAd = this.page.locator(this.pauseAdInMaximizedPlayer.selector);
+    await pauseAd.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await pauseAd.isVisible().catch(() => false);
+  }
+
+  async isPauseAdVisibleInMinimizedPlayer(): Promise<boolean> {
+    const pauseAd = this.page.locator(this.pauseAdInMinimizedPlayer.selector).first();
+    await pauseAd.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+    return await pauseAd.isVisible().catch(() => false);
   }
 
   async isAdTagVisible(): Promise<boolean> {
@@ -3515,22 +4397,9 @@ export class OTTDetailsPage {
     return match?.[1] ?? playbackText;
   }
 
-  async hoverPlaybackControls(): Promise<void> {
-    logger.elementInteraction('hover', 'Playback controls');
-    const controls = this.page.locator(this.playerVideoControls.selector).first();
-    await controls.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
-    const box = await controls.boundingBox();
-    if (box) {
-      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    } else {
-      await controls.hover().catch(() => undefined);
-    }
-  }
-
-
   async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
-    await seekBar.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    await seekBar.waitFor({ state: 'visible', timeout: 315000 }).catch(() => undefined);
     const box = await seekBar.boundingBox().catch(() => null);
     const clampedPercent = Math.min(Math.max(targetPercent, 0.02), 0.99);
     if (box) {
@@ -3541,7 +4410,7 @@ export class OTTDetailsPage {
 
       await this.page.mouse.move(startX, startY);
       await this.page.mouse.down();
-      await this.page.mouse.move(endX, endY, { steps: 12 });
+      await this.page.mouse.move(endX, endY, { steps: 20});
       await this.page.mouse.up();
     }
     const videoUpdated = await this.page.evaluate(({ percent }) => {
@@ -3562,6 +4431,67 @@ export class OTTDetailsPage {
       await seekBar.click({ position: { x: Math.max(4, Math.round(box.width * clampedPercent)), y: Math.max(4, Math.round(box.height / 2)) } });
     }
     await this.page.waitForTimeout(1500);
+  }
+
+  async dragSeekBarUntilUpNextMarkerReached(): Promise<boolean> {
+    const seekBar = this.page.locator(this.seekBar.selector).first();
+    const nextEpisodeText = this.page.locator("//span[contains(normalize-space(), 'Next Episode')]").first();
+    await seekBar.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+
+    const box = await seekBar.boundingBox().catch(() => null);
+    if (!box) {
+      return false;
+    }
+
+    const startX = box.x + box.width * 0.08;
+    const startY = box.y + box.height / 2;
+    const endX = box.x + box.width * 0.98;
+    const endY = startY;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(endX, endY, { steps: 18 });
+    await this.page.mouse.up();
+    await this.page.waitForTimeout(1200);
+
+    return await nextEpisodeText.isVisible().catch(() => false);
+  }
+
+  async dragProgressBarToPosition(targetPercent: number): Promise<void> {
+    const candidates = [this.progressBarContainer, this.progressBarIndicator, this.seekBar];
+    let targetLocator: Locator | null = null;
+
+    for (const candidate of candidates) {
+      const locator = this.page.locator(candidate.selector).first();
+      const count = await locator.count().catch(() => 0);
+      if (count > 0) {
+        const visible = await locator.isVisible().catch(() => false);
+        if (visible) {
+          targetLocator = locator;
+          break;
+        }
+      }
+    }
+
+    if (!targetLocator) {
+      return;
+    }
+
+    const box = await targetLocator.boundingBox().catch(() => null);
+    if (!box) {
+      return;
+    }
+
+    const safePercent = Math.min(Math.max(targetPercent, 0.05), 0.99);
+    const startX = box.x + box.width * 0.05;
+    const startY = box.y + box.height / 2;
+    const endX = box.x + box.width * safePercent;
+
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(endX, startY, { steps: 30 });
+    await this.page.mouse.up();
+    await this.page.waitForTimeout(1000);
   }
 
   async clickliveContent(contentName: string = 'TFC Asia'): Promise<void> {

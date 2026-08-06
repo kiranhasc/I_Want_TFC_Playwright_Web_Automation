@@ -2901,13 +2901,13 @@ screen.
 3. Click on the "Login with TV Provider" option.
 4. Select **Frontier** from the available TV Provider options 
 5. Click on Continue.
-Click on the Email Address field.
-6. Enter the valid email address (e.g ftrfios1@frontier.com)
-7. Click on the Password field.
-8. Enter the valid password. (e.g:Frontier1)
-9. Click on the Continue CTA.
-10. Click on the Account icon at the top right corner.
-11. Click on **Account & Settings**.
+6. Click on the Email Address field.
+7. Enter the valid email address 
+8. Click on the Password field.
+9. Enter the valid password.
+10. Click on the Continue CTA.
+11. Click on the Account icon at the top right corner.
+12. Click on **Account & Settings**.
    - expect: The user is able to view the **Account & Subscription** entitlements.
 
 
@@ -2954,8 +2954,6 @@ Click on the Email Address field.
 10. Enter alphanumeric values in the **First Name** and **Last Name** text fields.
    - expect: The **First Name** and **Last Name** fields accept only alphabetic characters.
    - expect: A validation error message is displayed.
-
-
 
 
 #### 1.12 IW3-T1872 Verify the NFvigation on tapping "Watchlist" icon for the PH region guest user. (PH REGION)
@@ -3027,21 +3025,25 @@ Click on the Email Address field.
    - expect: The **Add to Watchlist** option is not displayed for live content.
 
 
-#### 7.1.  IW3-T2046 Verify content can be played directly from my watchlist.
-
+#### 7.1. IW3-T2046 Verify content can be played directly from my watchlist.
 
 **File:** `tests\home\watchlist.spec.ts`
 
 **Steps:**
 1. Open the browser.
 2. Enter the URL(https://uat.iwanttfc.com/)
-3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
-4. Click on the Password field.
-5. Enter the valid password `Test1234` in the Password field.
-6. Click on the Continue CTA.
-4. Add some content to my watchlist
-5. NFvigate to my watchlist page
-6. Play same content from my watchlist (NAutomated)
+3. Login with **free user** credential.
+4. Click on the Continue CTA.
+5. Search for free tag conetnt.
+6. Click on first free tag conetnt.
+7. Add content to my watchlist.
+- Assert title name of the content.
+8. Navigate to my watchlist page
+9. Click first content in the rail.
+10. Click on playbutton.
+11. Wait for 120 seconds till the ad  completes.
+12. Tap on playback screen.
+- The title displayed while adding the content to the Watchlist and the title displayed in the player should match
 
 
 #### 7.2 IW3-T2049 Verify that "Free" tag is displayed for free content in my watchlist
@@ -3055,13 +3057,13 @@ Click on the Email Address field.
 4. Click on the Password field.
 5. Enter the valid password `Test1234` in the Password field.
 6. Click on the Continue CTA.
-7. Click on the Search icon.
-8. Search for **"My Illegal Wife"** and press Enter.
-9. Click on the first content from the first rail.
-10. Click on the Watchlist icon.
-11. Navigate to the **My Watchlist** page.
-   - expect: The title of the first content in **My Watchlist** matches the title of the searched content.
+7. Click on the first **'Free'** tag content in the home page.
+8. Click on the Watchlist icon.
+9. Navigate to the **My Watchlist** page.
+   - expect: The title of the first content in **My Watchlist** matches the   title of the searched content.
    - expect: The added content card displays the **"Free"** tag.
+10. Clcik on the first 'free' tag content in the **My watchlist** page.
+11. Click on watchlist icon.
 
 
 #### 7.3 IW3-T2050 Verify that user is able to add free content into my watchlist
@@ -3075,12 +3077,13 @@ Click on the Email Address field.
 4. Click on the Password field.
 5. Enter the valid password `Test1234` in the Password field.
 6. Click on the Continue CTA.
-7. Click on the Search icon.
-8. Search for **"Kuan on One"** and press Enter.
-9. Click on the first content from the first rail.
-10. Click on the Watchlist icon.
-11. - expect: A popup with the message **"Added to Watchlist"** is displayed.
-
+7. Click on the first **'Free'** tag content in the home page.
+8. Click on the Watchlist icon.
+- expect Add to watchlist toast is displayed.
+9. Navigate to the **My Watchlist** page.
+10. Click on the first 'free' tag content in the **My watchlist** page.
+- expect: The title of the first content in **My Watchlist** matches the      title of the content added to watchlist.
+11. Click on watchlist icon.
 
 
 #### 7.4 IW3-T2051 Verify that user is able to remove free content from my watchlist
@@ -3090,14 +3093,14 @@ Click on the Email Address field.
 **Steps:**
 1. Open the browser and navigate to https://www.iwanttfc.com/
 2. Click on the Confirm button in the cookies popup window.
-3. Enter the valid email address `sanitycheck@yopmail.com` in the Email Address field.
-4. Click on the Password field.
-5. Enter the valid password `Test1234` in the Password field.
-6. Click on the Continue CTA.
-7. Click on the Search icon.
-8. Search for **"Kuan on One"** and press Enter.
-9. Click on the first content from the first rail.
-10. Click on the Watchlist icon.
+3. Login using "freeUser" credentials
+4. Click on the first **'Free'** tag content in the home page.
+5. Click on the Watchlist icon.
+- expect Add to watchlist toast is displayed.
+6. Navigate to the **My Watchlist** page.
+7. Click on the first 'free' tag content in the **My watchlist** page.
+- expect: The title of the first content in **My Watchlist** matches the        title of the content added to watchlist.
+8. Click on watchlist icon.
    - expect: A popup with the message **"Removed from Watchlist"** is displayed.
 
 
@@ -3177,6 +3180,9 @@ Click on the Email Address field.
 9. Click on the first content from the first rail.
 10. Click on the Watchlist icon.
    - expect: The **"Added to Watchlist"** toast message is displayed.
+11. Navigate to watchlist tab and click on first content.
+12. Click on watchlist icon.
+   - expect: The **"Removed from to watchlist"** toast is displayed.
 
 
 #### 7.9 IW3-T2048 Verify that Movie/Show content in my watchlist page loads correctly with correct thumbnails and meta data
@@ -3189,7 +3195,9 @@ Click on the Email Address field.
 5. Enter the valid password `Test1234` in the Password field.
 6. Click on the Continue CTA.
 7. Navigate to the **Movies** tab.
+- assert content title.
 8. Click on the Watchlist icon.
+- expect: Added to watchlist message displayed.
 9. Navigate to the **My Watchlist** page.
 10. Click on the first content in the rail.
    - expect: The added Watchlist items are displayed with the correct titlename and metadata.
@@ -3241,6 +3249,17 @@ Click on the Email Address field.
 12. Observe the content in the **Continue Watching** tray.
     - **Expect:** The content should remain in the **Continue Watching** tray.
     - **Expect:** The progress bar should accurately reflect the updated playback position where the user stopped watching.
+- assert content title.
+- assert both conetnt matches.
+- expect: The added Watchlist items are displayed with the correct titlename and metadata.
+
+<!-- #### 7.10 IW3-T2046 Verify content can be played directly from my watchlist
+
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Login with **free user** credential.
+4. Click on the Continue CTA.
+5.  -->
 
 ### 5.5 IW3-T1951	Verify the Continue Watching tray upon logout and login with same account.
 
@@ -4178,3 +4197,884 @@ Click on the Email Address field.
 11. Scroll through each page until the mid-rail banner ad is displayed.
 12. Observe the network requests generated for the banner ad.
    - **Expect:** The mid-rail banner advertisements displayed across all landing pages should be from this URL https://securepubads.g.doubleclick.net/gampad/ads.
+#### Landing_page IW3-T1890 [WEB] - Verify that the details page is displayed upon clicking the "info" icon in the carousel.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Tap on the **Info** icon for any content in the carousel.
+   - expect: The content title is displayed.
+   - expect: The content metadata is displayed.
+
+
+
+#### Landing_page IW3-T1894 Verify that the subscription page is displayed when a logged-in free user taps the "Subscribe to Watch" CTA from the carousel.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Click on the Search icon.
+6. Search for **"Everybody Sing"** and press Enter.
+7. Click on the first content from the first rail.
+8. Click on Play Button.
+- expect subscription blocker page should be displayed.
+
+
+
+#### Landing_page IW3-T1887 Verify that the user is Navigated to the content detail screen when selecting any content from various screens.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to the **Movies** tab
+6. Click on the first content in the **Trending Movies Worldwide** section.
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+7. Navigate to the **Shows** tab
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+8. Navigate to the **GMA** tab
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+
+
+#### Landing_page IW3-T1883 Verify that the user can scroll through the entire carousel from left to right and vice versa on all landing pages.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Hover over the home page banner.
+6. Click on the **Right** arrow.
+   - expect: The carousel contents scroll to the right.
+   - expect: All carousel contents are visible.
+7. Hover over the home page banner.
+8. Click on the **Left** arrow.
+   - expect: The carousel contents scroll to the left.
+   - expect: All carousel contents are visible.
+
+#### Landing_page IW3-T4340 Verify Next and Previous page will be displayed when user click on Previous/Next link in Welcome / Introduction page
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Click on the Term and Condition link
+3. Click on arrow.
+- Assert the text "For customers in the Philippines".
+4. Click on Next page arrow button.
+- Next page with title "For customers in the Philippines" should be displayd.
+
+
+
+<!-- #### Landing_page IW3-T4704 Verify that "Top 10" tag displayed on the content thumbnail at the top right corner.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Scroll till **"Top 10 Shows"**.
+- expect: The **"Top 10"** tag should be displayed clearly on the top-right corner of the content thumbnail. -->
+
+
+#### Landing_page IW3-T4705 Vertify that "Top 10" tag displayed on the content thumbnail on searching the top 10 rail content.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Click on the Search icon.
+6. Search for **"Alibi"** and press Enter.
+- expect: In first rail **"Top 10"** tag should be displayed on the content thumbnial.
+
+#### Landing_page IW3-T4706 Verify that "Top 10" tag displayed on the content thumbnail on adding the  top 10 rail content to "Watchlist"
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Scroll to **"Top 10 Shows"** tray.
+6. Select first content from the rail.
+7. Cilck on the wathlist icon.
+8. Navigate to watchlist tab.
+- expect: In first rail **"Top 10"** tag should be displayed on the content thumbnial.
+
+#### Landing_page IW3-T1886 Verify that related content and trays are displayed under Shows, Movies, and GMA (only outside the Philippines).
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to "Movies tab.
+- expect: **Trending Movies Worldwide** tray should be present.
+6. Navigate to "Shows" tab.
+- expect: **Trending Shows Worldwide** tray should be present
+7. Navigate to **GMA** tab.
+- expect: **Subscribe to GMA Pinoy Bundle to Watch** metadata should be visible.
+
+
+#### Landing_page IW3-T1888 Verify that user Navigates back to previous page on tapping back button from details page. 
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to the **Movies** tab
+6. Click on the first content in the **Trending Movies Worldwide** section.
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+7. Navigate back.
+   - expect: Navigated back to the **Movies** page.
+8. Navigate to the **Shows** tab
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+9. Navigate back.
+   - expect: Navigated back to the **Shows** page.
+10. Navigate to the **GMA** tab
+   - expect: The user is navigated to the content details page.
+   - expect: The content title and metadata are displayed.
+11. Navigate back.
+   - expect: Navigated back to the **GMA** page.
+
+
+#### Landing_page IW3-T4659 Verify that the “Because You Watched {Movie Title/Show Title}” rail displays movies/shows belonging to the same genre as the watched content.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to "movies" tab.
+6. Click on any contnet in the page.
+- assert the meta data of the content.
+7. Click on play button.
+8. Drag seek bar upto 95%.
+9. Navigate to home page.
+10. Scroll till "Beacause you watched this" tray.
+11. Clik on first content.
+- assert the meta data.
+- compare both meta data contains display movies that belong to the same genre as the watched movie.
+
+<!-- #### Landing_page IW3-T4660 Verify that the “Because You Watched {Movie Title/Show title}” rail updates dyNFmically when the user watches a movie from a different genre.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Scroll till **Because you watched** tray.
+6. Click on first content.
+- assert the genre.
+7. Navigate to **Movie**
+8. Click first content.
+- assert the genre.
+9.  Clcik on play button.
+10. Drag progress bar till 95%.
+11. Clcik on back button.
+12. Clcik on home tab
+13. Scroll till **Because you watched** tray.
+14. clcik on first content.
+- assert the genre.
+- assert that the tray contents are updated based on the genre of the watched content. -->
+
+
+#### Landing_page IW3-T4660 Verify that the “Because You Watched {Movie Title/Show title}” rail updates dyNFmically when the user watches a movie from a different genre.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter fvalid email and password credentials.
+4. Click on the Continue CTA.
+5. Return a "Action" gern content from the GraphQL collection API.
+6. Click on search icon
+7. Search/Type content returned
+8. Click on first content of the search list.
+- expect: Meta data should be visible.
+9. Clcik on play button.
+10. Scroll till the end of the seek bar.
+11. Scroll till **Because you watched** tray.
+12. Click on first content.
+- expect: The metadata genre should match the genre of the watched content.
+13. Return a "Comedy" gern content from the GraphQL collection API.
+14. Repeat the step6 to step 12.
+- assert that the tray contents are updated based on the genre of the watched content.
+
+#### Landing_page IW3-T2127 Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages. 
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+- Asset if the ad is visible.
+7. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+8. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+
+#### Landing_page IW3-T2128 Verify Mid rail banner ad loads without any issues on page refresh.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+- Asset if the ad is visible.
+7. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+8. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+9. Refresh the page
+10. Navigate to **Home** tab.
+11. Scroll till mid rail ad banner.
+- Asset if the ad is visible.
+12. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+13. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+
+#### Landing_page IW3-T2130 Verify that Mid rail Ad banner displayed for free users.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+- Asset if the ad is visible.
+7. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+8. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+
+#### Landing_page IW3-T3670 Verify the popup displayed when free/basic plan users taps on "Early Access" content.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Find and click on first "Early access" content in the home page.
+- assert the meta data.
+6. Scroll down till you get the "Early access" episode thumbnail.
+7. Clcik on eary access episode.
+- expect: "Upgrade to Watch Now" CTA.
+
+
+
+#### Ad IW3-T3980 Verfiy that billboard ad banner displays for only Guest users, Free users and Basic Plan users.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Click on first "Free" tag content.
+6. Wait till the ad completes.
+7. Tap on playback screen.
+- expect: the ad banner should be visible.
+
+
+#### Ads IW3-T3648 Verify Mid rail banner Ad is displayed on Home, Shows, Movies, GMA, Search pages.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+- Asset if the ad is visible.
+7. Navigate to **Movies** tab.
+- Asset if the ad is visible.
+8. Navigate to **Shows** tab.
+- Asset if the ad is visible.
+
+#### Ads Verify pause ads are displayed on pausing the live content as guest or free or basic user.
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to the **Live Channels** tray.
+6. Click on **DZMM Teleradyo** live content.
+   - expect: The **Live** icon is visible in the playback.
+7. Click on the playback screen.
+8. Wait for 5 seconds
+- expect: Pause Ads should be displayed.
+
+
+#### IW3-T3991 Verify that pause ads NOT displayed for Premium or GMA plan users. 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid email and password credentials.
+4. Click on the Continue CTA.
+5. Clik on first content.
+6. Play for 10 seconds.
+7. Resume the player.
+- expect: The pause add banner should not be visible.
+
+#### Ads IW3-T3978 Verify that pause ad appears on player screen for all type of contents during pause state
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to the **Live Channels** tray.
+6. Click on first free channel.
+7. Tap on playback screen.
+- expect: Pause ad should be displayed.
+8. Click on back button.
+9. Navgate to "Movies" tab.
+10. Click on first free tag content.
+11. Tap on playback screen.
+- expect: Pause ad should  be displayed.
+12. Click on back button.
+13. Navigate to Shows tab.
+14. Clcik on first free content.
+15. Tap on playback screen.
+- expect: Pause ad should be displayed.
+
+#### Landing_page IW3-T3669 Verify that subscribed users with "Premium Monthly, Premium Annual, GMA Pinoy Bundle Monthly, GMA Pinoy Bundle Annual" plans can watch "Early Access"  episodes.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a Early access tag content from collection graphQL API.
+6. Click on search icon.
+7. Search/Type Early access tag content returned
+- except Thumbnails should show correct 'Early access' tags on search page (Use   search graphql api response to validate field name : type, should be equal to Early access)
+8. Click on the first content searched.
+9. Scroll the content details page till early access tag is visible on the episode thumbnail.
+10. Click on the episode which has the early access tag.
+- expect: The content should be played.
+
+
+
+#### Ad IW3-T3985 Verify pause ad disappears on player screen when playback resumes.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Click on first "Free" tag content.
+6. Wait till the ad completes.
+7. Tap on playback screen.
+- expect: the ad banner should be visible.
+8. Click on back button.
+- expect: the ad banner should not be visible.
+
+#### Ad IW3-T4017 Verify "Pause Ads" are not displayed when the video is playing. 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Click on first "Free" tag content.
+6. Wait till the ad completes.
+- expect: the pause ad should not be visible.
+
+#### Ad IW3-T3981 Verfiy that pause ad is clickable by user intercations.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the ad banner should be visible.
+10. Click on the Ad displayed.
+- expect: Navigates
+
+#### Ad IW3-T3992 Verify user should not be able to seek the content when the pause ad is displayed.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the ad banner should be visible.
+- expect: the seek bar should not be visible.
+
+
+#### Ad IW3-T3997 Verify that the "Dismiss Ad" CTA is displayed on the "Pause Ad" screen.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the ad banner should be visible.
+10. Click on "Press any button to return to content".
+- expect: The playerscreen should be displayed with title and the seek bar.
+
+#### Ad IW3-T3988 Verify pause ad appears on repeated pauses during playback
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the ad banner should be visible.
+10. Click on "Press any button to return to content".
+- expect: The playerscreen should be displayed with title and the seek bar.
+11. Wait for 5 seconds.
+12. Repeat the step 10 and 11 three times.
+- The ad banner should be displayed every time the playback is paused.
+
+#### Ad IW3-T4014 Verify "Pause Screen" is displayed for all type of contents on pausing the content as a premium or GMA user.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Movies** tab.
+6. Click on the first content in the rail.
+7. Click on search icon
+8. Tap on playback screen.
+9. Wait for 5 seconds.
+- expect: The pause screen should be displayed and the playback timestamp should remain unchanged.
+- expect: the ad banner should not be visible.
+11. Navigate to **Shows** tab.
+12. Click on the first content in the rail.
+13. Click on search icon
+14. Tap on playback screen.
+15. Wait for 5 seconds.
+- expect: The pause screen should be displayed and the playback timestamp should remain unchanged.
+- expect: the ad banner should not be visible.
+
+#### Ad IW3-T3995 Verify that on tapping back button from the pause ads screen user Navigated to previous screen.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Wait till the ad completes.
+10. Tap on playback screen.
+- expect: the ad banner should be visible.
+11. Click on back button.
+- expect: Navigated to previous screen on tapping back button from the
+pause ads screen.
+
+#### Ad IW3-T4018 Verify all the player controls gets dismissed when the "Pause Ad" is displayed.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Click on "Search" icon.
+6. Search for "Can't buy me love".
+7. Click on first content of the search list.
+8. Scroll and click on episode 4.
+9. Wait till the ad completes.
+10. Verify that the "Skip recap" button is visible
+11. Tap on playback screen.
+- expect: Pause ad screen visible.
+- expect: "Skip recap" button not visible.
+12. Tap on playback screen.
+13. Click on "skip recap" button.
+- expect: "Skip intro" button visible.
+14. Tap on playback screen.
+- expect: Pause ad screen visible.
+- expect: "Skip intro" button not visible.
+15. Hover over the playback screen.
+16. Click on the subtitle button.
+- expect: "Subtiitles" are visible.
+17. Tap on playback screen.
+- expect: Pause ad screen visible.
+- expect: "Subtitles" are not visible.
+
+#### Ad IW3-T3981 Verfiy that pause ad is clickable by user intercations.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the Pause ad banner should be visible.
+- expect: the Pause ad banner should be clickable.
+
+#### Ad IW3-T3990 Verify that pause ads are displayed in the "Full" screen.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Wait till the ad completes.
+10. Click on "Full screen" button.
+11. Tap on the playback screen.
+- expect: Pause ad is visible. 
+12. Return to the playback screen.
+13. Clcik on "Full screen" button.
+14. Tap on playback screen
+- expect: Pause ad should be visible.
+- expect: Pause ad is visible in both "Maximize" and "Minimize" screen.
+
+#### Ad IW3-T4019 Verify that "Mid-roll" ads are displayed on playing the content in full screen.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Wait till the ad completes.
+10. Click on the "Full screen" button.
+11. Drag till 75% of the progress bar.
+- expect: Mid roll ad is displayed in Full screen.
+
+#### Ad IW3-T4013 Verify "Next Episode" plays in full screen.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter valid user email and password credentials.
+4. Click on the Continue CTA.
+6. Navigate to "Shows" tab.
+7. Click first tvshow content.
+8. Clcik on play button.
+10. Wait till the ad completes.
+11. Click on the "Full screen" button.
+12. Drag till 99% of the progress bar.
+13. Click on "Up next" binge.
+- expect: New episode should be played in "Full screen" mode.
+
+#### Ad IW3-T4009 Verify that Pause Ads are displayed for Basic users when Micro Drama content is paused.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Retrieve a free content item from the "Quick Feels" tilte using the Collection GraphQL API.
+6. Click on search icon
+7. Search/Type free content returned.
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Wait till the ad completes.
+10. Tap on playback screen.
+- expect: the ad banner should be visible.
+
+
+#### Ad IW3-T4003 Verify that pause ads do not reappear on re pausing the content within 3 sec after resuming.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: the ad banner should be visible.
+10. Click on "Press any button to return to content".
+11. Tap on playback screen.
+- expect: Pause ad should not visible within 3 seconds.
+
+#### Watchlist IW3-T2054 Verify that user is able to add Movie/Show content with tags: "Recently Added", "New Episode",etc.. and tags are displayed correctly on my watchlist page
+
+**File:** `tests/home/watchlist-management.spec.ts`
+
+**Steps:**
+   1. Open the browser.
+   2. Enter the URL(https://iwanttfc.com/)
+   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+   4. Login with valid Email and Password
+   5. Return a "Recently Added" content , "Top 10","Early Access" and "New Episode" content from collection graphQL API
+   6. Click on search icon
+   7. Search/Type "Recently Added" content returned
+   - except Thumbnails should show correct "Recently Added" tags on search page (Use search graphql api response to validate field name : type, should be equal to Free)
+   8. Click on first content of the search list.
+   9. Clcik on watchlist icon.
+   - expect: "Added to Watchlist" toast message is displayed.
+   10. Navigate to **My watchlist** tab.
+   - expecet: First thumbnail should show correct "Recently Added" tag on watchlist page (Use search graphql api response to validate field name : type, should be equal to "Recently Added")
+   11. Navigate back to **Home** tab. 
+   12. Repeat the same steps for all "Top 10", "Early Access" and  "New Episode" contents.
+
+#### Ad IW3-T4011 Verify that Pause Ads are not getting overlapped with the dismiss ad button and content title on player screen
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: The ad banner should not be overlap the "Press any button to return to content".
+
+
+
+<!-- #### Ad  Verify that Pause Ads are not getting overlapped with the seek bar on player screen
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+9. Tap on playback screen.
+- expect: The ad banner should not be overlap the seek bar. -->
+
+#### Ad IW3-T4015 Verify pause ads are not overlapped on the "Up Next" binge marker.
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free content content from collection graphQL API
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+8. Wait till the ad completes.
+10. Drag till 99% of the seek bar.
+- expect: Up next binge marker is visible.
+11. Tap on playback screen.
+- expect: The ad banner should not be overlap the "Up next" thumbnail.
+
+
+#### Ad IW3-T4010 Verify that Pause Ads are not displayed on Skip Intro / Skip Recap/ Go Live CTA when the user pauses the content
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free show from the GraphQL collection API that has more than two free episodes. Exclude content from the "Quick Feels" and "Live" categories.
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Scroll till the "second" free episode content.
+10. Click on "Second" episode.
+11. Wait till the ad completes.
+- Expect: "Skip into" button is visible.
+12. Tap on playback screen
+- expect: "Skip intro" button should not overlap the "pause ad".
+13. Click on "Skip intro" button.
+- expect: "Skip recap" button should be visible.
+14. Tap on playback screen.
+- expect: "Skip recap" button should not overlap the "pause ad".
+15. Click on back button.
+16. Select free live content.
+17. Tap on playback scree.
+- expect: "Go live" button should be visible.
+- expect: "Pause ad" should not overlap the "Go live" button.
+
+
+#### Landing_page IW3-T2129 Verify Mid rail banner ads are from GAM.
+
+**File:** `tests/home/landing_page.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Navigate to **Home** tab.
+6. Scroll till mid rail ad banner.
+- Asset ads are from google ads.
+7. Navigate to **Movies** tab.
+- Asset ads are from google ads.
+8. Navigate to **Shows** tab.
+- Asset ads are from google ads.
+
+#### Ads IW3-T3986 Verify that pause ad displays for the differnet region, users 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate to https://www.iwanttfc.com/
+2. Click on the Confirm button in the cookies popup window.
+3. Enter free user email and password credentials.
+4. Click on the Continue CTA.
+5. Return a free show content from the GraphQL collection API.Exclude content from the "Quick Feels" and "Live" categories.
+6. Click on search icon
+7. Search/Type free content returned
+- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
+8. Click on first content of the search list.
+9. Click on play button.
+10. Pause the palyback screen.
+- expect: The pause ad banner should be visible.
+11. Clcik on back button. 
+12. Click on Account and select sigh out.
+13. Login with "tvUser" credentials.
+14. Repeat step5 to step11.

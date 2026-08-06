@@ -27,11 +27,15 @@ test.describe('Synacor Logout', () => {
     test('@High IW3-T3664: Verify Synacor user will not be able to edit the profile in account page', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-auth-017-synacor-profile-edit-restriction'];
+        const loginResult = await loginWithTVProvider(page, {
+            providerName: data.providerName,
+            mode: data.mode,
+        });
         const result = await verifySynacorProfileEditRestriction(page, {
             providerName: data.providerName,
             mode: data.mode,
         });
-        expect(result.isLoggedIn).toBe(true);
+        expect(loginResult.isLoggedIn).toBe(true);
         expect(result.isRestricted).toBe(true);
         expect(result.editProfileVisible).toBe(false);
     });

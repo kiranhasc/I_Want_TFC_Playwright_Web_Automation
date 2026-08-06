@@ -1,10 +1,12 @@
 import { OTTEarlyAccessPage } from '../pom/OTTEarlyAccessPage';
-import { OTTAuthPage } from '../pom/OTTAuthPage';
-import { OTTPlaybackPage } from '../pom/OTTPlaybackPage';
 import { loginToOTT } from './ott-auth-bfs';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { logger } from '../utils/logger';
+import { de } from '@faker-js/faker';
+import { OTTDetailsPage } from '../pom/OTTDetailsPage';
+import { OTTPlaybackPage } from '../pom/OTTPlaybackPage';
+import { OTTAuthPage } from '../pom/OTTAuthPage';
 
 export interface VerifyEarlyAccessInput {
     mode?: string;
@@ -32,10 +34,10 @@ export interface VerifyEarlyAccessUpgradePromptOutput {
     loggedIn: boolean;
     foundInGraphQL: boolean;
     upgradeIconVisible: boolean;
-    titleVisible: string;
-    descriptionVisible: string;
-    maybeLaterVisible: string;
-    upgradeCtaVisible: string;
+    titleVisible: boolean;
+    descriptionVisible: boolean;
+    maybeLaterVisible: boolean;
+    upgradeCtaVisible: boolean;
 }
 
 export async function verifyEarlyAccessTag(page: any, input: VerifyEarlyAccessInput): Promise<VerifyEarlyAccessOutput> {
@@ -81,10 +83,10 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
     const loggedIn = login.isLoggedIn;
     let foundInGraphQL = false;
     let upgradeIconVisible = false;
-    let titleVisible: string;
-    let descriptionVisible: string;
-    let maybeLaterVisible: string;
-    let upgradeCtaVisible: string;
+    let titleVisible: boolean;
+    let descriptionVisible: boolean;
+    let maybeLaterVisible: boolean;
+    let upgradeCtaVisible: boolean;
     if (loggedIn) {
         logger.step('Waiting for Collection GraphQL operation');
         const collectionResponse = await gql.waitForOperation(input.graphqlQueryName);
@@ -231,5 +233,75 @@ export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: 
         loggedIn: true,
         foundInGraphQL: true,
         assetVisibleInContinueWatching: visibleInContinueWatching,
+    }
+  }
+export interface VerifyEarlyAccessPlaybackOutput {
+  query?: string;
+  earlyAccessTagVisible: boolean;
+  episodeClicked: boolean;
+  playbackStarted: boolean;
+  playerTitleVisible: boolean;
+}
+
+export interface VerifyEarlyAccessPlaybackInput {
+  mode?: string;
+  graphqlQueryName?: string;
+  labelText?: string;
+}
+
+export async function verifyEarlyAccessPlaybackFlow(page: any, input?: VerifyEarlyAccessPlaybackInput): Promise<VerifyEarlyAccessPlaybackOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const playbackPage = new OTTPlaybackPage(page);
+  const earlyAccessPage = new OTTEarlyAccessPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  const mode = input?.mode;
+
+  logger.step('Starting Early Access Maybe Later navigation verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+
+  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+  const parser = new CollectionParser(collectionResponse as any);
+  const foundAsset = parser.findAssetByLabel(input?.labelText ?? 'Early Access');
+
+  if (!foundAsset?.asset?.title) {
+    logger.warn('Early Access asset not found in Collection GraphQL response');
+    return {
+      earlyAccessTagVisible: false,
+      episodeClicked: false,
+      playbackStarted: false,
+      playerTitleVisible: false,
+    };
+  }
+
+  const query = (foundAsset.asset.title ?? '').trim();
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(query);
+  await authPage.submitSearchQuery();
+  await authPage.isSearchResultsVisible(query);
+  await page.waitForTimeout(5000); 
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.isShowDetailsPageVisible();
+  await page.waitForTimeout(3000);
+  await earlyAccessPage.scrollUntilEarlyAccessTagVisible();
+  const earlyAccessTagVisible = await earlyAccessPage.scrollUntilEarlyAccessTagVisible();
+  logger.assertion('Early Access tag visible on episode thumbnail', earlyAccessTagVisible);
+  await page.waitForTimeout(3000);
+  const episodeClicked = await earlyAccessPage.clickEpisodeCardWithEarlyAccessTag();
+  logger.assertion('Early Access episode clicked', episodeClicked);
+  await page.waitForTimeout(3000);
+  await detailsPage.clickPlayButton();
+  await detailsPage.hoverPlaybackScreen();
+  const playbackStarted = await detailsPage.isPlaybackTimeVisible();
+  const playerTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer();
+  logger.assertion('Playback started after clicking Play', playbackStarted);
+  logger.assertion('Player content title visible in player', playerTitleVisible);
+  await page.waitForTimeout(3000);
+  return {
+      earlyAccessTagVisible: true,
+      episodeClicked: true,
+      playbackStarted,
+      playerTitleVisible,
     };
 }

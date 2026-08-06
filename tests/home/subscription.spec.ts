@@ -5,8 +5,7 @@ import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyPremiumContentGate, verifySubscribeToWatchCarouselMessage } from '../../src/businessFunction/ott-playback-bfs';
 
 test.describe('Premium content subscription', () => {
-  test('@High  IW3-T2033: Verify that "Subscribe to watch" CTA is displayed for premium contents inside content details', async ({ page }) => {
-    test.setTimeout(120000);
+  test('@High @D IW3-T2033: Verify that "Subscribe to watch" CTA is displayed for premium contents inside content details', async ({ page }) => {
     const data = testCaseData['tc-sub-001-subscribe-to-watch'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     expect(loginResult.isLoggedIn).toBe(true);
@@ -14,15 +13,12 @@ test.describe('Premium content subscription', () => {
       mode: data.mode,
       searchTerm: data.searchTerm,
     });
-
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.isSubscribeToWatchCtaVisible).toBe(true);
   });
 
-  test('@High  IW3-T2039: Verify navigation on tapping "Upgrade Plan" button from the subscription blocker screen', async ({ page }) => {
+  test('@High @D IW3-T2039: Verify navigation on tapping "Upgrade Plan" button from the subscription blocker screen', async ({ page }) => {
     const data = testCaseData['tc-sub-002-upgrade-plan'];
-    const loginResult = await loginToOTT(page, { mode: data.mode });
-    expect(loginResult.isLoggedIn).toBe(true);
     const result = await navigateToUpgradePlanFromSubscriptionBlocker(page, {
       mode: data.mode,
     });

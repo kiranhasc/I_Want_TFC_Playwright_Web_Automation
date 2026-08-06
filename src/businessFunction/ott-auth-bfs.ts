@@ -10,6 +10,8 @@ import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { SearchParser } from '../utils/graphql/parsers/search-parser';
 import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
 import { CollectionResponse } from '../utils/graphql/graphql-types';
+const authDir = path.join(__dirname, '../playwright/.auth'); // adjust relative path to your repo root
+const MAX_AGE_MS = 60 * 60 * 1000; // tune to your session/token TTL
 export interface InvalidLoginInput {
     email?: string;
     password?: string;
@@ -20,6 +22,7 @@ export interface InvalidLoginInput {
 }
 
 export interface TVProviderLoginInput {
+    graphqlQueryName?: string;
     email?: string;
     password?: string;
     providerName: string;
@@ -164,6 +167,22 @@ export interface VerifyTermsPageDetailsOutput {
     currentUrl: string;
 }
 
+export interface VerifyWelcomeIntroductionPagePaginationInput {
+    mode?: string;
+}
+
+export interface VerifyWelcomeIntroductionPagePaginationOutput {
+    isLoggedIn: boolean;
+    termsPageVisible: boolean;
+    nextPageVisible: boolean;
+    nextPageTitle: string;
+    currentUrl: string;
+}
+
+// function normalizeLoginMode(mode?: string): 'invalid' | 'valid' {
+//     return mode === 'valid' ? 'valid' : 'invalid';
+// }
+
 function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' {
     if (mode === 'valid') {
         return 'valid';
@@ -236,8 +255,6 @@ export interface EnterCreateAccountCredentialsInput {
 export interface EnterCreateAccountCredentialsOutput {
     isEmailFieldVisible: boolean;
     isPasswordFieldVisible: boolean;
-    emailFieldValue: string;
-    passwordFieldValue: string;
 }
 
 export interface VerifyPasswordVisibilityToggleInput {
@@ -290,7 +307,7 @@ function resolveLoginCredentials(
                     ? 'MOBILE_LOGIN_'
                     : mode === 'freeUser'
                         ? 'FREE_USER_'
-                        :'INVALID_LOGIN_';
+                        : 'INVALID_LOGIN_';
 
     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
@@ -311,6 +328,7 @@ export async function loginWithInvalidCredentials(page: any, input?: Partial<Inv
     await authPage.clickPasswordField();
     await authPage.enterPassword(credentials.password);
     await authPage.clickContinue();
+    await page.waitForTimeout(3000);
     const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
     logger.assertion('Invalid login error displayed', !!errorMessage);
     return {
@@ -345,13 +363,14 @@ export async function submitUnregisteredUserLogin(
     await authPage.enterPassword(input.password);
     await authPage.clickContinue();
 
+    await page.waitForTimeout(3000);
     const errorMessage = await authPage.getInvalidCredentialsErrorMessage();
     const isErrorDisplayed = !!errorMessage;
-    logger.assertion('Unregistered user login error displayed', isErrorDisplayed);
+    logger.assertion('Your login credentials are incorrect', isErrorDisplayed);
 
     if (input.expectedErrorMessage) {
         logger.assertion(
-            'Unregistered user login error matches expected',
+            'Your login credentials are incorrect',
             errorMessage.includes(input.expectedErrorMessage)
         );
     }
@@ -481,9 +500,6 @@ export async function loginWithTVProvider(page: any, input: TVProviderLoginInput
     return { isLoggedIn, homeTabVisible, moviesTabVisible };
 }*/
 
-const authDir = path.join(__dirname, '../playwright/.auth'); // adjust relative path to your repo root
-const MAX_AGE_MS = 60 * 60 * 1000; // tune to your session/token TTL
-
 const modeToFile: Record<string, string | null> = {
   valid: 'valid.json',
   provider: 'provider.json',
@@ -491,6 +507,28 @@ const modeToFile: Record<string, string | null> = {
   freeUser: 'freeUser.json',
   invalid: null,
 };
+
+export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step(`Starting ${mode} login flow`);
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after login', homeVisible);
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
+}
+
 
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
@@ -599,6 +637,27 @@ export interface SubmitCreateAccountInvalidCredentialsInput {
 export interface SubmitCreateAccountInvalidCredentialsOutput {
     isErrorDisplayed: boolean;
     errorMessage: string;
+}
+
+export async function loginWithBasicUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = 'basic';
+    logger.step('Starting basic user login flow');
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' });
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after basic user login', homeVisible);
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
 }
 
 export interface NavigateTabsInput {
@@ -1097,7 +1156,7 @@ export interface SearchByActorOrGenreOutput {
 export interface VerifySearchAutoSuggestionsInput {
     mode?: string;
     query: string;
-    validationType:string;
+    validationType: string;
 }
 
 export interface VerifySearchAutoSuggestionsOutput {
@@ -1238,14 +1297,11 @@ export async function verifySearchQueryTyping(page: any, input?: Partial<SearchQ
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting search query typing flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     const searchInputValue = await authPage.getSearchBarValue();
@@ -1264,14 +1320,11 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting search results verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     const searchInputValue = await authPage.getSearchBarValue();
@@ -1359,14 +1412,11 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     const query = input?.query ?? 'Love';
     const validationType = input?.validationType;
     logger.step('Starting search auto-suggestions verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
@@ -1394,16 +1444,13 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const searchQuery = input?.searchQuery ?? 'tfdiyhujehfdyhglfjh843847';
     logger.step('Starting search no results message verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchQuery);
     logger.step(`Waiting for no results message to display for irrelevant query: ${searchQuery}`);
@@ -1575,14 +1622,11 @@ export async function clearSearchTextFromSearchField(page: any, input?: Partial<
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting clear search input flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     const searchInputValueBeforeClear = await authPage.getSearchBarValue();
@@ -2486,14 +2530,11 @@ export async function verifyParentalPinOptionVisibility(page: any, input?: Parti
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting parental controls visibility flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -2535,17 +2576,14 @@ export async function verifyPasswordVisibilityToggle(
 export async function verifyParentalPinToggleState(page: any, input?: Partial<InvalidLoginInput>): Promise<ParentalPinToggleStateOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting parental PIN toggle state verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -2565,14 +2603,11 @@ export async function verifyParentalPinPasswordField(page: any, input?: Partial<
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting parental PIN password field verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -2601,14 +2636,11 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting search icon visibility verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const homePageSearchIconVisible = await authPage.isSearchIconVisible();
     logger.assertion('Search icon visible on Home page', homePageSearchIconVisible);
     await authPage.clickMoviesTab();
@@ -2635,18 +2667,15 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
 
 export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateTabsInput>): Promise<NavigateTabsOutput> {
     const authPage = new OTTAuthPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const expectedSearchPlaceholder = (input?.expectedSearchPlaceholder ?? '').trim();
     logger.step(`Starting valid login flow for tab navigation`);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     const homeRailVisible = await authPage.isContinueWatchingRailVisible();
     logger.assertion('Home tab rail active', homeRailVisible);
     await authPage.clickMoviesTab();
@@ -2788,16 +2817,6 @@ export async function verifySynacorProfileEditRestriction(page: any, input?: Par
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} profile edit restriction flow`);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickLoginWithTVProvider();
-    await authPage.selectTVProvider(input?.providerName ?? 'Frontier, a Verizon Company');
-    await authPage.clickContinue();
-    const credentials = resolveLoginCredentials({}, 'provider');
-    await authPage.enterProviderEmail(credentials.email);
-    await authPage.enterProviderPassword(credentials.password);
-    await authPage.clickProviderSignIn();
-    await authPage.waitForLoadingToDisappear();
     const isLoggedIn = await authPage.isLoginSuccessful();
     logger.assertion('User is logged in before validating profile edit restriction', isLoggedIn);
     if (!isLoggedIn) {
@@ -3253,23 +3272,14 @@ export async function verifyApplicationVersion(page: any, input?: Partial<Verify
 
 export async function navigateToTermsAndConditionsSection(page: any, input: NavigateToTermsAndConditionsSectionInput): Promise<NavigateToTermsAndConditionsSectionOutput> {
     const authPage = new OTTAuthPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting Terms and Conditions section navigation flow');
     const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-
-    const loginFormVisible = await authPage.isLoginFormVisible();
-    if (loginFormVisible) {
-        logger.step('Login form detected; attempting sign-in before validating the Terms page');
-        await authPage.clickEmailField();
-        await authPage.enterEmail(credentials.email);
-        await authPage.clickPasswordField();
-        await authPage.enterPassword(credentials.password);
-        await authPage.clickContinue();
-        await authPage.waitForLoadingToDisappear();
-    }
 
     await authPage.scrollToSupportLinks();
     const termsPageVisible = await authPage.openTermsPageAndNavigateToSection(input.sectionLinkText, input.subHeadingName, input.expectedHeading, input.expectedUrlPart);
@@ -3280,6 +3290,36 @@ export async function navigateToTermsAndConditionsSection(page: any, input: Navi
 
     return {
         sectionPageVisible: termsPageVisible,
+        currentUrl,
+    };
+}
+
+export async function verifyWelcomeIntroductionPagePagination(page: any, input?: VerifyWelcomeIntroductionPagePaginationInput): Promise<VerifyWelcomeIntroductionPagePaginationOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = normalizeLoginMode(input?.mode);
+    logger.step('Starting Welcome/Introduction page pagination validation flow');
+    const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
+
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickCreateAccountLink();
+    await authPage.clickTermsAndConditionsLink();
+
+    const termsPageOpened = await authPage.openTermsPageAndStayOpen();
+    const termsPageVisible = termsPageOpened || authPage.getCurrentUrl().includes('legal') || authPage.getCurrentUrl().includes('terms');
+
+    const nextPageVisible = await authPage.clickTermsPaginationLink();
+    const nextPageTitle = await authPage.getCurrentPageTitle();
+    const currentUrl = authPage.getCurrentUrl();
+
+    logger.assertion('Terms page opened for pagination validation', termsPageVisible);
+    logger.assertion('Next pagination link navigated to a different page', nextPageVisible);
+
+    return {
+        isLoggedIn: true,
+        termsPageVisible,
+        nextPageVisible,
+        nextPageTitle,
         currentUrl,
     };
 }
@@ -3393,8 +3433,6 @@ export async function enterCreateAccountCredentials(page: any, input: EnterCreat
     return {
         isEmailFieldVisible,
         isPasswordFieldVisible,
-        emailFieldValue,
-        passwordFieldValue,
     };
 }
 
@@ -3672,21 +3710,9 @@ export async function verifyAccountAndSubscriptionDetails(
 ): Promise<VerifyAccountAndSubscriptionDetailsOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting account and subscription details verification flow');
-
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickLoginWithTVProvider();
-    await authPage.selectTVProvider(input?.providerName ?? 'credentials');
-    await authPage.clickContinue();
-    await authPage.enterProviderEmail('ftrfios1@frontier.com');
-    await authPage.enterProviderPassword('Frontier1');
-    await authPage.clickProviderSignIn();
-    await authPage.waitForLoadingToDisappear();
     await authPage.openProfileSettings();
-
     const profileSectionText = await authPage.getProfileSectionText();
     const accountDetailsText = await authPage.getAccountDetailsText();
     const expectedSectionName = (input?.expectedSectionName ?? '').trim().toLowerCase();
@@ -3716,7 +3742,7 @@ export interface ValidateEditProfileNameFieldsInput {
 }
 
 export interface ValidateEditProfileNameFieldsOutput {
-    isEditProfileScreenVisible: boolean;
+    //isEditProfileScreenVisible: boolean;
     isFirstNameFieldVisible: boolean;
     isLastNameFieldVisible: boolean;
     isValidationErrorDisplayed: boolean;
@@ -3732,20 +3758,10 @@ export async function validateEditProfileNameFields(
 
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
-
     await authPage.openProfileSettings();
     await authPage.openEditProfile();
-
-    const isEditProfileScreenVisible = await authPage.isEditProfileScreenVisible();
+    await page.waitForTimeout(3000);
     const isFirstNameFieldVisible = await authPage.isFirstNameFieldVisible();
     const isLastNameFieldVisible = await authPage.isLastNameFieldVisible();
 
@@ -3756,13 +3772,11 @@ export async function validateEditProfileNameFields(
     const isValidationErrorDisplayed = await authPage.isProfileValidationErrorVisible();
     const validationErrorText = isValidationErrorDisplayed ? await authPage.getProfileValidationErrorText() : '';
 
-    logger.assertion('Edit profile screen visible', isEditProfileScreenVisible);
     logger.assertion('First name field visible', isFirstNameFieldVisible);
     logger.assertion('Last name field visible', isLastNameFieldVisible);
     logger.assertion('Validation error displayed for invalid names', isValidationErrorDisplayed);
 
     return {
-        isEditProfileScreenVisible,
         isFirstNameFieldVisible,
         isLastNameFieldVisible,
         isValidationErrorDisplayed,
@@ -3879,19 +3893,15 @@ export interface ParentalPinPlaybackPromptOutput {
 export async function submitParentalPinPassword(page: any, input?: Partial<ParentalPinSubmissionInput>): Promise<ParentalPinSubmissionOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-    const pinPassword = (input?.password ?? '').trim() || credentials.password;
-
+    const pinPassword = (input?.password ?? '').trim() || '';
     logger.step('Starting parental PIN password submission flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -3936,18 +3946,16 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
 export async function verifyParentalPinPasswordVisibility(page: any, input?: Partial<PasswordVisibilityInput>): Promise<PasswordVisibilityOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const pinPassword = (input?.password ?? '').trim() || credentials.password;
 
     logger.step('Starting parental PIN password visibility verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
@@ -4000,19 +4008,16 @@ export async function verifyParentalPinPasswordVisibility(page: any, input?: Par
 export async function verifyParentalPinInvalidPasswordError(page: any, input?: Partial<ParentalPinInvalidPasswordInput>): Promise<ParentalPinInvalidPasswordOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const invalidPassword = (input?.invalidPassword ?? '').trim() || 'wrongpassword123';
 
     logger.step('Starting parental PIN invalid password error verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4024,23 +4029,16 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
     let errorMessageText = '';
 
     if (passwordFieldVisible && invalidPassword) {
-        // Enter incorrect password
         await settingsPage.enterParentalPinPassword(invalidPassword);
         logger.step('Entered incorrect password for parental PIN');
-
-        // Click submit button
         await settingsPage.clickParentalPinSubmitButton();
         logger.step('Clicked submit button with incorrect password');
-
-        // Wait for error message to appear
         errorMessageVisible = await settingsPage.waitForParentalPinErrorMessageVisible(5000);
         logger.assertion('Error message appears after incorrect password submission', errorMessageVisible);
-
         if (errorMessageVisible) {
             // Get error message text
             errorMessageText = await settingsPage.getParentalPinErrorMessage();
             logger.debug(`Error message text: ${errorMessageText}`);
-
             // Verify error message matches expected value
             if (input?.expectedErrorMessage) {
                 const errorMatches = errorMessageText.includes(input.expectedErrorMessage);
@@ -4048,7 +4046,6 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
             }
         }
     }
-
     return {
         isLoggedIn: true,
         parentalControlsVisible,
@@ -4061,18 +4058,16 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
 export async function verifyParentalPinFourDigitInput(page: any, input?: Partial<ParentalPinSubmissionInput>): Promise<ParentalPinFourDigitInputOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
+
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
 
     logger.step('Starting parental PIN 4-digit input verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4114,20 +4109,17 @@ export async function verifyParentalPinFourDigitInput(page: any, input?: Partial
 export async function verifyParentalPinSaveSuccess(page: any, input?: Partial<ParentalPinSaveSuccessInput>): Promise<ParentalPinSaveSuccessOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const pinPassword = (input?.password ?? '').trim() || credentials.password;
     const pinDigits = (input?.pin ?? '1234').trim();
 
     logger.step('Starting parental PIN save success verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4204,6 +4196,11 @@ export async function verifyParentalPinPromptOnContentPlayback(page: any, input?
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const detailsPage = new OTTDetailsPage(page);
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const pinPassword = credentials.password;
@@ -4211,14 +4208,6 @@ export async function verifyParentalPinPromptOnContentPlayback(page: any, input?
     const expectedPromptText = (input?.expectedPromptText ?? '').trim();
 
     logger.step('Starting parental PIN playback prompt verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4331,17 +4320,14 @@ export async function verifyParentalPinPlaybackAllowedWhenDisabled(page: any, in
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const detailsPage = new OTTDetailsPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting parental PIN disabled playback verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4386,6 +4372,11 @@ export async function verifyParentalPinInvalidPlaybackPrompt(page: any, input?: 
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const detailsPage = new OTTDetailsPage(page);
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const pinPassword = credentials.password;
@@ -4395,14 +4386,6 @@ export async function verifyParentalPinInvalidPlaybackPrompt(page: any, input?: 
     const expectedInvalidPinErrorText = (input?.expectedInvalidPinErrorText ?? '').trim();
 
     logger.step('Starting parental PIN invalid playback error verification flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
@@ -4486,10 +4469,8 @@ export async function submitEmptyCredentials(page: any, input: EmptyCredentialsI
     logger.step('Starting empty credentials validation flow');
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(input.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(input.password);
+    await authPage.openCreateAccountFlow();
+    await authPage.selectCreateAccountTermsCheckbox();
     await authPage.clickContinue();
     const errorMessage = await authPage.getEmptyCredentialsErrorMessage();
     const isErrorDisplayed = !!errorMessage;
@@ -4505,27 +4486,16 @@ export async function submitEmptyCredentials(page: any, input: EmptyCredentialsI
 
 export async function searchFromTermsPage(page: any, input: SearchFromTermsPageInput): Promise<SearchFromTermsPageOutput> {
     const authPage = new OTTAuthPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
+
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting search from Terms and Conditions page flow');
     const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-
-    const loginFormVisible = await authPage.isLoginFormVisible();
-    if (loginFormVisible) {
-        logger.step('Login form detected; attempting sign-in before accessing Terms page');
-        await authPage.clickEmailField();
-        await authPage.enterEmail(credentials.email);
-        await authPage.clickPasswordField();
-        await authPage.enterPassword(credentials.password);
-        await authPage.clickContinue();
-        await authPage.waitForLoadingToDisappear();
-    }
-
     await authPage.scrollToSupportLinks();
-
-    // Get the popup for Terms page
     const popupPromise = page.context().waitForEvent('page', { timeout: 8000 });
     const termsLinkSelector = authPage.getTermsAndConditionsLinkSelector();
     const termsLink = page.locator(termsLinkSelector).first();
@@ -4589,24 +4559,14 @@ export async function searchFromTermsPage(page: any, input: SearchFromTermsPageI
 
 export async function verifyTermsPageDetails(page: any, input: VerifyTermsPageDetailsInput): Promise<VerifyTermsPageDetailsOutput> {
     const authPage = new OTTAuthPage(page);
+    const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting Terms and Conditions page details verification flow');
     const credentials = resolveLoginCredentials({ email: '', password: '' }, mode);
-
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-
-    const loginFormVisible = await authPage.isLoginFormVisible();
-    if (loginFormVisible) {
-        logger.step('Login form detected; attempting sign-in before accessing Terms page');
-        await authPage.clickEmailField();
-        await authPage.enterEmail(credentials.email);
-        await authPage.clickPasswordField();
-        await authPage.enterPassword(credentials.password);
-        await authPage.clickContinue();
-        await authPage.waitForLoadingToDisappear();
-    }
-
     await authPage.scrollToSupportLinks();
     const detailsPageVisible = await authPage.openTermsPageAndNavigateToSection(input.sectionLinkText, input.subHeadingName, input.expectedHeading, input.expectedUrlPart);
     const currentUrl = authPage.getCurrentUrl();
@@ -4621,18 +4581,15 @@ export async function verifyTermsPageDetails(page: any, input: VerifyTermsPageDe
 export async function disableParentalPin(page: any, input?: Partial<DisableParentalPinInput>): Promise<DisableParentalPinOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
+     const loginResult = await loginToOTT(page, {
+        mode: input?.mode,
+    });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const pinPassword = (input?.password ?? '').trim() || credentials.password;
     logger.step('Starting parental PIN password submission flow');
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();

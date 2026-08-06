@@ -72,7 +72,7 @@ test.describe('Play Back', () => {
     expect(result.adjustedVolume).toBeGreaterThanOrEqual(0);
   });
 
-  test('@Medium IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
+  test('@Medium @D IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
     const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
     const result = await verifyTapToPausePlaybackFlow(page, {
       graphqlQueryName: data.graphqlQueryName,

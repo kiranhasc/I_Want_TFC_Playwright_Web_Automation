@@ -19,6 +19,7 @@ export class OTTAuthPage {
     private readonly passwordVisibilityToggle: PageElement;
     private readonly passwordTextField: PageElement;
     private readonly passwordVisibilityEyeIcon: PageElement;
+    private readonly passwordTextVisibleField: PageElement;
     private readonly continueButton: PageElement;
     private readonly proceedButton: PageElement;
     private readonly tvProviderLoginOption: PageElement;
@@ -31,6 +32,7 @@ export class OTTAuthPage {
     private readonly verifyOTPHeading: PageElement;
     private readonly errorMessage: PageElement;
     private readonly emailErrorMessage: PageElement;
+    private readonly emailInvalidMessage: PageElement;
     private readonly welcomeHeading: PageElement;
     private readonly welcomeSubheading: PageElement;
     private readonly loginWithFacebookButton: PageElement;
@@ -86,6 +88,7 @@ export class OTTAuthPage {
     private readonly iWantOriginalsCardSelector: PageElement;
     private readonly iWantOriginalsClickableCardSelector: PageElement;
     private readonly iWantOriginalsTitleContainerSelector: PageElement;
+    private readonly gmaPinoyBundleMetadata: PageElement;
     private readonly profileLink: PageElement;
     private readonly profileSectionTextElement: PageElement;
     private readonly accountDetailsTextElement: PageElement;
@@ -119,6 +122,11 @@ export class OTTAuthPage {
     private readonly privacyPolicyLink: PageElement;
     private readonly cookiePolicyLink: PageElement;
     private readonly pageHeading: PageElement;
+    private readonly nextPageLink: PageElement;
+    private readonly previousPageLink: PageElement;
+    private readonly navTextContainer: PageElement;
+    private readonly navArrowLink: PageElement;
+    private readonly pageTitle: PageElement;
     private readonly accountAndSettingsLink: PageElement;
     private readonly editProfileOption: PageElement;
     private readonly editProfileHeading: PageElement;
@@ -153,12 +161,14 @@ export class OTTAuthPage {
         this.passwordVisibilityToggle = { selector: 'button[aria-label*="password"], [role="button"][aria-label*="password"], [data-testid*="password"], [data-testid*="show-password"], [data-testid*="hide-password"], .password-toggle, .password-visibility-toggle, .show-password-toggle, button:has-text("Show password"), button:has-text("Hide password"), button:has-text("Show"), button:has-text("Hide")', };
         this.passwordTextField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
         this.passwordVisibilityEyeIcon = { selector: '.absolute.top-\\[8px\\] > svg > path:nth-child(2)' };
+        this.passwordTextVisibleField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
         this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
+        this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")'};
         this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
@@ -207,6 +217,7 @@ export class OTTAuthPage {
         this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
+        this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
         this.myWatchListPage = { selector: '.min-h-screen' };
         this.tvProviderLoginOption = { selector: 'role=button[name="Login with TV Provider"]' };
@@ -244,6 +255,7 @@ export class OTTAuthPage {
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.iWantOriginalsClickableCardSelector = { selector: 'a, button, [role="button"], li, article, figure' };
         this.iWantOriginalsTitleContainerSelector = { selector: 'xpath=ancestor::div[contains(@class, "relative") and contains(@class, "w-auto") and .//img[contains(@class, "title")]][1]' };
+        this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]' };
         this.countryCodeDropdown = { selector: 'select, [role="combobox"]' };
         this.countryCodeOption = { selector: 'text=63' };
@@ -254,6 +266,9 @@ export class OTTAuthPage {
         this.privacyPolicyLink = { role: 'link', text: 'Privacy Policy', selector: 'a:has-text("Privacy Policy")' };
         this.cookiePolicyLink = { role: 'link', text: 'Cookie Policy', selector: 'a:has-text("Cookie Policy")' };
         this.pageHeading = { selector: 'h1, h2, [role="heading"]' };
+        this.navTextContainer = { selector: "//div[contains(@class,'items-center')]//a" };
+        this.navArrowLink = { selector: "//a//*[name()='svg']" };
+        this.pageTitle = { selector: '//title' };
         this.accountAndSettingsLink = { role: 'link', text: 'Account & Settings', selector: 'a:has-text("Account & Settings"), text=Account & Settings' };
         this.editProfileOption = { role: 'button', text: 'Edit Profile', selector: 'button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.editProfileHeading = { role: 'heading', text: 'Edit Profile', selector: 'h1:has-text("Edit Profile"), h2:has-text("Edit Profile")' };
@@ -289,7 +304,7 @@ export class OTTAuthPage {
 
     async acceptCookieSettingsIfVisible(): Promise<void> {
         try {
-            const isVisible = await this.pageUtils.isVisible(this.cookieConfirmButton, 2000);
+            const isVisible = await this.pageUtils.isVisible(this.cookieConfirmButton, 10000);
             if (isVisible) {
                 logger.step('Accepting cookie settings popup');
                 await this.pageUtils.safeClick(this.cookieConfirmButton);
@@ -356,6 +371,12 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.forgotPasswordLink);
     }
 
+    async enterTextInSearchBar(searchText: string): Promise<void> {
+        logger.elementInteraction('type', 'search bar');
+        await this.page.locator(this.searchBar.selector).first().waitFor({ state: 'visible', timeout: 30000 });
+        await this.pageUtils.safeType(this.searchBar, searchText);
+    }
+
     async clickProceed(): Promise<void> {
         logger.elementInteraction('click', 'Proceed button');
         await this.pageUtils.safeClick(this.proceedButton);
@@ -382,7 +403,7 @@ export class OTTAuthPage {
     }
 
     async getErrorMessage(): Promise<string> {
-        return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
+        return await this.pageUtils.getTextContent(this.emailInvalidMessage, 10000);
     }
 
     async clickPasswordVisibilityToggle(): Promise<void> {
@@ -407,6 +428,12 @@ export class OTTAuthPage {
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.getAttribute('type')) || '';
     }
+
+    // async isPasswordTextVisible(): Promise<boolean> {
+    //     const locator = this.page.locator(this.passwordTextVisibleField.selector).first();
+    //     await locator.waitFor({ state: 'attached', timeout: 10000 }).catch(() => undefined);
+    //     return (await locator.count()) > 0;
+    // }
 
     async getEmptyCredentialsErrorMessage(): Promise<string> {
         return await this.pageUtils.getTextContent(this.emptyCredentialsErrorMessage, 10000);
@@ -626,6 +653,35 @@ export class OTTAuthPage {
         return false;
     }
 
+    async clickCreateAccountLink(): Promise<void> {
+        logger.elementInteraction('click', 'Create Account link');
+        await this.pageUtils.safeClick(this.createAccountLink);
+    }
+
+    async getCurrentNavigationText(): Promise<string> {
+        const textContainer = this.page.locator(this.navTextContainer.selector).first();
+        await textContainer.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+        return (await textContainer.textContent().catch(() => '') || '').trim();
+    }
+
+    async clickNavigationArrowAndVerifyTitle(expectedText: string): Promise<boolean> {
+        const arrow = this.page.locator(this.navArrowLink.selector).first();
+        await arrow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+        await arrow.scrollIntoViewIfNeeded().catch(() => undefined);
+        await arrow.click({ force: true, timeout: 10000 }).catch(() => undefined);
+
+        await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        await this.page.waitForTimeout(1500);
+
+        const titleText = await this.page.locator(this.pageTitle.selector).first().textContent().catch(() => '');
+        return (titleText || '').trim().toLowerCase() === expectedText.trim().toLowerCase();
+    }
+
+    async clickTermsAndConditionsLink(): Promise<void> {
+        logger.elementInteraction('click', 'Terms and Conditions link');
+        await this.pageUtils.safeClick(this.termsAndConditionsLink);
+    }
+
     async openHelpAndSupportPage(expectedHeading?: string): Promise<boolean> {
         logger.elementInteraction('click', 'Help and Support link');
         return await this.openLinkInNewTab(this.helpAndSupportLink, expectedHeading);
@@ -639,6 +695,26 @@ export class OTTAuthPage {
     async openTermsPageAndStayOpen(expectedHeading?: string): Promise<boolean> {
         logger.elementInteraction('click', 'Terms and Conditions link');
         return await this.openLinkInNewTab(this.termsAndConditionsLink, expectedHeading, true);
+    }
+
+    async clickTermsPaginationLink(): Promise<boolean> {
+        const targetLink = this.page.locator(this.navArrowLink.selector).first();
+        const linkCount = await targetLink.count().catch(() => 0);
+        if (!linkCount) {
+            logger.warn('Pagination arrow not found');
+            return false;
+        }
+
+        const beforeUrl = this.page.url();
+        const beforeBodyText = await this.page.locator('body').textContent().catch(() => '');
+        await targetLink.scrollIntoViewIfNeeded().catch(() => undefined);
+        await targetLink.click({ force: true, timeout: 10000 }).catch(() => undefined);
+        await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        await this.page.waitForTimeout(1500);
+
+        const afterUrl = this.page.url();
+        const afterBodyText = await this.page.locator('body').textContent().catch(() => '');
+        return afterUrl !== beforeUrl || afterBodyText !== beforeBodyText;
     }
 
     async openTermsPageAndNavigateToSection(sectionLinkText: string, submoduleName: string, expectedHeading?: string, expectedUrlPart?: string): Promise<boolean> {
@@ -715,6 +791,13 @@ export class OTTAuthPage {
             return false;
         }
     }
+
+    async getCurrentPageTitle(): Promise<string> {
+        const titleLocator = this.page.locator(this.pageTitle.selector).first();
+        await titleLocator.waitFor({ state: 'attached', timeout: 5000 }).catch(() => undefined);
+        return (await titleLocator.textContent().catch(() => '') || '').trim();
+    }
+
     getCurrentUrl(): string {
         return this.page.url();
     }
@@ -1477,6 +1560,9 @@ export class OTTAuthPage {
         await this.page.waitForTimeout(1500);
         await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
         return true;
+    }
+    async isGmaPinoyBundleMetadataVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.gmaPinoyBundleMetadata, 10000);
     }
 
     async clickSearchBar(): Promise<void> {

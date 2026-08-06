@@ -197,9 +197,8 @@ test.describe('Home Page Launch', () => {
    test('@High IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
         test.setTimeout(120000);   
         const data = testCaseData['tc-play-001-free-asset-playback'];
-       const result = await playFreeAsset(page, {
-           email: process.env.VALID_LOGIN_EMAIL,
-           password: process.env.VALID_LOGIN_PASSWORD
+        const result = await playFreeAsset(page, {
+            mode: data.mode,
        });
        expect(result.isLoggedIn).toBe(true);
        expect(result.isPlayableContentDetected).toBe(true);

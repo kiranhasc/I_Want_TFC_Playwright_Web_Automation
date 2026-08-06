@@ -38,7 +38,10 @@ test.afterEach(async ({ }, testInfo) => {
     const status =
         testInfo.status === 'passed'
             ? 'PASSED'
-            : 'FAILED';
+            : testInfo.status === 'failed'
+            ? 'FAILED'
+            : 'ERROR';
+            
 
 
     const retryText =

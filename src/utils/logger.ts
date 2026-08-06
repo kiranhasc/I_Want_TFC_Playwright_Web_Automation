@@ -191,12 +191,15 @@ class Logger {
     this.info(`SCREENSHOT: ${path}`);
   }
 
-  /**
-     * Log assertion
-     */
-  public assertion(description: string, result: boolean | string): void {
+  public assertion(description: string, result: boolean): void {
     const status = result ? 'PASSED' : 'FAILED';
-    this.info(`ASSERTION ${status}: ${description}`);
+
+    if (result) {
+      this.info(`ASSERTION ${status}: ${description}`);
+    } else {
+      this.error(`ASSERTION ${status}: ${description}`);
+      throw new Error(`ASSERTION FAILED: ${description}`);
+    }
   }
 
   /**

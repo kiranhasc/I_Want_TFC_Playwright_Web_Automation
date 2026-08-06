@@ -59,7 +59,7 @@ test.describe('PH region guest watchlist navigation', () => {
       expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test.skip('@Medium IW3-T1876: Verify the search functionality for the PH region guest user', async ({ page }) => {
+  test.skip('@Medium @D IW3-T1876: Verify the search functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-018-ph-region-guest-search'];
     const result = await verifyGuestSearchNavigationFromFreeAsset(page, {
       searchTerm: data.searchTerm,
@@ -89,7 +89,6 @@ test.describe('PH region guest watchlist navigation', () => {
   test('@Medium IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
     const data = testCaseData['tc-auth-022-ph-region-guest-carousel-tab-tray'];
     const result = await verifyGuestPHCarouselTabTrayLoad(page, { mode: data?.mode });
-
     expect(result.homeRailVisible).toBe(true);
     expect(result.homePageScrolledToEnd).toBe(true);
     expect(result.homeAdVisible).toBe(true);

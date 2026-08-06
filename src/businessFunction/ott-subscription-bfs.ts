@@ -176,7 +176,6 @@ export async function verifySubscribeToWatchCTA(
   const authPage = new OTTAuthPage(page);
   logger.step('Starting subscribe-to-watch CTA verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  // await authPage.acceptCookieSettingsIfVisible();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -562,30 +561,13 @@ export async function navigateToUpgradePlanFromSubscriptionBlocker(
       isPlansPageVisible: false,
     };
   }
-
-  await authPage.acceptCookieSettingsIfVisible();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await detailsPage.scrollContinueWatchingTrayIntoView();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await authPage.clickGMATab();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isGmaTabVisible = await authPage.isTopStreamedRailVisible();
   await detailsPage.clickSubscribeToWatchCta();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await detailsPage.clickSubscribeToWatchCtaBlocker();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-
   const isUpgradePlanVisible = await detailsPage.isUpgradePlanButtonVisible();
   if (isUpgradePlanVisible) {
     await detailsPage.clickUpgradePlanButton();
-    await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   }
 
   const isPlansPageVisible = await detailsPage.isPlansPageVisible();

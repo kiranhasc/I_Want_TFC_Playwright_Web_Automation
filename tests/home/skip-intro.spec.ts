@@ -5,7 +5,7 @@ import { verifySkipMarkerVisibilityAfterPauseResume, verifySkipMarkersReappearAf
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Playback skip intro marker', () => {
-  test('@High  IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
+  test('@High @D IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
     const data = testCaseData['tc-disc-004-skip-intro'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipIntroMarkerDuringPlayback(page, {

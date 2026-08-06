@@ -258,6 +258,29 @@
     "tc-disc-004-player-close-return": {
         "mode": "valid"
     },
+    "tc-auth-034-details-page-back-navigation": {
+        "mode": "valid",
+        "query": "The Blood Sisters"
+    },
+    "tc-auth-035-welcome-introduction-pagination": {
+        "mode": "valid"
+    },
+    "tc-auth-036-because-you-watched-rail": {
+        "mode": "valid"
+    },
+    "tc-auth-039-because-you-watched-genre-update": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-auth-037-mid-rail-banner-adl": {
+        "mode": "freeUser"
+    },
+    "tc-auth-040-mid-rail-banner-ad-source": {
+        "mode": "freeUser"
+    },
+    "tc-auth-038-mid-rail-banner-adl-refresh": {
+        "mode": "freeUser"
+    },
     "tc-disc-005-skip-recap": {
         "mode": "valid",
         "searchTerm": "Incognito"
@@ -292,23 +315,23 @@
         "mode": "freeUser"
     },
     "tc-auth-015-account-subscriptions": {
-        "mode": "tvUser",
+        "mode": "provider",
         "providerName": "Frontier, a Verizon Company",
         "expectedSectionName": "Account",
         "expectedSubscriptionText": "Subscription"
     },
     "tc-auth-016-watchlist-management": {
-        "mode": "tvUser",
-        "providerName": "Frontier, a Verizon Company",
-        "searchTerm": "Nurse The Dead"
+        "mode": "provider",
+        "query": "collection",
+        "graphqlQueryName": "Collection",
+        "providerName": "Frontier, a Verizon Company"
     },
     "tc-auth-017-ph-region-guest-watchlist": {
         "expectedHeading": "Welcome to iWant"
     },
     "tc-auth-018-live-content-watchlist-absence": {
         "liveContentName": "DZMM Teleradyo",
-        "email": "sanitycheck@yopmail.com",
-        "password": "Test1234",
+        "mode": "freeUser",
         "expectedHeading": "Welcome to iWant"
     },
     "tc-auth-023-continue-watching-playback-synacor": {
@@ -354,10 +377,10 @@
         "mode": "valid"
     },
     "tc-auth-020-free-tag-watchlist": {
-        "email": "sanitycheck@yopmail.com",
+        "email": "abhilash584@gmail.com",
         "password": "Test1234",
-        "searchTerm": "My Illegal Wife",
-        "contentTitle": "My Illegal Wife"
+        "searchTerm": "Blood vs Duty",
+        "contentTitle": "Blood vs Duty"
     },
     "tc-auth-021-add-free-watchlist": {
         "email": "sanitycheck@yopmail.com",
@@ -366,10 +389,47 @@
         "contentTitle": "I Am Your Daughter"
     },
     "tc-auth-022-remove-free-watchlist": {
-        "email": "sanitycheck@yopmail.com",
-        "password": "Test1234",
-        "searchTerm": "A Moment in Time",
-        "contentTitle": "A Moment in Time"
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-watch-004-add-content-from-search-page": {
+        "mode": "valid",
+        "query": "Everybody Sing"
+    },
+    "tc-watch-005-add-premium-content-to-watchlist": {
+        "mode": "freeUser",
+        "query": "Everybody, Sing!"
+    },
+    "tc-watch-007-free-tag-visible-in-watchlist": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-watch-008-add-free-content-to-watchlist": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-watch-005-remove-content-from-search-page": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-watch-006-remove-premium-content-from-watchlist": {
+        "mode": "freeUser",
+        "query": "Everybody, Sing!"
+    },
+    "tc-watch-009-watchlist-thumbnail-metadata": {
+        "mode": "freeUser"
+    },
+    "tc-watch-011-watchlist-tagged-content": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "labels": [
+            "Recently Added",
+            "New Episode",
+            "Early Access"
+        ]
+    },
+    "tc-watch-010-play-content-from-watchlist": {
+        "mode": "freeUser"
     },
     "tc-watch-002-metadata-validation": {
         "mode": "valid",
@@ -422,20 +482,6 @@
         "mode": "valid",
         "query": "Abandoned"
     },
-    "tc-nav-008-premium-playback": {
-        "mode": "valid",
-        "searchQuery": "Abandoned"
-    },
-    "tc-nav-009-actor-or-genre-search": {
-        "mode": "valid",
-        "actorquery": "Angel Locsin",
-        "genrequery": "Action",
-        "graphqlQueryName": "Search"
-    },
-    "tc-nav-010-search-placeholder": {
-        "mode": "valid",
-        "expectedSearchPlaceholder": "Search by title, actor, genre..."
-    },
     "tc-nav-011-free-premium-labels": {
         "mode": "valid",
         "graphqlQueryName": "Collection"
@@ -482,6 +528,7 @@
     "tc-nav-025-search-results-guest": {
         "searchQuery": "Abandoned"
     },
+    
     "tc-sub-001-free-subscribe": {
         "mode": "freeUser",
         "query": "Karnal"
@@ -541,6 +588,92 @@
         "query": "Eva Fonda",
         "expectedTitle": "Eva Fonda",
         "expectedEpisode": "Eva Fonda"
+    },
+    "tc-ad-3998-pause-ad-live-channel": {
+        "mode": "freeUser",
+        "liveContentName": "DZMM Teleradyo"
+    },
+    "tc-ad-3978-pause-ad-player-screen": {
+        "mode": "freeUser",
+        "query": "DZMM Teleradyo",
+        "liveContentName": "DZMM Teleradyo"
+    },
+    "tc-ad-4009-pause-ad-micro-drama": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "query": "Quick Feels"
+    },
+    "tc-ad-3986-pause-ad-different-users": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection",
+        "providerName": "Frontier, a Verizon Company"
+    },
+    "tc-ad-3991-pause-ad-premium-or-gma": {
+        "mode": "valid",
+        "liveContentName": "DZMM Teleradyo"
+    },
+    "tc-ad-4014-pause-screen-premium-or-gma": {
+        "mode": "valid"
+    },
+    "tc-ad-3985-pause-ad-disappears-on-resume": {
+        "mode": "freeUser",
+        "query": "DZMM Teleradyo"
+    },
+    "tc-ad-4017-pause-ad-not-displayed-while-playing": {
+        "mode": "freeUser"
+    },
+    "tc-ad-3981-pause-ad-clickable": {
+        "mode": "freeUser"
+    },
+    "tc-ad-3990-pause-ad-fullscreen": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-4019-mid-roll-ad-fullscreen": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-4013-next-episode-fullscreen": {
+        "mode": "valid"
+    },
+    "tc-ad-3992-pause-ad-seek-restriction": {
+        "mode": "freeUser",
+        "query": "Eva Fonda"
+    },
+    "tc-ad-3997-dismiss-ad-cta": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-4011-pause-ad-no-overlap": {
+        "mode": "freeUser"
+    },
+    "tc-ad-4010-pause-ad-skip-intro-recap-go-live": {
+        "mode": "freeUser",
+        "searchTerm": "Lavender Fields",
+        "liveContentName": "DZMM Teleradyo"
+    },
+    "tc-ad-4015-pause-ad-up-next-overlap": {
+        "mode": "freeUser",
+        "searchTerm": "Lavender Fields"
+    },
+    "tc-ad-4018-pause-ad-controls-dismissed": {
+        "mode": "freeUser",
+        "query": "Can't buy me love"
+    },
+    "tc-ad-3995-pause-ad-back-navigation": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-3988-repeated-pauses": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-4003-pause-ad-no-reappear-within-3s": {
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-ad-3980-billboard-ad-banner": {
+        "mode": "freeUser"
     },
     "tc-sub-013-pause-playback": {
         "mode": "valid",
@@ -772,9 +905,11 @@
     "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
     },
-    "tc-play-001-free-asset-playback": {},
     "tc-auth-014-continue-watching-persistence": {
         "mode": "valid"
+    },
+    "tc-play-001-free-asset-playback": {
+        "mode": "freeUser"
     },
     "tc-play-002-premium-content-gate": {
         "mode": "freeUser",
@@ -801,11 +936,6 @@
         "query": "Love",
         "expectedSuggestionsVisible": true
     },
-    "tc-nav-007-search-no-results": {
-        "mode": "valid",
-        "searchQuery": "tfdiyhujehfdyhglfjh843847hgfhilwajigjlu",
-        "expectedNoResultsMessage": "No results found."
-    },
     "tc-nav-016-search-junk-characters": {
         "mode": "valid",
         "searchQuery": "hjbjbd    jcjbvjbe",
@@ -820,15 +950,30 @@
         "mode": "valid",
         "graphqlQueryName": "Collection"
     },
-    "tc-nav-019-search-back-navigation": {
-        "mode": "valid",
-        "graphqlQueryName": "Collection"
-    },
     "tc-nav-008-clear-search-input": {
         "mode": "valid",
         "query": "Abandoned"
     },
-    "tc-nav-009-premium-playback": {
+    "tc-nav-010-search-placeholder": {
+        "mode": "valid",
+        "expectedSearchPlaceholder": "Search by title, actor, genre..."
+    },
+    "tc-nav-009-actor-or-genre-search": {
+        "mode": "valid",
+        "actorquery": "Angel Locsin",
+        "genrequery": "Action",
+        "graphqlQueryName": "Search"
+    },
+    "tc-nav-019-search-back-navigation": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
+    },
+    "tc-nav-007-search-no-results": {
+        "mode": "valid",
+        "searchQuery": "tfdiyhujehfdyhglfjh843847hgfhilwajigjlu",
+        "expectedNoResultsMessage": "No results found."
+    },
+    "tc-nav-008-premium-playback": {
         "mode": "valid",
         "searchQuery": "La Luna Sangre",
         "expectedPlayback": true,
@@ -926,5 +1071,30 @@
         "mode": "valid",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access"
+    },
+    "tc-auth-026-info-icon-carousel": {
+        "mode": "freeUser"
+    },
+    "tc-auth-027-carousel-subscribe-cta": {
+        "mode": "freeUser",
+        "searchText": "Everybody Sing",
+        "contentTitle": "Everybody, Sing!"
+    },
+    "tc-auth-028-movie-details-from-movies-rail": {
+        "mode": "valid"
+    },
+    "tc-auth-029-landing-page-carousel-scroll": {
+        "mode": "valid"
+    },
+    "tc-auth-031-top-10-tag-on-search": {
+        "mode": "valid",
+        "searchQuery": "Alibi"
+    },
+    "tc-auth-032-top-10-tag-on-watchlist": {
+        "mode": "valid",
+        "searchQuery": "Alibi"
+    },
+    "tc-auth-033-related-content-trays-outside-ph": {
+        "mode": "valid"
     }
 }

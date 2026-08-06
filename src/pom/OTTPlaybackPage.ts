@@ -39,6 +39,8 @@ export class OTTPlaybackPage {
     private readonly episodeSelector: PageElement;
     private readonly unlockEarlyAccessButton: PageElement;
     private readonly updateToWatchNowButton: PageElement;
+    private readonly progressBarContainer: PageElement;
+    private readonly progressBarIndicator: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -76,6 +78,8 @@ export class OTTPlaybackPage {
         this.episodeSelector = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode")' };
         this.unlockEarlyAccessButton = { selector: '//div[text()="Unlock Early Access"]' };
         this.updateToWatchNowButton = { selector: '//p[text()="Upgrade to Watch Now"]' };
+        this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
+        this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     }
 
     async navigateToHomePage(): Promise<void> {
@@ -446,7 +450,7 @@ export class OTTPlaybackPage {
 
     async navigateToWatchlistPage(): Promise<boolean> {
         try {
-            const watchlistLink = this.page.getByText(/My Watchlist|Watchlist/i).first();
+            const watchlistLink = this.page.getByText(/#my_watchlist|Watchlist/i).first();
             await watchlistLink.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
             await watchlistLink.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -571,4 +575,41 @@ export class OTTPlaybackPage {
         await this.page.mouse.move(endX, endY, { steps: 8 });
         await this.page.mouse.up();
   }
+
+    async dragProgressBarToPosition(targetPercent: number): Promise<void> {
+        const candidates = [this.progressBarContainer, this.progressBarIndicator, this.seekBar];
+        let targetLocator = null as any;
+
+        for (const candidate of candidates) {
+            const locator = this.page.locator(candidate.selector).first();
+            const count = await locator.count().catch(() => 0);
+            if (count > 0) {
+                const visible = await locator.isVisible().catch(() => false);
+                if (visible) {
+                    targetLocator = locator;
+                    break;
+                }
+            }
+        }
+
+        if (!targetLocator) {
+            return;
+        }
+
+        const box = await targetLocator.boundingBox().catch(() => null);
+        if (!box) {
+            return;
+        }
+
+        const safePercent = Math.min(Math.max(targetPercent, 0.05), 0.99);
+        const startX = box.x + box.width * 0.05;
+        const startY = box.y + box.height / 2;
+        const endX = box.x + box.width * safePercent;
+
+        await this.page.mouse.move(startX, startY);
+        await this.page.mouse.down();
+        await this.page.mouse.move(endX, startY, { steps: 30 });
+        await this.page.mouse.up();
+        await this.page.waitForTimeout(1000);
+    }
 }

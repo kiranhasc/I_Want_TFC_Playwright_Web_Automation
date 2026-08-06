@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { logger } from '../utils/logger';
+import { OTTAuthPage } from './OTTAuthPage';
 
 export class OTTEarlyAccessPage {
     private page: Page;
@@ -13,7 +14,6 @@ export class OTTEarlyAccessPage {
     private readonly maybeLaterSelector: PageElement;
     private readonly upgradeCtaSelector: PageElement;
     private readonly earlyAccessLabelSelector: PageElement;
-
 
     constructor(page: Page) {
         this.page = page;
@@ -110,10 +110,10 @@ export class OTTEarlyAccessPage {
 
     async verifyUpgradePromptMessage() {
         const upgradeIconVisible = await this.pageUtils.isVisible(this.upgradeIconSelector)
-        const titleVisible = await this.pageUtils.getTextContent(this.upgradeTitleSelector);
-        const descriptionVisible = await this.pageUtils.getTextContent(this.upgradeDescriptionSelector);
-        const maybeLaterVisible = await this.pageUtils.getTextContent(this.maybeLaterSelector);
-        const upgradeCtaVisible = await this.pageUtils.getTextContent(this.upgradeCtaSelector);
+        const titleVisible = await this.pageUtils.isVisible(this.upgradeTitleSelector);
+        const descriptionVisible = await this.pageUtils.isVisible(this.upgradeDescriptionSelector);
+        const maybeLaterVisible = await this.pageUtils.isVisible(this.maybeLaterSelector);
+        const upgradeCtaVisible = await this.pageUtils.isVisible(this.upgradeCtaSelector);
         return {
             upgradeIconVisible,
             titleVisible,
@@ -122,4 +122,52 @@ export class OTTEarlyAccessPage {
             upgradeCtaVisible
         };
     }
-}
+
+  async scrollUntilEarlyAccessTagVisible(): Promise<boolean> {
+    try {
+      const tagCandidates = this.page.locator('//img[@alt="early_access"]');
+      const count = await tagCandidates.count().catch(() => 0);
+      if (!count) {
+        return false;
+      }
+
+      for (let index = 0; index < Math.min(count, 8); index += 1) {
+        const candidate = tagCandidates.nth(index);
+        const visible = await candidate.isVisible().catch(() => false);
+        if (!visible) {
+          continue;
+        }
+        await candidate.scrollIntoViewIfNeeded().catch(() => undefined);
+        await this.page.waitForTimeout(750);
+        return true;
+      }
+
+      await this.page.mouse.wheel(0, 400);
+      await this.page.waitForTimeout(1000);
+      return await tagCandidates.first().isVisible().catch(() => false);
+    } catch (error) {
+      logger.debug('Early Access tag visibility check failed', error);
+      return false;
+    }
+  }
+
+  async clickEpisodeCardWithEarlyAccessTag(): Promise<boolean> {
+    logger.elementInteraction('click', 'episode card with Early Access tag');
+    try {
+      const earlyAccessTag = this.page.locator('//img[@alt="early_access"]').first();
+      await earlyAccessTag.waitFor({ state: 'visible', timeout: 15000 });
+      const clickableAncestor = earlyAccessTag.locator('xpath=ancestor::a[1] | ancestor::button[1] | ancestor::*[contains(@role, "button")][1]').first();
+      if (await clickableAncestor.count()) {
+        await clickableAncestor.scrollIntoViewIfNeeded().catch(() => undefined);
+        await clickableAncestor.click({ timeout: 20000, force: true });
+        return true;
+      }
+
+      await earlyAccessTag.click({ timeout: 20000, force: true });
+      return true;
+    } catch (error) {
+      logger.debug('Clicking episode card with Early Access tag failed', error);
+      return false;
+    }
+
+  }}

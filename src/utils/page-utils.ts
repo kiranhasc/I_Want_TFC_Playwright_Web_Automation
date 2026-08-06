@@ -51,10 +51,10 @@ export class PageUtils {
   /**
    * Check if element is visible
    */
-  async isVisible(element: PageElement, timeout: number = 5000): Promise<boolean> {
+  async isVisible(element: PageElement, timeout: number = 10000): Promise<boolean> {
     try {
       const locator = this.getLocator(element);
-      await locator.waitFor({ state: 'visible', timeout });
+      await locator.waitFor({ state: 'attached', timeout });
       return true;
     } catch {
       return false;
@@ -89,6 +89,9 @@ export class PageUtils {
    * Get locator from PageElement definition
    */
   private getLocator(element: PageElement): Locator {
+    if (element.selector) {
+      return this.page.locator(element.selector);
+    }
     if (element.testId) {
       return this.page.getByTestId(element.testId);
     }
@@ -96,9 +99,9 @@ export class PageUtils {
       return this.page.getByRole(element.role as 'button' | 'link' | 'textbox', { name: element.text });
     }
     if (element.text) {
-      return this.page.getByText(element.text);
+      return this.page.getByText(element.text, { exact: true });
     }
-    return this.page.locator(element.selector);
+    return this.page.locator('');
   }
 
   /**

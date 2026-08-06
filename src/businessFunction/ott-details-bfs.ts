@@ -441,6 +441,7 @@ export async function verifyContentDetailsPageUi(
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before validating content details page UI', isLoggedIn);
 
+
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -746,6 +747,149 @@ export async function verifySharedDeeplinkRedirectToDetailsPage(
     titleMatchesAsset,
     shortDescriptionMatchesAsset,
   };
+}
+export interface VerifyBackNavigationFromDetailsPageInput {
+  mode?: string;
+  query?: string;
+}
+
+export interface VerifyBackNavigationFromDetailsPageOutput {
+  isLoggedIn: boolean;
+  detailsPageVisibleBeforeBack: boolean;
+  detailsPageVisibleAfterBack: boolean;
+  previousPageVisible: boolean;
+}
+
+export async function verifyBackNavigationFromDetailsPage(
+  page: any,
+  input?: VerifyBackNavigationFromDetailsPageInput
+): Promise<VerifyBackNavigationFromDetailsPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const mode = input?.mode;
+
+  logger.step('Starting details page back navigation verification flow');
+
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before details page back navigation validation', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      detailsPageVisibleBeforeBack: false,
+      detailsPageVisibleAfterBack: false,
+      previousPageVisible: false,
+    };
+  }
+
+  const tabActions = [
+    {
+      name: 'Home',
+      click: async () => {
+        await authPage.clickHomeTab();
+      },
+    },
+    {
+      name: 'Movies',
+      click: async () => {
+        await authPage.clickMoviesTab();
+      },
+    },
+    {
+      name: 'Shows',
+      click: async () => {
+        await authPage.clickShowsTab();
+      },
+    },
+    {
+      name: 'GMA',
+      click: async () => {
+        await authPage.clickGMATab();
+      },
+    },
+  ];
+
+  let detailsPageVisibleBeforeBack = false;
+  let detailsPageVisibleAfterBack = false;
+  let previousPageVisible = false;
+  let sawSuccessfulTab = false;
+
+  for (const tab of tabActions) {
+    try {
+      await tab.click();
+      await page.waitForTimeout(5000);
+
+      await detailsPage.clickFirstContentInRail();
+      await page.waitForTimeout(3000);
+
+      const currentDetailsPageVisibleBeforeBack = await detailsPage.isShowDetailsPageVisible();
+      logger.assertion(`Details page visible before back navigation on ${tab.name}`, currentDetailsPageVisibleBeforeBack);
+
+      if (!currentDetailsPageVisibleBeforeBack) {
+        continue;
+      }
+
+      sawSuccessfulTab = true;
+      detailsPageVisibleBeforeBack = currentDetailsPageVisibleBeforeBack;
+
+      await page.goBack();
+      await page.waitForTimeout(3000);
+
+      const currentDetailsPageVisibleAfterBack = await detailsPage.isShowDetailsPageVisible();
+      const currentPreviousPageVisible = await page.locator('img.title-image, [data-testid="content-card"], [data-testid="show-card"], a[href*="/content"], a[href*="/show"]').first().isVisible().catch(() => false);
+
+      logger.assertion(`Back navigation completed for ${tab.name}`, currentPreviousPageVisible);
+
+      detailsPageVisibleAfterBack = currentDetailsPageVisibleAfterBack || detailsPageVisibleAfterBack;
+      previousPageVisible = currentPreviousPageVisible || previousPageVisible;
+    } catch (error) {
+      logger.debug(`Back navigation flow failed on tab ${tab.name}`, error);
+    }
+  }
+
+  return {
+    isLoggedIn,
+    detailsPageVisibleBeforeBack: sawSuccessfulTab && detailsPageVisibleBeforeBack,
+    detailsPageVisibleAfterBack: sawSuccessfulTab && detailsPageVisibleAfterBack,
+    previousPageVisible: sawSuccessfulTab && previousPageVisible,
+  };
+}
+
+export interface PlayEpisodeFromDetailsInput {
+  mode?: string;
+  searchTerm?: string;
+}
+
+export interface PlayEpisodeFromDetailsOutput {
+  isDetailsPageVisible: boolean;
+  isEpisodeListVisible: boolean;
+  isPlayerVisible: boolean;
+  showDetailsHeading: string;
+  playbackContentTitle: string;
+  selectedEpisodeTitle: string;
+  playerTopLeftVisible: boolean;
+  playerContainsTitleEpisode: boolean;
+}
+
+export interface VerifyEpisodePlaybackStartsFromDetailsInput {
+  mode?: string;
+}
+
+export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
+  isLoggedIn: boolean;
+  isDetailsPageVisible: boolean;
+  seasonSectionVisible: boolean;
+  selectedEpisodeTitle: string;
+  showName: string;
+  seasonNumber: string;
+  episodeNumber: string;
+  playerVisible: boolean;
+  playbackStarted: boolean;
+  playerEpisodeTitleVisible: boolean;
+  playerSeasonVisible: boolean;
+  playerEpisodeVisible: boolean;
+  playerMetadataText: string;
 }
 
 export async function verifyEpisodePlaybackStartsFromDetailsPage(
@@ -1428,18 +1572,16 @@ export async function verifySkipIntroFunctionalityDuringPlayback(
       timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       await page.waitForTimeout(5000);
       // await detailsPage.hoverPlaybackScreen();
-    
+
       skipIntroClicked = await detailsPage.clickSkipIntroMarker();
       timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       logger.info(`Skip Intro clicked: ${skipIntroClicked}, initial time: ${timeBeforeSkipIntro}, updated time: ${timeAfterSkipIntro}`);
     }
   }
-  
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip intro marker visible', isSkipIntroMarkerVisible);
   logger.assertion('Skip Intro was clicked successfully', skipIntroClicked);
   logger.assertion('Playback time advanced after Skip Intro click', timeBeforeSkipIntro !== timeAfterSkipIntro);
-
   return {
     isDetailsPageVisible,
     isSkipIntroMarkerVisible,
@@ -1574,20 +1716,20 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
 
     }
   }
+  await page.waitForTimeout(3000);
+
+  isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
+  if (isSkipIntroMarkerVisible) {
+    timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+    console.log(`[IW3-T2115] Playback time before Skip Intro click: ${timeBeforeSkipIntro}`);
+    await page.waitForTimeout(2000);
+    skipIntroClicked = await detailsPage.clickSkipIntroMarker();
+    await page.waitForTimeout(2000);
+    timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
+    console.log(`[IW3-T2115] Playback time after Skip Intro click: ${timeAfterSkipIntro}`);
     await page.waitForTimeout(3000);
 
-    isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
-    if (isSkipIntroMarkerVisible) {
-      timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
-      console.log(`[IW3-T2115] Playback time before Skip Intro click: ${timeBeforeSkipIntro}`);
-      await page.waitForTimeout(2000);
-      skipIntroClicked = await detailsPage.clickSkipIntroMarker();
-      await page.waitForTimeout(2000);
-      timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
-      console.log(`[IW3-T2115] Playback time after Skip Intro click: ${timeAfterSkipIntro}`);
-      await page.waitForTimeout(3000);
-
-    }
+  }
 
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);

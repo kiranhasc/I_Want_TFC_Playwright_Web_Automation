@@ -152,6 +152,8 @@ export class OTTAuthPage {
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
+    private readonly midRailAdBanner: PageElement;
+    private readonly googleAdsIframeSelector: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -293,6 +295,8 @@ export class OTTAuthPage {
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
         this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
+        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
+        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
     }
 
     async navigate(): Promise<void> {
@@ -2637,4 +2641,89 @@ export class OTTAuthPage {
         }
         return undefined;
     }
+
+    async scrollUntilVisible(selector: string, maxAttempts = 8): Promise<boolean> {
+        const locator = this.page.locator(selector).first();
+        const scrollFactor = 0.75;
+        const pauseMs = 900;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+
+            await this.page.evaluate((factor) => {
+                window.scrollBy(0, window.innerHeight * factor);
+            }, scrollFactor).catch(() => undefined);
+            await this.page.waitForTimeout(pauseMs);
+
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+
+            const atBottom = await this.page.evaluate(() => {
+                return window.innerHeight + window.scrollY >= document.body.scrollHeight - 5;
+            }).catch(() => false);
+            if (atBottom) {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    getGoogleAdsIframeSelector(): string {
+        return this.googleAdsIframeSelector.selector;
+    }
+
+    async isAdTagVisible(): Promise<boolean> {
+        try {
+            const banner = this.page.locator(this.midRailAdBanner.selector).first();
+            if (await banner.count()) {
+                await banner.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                if (await banner.isVisible().catch(() => false)) {
+                    return true;
+                }
+            }
+
+            const iframe = this.page.locator(this.googleAdsIframeSelector.selector).first();
+            if (await iframe.count()) {
+                await iframe.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                return await iframe.isVisible().catch(() => false);
+            }
+
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad visibility check failed', error);
+            return false;
+        }
+    }
+
+    async scrollToMidRailAdBanner(): Promise<boolean> {
+        logger.elementInteraction('scroll', 'mid rail ad banner');
+        try {
+            const bannerSelector = this.midRailAdBanner.selector;
+            const iframeSelector = this.googleAdsIframeSelector.selector;
+
+            const bannerVisible = await this.scrollUntilVisible(bannerSelector);
+            if (bannerVisible) {
+                return true;
+            }
+
+            const iframe = this.page.locator(iframeSelector).first();
+            if (await iframe.count() > 0) {
+                await iframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+                await this.page.waitForTimeout(1200);
+                return await iframe.isVisible().catch(() => false);
+            }
+
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad banner scroll failed', error);
+            return false;
+        }
+    }
+
 }

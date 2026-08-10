@@ -1,0 +1,364 @@
+{
+  "cookies": [
+    {
+      "name": "_GRECAPTCHA",
+      "value": "09AKhCRwhU7vLtvz2LE-Y6N138E4AcbUzuqLtV4v_pglohtPOwZN5bXebdiq5nxL3nZvHCqGLuq0U0t9ZN2yhv2As",
+      "domain": "www.google.com",
+      "path": "/recaptcha",
+      "expires": 1801894102.461707,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "AKA_A2",
+      "value": "A",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1786345692.680376,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_s",
+      "value": "iKOrcpdb34iVZwlLxUmuNyampAGFJN9MQ9MksfCiuQDUHFIPRy6xar6hsNmGMt1j",
+      "domain": ".app.link",
+      "path": "/",
+      "expires": 1802066904.386797,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "countryCode",
+      "value": "IN",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1820902104.436855,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cnv_ses.6b35",
+      "value": "*",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1786343905,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "AMP_MKTG_5aec076cff",
+      "value": "JTdCJTdE",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1817878094,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1969856086.1786342096",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902096.43913,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_fbp",
+      "value": "fb.1.1786342096686.23831261544251865",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1794118102,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "moe_c_s",
+      "value": "1",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902097.672444,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "moe_uuid",
+      "value": "5f0ae487-ed2a-473a-bd5f-0d7feb9dece9",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902103.695799,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "moe_i_m",
+      "value": "q1Yqjc9UsgJSmSlKVkqGZoamRiZGZhaWBoYWJiZm5oYGSrW1AA",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902097.737773,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "moe_u_d",
+      "value": "HYzLCsMgEAD_Zc8KPlZ39WdkZQ0UAoUm9hL896Y5DXOYuUCgXjBf-scXKvjsU8CQuTjPiJm8AwOzyQnVE-eIwRWikNcycLT3fpeb7McwoE1Ux-3nZz76bAH74JAo26iaLIqSlS5se2Eq7PyIG8L6AQ",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902103.695109,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "moe_s_n",
+      "value": "RYoxDoAgEAT_crUkhxxy-BVjLgqSGKMW2Bn_Lti43c7MDVk26CFZ1oSBVSxTlGarfCCjNC-xQ5vc1EZoSpzlgl477gy16J3TvtL9o4zYQJBVrnqHsZrl7w17RirJIafkQp8X",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902098.041864,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ak_bmsc",
+      "value": "3FAA0B8CC07ED71D9BC11E02762BD2FD~000000000000000000000000000000~YAAQBBBiDrzrwtefAQAANkBJ6gC6t0ZYgyng5QJZgepR9HK2AWydMS+sk3cf5CqK5pmHVzG8ohI1lzvM+Nvr+VX/vwI/fnaTKmBucF6yAO33nrcsN7JQV7geTh63VFSdO1rnfdaLUcJ9B113txA11xqXa6Qe+gEQXpke/K3RIekmSf3qGeQUvSOGfuyl/zwi7Wj5JsGUeAZhoyMEke90khfxUUtdbceR8yG1tFdjE+MbVQrO6uEID1r0leBMzI4SGsJH4xIPSGxWWoCHxJ807WJg3nORav60cpgHLA4gJGx2nfYTck+aJbFni6PUOb/OqP4YK0QGo9Bo6Q0mT4YkwMzrBZ+6d2FuJ4epLYIXGYLUtZU0n+Ol4u2432xM0/IjIWMJCS20dxDX5+pvgPkIc6vu2m7L+b5dpY1ZhImi+vzAff953E72rJW7QNSvAD9b/4hLX4IfVfETW3lANbaLX5POE9hIhHT44MMu6VPoMSfMcxkXT+1Vgob2jY9pz11npjR4BnS9NKomKcrN",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1786349292.116426,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "CookiePolicyAccepted",
+      "value": "true",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1817878101,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "IDE",
+      "value": "AHWqTUllq43V5k-lBwyYJ75YrLoUC4_cNH1vcBUmas4Qb5QQt49zbdUAjp64j_cn",
+      "domain": ".doubleclick.net",
+      "path": "/",
+      "expires": 1820902101.089213,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ga_CE3JNEMCYD",
+      "value": "GS2.1.s1786342096$o1$g0$t1786342103$j53$l0$h0",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820902103.576369,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_gcl_au",
+      "value": "1.1.1966987388.1786342097.377066213.1786342102.1786342103.1903632108.1786342102.1786342103",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1794118097,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "UserAuthentication",
+      "value": "eyJ4NXQiOiIzNnRoYkh3RnVjQXdZLWdZWWs0RzJkdlpzQ00iLCJraWQiOiJNek01TWpSbU5tSTVOekZsTkRjMlpEQmlaR05pTVRoaU9ERTBNakEwTVdaaU4yUXpaVE01TUdSbE5ETTNNVFpsTlRrMk1URTBNVEEzT0RVNU5tSXdNQV9SUzI1NiIsInR5cCI6ImF0K2p3dCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI5ZTIxYWUyOS0yYWVmLTQzOTItYjRiNS1hMGEyNjM5ZjNhZTAiLCJhdXQiOiJBUFBMSUNBVElPTl9VU0VSIiwiYmluZGluZ190eXBlIjoic3NvLXNlc3Npb24iLCJsb2dpblR5cGUiOiJlbWFpbCIsImlzcyI6Imh0dHBzOi8vYXBpLnVzMi5hc2dhcmRlby5pby90L2Fic2NibnByb2Qvb2F1dGgyL3Rva2VuIiwiY3AiOiJBQlNDQk4tUEgiLCJjbGllbnRfaWQiOiI5ZUN2OW9lX0Q3NVNud3RvZVBQQUZLeEJ5bGNhIiwiYXVkIjoiOWVDdjlvZV9ENzVTbnd0b2VQUEFGS3hCeWxjYSIsInVpZCI6IjRkYjkzMjY1LTc5MDktNDE1ZC1hZTE0LTYwMDFkYjdiOTI5ZiIsIm5iZiI6MTc4NjM0MjEwMiwiYXpwIjoiOWVDdjlvZV9ENzVTbnd0b2VQUEFGS3hCeWxjYSIsIm9yZ19pZCI6IjJlNTRlZDAzLWU3YTAtNDYwNS1hOTc1LWUyZmVmNzNjY2Q3OCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUiLCJ1c2VyVHlwZSI6ImVtYWlsIiwiZXhwIjoxNzg2NjAxMzAyLCJvcmdfbmFtZSI6ImFic2NibnByb2QiLCJpYXQiOjE3ODYzNDIxMDIsImJpbmRpbmdfcmVmIjoiYTRmZWIwMzJkMDY4NDNjOWJmNTA1MTcwZDAwZDgxYzgiLCJqdGkiOiJhMjk2YTY5Zi03ZjAxLTQ5YTAtYmE4NS01YmFjM2M2YzdiMTAiLCJlbWFpbCI6ImFiaGlsYXNoNTg0QGdtYWlsLmNvbSIsIm9yZ19oYW5kbGUiOiJhYnNjYm5wcm9kIn0.JpNte69zXoUhWO4m9-Nk9qQ0vl8Ri81YY2D9lZVCKsyCpTARhZolwlNALoi2tslKkoaqIAMRyIzZAUBVmg-DjwcajWJ5IRqNd1UTYO5p4NoWB1aphus_BmIccFtDIXEGScKjDKqMzT7zcd4bVsAbETWPXXXGUV9g1PYIzA7MGxOSbVexAC-pr1THv83f6hq5ouQyJ2zYi_-5SC93CIGCasUKlYKbKRkqHhrDd5l7f-iEeIXE260nhWlYMy5ZrAtJ6Q63YYk_qvEi2VwS8L3o9DEQXlmuC_TFxJqUBidAh6aoxDpvyFziuvqdHlEY9KBNXhZkI2kQntRo2AaltWX-9Q",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1817878103,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "UserAuthProvider",
+      "value": "email",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1817878103,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "RT",
+      "value": "\"z=1&dm=www.iwanttfc.com&si=6fbbb44b-ddb3-4080-b23f-941077b0e7fb&ss=msmtym28&sl=1&tt=1of&rl=1\"",
+      "domain": ".www.iwanttfc.com",
+      "path": "/",
+      "expires": 1786946904,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FCCDCF",
+      "value": "%5Bnull%2Cnull%2Cnull%2Cnull%2Cnull%2Cnull%2C%5B%5B32%2C%22%5B%5C%2226c55437-8668-4cb5-b062-6452e79ec5c3%5C%22%2C%5B1786342094%2C356000000%5D%5D%22%5D%5D%5D",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1820038104,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cnv_id.6b35",
+      "value": "eacfcdb9-c5db-4e40-ab6a-6228de155db3.1786342095.1.1786342105..95b23c13-55e8-4274-82d6-b0ed643c1318...",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1820902105.188865,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "skus",
+      "value": "[\"SVOD057\"]",
+      "domain": "www.iwanttfc.com",
+      "path": "/",
+      "expires": 1820902104.920172,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "AMP_5aec076cff",
+      "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjIxNjE1MjQyNjg5MDE4NDQ2NzEwJTIyJTJDJTIydXNlcklkJTIyJTNBJTIyNGRiOTMyNjUtNzkwOS00MTVkLWFlMTQtNjAwMWRiN2I5MjlmJTIyJTJDJTIyc2Vzc2lvbklkJTIyJTNBMTc4NjM0MjA5NDk5NiUyQyUyMm9wdE91dCUyMiUzQWZhbHNlJTJDJTIybGFzdEV2ZW50VGltZSUyMiUzQTE3ODYzNDIxMDQ5NjElMkMlMjJsYXN0RXZlbnRJZCUyMiUzQTklMkMlMjJwYWdlQ291bnRlciUyMiUzQTAlN0Q=",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1817878104,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FCNEC",
+      "value": "%5B%5B%22AKsRol9MKfZsXT816y_CrMnYPqks_PhmVl6pejVDgTpUkwa0Bn3499btuytSiRxnjJpXLBCbgrtxhX94Hli53WlUpdkq4MbYiJK8CVnHZpTVHddAr6mqvsDErbke0btMVt0A6WKJFcSpBJfY1JhkPQc8JgRUXaWr0w%3D%3D%22%5D%5D",
+      "domain": ".iwanttfc.com",
+      "path": "/",
+      "expires": 1817878105,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.iwanttfc.com",
+      "localStorage": [
+        {
+          "name": "analyticsUserId",
+          "value": "4db93265-7909-415d-ae14-6001db7b929f"
+        },
+        {
+          "name": "userData",
+          "value": "{\"data\":{\"id\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"country\":\"IN\",\"zipCode\":\"\",\"state\":\"\",\"isProfileComplete\":false,\"isMobileVerified\":false,\"verificationStatus\":false,\"lastLoginTime\":null,\"registrationDate\":null,\"loginType\":\"email\",\"contact\":[{\"contactId\":null,\"firstName\":\"ABHILASH\",\"lastName\":\"MAN\",\"primary\":true,\"dateOfBirth\":null,\"gender\":null,\"parentalControl\":false,\"parentalControlLevel\":\"default\",\"pin\":true,\"email\":\"ABHILASH584@GMAIL.COM\",\"mobileNumber\":null,\"socialProviderUID\":null,\"socialProvider\":null}]},\"timestamp\":1786342104471}"
+        },
+        {
+          "name": "Conviva.sdkConfig",
+          "value": "{\"clId\":\"904056251.1048367862.729531804.1768143601\",\"iid\":1326693400}"
+        },
+        {
+          "name": "geoLocation",
+          "value": "{\"data\":{\"success\":true,\"data\":{\"executionStatus\":\"SUCCESS\",\"ipAddress\":\"49.249.95.65\",\"geoLocation\":{\"countryCode\":\"IN\",\"regionCode\":\"KA\",\"city\":\"BANGALORE\",\"latitude\":\"12.98\",\"longitude\":\"77.58\",\"continent\":\"AS\",\"timeZone\":\"GMT+5.50\",\"throughput\":\"\",\"asNumber\":\"45820\"},\"source\":\"Akamai-headers\"}},\"timestamp\":1786342104436}"
+        },
+        {
+          "name": "ConvivaVisualLabellingConfig",
+          "value": "eyJzZW5zb3JWZXJzaW9uIjoianMtMS4xLjgiLCJjayI6IjhiZTVmYmZlM2FmMTk0ZjI0YWRjMTc0YzkyYTc1ZjhmZWM2NDBhNDkifQ=="
+        },
+        {
+          "name": "ConvivaRemoteConfig",
+          "value": "{\"cacheRefreshInterval\":60,\"base64\":false,\"lifecycleAutotracking\":false,\"exceptionAutotracking\":true,\"enablePeriodicHeartbeat\":true,\"periodicHeartbeatInterval\":40,\"enc\":\"gzip\",\"customEventTrackingConfiguration\":{\"blocklist\":[\"c3.sdk.custom_event\",\"c3.video.bitrate_switch\",\"Conviva.RemoteConfigApplied\",\"c3.video.set_content_info\",\"Conviva.TrackerCreated\",\"c3.video.buffering\",\"c3.video.pause\",\"c3.video.end\",\"c3.video.custom_event\",\"c3.sdk.init\"]},\"networkRequestTrackingConfiguration\":{\"blocklist\":[\"fundingchoicesmessages.google.com\",\"moengage\",\"doubleclick.net\",\"remote_config.json\",\"https://appgw.conviva.com\",\"cws.conviva.com\",\"/wsg\",\"/ctp\",\"remote_config\",\"pings.conviva.com\",\".m3u8\",\".mpd\",\".ism\",\".m4\",\".mp4\",\".ts\",\".png\",\".jpg\",\".jpeg\",\".bmp\",\"google-analytics.com\",\"googlesyndication.com\",\"googleapis\",\"stats.g.doubleclick\",\"chartbeat.com\",\"omtrdc.net\",\"app-measurement.com\",\"firebase\",\"nr-data.net\",\"newrelic\",\"bitmovin.com/impression\",\"bitmovin.com/analytics\",\"api.segment.io\",\"youbora\",\"hotjar\",\"mixpanel.com\",\"clevertap\",\"auryc\",\".aac\",\".vtt\",\".googlevideo\",\"webp\",\"appsflyer\",\"facebook\",\"dynatrace\",\"mparticle\",\"npaw\",\".pdf\",\"bookkeeper\",\"kochava\",\"mp3\",\"marketingcloudapis\",\"demdex\",\"scorecardresearch\",\"lura.live\",\"perimeterx.net\",\"permutive.app\",\"segment.com\",\"vaicore.site\",\"boomtrain\",\"ketchcdn\",\"qualtrics\",\".svg\",\"amplitude\",\"datadoghq\",\"branch.io\",\"hotjar\",\"splunkcloud\"],\"collect\":[{\"opt\":{\"cond\":[{\"key\":\"rsc\",\"op\":\"!=\",\"val\":200},{\"key\":\"dur\",\"op\":\">\",\"val\":800}],\"type\":\"or\"},\"req\":{\"cond\":[{\"key\":\"path\",\"op\":\"ew\",\"val\":[\".mpd\",\".mp4\",\".m3u8\",\".ts\",\".dash\",\".m4s\",\".m4i\",\".m4a\",\".m4v\"]}],\"type\":\"or\"}}],\"collectattr\":[{\"conditions\":[{\"targetUrl\":[\"video-aws.akamaized.net\"]}],\"rqh\":[\"priority\",\"sec-fetch-dest\",\"sec-fetch-mode\",\"sec-fetch-site\"],\"rsh\":[\"server\",\"x-amz-cf-id\",\"x-amz-cf-pop\",\"x-amz-replication-status\",\"x-amz-server-side-encryption\",\"x-amz-version-id\",\"content-type\",\"etag\"]}],\"enabled\":true},\"traceparentconfig\":{\"enabled\":false,\"pref\":2,\"targetUrl\":[]},\"performanceContextConfig\":2,\"mend\":true,\"configurationVersion\":4011,\"catRcLastUpdatedTs\":1786342104621,\"endpoint\":\"https://appgw.conviva.com\",\"emitterConfiguration\":{\"batching\":{\"enabled\":true,\"byteLimitPostInKB\":250,\"batchingIntervalInSec\":5,\"urgentEvents\":[\"abg\",\"ae\"]}},\"applicationContext\":true,\"di\":{\"en\":false,\"lim\":30},\"clickcc\":{\"en\":true,\"cssSelectorList\":\"\\n  button,\\n  a,\\n  li,\\n  select,\\n  input:not([type=\\\"hidden\\\"]),\\n  textarea,\\n  video,\\n  audio,\\n  [role=\\\"button\\\"],\\n  [class^=\\\"btn\\\"],\\n  [class*=\\\"click\\\"],\\n  [data-click],\\n  [data-action],\\n  [tabindex],\\n  [role=\\\"datepicker\\\"],\\n  [class*=\\\"datepicker\\\"],\\n  [class*=\\\"date-picker\\\"],\\n  [class*=\\\"mat-datepicker\\\"],\\n  [class*=\\\"ant-picker\\\"],\\n  [class*=\\\"v-date-picker\\\"],\\n  [class*=\\\"react-datepicker\\\"],\\n  [class*=\\\"ngx-datepicker\\\"],\\n  [data-role=\\\"button\\\"],\\n  [data-ng-click],\\n  [ng-click],\\n  [v-on\\\\:click],\\n  [\\\\@click],\\n  [onclick],\\n  [data-test-id*=\\\"click\\\"],\\n  [data-testid*=\\\"button\\\"],\\n  [class*=\\\"-btn\\\"],\\n  [class*=\\\"-button\\\"],\\n  [class*=\\\"mat-button\\\"],\\n  [class*=\\\"v-btn\\\"],\\n  [class*=\\\"v-icon-button\\\"],\\n  [data-listener-count-click],\\n  [class*=\\\"Button\\\"]\\n\",\"uiMode\":\"closest\"},\"collectionRateLimit\":{\"exceptionAutotracking\":{\"maxEvents\":20,\"timeWindow\":1000,\"disconnectDuration\":2000}}}"
+        },
+        {
+          "name": "AMP_remote_config_5aec076cff",
+          "value": "{\"remoteConfig\":{\"configs\":{\"diagnostics\":{\"browserSDK\":{\"sampleRate\":0.02}},\"sessionReplay\":{},\"analyticsSDK\":{}}},\"lastFetch\":\"2026-08-10T06:08:16.338Z\"}"
+        },
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gsid_dc\":{\"value\":{\"joinId\":\"0BbBvG1IuEGY2ORMdIDZoWo8bA15ZjXuRQ\",\"lastJoinedTimeMs\":1786342096524},\"expires\":1786342396524},\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"eopCount\":0,\"creationTimeMs\":1786342096528},\"expires\":1794118096528}}"
+        },
+        {
+          "name": "_grecaptcha",
+          "value": "09AKhCRwibXw8lf4h3xF5YL-70n_r6GYmln-q15cqakBYDUsTFonAJzZrbUc82mjyuyxdppvMvKC_VriUvdrcCNT79m0y2v2Gv2A6aNvrQhvSZjnwQSVAPrCIMPGzXomsz"
+        },
+        {
+          "name": "_boomr_akamaiXhrRetry",
+          "value": "{\"items\":{},\"expires\":1786343894692}"
+        },
+        {
+          "name": "convivaOutQueue_CAT_post2",
+          "value": "[{\"evt\":{\"e\":\"ue\",\"eid\":\"f48cd830-15d2-4719-9c18-c3733614f1e2\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342104916\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"Stream Filipino Movies & TV Shows | iWant\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/nr/1-0-4\\\",\\\"dt\\\":{\\\"targetUrl\\\":\\\"https://api.iwanttfc.com/subs/api/subscription/get-active-entitlements\\\",\\\"method\\\":\\\"POST\\\",\\\"responseStatusCode\\\":200,\\\"responseStatusText\\\":\\\"ok\\\",\\\"duration\\\":436.5}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":0}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1534},{\"evt\":{\"e\":\"pv\",\"url\":\"https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"eid\":\"9fa5ce87-bca3-4d8d-8aeb-e4c64db93d87\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342104946\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/pc/1-0-1\\\",\\\"dt\\\":{\\\"st\\\":1786342103691,\\\"dls\\\":1786342103696,\\\"dle\\\":1786342103696,\\\"rss\\\":1786342104015,\\\"rse\\\":1786342104017,\\\"le\\\":1786342104554,\\\"dur\\\":1786342104554,\\\"as\\\":1786342103691}},{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":1}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1591},{\"evt\":{\"e\":\"ue\",\"eid\":\"5de7b9f1-904d-4c1c-9a20-e655fb025506\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342104954\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/re/1-0-1\\\",\\\"dt\\\":{\\\"name\\\":\\\"Page Viewed\\\",\\\"data\\\":\\\"{\\\\\\\"page_name\\\\\\\":\\\\\\\"page_content_browser_home\\\\\\\",\\\\\\\"page_source\\\\\\\":\\\\\\\"\\\\\\\",\\\\\\\"page_type\\\\\\\":\\\\\\\"screen\\\\\\\",\\\\\\\"page_url\\\\\\\":\\\\\\\"/\\\\\\\",\\\\\\\"device_platform\\\\\\\":\\\\\\\"web\\\\\\\",\\\\\\\"device_sub_platform\\\\\\\":\\\\\\\"chrome\\\\\\\",\\\\\\\"device_model\\\\\\\":\\\\\\\"Windows\\\\\\\",\\\\\\\"device_login_method\\\\\\\":\\\\\\\"email\\\\\\\",\\\\\\\"device_advertiser_id\\\\\\\":\\\\\\\"not_applicable\\\\\\\",\\\\\\\"device_latitude\\\\\\\":\\\\\\\"12.98\\\\\\\",\\\\\\\"device_longitude\\\\\\\":\\\\\\\"77.58\\\\\\\",\\\\\\\"device_city\\\\\\\":\\\\\\\"BANGALORE\\\\\\\",\\\\\\\"device_state\\\\\\\":\\\\\\\"KA\\\\\\\",\\\\\\\"device_country\\\\\\\":\\\\\\\"IN\\\\\\\",\\\\\\\"device_network_type\\\\\\\":\\\\\\\"unknown\\\\\\\",\\\\\\\"device_experiment_groups\\\\\\\":[],\\\\\\\"device_download_wifi_only\\\\\\\":false,\\\\\\\"device_download_quality\\\\\\\":\\\\\\\"not_applicable\\\\\\\",\\\\\\\"device_logged_in_status\\\\\\\":true,\\\\\\\"device_partner_source_id\\\\\\\":\\\\\\\"not_available\\\\\\\",\\\\\\\"device_asn\\\\\\\":\\\\\\\"45820\\\\\\\"}\\\"}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":2}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":2332},{\"evt\":{\"e\":\"ue\",\"eid\":\"71b0a34e-280c-4669-8a5f-bcda3e04a369\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342105147\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/nr/1-0-4\\\",\\\"dt\\\":{\\\"targetUrl\\\":\\\"https://api.iwanttfc.com/consumer/graphql\\\",\\\"method\\\":\\\"POST\\\",\\\"responseStatusCode\\\":200,\\\"responseStatusText\\\":\\\"ok\\\",\\\"duration\\\":182}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":3}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1614},{\"evt\":{\"e\":\"ue\",\"eid\":\"95ac1917-4e9c-4ce1-a35d-5812a00d2696\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342105152\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/nr/1-0-4\\\",\\\"dt\\\":{\\\"targetUrl\\\":\\\"https://www.iwanttfc.com/legal/privacy-notice/introduction?_rsc=1ld0r\\\",\\\"method\\\":\\\"GET\\\",\\\"responseStatusCode\\\":200,\\\"responseStatusText\\\":\\\"ok\\\",\\\"duration\\\":185.4}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":4}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1643},{\"evt\":{\"e\":\"ue\",\"eid\":\"6d7ce7ce-0b56-41ea-8d41-622eee53b9b1\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342105159\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/nr/1-0-4\\\",\\\"dt\\\":{\\\"targetUrl\\\":\\\"https://www.iwanttfc.com/legal/cookie-policy?_rsc=1ld0r\\\",\\\"method\\\":\\\"GET\\\",\\\"responseStatusCode\\\":200,\\\"responseStatusText\\\":\\\"ok\\\",\\\"duration\\\":192.1}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":5}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1629},{\"evt\":{\"e\":\"ue\",\"eid\":\"03ad2a05-a8db-4590-a48a-1cd97e1ab204\",\"tv\":\"js-1.1.8\",\"aid\":\"chrome\",\"p\":\"web\",\"dtm\":\"1786342105188\",\"uid\":\"4db93265-7909-415d-ae14-6001db7b929f\",\"refr\":\"https://www.iwanttfc.com/login/auth?redirectUrl=https://www.iwanttfc.com/\",\"page\":\"page_content_browser_home\",\"url\":\"https://www.iwanttfc.com/\",\"ue_pr\":\"{\\\"sc\\\":\\\"sp/ue/1-0-0\\\",\\\"dt\\\":{\\\"sc\\\":\\\"cv/nr/1-0-4\\\",\\\"dt\\\":{\\\"targetUrl\\\":\\\"https://www.iwanttfc.com/legal/terms-and-conditions/introduction/?_rsc=1ld0r\\\",\\\"method\\\":\\\"GET\\\",\\\"responseStatusCode\\\":200,\\\"responseStatusText\\\":\\\"ok\\\",\\\"duration\\\":221.9}}}\",\"co\":\"{\\\"sc\\\":\\\"sp/ctx/1-0-0\\\",\\\"dt\\\":[{\\\"sc\\\":\\\"cv/clid/1-0-2\\\",\\\"dt\\\":{\\\"clid\\\":\\\"904056251.1048367862.729531804.1768143601\\\",\\\"iid\\\":\\\"1326693400\\\",\\\"ck\\\":\\\"8be5fbfe3af194f24adc174c92a75f8fec640a49\\\",\\\"eventIndex\\\":6}},{\\\"sc\\\":\\\"cv/ct/1-0-0\\\",\\\"dt\\\":{\\\"data\\\":{\\\"DeviceId\\\":\\\"1615242689018446710\\\",\\\"user_platform\\\":\\\"web_chrome\\\",\\\"user_subscription_product_id\\\":\\\"[\\\\\\\"SVOD057\\\\\\\"]\\\",\\\"user_latitude\\\":\\\"12.98\\\",\\\"user_longitude\\\":\\\"77.58\\\",\\\"user_city\\\":\\\"BANGALORE\\\",\\\"user_state\\\":\\\"KA\\\",\\\"user_country\\\":\\\"IN\\\",\\\"user_device_model\\\":\\\"Windows\\\",\\\"user_dob_year\\\":\\\"-1\\\",\\\"version_name\\\":\\\"26.07.01-1\\\",\\\"os\\\":\\\"149.0.7827.55\\\",\\\"device_experiment_groups\\\":\\\"[]\\\",\\\"user_logged_in_status\\\":\\\"true\\\",\\\"user_login_method\\\":\\\"email\\\"}}},{\\\"sc\\\":\\\"spm/app/1-0-0\\\",\\\"dt\\\":{\\\"build\\\":\\\"\\\",\\\"version\\\":\\\"\\\"}},{\\\"sc\\\":\\\"iglu:com.conviva/pm/jsonschema/1-0-2\\\",\\\"dt\\\":{\\\"sch\\\":\\\"sdk.js.eco.1\\\",\\\"cat\\\":\\\"WEB\\\",\\\"dvb\\\":\\\"Unknown\\\",\\\"dvma\\\":\\\"Unknown\\\",\\\"dvm\\\":\\\"Windows\\\",\\\"dvt\\\":\\\"DESKTOP\\\",\\\"os\\\":\\\"Windows\\\",\\\"osv\\\":\\\"10\\\",\\\"fw\\\":\\\"web\\\",\\\"fwv\\\":\\\"149.0.7827.55\\\"}}]}\"},\"bytes\":1650}]"
+        },
+        {
+          "name": "appLaunchDetails",
+          "value": "{\"data\":{\"privacyPolicy\":\"https://www.iwanttfc.com/legal/privacy-notice/introduction\",\"activateCodeUrl\":\"https://www.iwanttfc.com/login/activate-tv?code={{code}}\",\"tnc\":\"https://www.iwanttfc.com/legal/terms-and-conditions/introduction\",\"help\":\"https://help.iwanttfc.com/support/home\",\"cookiePolicy\":\"https://www.iwanttfc.com/legal/cookie-policy\",\"plans\":\"https://www.iwanttfc.com/account/select-plan\",\"heartbeat_interval\":90,\"loginCodePollingInterval\":5,\"allow_guest_user\":false,\"heroAdOverlayImageUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/hero_ad_overlay.png\",\"subscribeToWatchScreenImageUrl\":\"https://pql-static.iwanttfc.com/static/prod/tv/universal-bg.png\",\"accountDeletionUrl\":\"https://www.iwanttfc.com/account/account-deletion\",\"imageBaseUrl\":\"https://img.iwanttfc.com\",\"errorMessages\":\"https://static.iwanttfc.com/common/error/error_message.json\",\"countryCodes\":\"https://static.iwanttfc.com/common/login/country_codes.json\",\"h5\":{\"featureConfig\":\"https://static.iwanttfc.com/tv/config/feature-config.json\"},\"menu\":{\"collections\":[{\"id\":\"home\",\"collectionId\":\"home\",\"title\":\"Home\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/home-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/home_focused.png\",\"lottieUrl\":\"\"},{\"id\":\"movies\",\"collectionId\":\"movies\",\"title\":\"Movies\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/movies-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/movies_focused.png\",\"lottieUrl\":\"\"},{\"id\":\"shows\",\"collectionId\":\"tvshows\",\"title\":\"Shows\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/shows-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/tvshow_focused.png\",\"lottieUrl\":\"\"}],\"partners\":[{\"id\":\"gma\",\"collectionId\":\"gma\",\"title\":\"\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/menu_item_gma.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/menu_item_gma.png\",\"lottieUrl\":\"\"}],\"bottomBar\":[{\"id\":\"home\",\"collectionId\":\"home\",\"title\":\"Home\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/home-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/home_focused.png\",\"lottieUrl\":\"\"},{\"id\":\"my_space\",\"collectionId\":\"\",\"title\":\"My iWant\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/my-space-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/my-space-icon-focused.png\",\"lottieUrl\":\"\"}],\"floatingBar\":[{\"id\":\"movies\",\"collectionId\":\"movies\",\"title\":\"Movies\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/movies-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/movies_focused.png\",\"lottieUrl\":\"\"},{\"id\":\"shows\",\"collectionId\":\"tvshows\",\"title\":\"Shows\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/shows-icon.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/menu/tvshow_focused.png\",\"lottieUrl\":\"\"},{\"id\":\"gma\",\"collectionId\":\"gma\",\"title\":\"GMA\",\"iconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/menu_item_gma.png\",\"focusedIconUrl\":\"https://pql-static.iwanttfc.com/static/prod/common/images/icons/menu_item_gma.png\",\"lottieUrl\":\"\"}]},\"imageTransformations\":{\"hd\":{\"mobile\":{\"landscapeHero\":\"\",\"portraitHero\":\"?im_policy=portraitHero_mobile_hd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_mobile_hd\",\"portraitThumb\":\"?im_policy=portraitThumb_mobile_hd\",\"title\":\"?im_policy=title_mobile_hd\",\"originals\":\"?im_policy=originals_mobile_hd\",\"square\":\"?im_policy=square_mobile_hd\"},\"tv\":{\"landscapeHero\":\"?im_policy=landscapeHero_tv_hd\",\"portraitHero\":\"?im_policy=portraitHero_tv_hd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_tv_hd\",\"portraitThumb\":\"?im_policy=portraitThumb_tv_hd\",\"title\":\"?im_policy=title_tv_hd\",\"originals\":\"?im_policy=originals_tv_hd\",\"square\":\"?im_policy=square_tv_hd\"}},\"fhd\":{\"mobile\":{\"landscapeHero\":\"\",\"portraitHero\":\"?im_policy=portraitHero_mobile_fhd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_mobile_fhd\",\"portraitThumb\":\"?im_policy=portraitThumb_mobile_fhd\",\"title\":\"?im_policy=title_mobile_fhd\",\"originals\":\"?im_policy=originals_mobile_fhd\",\"square\":\"?im_policy=square_mobile_fhd\"},\"tv\":{\"landscapeHero\":\"?im_policy=landscapeHero_tv_fhd\",\"portraitHero\":\"?im_policy=portraitHero_tv_fhd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_tv_fhd\",\"portraitThumb\":\"?im_policy=portraitThumb_tv_fhd\",\"title\":\"?im_policy=title_tv_fhd\",\"originals\":\"?im_policy=originals_tv_fhd\",\"square\":\"?im_policy=square_tv_fhd\"}},\"qhd\":{\"tv\":{\"landscapeHero\":\"?im_policy=landscapeHero_tv_fhd\",\"portraitHero\":\"?im_policy=portraitHero_tv_fhd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_tv_fhd\",\"portraitThumb\":\"?im_policy=portraitThumb_tv_fhd\",\"title\":\"?im_policy=title_tv_fhd\",\"originals\":\"?im_policy=originals_tv_fhd\",\"square\":\"?im_policy=square_tv_fhd\"},\"mobile\":{\"landscapeHero\":\"\",\"portraitHero\":\"?im_policy=portraitHero_mobile_qhd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_mobile_qhd\",\"portraitThumb\":\"?im_policy=portraitThumb_mobile_qhd\",\"title\":\"?im_policy=title_mobile_qhd\",\"originals\":\"?im_policy=originals_mobile_qhd\",\"square\":\"?im_policy=square_mobile_qhd\"}},\"uhd\":{\"tv\":{\"landscapeHero\":\"?im_policy=landscapeHero_tv_uhd\",\"portraitHero\":\"?im_policy=portraitHero_tv_uhd\",\"landscapeThumb\":\"?im_policy=landscapeThumb_tv_uhd\",\"portraitThumb\":\"?im_policy=portraitThumb_tv_uhd\",\"title\":\"?im_policy=title_tv_uhd\",\"originals\":\"?im_policy=originals_tv_uhd\",\"square\":\"?im_policy=square_tv_uhd\"}}},\"allowedPartners\":[{\"partnerId\":\"dito\",\"partnerName\":\"Dito\",\"partnerASN\":\"139831\",\"partnerRedirectionUrl\":\"https://app.dito.ph/\"}],\"version\":\"260729.070131\"},\"timestamp\":1786342104281}"
+        },
+        {
+          "name": "AMP_unsent_5aec076cff",
+          "value": "[]"
+        },
+        {
+          "name": "errorMessages",
+          "value": "{\"data\":{\"default\":{\"100\":{\"msg\":\"Server is taking too long to respond. Please try again.\",\"canRetry\":true},\"101\":{\"msg\":\"Please check your internet connection and try again.\",\"canRetry\":true},\"PPE-1000\":{\"msg\":\"We encountered an unexpected error. Please try again.\",\"canRetry\":true},\"PPE-1001\":{\"msg\":\"Playback could not start due to a system issue. Please retry shortly.\",\"canRetry\":true},\"PPE-1002\":{\"msg\":\"You're currently behind the live stream. Please select 'Go Live' to continue watching in real time.\",\"canRetry\":true},\"PPE-1003\":{\"msg\":\"The video took too long to load. Please try again.\",\"canRetry\":true},\"PPE-1004\":{\"msg\":\"We experienced a playback error. Please retry to continue watching.\",\"canRetry\":true},\"PMC-100\":{\"msg\":\"A system error has occurred. We recommend trying again.\",\"canRetry\":true},\"PMC-101\":{\"msg\":\"Please check your internet connection and try again.\",\"canRetry\":true},\"PMC-470\":{\"msg\":\"We detected that you’re using a VPN or proxy. Please disable it and try again.\",\"canRetry\":false},\"PMC-470-1001\":{\"msg\":\"We detected that you’re using a VPN or proxy. Please disable it and try again.\",\"canRetry\":false},\"PMC-502\":{\"msg\":\"We received an invalid response from the server. Please try again later.\",\"canRetry\":true},\"PMC-503\":{\"msg\":\"Our service is temporarily unavailable. Please try again shortly.\",\"canRetry\":true},\"PMC-504\":{\"msg\":\"The server took too long to respond. Kindly check your connection and try again.\",\"canRetry\":true},\"PMC-408\":{\"msg\":\"The request timed out. Please try again.\",\"canRetry\":true},\"PMC-415\":{\"msg\":\"Playback failed due to an unexpected server response. Please try again.\",\"canRetry\":true},\"PMC-400\":{\"msg\":\"A server-side issue occurred. Please retry.\",\"canRetry\":true},\"PMC-404\":{\"msg\":\"We could not locate the requested media file. The content may have been moved or removed.\",\"canRetry\":false},\"PMC-401\":{\"msg\":\"Access to the media was denied. Please check your account's permission settings.\",\"canRetry\":false},\"PMC-403\":{\"msg\":\"You do not have permission to view this content. Please verify your access rights or subscription status.\",\"canRetry\":false},\"PMC-416\":{\"msg\":\"A data read error occurred. Please try again.\",\"canRetry\":true},\"PMC-2007\":{\"msg\":\"For security reasons, please connect via a secure network.\",\"canRetry\":true},\"PMA-3001\":{\"msg\":\"Playback failed because the video file appears to be corrupted.\",\"canRetry\":true},\"PMA-3002\":{\"msg\":\"We were unable to read the video metadata. Please try again.\",\"canRetry\":true},\"PMA-3003\":{\"msg\":\"This video format is not supported by your device. Please try viewing on a different device.\",\"canRetry\":false},\"PMA-3004\":{\"msg\":\"Unfortunately, this video is not compatible with your device. We apologize for the inconvenience.\",\"canRetry\":false},\"PDC-4001\":{\"msg\":\"Video playback could not start. Please try again.\",\"canRetry\":true},\"PDC-4002\":{\"msg\":\"We encountered an error initializing the video decoder. Please restart the application if the issue persists.\",\"canRetry\":true},\"PDC-4003\":{\"msg\":\"Playback failed due to a media issue. Please retry.\",\"canRetry\":true},\"PDC-4004\":{\"msg\":\"This video format is not supported on your current device. Please try another device.\",\"canRetry\":false},\"PDC-4005\":{\"msg\":\"This content cannot be played on your device. We apologize for the inconvenience.\",\"canRetry\":false},\"PDC-4006\":{\"msg\":\"Playback was paused due to limited system resources. Please close other applications and try again soon.\",\"canRetry\":true},\"PPA-5001\":{\"msg\":\"Audio playback could not be started. Please retry.\",\"canRetry\":true},\"PPA-5002\":{\"msg\":\"An error occurred during audio playback. Please try again.\",\"canRetry\":true},\"PPA-5003\":{\"msg\":\"Audio output failed in optimized mode. Please retry.\",\"canRetry\":true},\"PPA-5004\":{\"msg\":\"We encountered an issue initializing the audio device. Please check your audio settings.\",\"canRetry\":true},\"PDE-6000\":{\"msg\":\"A DRM (Digital Rights Management) error occurred. Please try again.\",\"canRetry\":true},\"PDE-6001\":{\"msg\":\"Your device does not support the required DRM for this content. Please try a different device.\",\"canRetry\":false},\"PDE-6002\":{\"msg\":\"DRM setup was unsuccessful. Please try again.\",\"canRetry\":true},\"PDE-6003\":{\"msg\":\"This content cannot be played on your device due to compatibility issues. Please consider updating your software.\",\"canRetry\":false},\"PDE-6004\":{\"msg\":\"We were unable to obtain the necessary permissions to play this content. Please ensure your device is authorized.\",\"canRetry\":true},\"PDE-6005\":{\"msg\":\"This content cannot be played due to licensing or regional restrictions. We apologize for the limitation.\",\"canRetry\":false},\"PDE-6006\":{\"msg\":\"A system error occurred in the content protection process. Please try again.\",\"canRetry\":true},\"PDE-6007\":{\"msg\":\"This device is no longer able to play DRM-protected content. Please use an authorized device.\",\"canRetry\":false},\"PDE-6008\":{\"msg\":\"The license for this content has expired. Please refresh or update your subscription to continue.\",\"canRetry\":true},\"PDE-6009\":{\"msg\":\"A playback error occurred while verifying content security. Please try again later.\",\"canRetry\":false},\"PPV-7000\":{\"msg\":\"We were unable to process the video frames. Please try again.\",\"canRetry\":true},\"PPV-7001\":{\"msg\":\"A video processing error occurred. Please retry.\",\"canRetry\":true},\"EPS-400-02\":{\"msg\":\"This content is not available in your region. We apologize for the inconvenience.\",\"canRetry\":false},\"EPS-401-24\":{\"msg\":\"A valid subscription is required to view this content. Please login and subscribe or renew your plan.\",\"canRetry\":false},\"EPS-401-26\":{\"msg\":\"A valid subscription is required to view this content. Please login and subscribe or renew your plan.\",\"canRetry\":false},\"EPS-451\":{\"msg\":\"Oops! It looks like you're using a VPN. Please turn off VPN to continue using this service.\",\"canRetry\":false},\"EPS-401-06\":{\"msg\":\"A valid subscription is required to view this content. Please subscribe or renew your plan.\",\"canRetry\":false},\"EPS-401-25\":{\"msg\":\"A valid GMA Pinoy subscription is required to view this content. Please subscribe or renew your plan.\",\"canRetry\":false},\"EPS-401-29\":{\"msg\":\"Oops! This content isn’t available on your current plan.\",\"canRetry\":false},\"EPS-401-30\":{\"msg\":\"Upgrade to Premium for exclusive early viewing and be the first to watch new content.\",\"canRetry\":false},\"EPS-401-31\":{\"msg\":\"Oops! This content isn’t available on your current plan.\",\"canRetry\":false},\"EPS-401-32\":{\"msg\":\"Oops! This content isn’t available on your current plan.\",\"canRetry\":false},\"EPS-401-99\":{\"msg\":\"Looks like your session expired. Please log out and log back in to keep going.\",\"canRetry\":false},\"EPS-429-18\":{\"msg\":\"You have reached the device limit for playback. Please stop playback on another device and try again.\",\"canRetry\":true},\"EPS-470-47\":{\"msg\":\"We detected that you’re using a VPN or proxy. Please disable it and try again.\",\"canRetry\":false},\"EPS-500-19\":{\"msg\":\"Playback is currently unavailable. Please try again shortly.\",\"canRetry\":true},\"EPS-403-21\":{\"msg\":\"This content will be available soon. Please check back later for access.\",\"canRetry\":true},\"UWL-400-05\":{\"msg\":\"This content is already in your watchlist. No action is required.\",\"canRetry\":false},\"UWL-400-08\":{\"msg\":\"Your watchlist is full. Please remove an item before adding a new one.\",\"canRetry\":true},\"WAL-401-99\":{\"msg\":\"Your session has expired for security reasons. Please log in again to continue.\",\"canRetry\":true},\"PLE-104\":{\"msg\":\"You need to log in to your account to continue.\",\"canRetry\":false},\"SAE-105\":{\"msg\":\"Subscription required. Visit the help center for details on how to subscribe.\",\"canRetry\":false},\"ISC-400-200100\":{\"msg\":\"An account with this email or username already exists. Please try logging in or use a different email to sign up.\",\"canRetry\":false},\"IAP-301\":{\"msg\":\"We couldn't determine your app store region. Please try again.\",\"canRetry\":true},\"IAP-302\":{\"msg\":\"Unable to retrieve subscription plans. Please try again later.\",\"canRetry\":true},\"IAP-304\":{\"msg\":\"Subscription details not found. Please try again.\",\"canRetry\":true},\"IAP-305\":{\"msg\":\"You need to be logged in to purchase a subscription. Please sign in and try again.\",\"canRetry\":false},\"IAP-306\":{\"msg\":\"There was a problem processing your purchase. Please try again.\",\"canRetry\":true},\"IAP-307\":{\"msg\":\"The selected subscription plan is no longer available. Please choose another plan.\",\"canRetry\":false},\"IAP-308\":{\"msg\":\"Your purchase could not be completed. Please try again later.\",\"canRetry\":true},\"IAP-309\":{\"msg\":\"Purchase information is missing. Please try again.\",\"canRetry\":true},\"IAP-310\":{\"msg\":\"Your app store region doesn't match your account region. This may affect available subscriptions.\",\"canRetry\":false},\"IAP-311\":{\"msg\":\"You already own this subscription. Please check your active subscriptions.\",\"canRetry\":false},\"IAP-312\":{\"msg\":\"Purchase was canceled. No payment was made.\",\"canRetry\":false},\"GCL-103\":{\"msg\":\"Unable to load the content. Please try again.\",\"canRetry\":true},\"IOA-eV2371\":{\"msg\":\"Your account is not verified. Please check your email and follow the verification instructions to continue.\",\"canRetry\":false},\"PML-400\":{\"msg\":\"The media could not be loaded due to a DRM license failure.\",\"canRetry\":true},\"PML-401\":{\"msg\":\"The media could not be loaded because the DRM license token has expired. Please retry again\",\"canRetry\":true},\"PML-403\":{\"msg\":\"You do not have permission to access this media.\",\"canRetry\":false},\"PML-404\":{\"msg\":\"The requested media license could not be found.\",\"canRetry\":false},\"GRA-103\":{\"msg\":\"Unable to load the content. Please try again.\",\"canRetry\":false},\"PAE-10000\":{\"msg\":\"Ad Blocker Detected, please disable your ad blocker and try again\",\"canRetry\":true},\"GAS-404-04\":{\"msg\":\"We couldn’t find this content. Please check the URL and try again.\",\"canRetry\":false},\"DOS-1000\":{\"msg\":\"Not enough storage space. Please free up space on your device and try again.\",\"canRetry\":false}}},\"timestamp\":1786342104184}"
+        },
+        {
+          "name": "refreshToken",
+          "value": "b94b823d-38fb-3445-ac85-b9a4d42dec70"
+        },
+        {
+          "name": "branch_session_first",
+          "value": "{\"browser_fingerprint_id\":\"MTYxNTI0MjY4OTAxODQ0NjcxMA==\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":false}\",\"has_app\":false,\"identity_id\":\"1615242690264638713\",\"link\":\"https://app.iwanttfc.com/a/key_live_cfIGZykgBNcEaH2dJ08OzmdcuxkeLvWc?%24identity_id=1615242690264638713\",\"session_id\":\"1615242690264874158\",\"identity\":null}"
+        },
+        {
+          "name": "analyticsDeviceId",
+          "value": "1615242689018446710"
+        },
+        {
+          "name": "MOE_DATA",
+          "value": "{\"INIT_DATA\":{\"debugLevel\":0,\"sdkEnvironment\":\"LIVE\",\"logLevel\":0,\"cluster\":\"DC_1\",\"environment\":\"sdk-01.moengage.com\",\"baseDomainName\":\"https://sdk-01.moengage.com/\",\"inapp\":null,\"customSoftAsk\":{\"mainClass\":\"moe-main-class\",\"allowClass\":\"moe-allow-class\",\"dismissClass\":\"moe-block-class\"},\"appId\":\"0IIA4CHB66GJ1LC0B5NY2RY1\",\"forceSwUpdate\":null,\"swPath\":\"/serviceworker.js\",\"disableOnsite\":false,\"enableSPA\":false,\"disableWebPush\":false,\"disableCookies\":false,\"disableSdk\":false,\"integrationType\":\"NPM\"},\"WEB_SETTINGS\":{\"isDomainLevelStorage\":true,\"configs\":{\"isBeaconDisabled\":false,\"isCardsModuleEnabled\":true,\"isWebPersonalizationModuleEnabled\":false,\"isCacheEnabledForWebPSelfHandle\":true,\"eventBatchCount\":15,\"logLevel\":null,\"periodicFlushTime\":30,\"isBatchingEnabled\":true,\"sessionInactiveDuration\":1800,\"isRemoteLoggingEnabled\":true,\"sourceExtraParams\":[],\"whitelistedEvents\":[\"MOE_PUSH_PERMISSION_STATE_ALLOWED\",\"MOE_PUSH_PERMISSION_STATE_BLOCKED\"],\"blacklistedEvents\":[],\"blacklistedPortfolioUserAttributes\":[],\"isAppActive\":true,\"remoteLogTracking\":false,\"subscriberBasedBillingAttributes\":[],\"isMultiIdEnabled\":false,\"userAttributeCacheTime\":43200,\"portfolioUserAttributeCacheTime\":43200,\"identityAttributes\":[\"uid\"],\"landingPageTracking\":false},\"settingsVersion\":\"V2\",\"toShowOverlay\":false,\"loadTime\":2,\"promptAgain\":768,\"optInType\":\"self-handled\",\"isWebPushEnabled\":true,\"optInPreview\":{\"mobile\":{\"nudge\":{\"title\":{\"textColor\":\"#232323\",\"text\":\"This website would like to send you awesome offers!\"},\"backgroundColor\":\"#FFFFFF\",\"icon\":\"https://www.moengage.com/img/icon-web-push.png\",\"altText\":\"\"},\"allowButton\":{\"textColor\":\"#FFFFFF\",\"text\":\"Allow\",\"backgroundColor\":\"#23bd9f\"},\"dismissButton\":{\"textColor\":\"#000000\",\"text\":\"Don't Allow\",\"backgroundColor\":\"#ffffff\"},\"logo\":{\"logoUrl\":\"https://app-cdn.moengage.com/images/brand/logo-blue.png\",\"logoColor\":\"#232323\",\"altText\":\"Powered By MoEngage\"}},\"web\":{\"banner\":{\"title\":{\"textColor\":\"#232323\",\"text\":\"We would like to send you awesome updates and offers!\"},\"body\":{\"textColor\":\"#232323\",\"text\":\"Notifications can be turned off anytime from browser settings.\"},\"backgroundColor\":\"#FFFFFF\",\"icon\":\"https://image.moengage.com/abscbnmoengage/20220804054235081627KXXNX0qTu5vfhisol9Lt3n8WyoMwpngabscbnmoengage.png\",\"altText\":\"\"},\"allowButton\":{\"textColor\":\"#FFFFFF\",\"text\":\"I am In\",\"backgroundColor\":\"#283083\"},\"dismissButton\":{\"textColor\":\"#FFFFFF\",\"text\":\"Not Now\",\"backgroundColor\":\"#283083\"},\"logo\":{\"logoUrl\":\"https://app-cdn.moengage.com/images/brand/logo-blue.png\",\"logoColor\":\"#232323\",\"altText\":\"Powered By MoEngage\"}}},\"overlay\":{\"opera\":{\"mobile\":{\"text\":\"Tap on ALLOW button to receive notifications\",\"image\":\"https://d5pqei1hlfwjj.cloudfront.net/demoappmoengage/opera_mobile.png\",\"title\":\"Opera Mobile Preview\"},\"desktop\":{\"text\":\"Click on ALLOW button to receive notifications\",\"image\":\"https://d5pqei1hlfwjj.cloudfront.net/demoappmoengage/opera_desktop_one.png\",\"title\":\"Opera Desktop Preview\"}},\"chrome\":{\"mobile\":{\"text\":\"Tap on ALLOW button to receive notifications\",\"image\":\"https://moengageimage.imgix.net/demoappmoengage/201612081054217286212N37JAScreenshot20161208162212pngcompDemoApp.png\",\"title\":\"Chrome Mobile Preview\"},\"desktop\":{\"text\":\"Click on ALLOW button to receive notifications\",\"image\":\"https://moengageimage.imgix.net/demoappmoengage/201612081054217286212N37JAScreenshot20161208162212pngcompDemoApp.png\",\"title\":\"Chrome Desktop Preview\"}},\"firefox\":{\"mobile\":{\"text\":\"Tap on Always button to receive Notifications\",\"image\":\"https://d5pqei1hlfwjj.cloudfront.net/demoappmoengage/20161129112726451819MO0BRYScreenshot20161129145933pngcompDemoApp.png\",\"title\":\"Firefox Mobile Preview\"},\"desktop\":{\"text\":\"Click on Always button to receive Notifications\",\"image\":\"https://d5pqei1hlfwjj.cloudfront.net/demoappmoengage/20161130115929182209KTNRROScreenShot20161130at52858PMpngcompDemoApp.png\",\"title\":\"Firefox Desktop Preview\"}}},\"webPushPlatformData\":{\"chrome\":{\"subscriptionMode\":\"vapid\",\"vapidPublicKey\":\"BExBQV36MBTyK8T3KiVmMYDAtmMbV74AS0_vFEUrFuxLnR29BaUNX7ujC-9KFuhuUbLxi3otUXJBL_0QWa-cBgs\"},\"firefox\":{\"subscriptionMode\":\"vapid\",\"vapidPublicKey\":\"BExBQV36MBTyK8T3KiVmMYDAtmMbV74AS0_vFEUrFuxLnR29BaUNX7ujC-9KFuhuUbLxi3otUXJBL_0QWa-cBgs\"}},\"isPushSubBilling\":false,\"isBrandingHidden\":true},\"SETUP_TIME\":1786342097669,\"SDK_VERSION\":\"2.74.01\",\"DEVICE_DATA\":{\"deviceUniqueId\":\"4be82576-3dd5-4ad7-aba8-b9879801e3f4\"},\"browserDetails\":{\"os\":\"web\",\"osPlatform\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.7827.55 Safari/537.36\",\"isMobile\":false,\"name\":\"Google Chrome\",\"isIncognito\":false,\"osName\":\"Windows\",\"osVersion\":\"10\",\"osFullVersion\":\"Windows 10\"},\"USER_DATA\":{\"attributes\":[{\"key\":\"USER_ATTRIBUTE_UNIQUE_ID\",\"value\":\"1615242689018446710\",\"updated_at\":1786342097726}],\"subscribedToOldSdk\":false,\"deviceUuid\":\"5f0ae487-ed2a-473a-bd5f-0d7feb9dece9\",\"deviceAdded\":true},\"SESSION\":{\"sessionKey\":\"f58140c8-dddd-4fb5-9c43-18ed605f7a2d\",\"sessionStartTime\":\"2026-08-10T06:08:17.719Z\",\"sessionMaxTime\":1800,\"customIdentifiersToTrack\":[],\"sessionExpiryTime\":1786343898040,\"numberOfSessions\":1},\"IDENTITY_MAP\":{\"userIdentities\":{\"uid\":\"1615242689018446710\"},\"previousIdentities\":{},\"previousIdentitiesUpdatedTime\":0},\"OPTED_STATUS_TRACK_TIME\":1786342098029}"
+        },
+        {
+          "name": "activeEntitlements",
+          "value": "{\"data\":{\"statusCode\":\"1\",\"statusMessage\":\"OK\",\"data\":{\"nextBillingDate\":-1,\"nextBillingAmount\":0,\"country\":\"IN\",\"subscriptions\":[{\"orderId\":529991869,\"isContent\":false,\"isFreemium\":false,\"isCurrentPlan\":true,\"serviceType\":\"SVOD\",\"serviceId\":\"SVOD057\",\"startDate\":1782308959000,\"retailPrice\":119,\"description\":\"iWant Monthly Premium Plan\",\"status\":\"Active\",\"currencyCode\":\"PHP\",\"currencySymbol\":\"&#8369;\",\"subscriptionType\":\"Monthly\",\"displayName\":\"iWant Monthly Premium Plan\",\"isRenewal\":true,\"isCancellable\":true,\"paymentMethod\":\"Credit Card\",\"validityDuration\":1,\"isInFreeTrial\":false,\"basicService\":false,\"validityTill\":1787579356000,\"validityPeriod\":\"NoOfMonths\",\"channelPartnerId\":\"ABSCBN-PH\",\"billingPeriod\":\"Monthly\",\"entitlements\":{\"noDevice\":6,\"concurrentView\":5,\"ads\":false,\"continueWatching\":true,\"casting\":\"chromecast,airplay\",\"download\":true,\"quality\":\"hd,fhd\",\"deviceType\":\"mobile,web,tv\",\"earlyAccess\":true,\"adsMidrolls\":false}}]}},\"timestamp\":1786342104923}"
+        },
+        {
+          "name": "convivaOutQueue_CAT_post2.expires",
+          "value": "1849414105188"
+        }
+      ]
+    },
+    {
+      "origin": "https://www.google.com",
+      "localStorage": [
+        {
+          "name": "rc::a",
+          "value": "MWt3M3BtNm92YWhlbw=="
+        },
+        {
+          "name": "rc::f",
+          "value": "0aAJb57123uPdVvefg_EcdmXYrHcJJFeOGaoUs6oz7pqGav19-sxvwr7o9eQ-k2TWfOKM24DQ"
+        }
+      ]
+    }
+  ]
+}

@@ -294,6 +294,46 @@ export interface EmptyCredentialsOutput {
     errorMessage: string;
 }
 
+export interface VerifyMidRailAdsInput {
+    mode?: string;
+    expectedAdHost: string;
+}
+
+export interface VerifyMidRailAdsOutput {
+    adRequestsFound: boolean;
+    matchedUrls: string[];
+    homeAdVisible: boolean;
+    moviesAdVisible: boolean;
+    showsAdVisible: boolean;
+    allTabsAdVisible: boolean;
+    adElementVisible: boolean;
+}
+
+export interface VerifyMidRailAdAutoRefreshInput {
+    mode?: string;
+    expectedAdHost: string;
+    refreshWindowMs?: number;
+    minimumRefreshRequests?: number;
+}
+
+export interface VerifyMidRailAdAutoRefreshOutput {
+    isLoggedIn: boolean;
+    adVisible: boolean;
+    initialRequestCount: number;
+    finalRequestCount: number;
+    refreshObserved: boolean;
+    matchedUrls: string[];
+    tabResults: Array<{
+        tabName: string;
+        adVisible: boolean;
+        initialRequestCount: number;
+        finalRequestCount: number;
+        refreshObserved: boolean;
+        triggerCount: number;
+        latestTriggerUrl: string | null;
+    }>;
+}
+
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
     mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' = 'invalid'
@@ -4778,5 +4818,160 @@ export async function verifyTrendingContentDetailNavigation(
         trendingContentTitle,
         detailsPageVisible,
         detailsPageTitleMatches,
+    };
+}
+
+async function verifyMidRailAdOnCurrentTab(page: any, authPage: OTTAuthPage): Promise<boolean> {
+    const scrolled = await authPage.scrollToMidRailAdBanner().catch(() => false);
+    if (scrolled) {
+        await page.waitForTimeout(1500);
+        const bannerVisible = await authPage.isAdTagVisible().catch(() => false);
+        if (bannerVisible) {
+            return true;
+        }
+    }
+    const iframeSelector = authPage.getGoogleAdsIframeSelector();
+    const fallbackIframe = page.locator(iframeSelector).first();
+    if (await fallbackIframe.count() > 0) {
+        await fallbackIframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+        await page.waitForTimeout(1500);
+        return await fallbackIframe.isVisible().catch(() => false);
+    }
+    return false;
+}
+
+export async function verifyMidRailAds(page: any, input: VerifyMidRailAdsInput): Promise<VerifyMidRailAdsOutput> {
+    logger.step('Starting IW3-T2129: Verify Mid rail banner ads are from GAM');
+    const authPage = new OTTAuthPage(page);
+    const matchedUrls: string[] = [];
+    const requestHandler = (req: any) => {
+        try {
+            const url = typeof req.url === 'function' ? req.url() : req.url;
+            if (url && input.expectedAdHost && url.includes(input.expectedAdHost)) {
+                matchedUrls.push(url);
+                logger.debug('Captured ad network request', url);
+            }
+        } catch (err) {
+            logger.debug('Mid rail ad request capture error', err);
+        }
+    };
+    page.on('request', requestHandler);
+    await loginToOTT(page, { mode: input.mode });
+    await page.waitForTimeout(3000);
+    let homeAdVisible = false;
+    let moviesAdVisible = false;
+    let showsAdVisible = false;
+    try {
+        homeAdVisible = await verifyMidRailAdOnCurrentTab(page, authPage);
+        await authPage.clickMoviesTab();
+        await page.waitForTimeout(2500);
+        moviesAdVisible = await verifyMidRailAdOnCurrentTab(page, authPage);
+        await authPage.clickShowsTab();
+        await page.waitForTimeout(2500);
+        showsAdVisible = await verifyMidRailAdOnCurrentTab(page, authPage);
+    } catch (err) {
+        logger.debug('Mid rail ad verification flow failed', err);
+    }
+    await page.waitForTimeout(2000);
+    try {
+        page.removeListener('request', requestHandler);
+    } catch {
+        logger.debug('Unable to remove request listener after mid-rail ad verification');
+    }
+    const adRequestsFound = matchedUrls.length > 0;
+    const allTabsAdVisible = homeAdVisible && moviesAdVisible && showsAdVisible;
+    logger.assertion('Ad network requests found matching expected host', adRequestsFound);
+    logger.assertion('Home mid rail ad element visible', homeAdVisible);
+    logger.assertion('Movies mid rail ad element visible', moviesAdVisible);
+    logger.assertion('Shows mid rail ad element visible', showsAdVisible);
+    return {
+        adRequestsFound,
+        matchedUrls,
+        homeAdVisible,
+        moviesAdVisible,
+        showsAdVisible,
+        allTabsAdVisible,
+        adElementVisible: homeAdVisible,
+    };
+}
+
+export async function verifyMidRailAdAutoRefresh(page: any, input: VerifyMidRailAdAutoRefreshInput): Promise<VerifyMidRailAdAutoRefreshOutput> {
+    logger.step('Starting IW3-T2133: Verify Mid rail Ad banner auto refreshes after every 30 sec');
+    const authPage = new OTTAuthPage(page);
+    const matchedUrls: string[] = [];
+    const tabResults: VerifyMidRailAdAutoRefreshOutput['tabResults'] = [];
+    const refreshWindowMs = input.refreshWindowMs;
+    const minimumRefreshRequests = input.minimumRefreshRequests ?? 2;
+    const requestHandler = (req: any) => {
+        try {
+            const url = typeof req.url === 'function' ? req.url() : req.url;
+            if (url && input.expectedAdHost && url.includes(input.expectedAdHost)) {
+                matchedUrls.push(url);
+                logger.info('AD API trigger received', {
+                    url,
+                    currentPage: page.url(),
+                });
+                logger.debug('Captured refresh-related ad request');
+            }
+        } catch (err) {
+            logger.debug('Mid rail ad refresh request capture error', err);
+        }
+    };
+    page.on('request', requestHandler);
+    const loginResult = await loginToOTT(page, { mode: input.mode });
+    const isLoggedIn = loginResult.isLoggedIn;
+    logger.assertion('User logged in before mid-rail ad refresh validation', isLoggedIn);
+    const validateTab = async (tabName: string, goToTab: () => Promise<void>): Promise<void> => {
+        logger.step(`Validating mid-rail ad refresh on ${tabName} tab`);
+        await goToTab();
+        await page.waitForTimeout(3000);
+        const adVisible = await verifyMidRailAdOnCurrentTab(page, authPage);
+        logger.assertion(`${tabName} tab mid-rail ad visible`, adVisible);
+        const initialRequestCount = matchedUrls.length;
+        logger.step(`${tabName} tab observed ${initialRequestCount} matching ad requests before the refresh window`);
+        await page.waitForTimeout(refreshWindowMs);
+        const finalRequestCount = matchedUrls.length;
+        const refreshObserved = finalRequestCount >= initialRequestCount + minimumRefreshRequests;
+        logger.step(`${tabName} tab observed ${finalRequestCount} matching ad requests after the refresh window`);
+        logger.assertion(`${tabName} tab ad refresh requests observed within the refresh window`, refreshObserved);
+        if (!refreshObserved) {
+            throw new Error(`${tabName} tab did not observe the expected mid-rail ad refresh within ${refreshWindowMs}ms`);
+        }
+        tabResults.push({
+            tabName,
+            adVisible,
+            initialRequestCount,
+            finalRequestCount,
+            refreshObserved,
+            triggerCount: finalRequestCount - initialRequestCount,
+            latestTriggerUrl: matchedUrls[matchedUrls.length - 1] ?? null,
+        });
+    };
+    await validateTab('Home', async () => {
+        await authPage.clickHomeTab();
+    });
+    await validateTab('Movies', async () => {
+        await authPage.clickMoviesTab();
+    });
+    await validateTab('Shows', async () => {
+        await authPage.clickShowsTab();
+    });
+    const overallRefreshObserved = tabResults.every((tab) => !tab.adVisible || tab.refreshObserved);
+    logger.assertion('Mid-rail ad refresh observed across validated tabs', overallRefreshObserved);
+    try {
+        page.removeListener('request', requestHandler);
+    } catch {
+        logger.debug('Unable to remove request listener after mid-rail ad refresh validation');
+    }
+    const initialRequestCount = tabResults[0]?.initialRequestCount ?? 0;
+    const finalRequestCount = matchedUrls.length;
+    return {
+        isLoggedIn,
+        adVisible: tabResults.some((tab) => tab.adVisible),
+        initialRequestCount,
+        finalRequestCount,
+        refreshObserved: overallRefreshObserved,
+        matchedUrls,
+        tabResults,
     };
 }

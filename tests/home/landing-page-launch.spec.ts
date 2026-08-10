@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { loginWithTVProvider, verifyTop10TagOnContentThumbnail } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithTVProvider, verifyMidRailAds, verifyTop10TagOnContentThumbnail, verifyMidRailAdAutoRefresh } from '../../src/businessFunction/ott-auth-bfs';
 import { verifyMidRailAdSpacingAcrossTabs } from '../../src/businessFunction/ott-playback-bfs';
 import { navigateToMovieDetailsFromLandingPage, verifyDetailsPageFromCarouselInfoIcon, verifySubscriptionPageFromCarouselSubscribeCta } from '../../src/businessFunction/ott-landing-bfs';
 import { verifyBecauseYouWatchedRail, verifyBecauseYouWatchedRailGenreUpdate, verifyLandingPageRelatedContentTraysOutsidePH, verifyMidRailBannerAdlRefresh, verifyMidRailBannerAdlVisibility, verifyTop10TagOnSearchResults, verifyTop10TagOnWatchlist } from '../../src/businessFunction/ott-landing-bfs';
@@ -17,6 +17,36 @@ test.describe('Home Page Landing', () => {
             mode: data.mode
         });
         expect(result.isLoggedIn).toBe(true);
+    });
+
+    test('@High IW3-T2129: Verify mid rail banner ads are from GAM', async ({ page }) => {
+        const data = testCaseData['tc-ad-002-mid-rail-gam'] as Record<string, any>;
+        const result = await verifyMidRailAds(page, {
+        mode: data.mode,
+        expectedAdHost: data.expectedAdHost,
+        });
+        expect(result.adElementVisible).toBe(true);
+        expect(result.adRequestsFound).toBe(true);
+        expect(result.matchedUrls.length).toBeGreaterThan(0);
+    });
+
+    test('@High - IW3-T2133: Verify Mid rail Ad banner auto refreshes after every 30 sec', async ({ page }) => {
+        test.setTimeout(200000);
+        const data = testCaseData['tc-ad-003-mid-rail-refresh'] as Record<string, any>;
+        const result = await verifyMidRailAdAutoRefresh(page, {
+            mode: data.mode,
+            expectedAdHost: data.expectedAdHost,
+            refreshWindowMs: data.refreshWindowMs,
+            minimumRefreshRequests: data.minimumRefreshRequests,
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.tabResults.length).toBe(3);
+        for (const tabResult of result.tabResults) {
+            expect(tabResult.adVisible).toBe(true);
+            expect(tabResult.refreshObserved).toBe(true);
+            expect(tabResult.finalRequestCount).toBeGreaterThanOrEqual(tabResult.initialRequestCount + data.minimumRefreshRequests);
+        }
+        expect(result.refreshObserved).toBe(true);
     });
 
     test('@High - IW3-T4703: Verify the "Top 10" tag on content thumbnails across home rails', async ({ page }) => {

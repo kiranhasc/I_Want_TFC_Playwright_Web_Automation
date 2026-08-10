@@ -443,6 +443,19 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-mid-rail-ad-auto-refresh"
+  name: "Verify the mid-rail ad refreshes automatically"
+  path: "src/businessFunction/ott-auth-bfs.ts"
+  export: "verifyMidRailAdAutoRefresh"
+  tags:
+    - auth
+    - ad
+    - ui
+  testCases:
+    - "IW3-T2133"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "verify-continue-watching-tray-ui"
   name: "Verify the Continue Watching tray UI and content cards"
   path: "src/businessFunction/ott-auth-bfs.ts"

@@ -141,7 +141,7 @@ test.describe('Home Page Launch', () => {
     });
 
     test('@High IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
-    test.setTimeout(70000)    
+        test.setTimeout(70000)
         const data = testCaseData['tc-auth-016-application-version'];
         const result = await verifyApplicationVersion(page, {
             mode: data.mode,
@@ -188,21 +188,19 @@ test.describe('Home Page Launch', () => {
     });
 
     test('IW3-T1870: Verify user is able to login with valid credentials', async ({ page }) => {
-       const data = testCaseData['tc-auth-006-valid-login'];
-       const result = await loginToOTT(page, { mode: data.mode });
-       expect(result.isLoggedIn).toBe(true);
-       expect(result.homeTabVisible).toBe(true);
-   });
+        const data = testCaseData['tc-auth-006-valid-login'];
+        const result = await loginToOTT(page, { mode: data.mode });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeTabVisible).toBe(true);
+    });
 
-   test('@High IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
-        test.setTimeout(120000);   
+    test('@High IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+        test.setTimeout(120000);
         const data = testCaseData['tc-play-001-free-asset-playback'];
-        const result = await playFreeAsset(page, {
-            mode: data.mode,
-       });
-       expect(result.isLoggedIn).toBe(true);
-       expect(result.isPlayableContentDetected).toBe(true);
-       expect(result.playAttempted).toBe(true);
-       expect(result.playbackStarted).toBe(true);
-   });
+        const result = await playFreeAsset(page, { mode: data.mode });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.isPlayableContentDetected).toBe(true);
+        expect(result.playAttempted).toBe(true);
+        expect(result.playbackStarted).toBe(true);
+    });
 });

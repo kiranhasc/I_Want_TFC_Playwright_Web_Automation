@@ -8,4 +8,4 @@ node_modules/
 /playwright/.auth/
 /playwright/
 logs/
-/src/playwright
+/src/playwright/.auth/

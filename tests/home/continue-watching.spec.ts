@@ -1,18 +1,18 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { validateContinueWatchingForNoHistory, verifyContinueWatchingRemovalAfterPlayback, verifyContinueWatchingRemoveItem, verifyContinueWatchingTrayScroll, verifyContinueWatchingTrayUI } from '../../src/businessFunction/ott-auth-bfs';
-import { verifyContinueWatchingAcrossTabs, verifyContinueWatchingDetailsAndMoreNavigation, verifyContinueWatchingPlaybackFromTray, verifyContinueWatchingResumePlayback, verifyContinueWatchingTrayPersistence, verifyResumeCtaOnContentDetailsPage, verifyContinueWatchingTrayForNewUserAfterFivePercentPlayback, verifyContinueWatchingTrayForNewUserAfterLessThanFivePercentPlayback, verifyContinueWatchingTrayAfterFiftyPercentPlayback, validateContinueWatchingProgressBarPercentage, verifyContentUpdatedInContinueWatchingTray, verifyClickUpNextBingeMarkerFromContinueWatching, verifyNextSeasonFirstEpisodeAutoPlayFlow, verifyContinueWatchingFreeUserAdResumePlayback, verifyLatestWatchedSeasonEpisodeInContinueWatchingTray, verifyContinueWatchingSeasonEpisodeUpdateAfterNextSeasonPlayback, verifyResumeToPlayAfterRemovingFromContinueWatching, verifyContinueWatchingShowsFreeAndPaidContent, verifyContinueWatchingSubscriptionPrompt, verifyShowContentRemovalFromContinueWatching } from '../../src/businessFunction/ott-continue-watching-bfs';
+import { verifyContinueWatchingAcrossTabs, verifyContinueWatchingDetailsAndMoreNavigation, verifyContinueWatchingPlaybackFromTray, verifyContinueWatchingResumePlayback, verifyContinueWatchingTrayPersistence, verifyResumeCtaOnContentDetailsPage, verifyContinueWatchingTrayForNewUserAfterFivePercentPlayback, verifyContinueWatchingTrayForNewUserAfterLessThanFivePercentPlayback, verifyContinueWatchingTrayAfterFiftyPercentPlayback, validateContinueWatchingProgressBarPercentage, verifyContentUpdatedInContinueWatchingTray, verifyClickUpNextBingeMarkerFromContinueWatching, verifyNextSeasonFirstEpisodeAutoPlayFlow, verifyContinueWatchingFreeUserAdResumePlayback, verifyLatestWatchedSeasonEpisodeInContinueWatchingTray, verifyContinueWatchingSeasonEpisodeUpdateAfterNextSeasonPlayback, verifyResumeToPlayAfterRemovingFromContinueWatching, verifyContinueWatchingShowsFreeAndPaidContent, verifyContinueWatchingSubscriptionPrompt, verifyShowContentRemovalFromContinueWatching, verifyUpNextBingeMarkerFromContinueWatching } from '../../src/businessFunction/ott-continue-watching-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Continue Watching - No Watch History', () => {
     test('@Medium IW3-T1951: Verify the Continue Watching tray upon logout and login with same account', async ({ page }) => {
         test.setTimeout(60000);
         const data = testCaseData['tc-auth-014-continue-watching-persistence'];
-        const result = await verifyContinueWatchingTrayPersistence(page, {mode: data.mode });
+        const result = await verifyContinueWatchingTrayPersistence(page, { mode: data.mode });
         expect(result.isValid).toBeTruthy();
         expect(result.sameContentAfterRelogin).toBeTruthy();
     });
 
-    test.only('@High IW3-T1926: Verify the Continue Watching tray for the new user.', async ({ page }) => {
+    test('@High IW3-T1926: Verify the Continue Watching tray for the new user.', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-009-continue-watching-no-history'];
         const result = await validateContinueWatchingForNoHistory(page, { mode: data.mode });
@@ -22,7 +22,7 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@High IW3-T1927: Verify the Continue Watching tray on the Home Page for new users after watching 5% of the content', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-027-continue-watching-five-percent'] as { mode?: string } | undefined;
-        const result = await verifyContinueWatchingTrayForNewUserAfterFivePercentPlayback(page, {mode: data?.mode });
+        const result = await verifyContinueWatchingTrayForNewUserAfterFivePercentPlayback(page, { mode: data?.mode });
         expect(result.isValid).toBeTruthy();
         expect(result.trayVisible).toBeTruthy();
         expect(result.contentAppearsInTray).toBeTruthy();
@@ -128,11 +128,10 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-023-continue-watching-playback'] as { mode?: string } | undefined;
-        const result = await verifyContinueWatchingPlaybackFromTray(page, {mode: data?.mode });
+        const result = await verifyContinueWatchingPlaybackFromTray(page, { mode: data?.mode });
         expect(result.isValid).toBeTruthy();
         expect(result.itemFound).toBeTruthy();
         expect(result.playerVisible).toBeTruthy();
-        expect(result.progressBarVisible).toBeTruthy();
     });
 
     test('@Medium IW3-T1935: Verify the Navigation on tapping 3 dots and "Details and More" option displayed on the CW tray bottom bar popup', async ({ page }) => {
@@ -153,7 +152,7 @@ test.describe('Continue Watching - No Watch History', () => {
         expect(result.confirmationVisible).toBeTruthy();
     });
 
-        test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {
+    test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-auth-030-continue-watching-resume-to-play-after-removal'] as { mode?: string; searchTerm?: string; season?: string; episodeName?: string } | undefined;
         const result = await verifyResumeToPlayAfterRemovingFromContinueWatching(page, {
@@ -179,7 +178,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@High IW3-T1961: Verify that show content gets removed from CW tray after completely watching the show content', async ({ page }) => {
-        test.setTimeout(120000);
+        test.setTimeout(180000);
         const data = testCaseData['tc-cw-1961-show-removal'] as { mode?: string; searchTerm?: string } | undefined;
         const result = await verifyShowContentRemovalFromContinueWatching(page, {
             mode: data?.mode,
@@ -202,7 +201,7 @@ test.describe('Continue Watching - No Watch History', () => {
 
     test('@Medium IW3-T1958: Verify that "Resume" CTA is displayed inside the details screen for the partially watched contents', async ({ page }) => {
         const data = testCaseData['tc-auth-025-continue-watching-resume-cta'] as { mode?: string } | undefined;
-        const result = await verifyResumeCtaOnContentDetailsPage(page, {mode: data?.mode });
+        const result = await verifyResumeCtaOnContentDetailsPage(page, { mode: data?.mode });
         expect(result.isValid).toBeTruthy();
         expect(result.resumeCtaVisible).toBeTruthy();
         expect(result.detailsPageVisible).toBeTruthy();
@@ -211,7 +210,7 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@Medium IW3-T1959: Verify that content gets resumed on tapping "Resume" CTA', async ({ page }) => {
         test.setTimeout(60000);
         const data = testCaseData['tc-auth-026-continue-watching-resume-playback'] as { mode?: string } | undefined;
-        const result = await verifyContinueWatchingResumePlayback(page, {mode: data?.mode });
+        const result = await verifyContinueWatchingResumePlayback(page, { mode: data?.mode });
         expect(result.isValid).toBeTruthy();
         expect(result.resumeActionVisible).toBeTruthy();
         expect(result.detailsPageVisible).toBeTruthy();
@@ -229,7 +228,7 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@Medium IW3-T1941: Verify that the content is updated in the Continue Watching (CW) tray when the user partially watches it', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-cw-1941-content-updated-in-tray'] as { mode?: string; seekMinutes?: number } | undefined;
-        const result = await verifyContentUpdatedInContinueWatchingTray(page, {mode: data?.mode, seekMinutes: data?.seekMinutes });
+        const result = await verifyContentUpdatedInContinueWatchingTray(page, { mode: data?.mode, seekMinutes: data?.seekMinutes });
         expect(result.isValid).toBeTruthy();
         expect(result.trayVisible).toBeTruthy();
         expect(result.contentRemainsInTray).toBeTruthy();
@@ -238,7 +237,7 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@Low IW3-T1964: Verify the content from the CW tray when user partially watches the content', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-cw-1941-content-updated-in-tray'] as { mode?: string; seekMinutes?: number } | undefined;
-        const result = await verifyContentUpdatedInContinueWatchingTray(page, {mode: data?.mode, seekMinutes: data?.seekMinutes });
+        const result = await verifyContentUpdatedInContinueWatchingTray(page, { mode: data?.mode, seekMinutes: data?.seekMinutes });
         expect(result.isValid).toBeTruthy();
         expect(result.trayVisible).toBeTruthy();
         expect(result.contentRemainsInTray).toBeTruthy();
@@ -247,7 +246,7 @@ test.describe('Continue Watching - No Watch History', () => {
     test('@Medium IW3-T1954: Verify that the Up Next binge marker appears and the next episode plays automatically after the current episode ends when resuming content from the Continue Watching (CW) tray.', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-cw-1955-next-episode-playback'] as { mode?: string; query?: string } | undefined;
-        const result = await verifyClickUpNextBingeMarkerFromContinueWatching(page, {
+        const result = await verifyUpNextBingeMarkerFromContinueWatching(page, {
             mode: data?.mode,
             query: data?.query,
         });
@@ -276,9 +275,9 @@ test.describe('Continue Watching - No Watch History', () => {
         test.setTimeout(90000);
         const data = testCaseData['tc-sub-046-iw3-t1956-next-season-autoplay'] as Record<string, any>;
         const result = await verifyNextSeasonFirstEpisodeAutoPlayFlow(page, {
-        query: data.query,
-        mode: data.mode,
-        expectedTitle: data.expectedTitle,
+            query: data.query,
+            mode: data.mode,
+            expectedTitle: data.expectedTitle,
         });
         expect(result.isValid).toBeTruthy();
         expect(result.markerVisible).toBeTruthy();

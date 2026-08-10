@@ -137,6 +137,8 @@ export class OTTAuthPage {
     private readonly lastNameValidationError: PageElement;
     private readonly pageBody: PageElement;
     private readonly bodyTextPattern: PageElement;
+    private readonly midRailAdBanner: PageElement;
+    private readonly googleAdsIframeSelector: PageElement;
     private readonly accountSettingsTextLink: PageElement;
     private readonly profileValidationTextPattern: PageElement;
     private readonly searchResultsContainer: PageElement;
@@ -152,8 +154,6 @@ export class OTTAuthPage {
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
-    private readonly midRailAdBanner: PageElement;
-    private readonly googleAdsIframeSelector: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -179,7 +179,7 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { text: 'Home', selector: 'div#home' };
+        this.homeTab = { selector: 'div#home' };
         this.homeTabFallbackById = { selector: 'div#home' };
         this.homeTabFallbackByText = { selector: 'a:has-text("Home"), button:has-text("Home"), [aria-label="Home"], [data-testid*="home"], text=Home' };
         this.homeTabFallbackByHref = { selector: 'a[href="/"], [href="/"], [role="link"][aria-label*="home" i]' };
@@ -281,6 +281,8 @@ export class OTTAuthPage {
         this.lastNameValidationError = { selector: '//*[@id="last name-helper-text"]' };
         this.pageBody = { selector: 'body' };
         this.bodyTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
+        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
+        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
         this.accountSettingsTextLink = { text: 'Account & Settings', selector: 'text=Account & Settings' };
         this.profileValidationTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
         this.searchResultsContainer = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3' };
@@ -295,8 +297,6 @@ export class OTTAuthPage {
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
         this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
-        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
-        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
     }
 
     async navigate(): Promise<void> {
@@ -516,28 +516,105 @@ export class OTTAuthPage {
     }
 
     async scrollToBottomOfPage(): Promise<void> {
-    logger.elementInteraction('scroll', 'Scroll to page footer');
+        logger.elementInteraction('scroll', 'Scroll to page footer');
+        const footer = this.page.locator('footer');
+        const scrollStep = 300;
+        while (!(await footer.isVisible().catch(() => false))) {
+            await this.page.mouse.wheel(0, scrollStep);
+            await this.page.waitForTimeout(400);
+            const isBottom = await this.page.evaluate(() => {
+                return window.innerHeight + window.scrollY >= document.body.scrollHeight;
+            });
+            if (isBottom) {
+                break;
+            }
+        }
+        logger.info('Reached page footer.');
+    }
 
-    const footer = this.page.locator('footer');
-    const scrollStep = 300;
+    async scrollToMidRailAdBanner(): Promise<boolean> {
+        logger.elementInteraction('scroll', 'mid rail ad banner');
+        try {
+            const bannerSelector = this.midRailAdBanner.selector;
+            const iframeSelector = this.googleAdsIframeSelector.selector;
 
-    while (!(await footer.isVisible().catch(() => false))) {
+            const bannerVisible = await this.scrollUntilVisible(bannerSelector);
+            if (bannerVisible) {
+                return true;
+            }
 
-        await this.page.mouse.wheel(0, scrollStep);
+            const iframe = this.page.locator(iframeSelector).first();
+            if (await iframe.count() > 0) {
+                await iframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+                await this.page.waitForTimeout(1200);
+                return await iframe.isVisible().catch(() => false);
+            }
 
-        await this.page.waitForTimeout(400);
-
-        const isBottom = await this.page.evaluate(() => {
-            return window.innerHeight + window.scrollY >= document.body.scrollHeight;
-        });
-
-        if (isBottom) {
-            break;
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad banner scroll failed', error);
+            return false;
         }
     }
 
-    logger.info('Reached page footer.');
-}
+    async scrollUntilVisible(selector: string, maxAttempts = 8): Promise<boolean> {
+        const locator = this.page.locator(selector).first();
+        const scrollFactor = 0.75;
+        const pauseMs = 900;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+
+            await this.page.evaluate((factor) => {
+                window.scrollBy(0, window.innerHeight * factor);
+            }, scrollFactor).catch(() => undefined);
+            await this.page.waitForTimeout(pauseMs);
+
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+
+            const atBottom = await this.page.evaluate(() => {
+                return window.innerHeight + window.scrollY >= document.body.scrollHeight - 5;
+            }).catch(() => false);
+            if (atBottom) {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    getGoogleAdsIframeSelector(): string {
+        return this.googleAdsIframeSelector.selector;
+    }
+
+    async isAdTagVisible(): Promise<boolean> {
+        try {
+            const banner = this.page.locator(this.midRailAdBanner.selector).first();
+            if (await banner.count()) {
+                await banner.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                if (await banner.isVisible().catch(() => false)) {
+                    return true;
+                }
+            }
+
+            const iframe = this.page.locator(this.googleAdsIframeSelector.selector).first();
+            if (await iframe.count()) {
+                await iframe.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                return await iframe.isVisible().catch(() => false);
+            }
+
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad visibility check failed', error);
+            return false;
+        }
+    }
 
     async getApplicationVersionText(): Promise<string> {
         const locator = this.page.locator(this.appVersionText.selector).first();
@@ -2641,89 +2718,4 @@ export class OTTAuthPage {
         }
         return undefined;
     }
-
-    async scrollUntilVisible(selector: string, maxAttempts = 8): Promise<boolean> {
-        const locator = this.page.locator(selector).first();
-        const scrollFactor = 0.75;
-        const pauseMs = 900;
-
-        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-            if (await locator.isVisible().catch(() => false)) {
-                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
-                return true;
-            }
-
-            await this.page.evaluate((factor) => {
-                window.scrollBy(0, window.innerHeight * factor);
-            }, scrollFactor).catch(() => undefined);
-            await this.page.waitForTimeout(pauseMs);
-
-            if (await locator.isVisible().catch(() => false)) {
-                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
-                return true;
-            }
-
-            const atBottom = await this.page.evaluate(() => {
-                return window.innerHeight + window.scrollY >= document.body.scrollHeight - 5;
-            }).catch(() => false);
-            if (atBottom) {
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    getGoogleAdsIframeSelector(): string {
-        return this.googleAdsIframeSelector.selector;
-    }
-
-    async isAdTagVisible(): Promise<boolean> {
-        try {
-            const banner = this.page.locator(this.midRailAdBanner.selector).first();
-            if (await banner.count()) {
-                await banner.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-                if (await banner.isVisible().catch(() => false)) {
-                    return true;
-                }
-            }
-
-            const iframe = this.page.locator(this.googleAdsIframeSelector.selector).first();
-            if (await iframe.count()) {
-                await iframe.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
-                return await iframe.isVisible().catch(() => false);
-            }
-
-            return false;
-        } catch (error) {
-            logger.debug('Mid rail ad visibility check failed', error);
-            return false;
-        }
-    }
-
-    async scrollToMidRailAdBanner(): Promise<boolean> {
-        logger.elementInteraction('scroll', 'mid rail ad banner');
-        try {
-            const bannerSelector = this.midRailAdBanner.selector;
-            const iframeSelector = this.googleAdsIframeSelector.selector;
-
-            const bannerVisible = await this.scrollUntilVisible(bannerSelector);
-            if (bannerVisible) {
-                return true;
-            }
-
-            const iframe = this.page.locator(iframeSelector).first();
-            if (await iframe.count() > 0) {
-                await iframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
-                await this.page.waitForTimeout(1200);
-                return await iframe.isVisible().catch(() => false);
-            }
-
-            return false;
-        } catch (error) {
-            logger.debug('Mid rail ad banner scroll failed', error);
-            return false;
-        }
-    }
-
 }

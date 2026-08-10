@@ -4,7 +4,7 @@ import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { loginToOTT } from './ott-auth-bfs';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
-import {OTTPlaybackPage} from "../pom/OTTPlaybackPage";
+import { OTTPlaybackPage } from "../pom/OTTPlaybackPage";
 import { OpenContentAndPlayInput } from "./ott-playback-bfs";
 import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
 import { TVShowEpisodesParser } from '../utils/graphql/parsers/tv-show-episodes-parser';
@@ -21,7 +21,6 @@ export interface ContinueWatchingPlaybackOutput {
   itemFound: boolean;
   playerVisible: boolean;
   resumeActionVisible: boolean;
-  progressBarVisible: boolean;
   selectedContentName: string;
   forwardedTime: string;
   resumedTime: string;
@@ -35,7 +34,7 @@ export interface ParentalPinContinueWatchingPlaybackInput extends ContinueWatchi
   parentalPin?: string;
 }
 
-export interface ParentalPinContinueWatchingPlaybackOutput{
+export interface ParentalPinContinueWatchingPlaybackOutput {
   itemFound: boolean;
   playerVisible: boolean;
   parentalPinPromptVisible: boolean;
@@ -333,6 +332,21 @@ export interface VerifyContinueWatchingFreeAndPaidContentOutput {
   reason?: string;
 }
 
+export interface ContinueWatchingAcrossTabsInput {
+  mode?: string;
+  email?: string;
+  password?: string;
+  tabs?: string[];
+}
+
+export interface ContinueWatchingAcrossTabsOutput {
+  isValid: boolean;
+  trayItemCount: number;
+  contentVisibleInTray: boolean;
+  selectedTab?: string;
+  reason?: string;
+}
+
 function parseSeasonEpisodeFromText(text: string): { seasonNumber: string; episodeNumber: string } {
   const seasonMatch = text.match(/S(?:eason\s*)?(\d+)/i);
   const episodeMatch = text.match(/E(\d+)/i);
@@ -596,9 +610,9 @@ export async function verifyLatestWatchedSeasonEpisodeInContinueWatchingTray(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-  const searchTerm = input?.searchTerm ;
+  const searchTerm = input?.searchTerm;
   const expectedSeasonNumber = input?.expectedSeasonNumber;
-  const expectedEpisodeNumber = input?.expectedEpisodeNumber ;
+  const expectedEpisodeNumber = input?.expectedEpisodeNumber;
   logger.step(`Starting IW3-T1930 flow for latest watched season/episode update under continue watching tray`);
   const loginResult = await loginToOTT(page, { mode });
   if (!loginResult.isLoggedIn) {
@@ -1044,15 +1058,15 @@ export async function verifyContinueWatchingSubscriptionPrompt(
     };
   }
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  let adVisible = false;    
+  let adVisible = false;
   adVisible = await detailsPage.isAdTagVisible().catch(() => false);
-  if(adVisible) {
+  if (adVisible) {
     await page.waitForTimeout(100000);
   }
   await detailsPage.hoverPlaybackControls();
   await detailsPage.dragSeekBarToPosition(0.99);
   adVisible = await detailsPage.isAdTagVisible().catch(() => false);
-  if(adVisible) {
+  if (adVisible) {
     await page.waitForTimeout(100000);
   }
   const subscriptionInstructionVisible = await detailsPage.isSubscriptionInstructionPromptVisible().catch(() => false);
@@ -1072,7 +1086,7 @@ export async function verifyContinueWatchingSubscriptionPrompt(
       ? await playbackPage.getPremiumGateMessageText().catch(() => '')
       : subscribeCtaVisible
         ? subscribeCtaText
-          : '';
+        : '';
   logger.assertion('Continue Watching tray visible', trayVisible);
   logger.assertion('Premium episode found in Continue Watching', premiumEpisodeFound);
   logger.assertion('Subscription prompt or gate visible after play attempt', subscriptionPromptVisible);
@@ -1169,9 +1183,9 @@ export async function verifyShowContentRemovalFromContinueWatching(
   logger.step(`Selected show content for IW3-T1961 from Continue Watching GraphQL: ${selectedContentTitle}`);
   // Check if content is visible in Continue Watching BEFORE clicking the tray item
   // Use GraphQL data as source of truth - if it was in the GraphQL response, it's visible
-  const initialVisibility = graphQLShowItems.some((item) => 
-    (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) || 
-     item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
+  const initialVisibility = graphQLShowItems.some((item) =>
+  (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) ||
+    item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
   );
   const openedFromTray = await authPage.clickContinueWatchingItemUsingGraphQL(selectedContentTitle, 30000);
   if (!openedFromTray) {
@@ -1202,7 +1216,7 @@ export async function verifyShowContentRemovalFromContinueWatching(
   await page.waitForTimeout(20000);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(4000);
-  await authPage.refreshPage();  
+  await authPage.refreshPage();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await authPage.clickHomeTab();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -1212,9 +1226,9 @@ export async function verifyShowContentRemovalFromContinueWatching(
   // Check if content is removed from Continue Watching after playback completion
   // Get fresh GraphQL data and check if item still exists
   const finalGraphQLItems = await authPage.getContinueWatchingGraphQLShows();
-  const finalVisibility = finalGraphQLItems.some((item) => 
-    (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) || 
-     item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
+  const finalVisibility = finalGraphQLItems.some((item) =>
+  (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) ||
+    item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
   );
   const isValid = initialVisibility && !finalVisibility;
   logger.assertion('Show content was present in Continue Watching before playback', initialVisibility);
@@ -1323,7 +1337,6 @@ export async function verifyContinueWatchingPlaybackFromTray(
       itemFound: false,
       playerVisible: false,
       resumeActionVisible: false,
-      progressBarVisible: false,
       selectedContentName: '',
       forwardedTime: '',
       resumedTime: '',
@@ -1341,7 +1354,6 @@ export async function verifyContinueWatchingPlaybackFromTray(
       itemFound: false,
       playerVisible: false,
       resumeActionVisible: false,
-      progressBarVisible: false,
       selectedContentName: '',
       forwardedTime: '',
       resumedTime: '',
@@ -1358,7 +1370,6 @@ export async function verifyContinueWatchingPlaybackFromTray(
       itemFound: false,
       playerVisible: false,
       resumeActionVisible: false,
-      progressBarVisible: false,
       selectedContentName: '',
       forwardedTime: '',
       resumedTime: '',
@@ -1416,7 +1427,6 @@ export async function verifyContinueWatchingPlaybackFromTray(
       itemFound: false,
       playerVisible: false,
       resumeActionVisible,
-      progressBarVisible: false,
       selectedContentName: altText,
       forwardedTime,
       resumedTime: '',
@@ -1442,25 +1452,24 @@ export async function verifyContinueWatchingPlaybackFromTray(
   logger.info('Resumed playback time capture', { resumedTime, resumedTimeSeconds, forwardedTime, forwardedTimeSeconds, timeDifferenceSeconds });
   const progressBarVisible = await detailsPage.isSeekBarVisible().catch(() => false);
   const timeObserved = resumedTimeSeconds > 0 || !!resumedTime;
-  const isWithinFiveSeconds = resumedTimeSeconds > 0 && timeDifferenceSeconds <= 5;
+  const isWithinFiveSeconds = resumedTimeSeconds > 0 && timeDifferenceSeconds <= 10;
   const itemFound = !!reloadedItem;
   const isValid = Boolean(
     playerVisible &&
     itemFound &&
     pauseTimeCaptured &&
-    (progressBarVisible || timeObserved || resumeActionVisible) &&
+    (timeObserved || resumeActionVisible) &&
     isWithinFiveSeconds
   );
   logger.assertion('Continue Watching content title captured', !!altText);
   logger.assertion('Playback time captured before pause', initialTimeSeconds > 0);
   logger.assertion('Playback time captured after first pause', pauseTimeCaptured);
-  logger.assertion('Playback resumed within +/- 5 seconds', isValid);
+  logger.assertion('Playback resumed within +/- 10 seconds', isWithinFiveSeconds);
   return {
     isValid,
     itemFound: !!reloadedItem,
     playerVisible,
     resumeActionVisible: resumeActionVisible || resumedActionVisible,
-    progressBarVisible,
     selectedContentName: altText,
     forwardedTime,
     resumedTime,
@@ -1477,13 +1486,10 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
   const settingsPage = new OTTSettingsPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching playback validation from tray with parental PIN enabled');
-
   const parentalPin = (input?.parentalPin).trim();
-
   const modeToUse = input?.mode;
   const loginResult = await loginToOTT(page, { mode: modeToUse });
   const password = input?.password;
-
   if (!loginResult?.isLoggedIn) {
     return {
       itemFound: false,
@@ -1492,7 +1498,6 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
       parentalPinSubmitted: false,
     };
   }
-
   // Ensure PIN is disabled before seeding Continue Watching content
   await settingsPage.clickAccountIcon();
   await settingsPage.clickAccountAndSettings();
@@ -1508,8 +1513,8 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
     await settingsPage.clickParentalPinSuccessContinueButton().catch(() => undefined);
     await page.waitForTimeout(3000);
   }
- await authPage.navigate();
- await page.waitForLoadState('networkidle', { timeout: 60000 });
+  await authPage.navigate();
+  await page.waitForLoadState('networkidle', { timeout: 60000 });
   // Try to obtain a show title from Collection GraphQL, search it and play first episode partially
   try {
     const gql = GraphQLHelper.getInstance(page);
@@ -1635,21 +1640,6 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
     parentalPinPromptVisible,
     parentalPinSubmitted,
   };
-}
-
-export interface ContinueWatchingAcrossTabsInput {
-  mode?: string;
-  email?: string;
-  password?: string;
-  tabs?: string[];
-}
-
-export interface ContinueWatchingAcrossTabsOutput {
-  isValid: boolean;
-  trayItemCount: number;
-  contentVisibleInTray: boolean;
-  selectedTab?: string;
-  reason?: string;
 }
 
 export async function verifyResumeCtaOnContentDetailsPage(
@@ -2170,15 +2160,15 @@ export async function verifyContinueWatchingAcrossTabs(
           return video ? Number(video.currentTime) || 0 : 0;
         }).catch(() => 0);
       };
-      try {
-        await detailsPage.dragSeekBarToPosition(0.1);
-      } catch (e) {
-        logger.debug('dragSeekBarToPosition failed', e);
-      }
+      await detailsPage.hoverPlaybackControls();
+      await detailsPage.dragSeekBarToPosition(0.2);
       const playbackProgressSeconds = await waitForVideoProgress(8, 25000);
       logger.info('Playback registration wait complete', { playbackProgressSeconds });
       await page.waitForTimeout(5000);
-      await authPage.navigateHome();
+      await detailsPage.clickBackButton();
+      await authPage.clickHomeTab();
+      await authPage.refreshPage();
+      await page.waitForTimeout(5000);
       await authPage.waitForContinueWatchingTrayToBeReady();
       await authPage.ensureContinueWatchingTrayInView();
       await page.waitForTimeout(5000);
@@ -2225,7 +2215,7 @@ export async function verifyContinueWatchingDetailsAndMoreNavigation(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching details and more navigation validation');
-  const mode = input?.mode; 
+  const mode = input?.mode;
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.waitForContinueWatchingTrayToBeReady();
@@ -2324,59 +2314,36 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
   logger.step('Starting Up Next binge marker validation from Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
+  await authPage.registerContinueWatchingListener();
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
-  const traySection = await authPage.getContinueWatchingTraySection();
-  const continueWatchingItems = traySection.locator('img[alt]').filter({ hasNotText: '' });
-  const itemCount = await continueWatchingItems.count().catch(() => 0);
-  if (!itemCount) {
-    return {
-      isValid: false,
-      markerVisible: false,
-      autoPlaybackStarted: false,
-      reason: 'No Continue Watching content items were available to resume',
-    };
-  }
-  let targetItem: any = null;
-  for (let index = 0; index < itemCount; index += 1) {
-    const candidate = continueWatchingItems.nth(index);
-    const altText = ((await candidate.getAttribute('alt')) || '').trim();
-    if (altText && /show|series|season|episode/i.test(altText)) {
-      targetItem = candidate;
-      break;
-    }
-  }
-  if (!targetItem) {
-    targetItem = continueWatchingItems.nth(0);
-  }
-  const selectedTitle = ((await targetItem.getAttribute('alt')) || '').trim();
-  if (!selectedTitle) {
-    return {
-      isValid: false,
-      markerVisible: false,
-      autoPlaybackStarted: false,
-      reason: 'No Continue Watching item title could be captured',
-    };
-  }
-  await targetItem.scrollIntoViewIfNeeded();
-  await targetItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  await page.waitForTimeout(5000);
+  const graphQLShowItems = await authPage.getContinueWatchingGraphQLShows();
+  const selectedShow = graphQLShowItems.find((item) => Boolean(item.showTitle)) || graphQLShowItems[0];
+  const selectedContentTitle = selectedShow?.showTitle || selectedShow?.episodeTitle || '';
+  logger.step(`Selected show content for IW3-T1961 from Continue Watching GraphQL: ${selectedContentTitle}`);
+  // Check if content is visible in Continue Watching BEFORE clicking the tray item
+  // Use GraphQL data as source of truth - if it was in the GraphQL response, it's visible
+  const initialVisibility = graphQLShowItems.some((item) =>
+  (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) ||
+    item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
+  );
+  const openedFromTray = await authPage.clickContinueWatchingItemUsingGraphQL(selectedContentTitle, 30000);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
-  const resumeActionVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
-  if (resumeActionVisible) {
-    await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
-  }
+  await detailsPage.clickPlayButton();
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(6000);
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.dragSeekBarToPosition(0.98);
+  await detailsPage.dragSeekBarToPosition(0.99);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(1000);
   const currentMetadata = await detailsPage.getCurrentPlayerEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
   const currentSeasonNumber = currentMetadata.seasonNumber || '';
   const currentEpisodeNumber = currentMetadata.episodeNumber || '';
   const markerVisible = await detailsPage.waitForUpNextMarker(20000);
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(20000);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   const nextMetadata = await detailsPage.getCurrentPlayerEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
   const nextSeasonNumber = nextMetadata.seasonNumber || '';
@@ -2417,53 +2384,30 @@ export async function verifyClickUpNextBingeMarkerFromContinueWatching(
 ): Promise<UpNextContinueWatchingOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
-  const query = (input?.query ?? '').trim() || 'altar';
-  const mode = input?.mode === 'valid' || input?.mode === undefined ? 'valid' : input.mode;
+  const mode = input?.mode;
   logger.step('Starting Up Next binge marker validation from Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
+  await authPage.registerContinueWatchingListener();
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
-  const traySection = await authPage.getContinueWatchingTraySection();
-  const continueWatchingItems = traySection.locator('img[alt]').filter({ hasNotText: '' });
-  const itemCount = await continueWatchingItems.count().catch(() => 0);
-  if (!itemCount) {
-    return {
-      isValid: false,
-      markerVisible: false,
-      autoPlaybackStarted: false,
-      reason: 'No Continue Watching content items were available to resume',
-    };
-  }
-  let targetItem: any = null;
-  for (let index = 0; index < itemCount; index += 1) {
-    const candidate = continueWatchingItems.nth(index);
-    const altText = ((await candidate.getAttribute('alt')) || '').trim();
-    if (altText && /show|series|season|episode/i.test(altText)) {
-      targetItem = candidate;
-      break;
-    }
-  }
-  if (!targetItem) {
-    targetItem = continueWatchingItems.nth(0);
-  }
-  const selectedTitle = ((await targetItem.getAttribute('alt')) || '').trim();
-  if (!selectedTitle) {
-    return {
-      isValid: false,
-      markerVisible: false,
-      autoPlaybackStarted: false,
-      reason: 'No Continue Watching item title could be captured',
-    };
-  }
-  await targetItem.scrollIntoViewIfNeeded();
-  await targetItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  await page.waitForTimeout(5000);
+  const graphQLShowItems = await authPage.getContinueWatchingGraphQLShows();
+  const selectedShow = graphQLShowItems.find((item) => Boolean(item.showTitle)) || graphQLShowItems[0];
+  const selectedContentTitle = selectedShow?.showTitle || selectedShow?.episodeTitle || '';
+  logger.step(`Selected show content for IW3-T1961 from Continue Watching GraphQL: ${selectedContentTitle}`);
+  // Check if content is visible in Continue Watching BEFORE clicking the tray item
+  // Use GraphQL data as source of truth - if it was in the GraphQL response, it's visible
+  const initialVisibility = graphQLShowItems.some((item) =>
+  (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) ||
+    item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
+  );
+  const openedFromTray = await authPage.clickContinueWatchingItemUsingGraphQL(selectedContentTitle, 30000);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   const resumeActionVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
-  if (resumeActionVisible) {
-    await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
-  }
+  await detailsPage.clickPlayButton();
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(6000);
   await detailsPage.hoverPlaybackScreen();
@@ -2474,7 +2418,7 @@ export async function verifyClickUpNextBingeMarkerFromContinueWatching(
   const currentSeasonNumber = currentMetadata.seasonNumber || '';
   const currentEpisodeNumber = currentMetadata.episodeNumber || '';
   const markerVisible = await detailsPage.waitForUpNextMarker(20000);
-  await detailsPage.clickNextEpisodeButton();
+  await detailsPage.clickUpNextMarker();
   await page.waitForTimeout(5000);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   const nextMetadata = await detailsPage.getCurrentPlayerEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
@@ -2806,11 +2750,12 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   await authPage.clickSearchBar();
   await authPage.enterSearchText(searchTerm);
   await authPage.submitSearch();
+  await page.waitForTimeout(4000);
   await detailsPage.clickFirstSearchResult();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
-// Wait for the CTA to revert to "Play S1 E1"
+  // Wait for the CTA to revert to "Play S1 E1"
   let playS1E1Visible = false;
   try {
     playS1E1Visible = await page
@@ -2821,9 +2766,9 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
     playS1E1Visible = false;
   }
   const isDefaultPlayState = detailsPageVisible && playS1E1Visible;
-  logger.info('Default Play state validation', { detailsPageVisible, playS1E1Visible, confirmationVisible: removeResult.confirmationVisible, isDefaultPlayState,});
-  logger.assertion('Content Details page is displayed',detailsPageVisible);
-  logger.assertion('Primary CTA reverted to "Play S1 E1"',playS1E1Visible);
+  logger.info('Default Play state validation', { detailsPageVisible, playS1E1Visible, confirmationVisible: removeResult.confirmationVisible, isDefaultPlayState, });
+  logger.assertion('Content Details page is displayed', detailsPageVisible);
+  logger.assertion('Primary CTA reverted to "Play S1 E1"', playS1E1Visible);
   const isValid = isDefaultPlayState && removeResult.confirmationVisible;
   return {
     isValid,

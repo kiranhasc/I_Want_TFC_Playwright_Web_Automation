@@ -831,8 +831,7 @@ export interface VerifySubtitleSynchronizationOutput {
 }
 
 export interface PlayFreeAssetInput {
-    email?: string;
-    password?: string;
+    mode?: string;
 }
 
 export interface PlayFreeAssetOutput {
@@ -5666,39 +5665,20 @@ export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { m
   };
 }
 
-export interface PlayFreeAssetInput {
-    mode?: string;
-}
-
-export interface PlayFreeAssetOutput {
-    isLoggedIn: boolean;
-    isPlayableContentDetected: boolean;
-    playAttempted: boolean;
-    playbackStarted: boolean;
-}
-
-
-export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Promise<PlayFreeAssetOutput> {    
-  const playbackPage = new OTTPlaybackPage(page);
-    const loginResult = await loginToOTT(page, {
-        mode: input?.mode,
-    });
-    const isLoggedIn = loginResult.isLoggedIn;
-    logger.assertion('User is logged in', isLoggedIn);
-    await playbackPage.isHomeScreenReady();
+export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Promise<PlayFreeAssetOutput> {
+    const playbackPage = new OTTPlaybackPage(page);
+    const loginResult = await loginToOTT(page, { mode: input?.mode });
+    logger.step('Starting free asset playback flow');
+    const isLoggedIn = await playbackPage.isHomeScreenReady();
     logger.assertion('Free user loaded the home screen', isLoggedIn);
-
     const isPlayableContentDetected = await playbackPage.hoverFirstPlayableContentCard();
     logger.assertion('Playable free content detected', isPlayableContentDetected);
-
     const playAttempted = isPlayableContentDetected
         ? await playbackPage.clickFirstAvailablePlayButton()
         : false;
     logger.assertion('Play button attempted on detected content', playAttempted);
-
     const playbackStarted = await playbackPage.isPlaybackStarted();
     logger.assertion('Playback started for free content', playbackStarted);
-
     return {
         isLoggedIn,
         isPlayableContentDetected,

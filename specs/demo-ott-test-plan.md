@@ -4197,6 +4197,25 @@ screen.
 11. Scroll through each page until the mid-rail banner ad is displayed.
 12. Observe the network requests generated for the banner ad.
    - **Expect:** The mid-rail banner advertisements displayed across all landing pages should be from this URL https://securepubads.g.doubleclick.net/gampad/ads.
+
+### 7.2 IW3-T2133 Verify Mid rail Ad banner auto refreshes after every 30 sec
+
+**File:** `tests/home/landing-page.spec.ts`
+
+**Steps**
+
+1. **Precondition:** Mid-rail banner ads are configured and enabled in the test environment.
+2. Open the browser.
+3. Enter the URL (https://iwanttfc.com/).
+4. Log in with valid user credentials.
+5. Navigate through the **Home**, **Shows**, **Movies**, **GMA**, and **Search** pages.
+6. Scroll until a **Mid-rail Banner Ad** is displayed.
+7. Open **Charles Proxy** and monitor the **Google Publisher Ads (pubads)** API requests.
+8. Observe the ad for at least **30 seconds**.
+9. Verify the network requests in Charles Proxy.
+   - **Expect:** The **Mid-rail Banner Ad** should automatically refresh every **30 seconds**.
+   - **Expect:** A new **Google Publisher Ads (pubads)** API request should be triggered for each ad refresh.
+
 #### Landing_page IW3-T1890 [WEB] - Verify that the details page is displayed upon clicking the "info" icon in the carousel.
 
 **File:** `tests/home/landing_page.spec.ts`

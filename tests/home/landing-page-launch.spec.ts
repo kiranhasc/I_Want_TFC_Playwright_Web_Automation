@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { loginWithTVProvider, verifyTop10TagOnContentThumbnail , verifyMidRailAds, verifyMidRailAdAutoRefresh} from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithTVProvider, verifyMidRailAds, verifyTop10TagOnContentThumbnail, verifyMidRailAdAutoRefresh } from '../../src/businessFunction/ott-auth-bfs';
 import { verifyMidRailAdSpacingAcrossTabs } from '../../src/businessFunction/ott-playback-bfs';
 import { navigateToMovieDetailsFromLandingPage, verifyDetailsPageFromCarouselInfoIcon, verifySubscriptionPageFromCarouselSubscribeCta } from '../../src/businessFunction/ott-landing-bfs';
 import { verifyBecauseYouWatchedRail, verifyBecauseYouWatchedRailGenreUpdate, verifyLandingPageRelatedContentTraysOutsidePH, verifyMidRailBannerAdlRefresh, verifyMidRailBannerAdlVisibility, verifyTop10TagOnSearchResults, verifyTop10TagOnWatchlist } from '../../src/businessFunction/ott-landing-bfs';
@@ -39,7 +39,6 @@ test.describe('Home Page Landing', () => {
             refreshWindowMs: data.refreshWindowMs,
             minimumRefreshRequests: data.minimumRefreshRequests,
         });
-
         expect(result.isLoggedIn).toBe(true);
         expect(result.tabResults.length).toBe(3);
         for (const tabResult of result.tabResults) {

@@ -110,7 +110,7 @@ test.describe('Content details navigation', () => {
   test('@Medium IW3-T1909: Verify that user redirect back to detail page post killing/closing the player', async ({ page }) => {
     const data = testCaseData['tc-disc-004-player-close-return'] as Record<string, any>;
     const result = await verifyPlayerCloseReturnsToDetailsFlow(page, {
-      mode: data?.mode ,
+      mode: data?.mode,
       query: data?.query,
     });
     expect(result.isLoggedIn).toBe(true);
@@ -218,11 +218,10 @@ test.describe('Content details navigation', () => {
     const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
     const result = await verifyPlaybackResumeFlow(page, {
       query: data.query,
-      mode:data.mode,
+      mode: data.mode,
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
     });
-
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialPlayed).toBeTruthy();
     expect(result.resumed).toBeTruthy();

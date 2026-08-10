@@ -34,6 +34,16 @@
     "tc-ad-001-mid-rail-spacing": {
         "mode": "freeUser"
     },
+    "tc-ad-002-mid-rail-gam": {
+        "mode": "freeUser",
+        "expectedAdHost": "securepubads.g.doubleclick.net"
+    },
+    "tc-ad-003-mid-rail-refresh": {
+        "mode": "freeUser",
+        "expectedAdHost": "securepubads.g.doubleclick.net",
+        "refreshWindowMs": 35000,
+        "minimumRefreshRequests": 1
+    },
     "tc-disc-001-show-details-navigation": {
         "mode": "valid",
         "expectedYear": "2026",

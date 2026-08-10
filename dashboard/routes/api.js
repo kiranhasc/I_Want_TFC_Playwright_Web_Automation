@@ -1,6 +1,76 @@
 const express = require('express');
 const fs = require('fs');
 const { PROJECTS_MANIFEST } = require('../lib/paths');
+const { askAboutHistory } = require('../lib/chat');
+
+// A chat message is free text a human typed, not an id used in a file path
+// or object-key lookup — the injection surface isSafeId guards against
+// doesn't apply here. What matters is bounding size (a very long message
+// could balloon token cost) and shape (history must be a real array of
+// {role, content} turns, not arbitrary JSON handed straight to a prompt).
+const MAX_CHAT_MESSAGE_LENGTH = 2000;
+
+function validateChatBody(body) {
+  if (typeof body?.message !== 'string' || !body.message.trim()) return 'message is required';
+  if (body.message.length > MAX_CHAT_MESSAGE_LENGTH) return `message is too long (max ${MAX_CHAT_MESSAGE_LENGTH} characters)`;
+  if (body.history !== undefined) {
+    if (!Array.isArray(body.history)) return 'history must be an array';
+    for (const turn of body.history) {
+      if (typeof turn?.content !== 'string' || (turn.role !== 'user' && turn.role !== 'assistant')) {
+        return 'history entries must be { role: "user"|"assistant", content: string }';
+      }
+    }
+  }
+  return null;
+}
+
+// `env` and `project` end up as literal arguments in a shell-spawned
+// `npx playwright test` command (see lib/processRunner.js), so they must be
+// checked against the actual configured values before they ever reach
+// spawn() — not just for injection, but so a typo gets a clean 400 instead
+// of a confusing Playwright CLI failure three layers down.
+function loadManifest() {
+  return JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'));
+}
+
+function validateEnv(env, manifest) {
+  const allowed = manifest.environments.map((e) => e.value);
+  return allowed.includes(env) ? null : `env must be one of: ${allowed.join(', ')}`;
+}
+
+function validateProject(project, manifest) {
+  if (!project) return null; // optional — omitted means "all projects"
+  const allowed = manifest.projects.map((p) => p.name);
+  return allowed.includes(project) ? null : `project must be one of: ${allowed.join(', ')}`;
+}
+
+// --grep takes a regex, so it legitimately needs characters like ()|[]$^ —
+// it can't be locked down to alphanumerics. What it must never contain is a
+// newline or NUL byte, which is enough to keep it a single well-formed CLI
+// argument rather than something that could smuggle extra tokens in.
+function validateGrep(grep) {
+  if (!grep) return null;
+  if (grep.length > 300) return 'grep is too long';
+  if (/[\0\r\n]/.test(grep)) return 'grep contains invalid characters';
+  return null;
+}
+
+/**
+ * A route id (:runId, :testId) is used to build a file path or an object-key
+ * lookup, never rendered or shell-escaped, so the only real threats are path
+ * traversal (via ".." or a path separator) and prototype pollution (via
+ * "__proto__"/"constructor"). Both are cheap to rule out up front.
+ */
+function isSafeId(id) {
+  return typeof id === 'string' && /^[\w-]+$/.test(id) && id !== '__proto__' && id !== 'constructor';
+}
+
+// Registered per-param via router.param below, so `value`/`name` come from
+// Express's own param-dispatch signature.
+function requireSafeId(req, res, next, value, name) {
+  if (!isSafeId(value)) return res.status(400).json({ error: `Invalid ${name}` });
+  next();
+}
 
 /**
  * @param {import('../lib/runManager')} runManager
@@ -8,14 +78,15 @@ const { PROJECTS_MANIFEST } = require('../lib/paths');
  */
 module.exports = function createApiRouter(runManager, autoUpdater) {
   const router = express.Router();
+  router.param('runId', requireSafeId);
+  router.param('testId', requireSafeId);
 
   router.get('/auto-update/status', (req, res) => {
     res.json(autoUpdater ? autoUpdater.getStatus() : { phase: 'idle' });
   });
 
   router.get('/projects', (req, res) => {
-    const manifest = JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'));
-    res.json(manifest);
+    res.json(loadManifest());
   });
 
   router.get('/runs', (req, res) => {
@@ -32,13 +103,40 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
   router.post('/runs', (req, res) => {
     const { env, project, grep } = req.body || {};
     if (!env) return res.status(400).json({ error: 'env is required' });
+    const manifest = loadManifest();
+    const error =
+      validateEnv(env, manifest) || validateProject(project, manifest) || validateGrep(grep);
+    if (error) return res.status(400).json({ error });
     const runId = runManager.start({ env, project, grep });
+    res.status(202).json({ runId });
+  });
+
+  // Kept above '/runs/:runId/rerun': both are 3-segment POST paths
+  // (runs/X/rerun), and Express resolves routes in registration order, so a
+  // literal 'last-failed' segment must be matched before ':runId' has the
+  // chance to swallow it.
+  router.post('/runs/last-failed/rerun', (req, res) => {
+    const { env, project } = req.body || {};
+    if (!env) return res.status(400).json({ error: 'env is required' });
+    const manifest = loadManifest();
+    const error = validateEnv(env, manifest) || validateProject(project, manifest);
+    if (error) return res.status(400).json({ error });
+    const runId = runManager.rerunLastFailed({ env, project });
     res.status(202).json({ runId });
   });
 
   router.post('/runs/:runId/stop', (req, res) => {
     const ok = runManager.stop(req.params.runId);
     if (!ok) return res.status(404).json({ error: 'Run not found' });
+    res.json({ ok: true });
+  });
+
+  // Kills only the currently-wedged module and continues with the rest of
+  // the queue — the alternative to /stop when the run isn't meant to end,
+  // just recover from one stuck module. See runManager.skipStalledJob.
+  router.post('/runs/:runId/skip-stalled', (req, res) => {
+    const ok = runManager.skipStalledJob(req.params.runId);
+    if (!ok) return res.status(400).json({ error: 'No stuck module to skip on this run right now' });
     res.json({ ok: true });
   });
 
@@ -82,6 +180,9 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
         rerun: Boolean(req.body?.rerun),
         // Provisional apply: kept only if the rerun comes back green.
         verify: Boolean(req.body?.verify),
+        // Required when the proposal has a high-severity risk (see risk.js)
+        // — a deliberate, separate signal from clicking Apply itself.
+        acknowledgeRisks: Boolean(req.body?.acknowledgeRisks),
       });
       res.json(result);
     } catch (err) {
@@ -92,6 +193,34 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
   router.post('/runs/:runId/tests/:testId/spot-fix/revert', (req, res) => {
     try {
       const result = runManager.revertSpotFix(req.params.runId, req.params.testId);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // (Re)generates the proactive plain-English run summary. Runs also get one
+  // automatically on completion (see runManager._generateRunSummaryAsync) —
+  // this is for regenerating it, or for runs that finished before the
+  // feature existed and so never got one.
+  router.post('/runs/:runId/summary', async (req, res) => {
+    try {
+      const summary = await runManager.generateRunSummaryNow(req.params.runId);
+      res.json(summary);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Conversational Q&A over run history — stateless on the server (the
+  // client resends prior turns as `history` each time), consistent with the
+  // rest of this API. Read-only: nothing here can write to a run or the
+  // working tree.
+  router.post('/chat', async (req, res) => {
+    const validationError = validateChatBody(req.body);
+    if (validationError) return res.status(400).json({ error: validationError });
+    try {
+      const result = await askAboutHistory(req.body.message, req.body.history || []);
       res.json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -132,13 +261,6 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
-  });
-
-  router.post('/runs/last-failed/rerun', (req, res) => {
-    const { env, project } = req.body || {};
-    if (!env) return res.status(400).json({ error: 'env is required' });
-    const runId = runManager.rerunLastFailed({ env, project });
-    res.status(202).json({ runId });
   });
 
   // Ingestion endpoint for dashboard/reporter/dashboard-reporter.js running inside a spawned job.

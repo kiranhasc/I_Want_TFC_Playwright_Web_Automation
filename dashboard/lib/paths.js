@@ -5,6 +5,10 @@ const REPO_ROOT = path.resolve(DASHBOARD_ROOT, '..');
 const DATA_DIR = path.join(DASHBOARD_ROOT, 'data');
 const RUNS_DIR = path.join(DATA_DIR, 'runs');
 const REPORTS_DIR = path.join(DATA_DIR, 'reports');
+// Per-run copies of test attachments (screenshot/trace/error-context), so a
+// run's evidence survives Playwright wiping test-results/ at the start of
+// its next invocation. See lib/artifactArchive.js.
+const ARTIFACTS_DIR = path.join(DATA_DIR, 'artifacts');
 const FRONTEND_DIST_DIR = path.join(DASHBOARD_ROOT, 'frontend', 'dist');
 const PROJECTS_MANIFEST = path.join(DASHBOARD_ROOT, 'config', 'projects.json');
 
@@ -31,6 +35,7 @@ const TRACE_VIEWER_DIR = resolveTraceViewerDir();
 // binds to localhost, to guard against path-traversal in the ?path= query.
 const ALLOWED_FILE_ROOTS = [
   path.join(REPO_ROOT, 'test-results'),
+  ARTIFACTS_DIR,
 ];
 
 module.exports = {
@@ -39,6 +44,7 @@ module.exports = {
   DATA_DIR,
   RUNS_DIR,
   REPORTS_DIR,
+  ARTIFACTS_DIR,
   FRONTEND_DIST_DIR,
   PROJECTS_MANIFEST,
   TRACE_VIEWER_DIR,

@@ -34,21 +34,45 @@ function DiffView({ edit }: { edit: SpotFixEdit }) {
   );
 }
 
-function RiskWarnings({ edits }: { edits: SpotFixEdit[] }) {
+function riskList(edits: SpotFixEdit[]) {
   // De-duplicate by risk id: the same warning across two edits reads as noise.
-  const risks = new Map(edits.flatMap((e) => e.risks.map((r) => [r.id, r])));
-  if (!risks.size) return null;
+  return [...new Map(edits.flatMap((e) => e.risks.map((r) => [r.id, r]))).values()];
+}
+
+function RiskWarnings({ edits }: { edits: SpotFixEdit[] }) {
+  const risks = riskList(edits);
+  if (!risks.length) return null;
+  const high = risks.filter((r) => r.severity === 'high');
+  const low = risks.filter((r) => r.severity !== 'high');
 
   return (
     <div className="spotfix-risks">
-      <div className="spotfix-risks-title">⚠ Review carefully before applying</div>
-      <ul>
-        {[...risks.values()].map((risk) => (
-          <li key={risk.id}>
-            <strong>{risk.label}.</strong> {risk.detail}
-          </li>
-        ))}
-      </ul>
+      {high.length > 0 && (
+        <>
+          <div className="spotfix-risks-title spotfix-risks-title-high">
+            ⛔ This changes what the test checks — cannot apply without confirming below
+          </div>
+          <ul>
+            {high.map((risk) => (
+              <li key={risk.id}>
+                <strong>{risk.label}.</strong> {risk.detail}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {low.length > 0 && (
+        <>
+          <div className="spotfix-risks-title">⚠ Review before applying</div>
+          <ul>
+            {low.map((risk) => (
+              <li key={risk.id}>
+                <strong>{risk.label}.</strong> {risk.detail}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
@@ -66,6 +90,7 @@ export function SpotFixPanel({
   const [proposal, setProposal] = useState<SpotFixProposal | null | undefined>(test.spotFix);
   const [busy, setBusy] = useState<'propose' | 'apply' | 'apply-rerun' | 'revert' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [riskAcknowledged, setRiskAcknowledged] = useState(false);
 
   // A spot fix only makes sense for a code-level cause, and the server
   // enforces the same rule — this just avoids offering a button that would
@@ -75,6 +100,7 @@ export function SpotFixPanel({
   async function handlePropose() {
     setBusy('propose');
     setError(null);
+    setRiskAcknowledged(false);
     try {
       setProposal(await api.proposeSpotFix(runId, test.testId));
     } catch (err) {
@@ -88,7 +114,7 @@ export function SpotFixPanel({
     setBusy(rerun ? 'apply-rerun' : 'apply');
     setError(null);
     try {
-      const result = await api.applySpotFix(runId, test.testId, rerun, verify);
+      const result = await api.applySpotFix(runId, test.testId, rerun, verify, riskAcknowledged);
       setProposal((prev) =>
         prev
           ? { ...prev, applied: result.applied, reverted: null, verification: verify ? { status: 'pending' } : null }
@@ -132,6 +158,7 @@ export function SpotFixPanel({
 
   const applied = proposal?.applied;
   const verification = proposal?.verification;
+  const highRisk = proposal?.available ? riskList(proposal.edits).some((r) => r.severity === 'high') : false;
 
   return (
     <div className="spotfix-section">
@@ -184,7 +211,9 @@ export function SpotFixPanel({
           {verification && (
             <div className={`spotfix-verification is-${verification.status}`}>
               {verification.status === 'pending' && '⏳ Rerunning to check this fix — it will be undone automatically unless the test passes.'}
-              {verification.status === 'passed' && `✓ Verified — ${verification.detail}`}
+              {verification.status === 'passed' && highRisk &&
+                `✓ The rerun passed — but this edit changed what's expected, so that was never in doubt. It does not confirm the fix is correct. ${verification.detail || ''}`}
+              {verification.status === 'passed' && !highRisk && `✓ Verified — ${verification.detail}`}
               {verification.status === 'failed' && `✕ Not verified — ${verification.detail}`}
             </div>
           )}
@@ -200,24 +229,46 @@ export function SpotFixPanel({
               </button>
             </div>
           ) : (
-            <div className="spotfix-actions">
-              {/* Default action is the verified one: an AI fix is a guess until
-                  a rerun proves it, so keeping it should be the deliberate
-                  fallback rather than the easy path. */}
-              <button
-                className="primary-button"
-                onClick={() => handleApply(true, true)}
-                disabled={busy !== null}
-                title="Applies the fix, reruns the test, and undoes the change automatically unless it passes"
-              >
-                {busy === 'apply-rerun' ? 'Applying…' : 'Apply & verify'}
-              </button>
-              <button className="secondary-button" onClick={() => handleApply(false)} disabled={busy !== null}>
-                {busy === 'apply' ? 'Applying…' : 'Apply without rerunning'}
-              </button>
-              <button className="link-button" onClick={handlePropose} disabled={busy !== null}>
-                {busy === 'propose' ? 'Regenerating…' : 'Regenerate'}
-              </button>
+            <div className="spotfix-actions-wrap">
+              {highRisk && (
+                <label className="spotfix-risk-ack">
+                  <input
+                    type="checkbox"
+                    checked={riskAcknowledged}
+                    onChange={(e) => setRiskAcknowledged(e.target.checked)}
+                  />
+                  I've reviewed this — it changes the test's expectations rather than fixing the app, and I've
+                  confirmed that's the right call here, not a bug being hidden.
+                </label>
+              )}
+              <div className="spotfix-actions">
+                {/* Default action is the verified one: an AI fix is a guess until
+                    a rerun proves it, so keeping it should be the deliberate
+                    fallback rather than the easy path. Not a meaningful signal
+                    for a high-risk edit though — see the title/tooltip. */}
+                <button
+                  className="primary-button"
+                  onClick={() => handleApply(true, true)}
+                  disabled={busy !== null || (highRisk && !riskAcknowledged)}
+                  title={
+                    highRisk
+                      ? 'A passing rerun does not validate this edit — it will pass by construction. Confirm above before applying.'
+                      : 'Applies the fix, reruns the test, and undoes the change automatically unless it passes'
+                  }
+                >
+                  {busy === 'apply-rerun' ? 'Applying…' : 'Apply & verify'}
+                </button>
+                <button
+                  className="secondary-button"
+                  onClick={() => handleApply(false)}
+                  disabled={busy !== null || (highRisk && !riskAcknowledged)}
+                >
+                  {busy === 'apply' ? 'Applying…' : 'Apply without rerunning'}
+                </button>
+                <button className="link-button" onClick={handlePropose} disabled={busy !== null}>
+                  {busy === 'propose' ? 'Regenerating…' : 'Regenerate'}
+                </button>
+              </div>
             </div>
           )}
 

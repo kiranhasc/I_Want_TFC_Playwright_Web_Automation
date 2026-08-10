@@ -5,6 +5,7 @@ import { useDashboardSocket } from '../api/useDashboardSocket';
 import type { RunRecord } from '../api/types';
 import { StatusBadge } from '../components/StatusBadge';
 import { RunSummaryCharts } from '../components/RunSummaryCharts';
+import { RunSummaryCard } from '../components/RunSummaryCard';
 import { TestTable } from '../components/TestTable';
 import { CopyButton } from '../components/CopyButton';
 import { Confetti } from '../components/Confetti';
@@ -110,6 +111,18 @@ export function RunDetailPage() {
     }
   }
 
+  async function handleSkipStalled() {
+    setBusy(true);
+    try {
+      await api.skipStalledModule(run!.runId);
+      refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Could not skip the stuck module');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleRerun(scope: 'test' | 'file' | 'project' | 'all-failed', target?: string) {
     setBusy(true);
     try {
@@ -131,11 +144,17 @@ export function RunDetailPage() {
           <div>
             <strong>This run looks stuck.</strong> No test has reported since{' '}
             {new Date(run.stalledSince).toLocaleTimeString()}. The usual cause is the browser under test dying, which
-            leaves Playwright waiting on it forever — the run will not recover on its own.
+            leaves Playwright waiting on it forever — it will not recover on its own. Skip just the stuck module to
+            keep going with the rest, or stop the whole run.
           </div>
-          <button className="danger-button" onClick={handleStop} disabled={busy}>
-            {busy ? 'Stopping…' : 'Stop run'}
-          </button>
+          <div className="stalled-banner-actions">
+            <button className="secondary-button" onClick={handleSkipStalled} disabled={busy}>
+              {busy ? 'Working…' : 'Skip stuck module & continue'}
+            </button>
+            <button className="danger-button" onClick={handleStop} disabled={busy}>
+              {busy ? 'Stopping…' : 'Stop run'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -167,6 +186,8 @@ export function RunDetailPage() {
           )}
         </div>
       </div>
+
+      {!isActive && <RunSummaryCard run={run} onUpdated={refetch} />}
 
       {isActive && (
         <div className="card progress-card">

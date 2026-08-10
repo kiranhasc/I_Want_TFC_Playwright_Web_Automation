@@ -3,11 +3,13 @@ import './App.css';
 import { OverviewPage } from './pages/OverviewPage';
 import { RunHistoryPage } from './pages/RunHistoryPage';
 import { RunDetailPage } from './pages/RunDetailPage';
+import { ChatPage } from './pages/ChatPage';
 import { ConnectionBadge } from './components/ConnectionBadge';
 import { AutoUpdateBadge } from './components/AutoUpdateBadge';
 import { UpdateBanner } from './components/UpdateBanner';
 import { AppliedFixesBanner } from './components/AppliedFixesBanner';
 import { useTheme } from './hooks/useTheme';
+import igsLogo from './assets/igs-logo.webp';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -15,13 +17,15 @@ export default function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="sidebar-brand">
-          <span className="sidebar-logo">▶</span>
+        <NavLink to="/" end className="sidebar-brand" aria-label="IGS — go to homepage">
+          <span className="sidebar-logo-badge">
+            <img src={igsLogo} alt="IGS" className="sidebar-logo-img" />
+          </span>
           <span className="sidebar-title">
             I Want TFC v2
             <small>Playwright Dashboard</small>
           </span>
-        </div>
+        </NavLink>
 
         <nav className="sidebar-nav">
           <NavLink to="/" end className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
@@ -29,6 +33,9 @@ export default function App() {
           </NavLink>
           <NavLink to="/runs" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
             <span className="sidebar-link-icon">☰</span> Run history
+          </NavLink>
+          <NavLink to="/chat" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+            <span className="sidebar-link-icon">💬</span> Ask about history
           </NavLink>
         </nav>
 
@@ -56,6 +63,7 @@ export default function App() {
           <Route path="/" element={<OverviewPage />} />
           <Route path="/runs" element={<RunHistoryPage />} />
           <Route path="/runs/:runId" element={<RunDetailPage />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Routes>
       </main>
     </div>

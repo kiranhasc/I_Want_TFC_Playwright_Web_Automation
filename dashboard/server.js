@@ -60,6 +60,18 @@ try {
   console.error('[dashboard] could not backfill applied spot fixes:', err.message);
 }
 
+// Rebuild the SQLite history index (lib/db.js) from whatever run files are
+// on disk. Idempotent and cheap, and the only way the index recovers on a
+// fresh checkout, after dashboard.db is deleted, or after a version of the
+// dashboard that predates this index wrote run files it never knew about.
+try {
+  const { backfillFromDisk } = require('./lib/db');
+  const indexed = backfillFromDisk();
+  console.log(`[dashboard] history index ready (${indexed} run${indexed === 1 ? '' : 's'})`);
+} catch (err) {
+  console.error('[dashboard] could not build the history index:', err.message);
+}
+
 // Keep dashboard/config/projects.json in sync with playwright.config.ts on
 // every boot. Never let a sync failure block the server from starting.
 try {

@@ -92,4 +92,42 @@ function sweepOrphanedBrowsers(preExistingPids) {
   }
 }
 
-module.exports = { spawnPlaywrightJob, killJobTree };
+/**
+ * The true test count for a run BEFORE any job spawns — no browser launch,
+ * so this is fast (~1-2s even across every project).
+ *
+ * Needed because splitting "all projects" into one job per project (see
+ * runManager._allProjectJobSpecs) means the dashboard's own stats.total,
+ * left to accumulate from each job's own 'begin' event as before, would
+ * only reflect whichever modules have already started — showing a
+ * misleadingly small "total" for most of the run instead of the real
+ * grand total, which used to be known instantly because everything ran as
+ * one combined Playwright invocation. Asking Playwright to just list
+ * (never run) the same target this run is about to execute sidesteps that
+ * — it costs a few seconds up front in exchange for an accurate total for
+ * the entire run instead of one that only fills in as modules start.
+ *
+ * Returns null (never throws) on any failure — a run must still start even
+ * if this optional accuracy pass fails; callers fall back to the old
+ * incremental accumulation.
+ */
+function listTestCount({ env, grep }) {
+  const args = ['cross-env', `TEST_ENV=${env}`, 'playwright', 'test', '--list'];
+  if (grep) args.push('--grep', grep);
+  try {
+    const out = execSync(`npx ${args.join(' ')}`, {
+      cwd: REPO_ROOT,
+      shell: true,
+      encoding: 'utf-8',
+      timeout: 30000,
+      windowsHide: true,
+    });
+    const match = out.match(/Total:\s*(\d+)\s*tests?/);
+    return match ? Number(match[1]) : null;
+  } catch (err) {
+    console.error('[dashboard] could not pre-list test count (falling back to incremental total):', err.message);
+    return null;
+  }
+}
+
+module.exports = { spawnPlaywrightJob, killJobTree, listTestCount };

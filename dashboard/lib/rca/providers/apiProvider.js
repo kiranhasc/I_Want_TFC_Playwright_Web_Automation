@@ -32,7 +32,11 @@ async function callOpenAiCompatible(prompt, { baseUrl, apiKey, model, timeoutMs 
     body: JSON.stringify({
       model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
+      // As deterministic as the API allows — this is a code-generation task
+      // being checked against ground truth afterward (see locatorIndex.js),
+      // not creative writing, and cross-run/cross-model consistency matters
+      // more here than variety.
+      temperature: 0,
       ...(maxTokens ? { max_tokens: maxTokens } : {}),
     }),
     signal: AbortSignal.timeout(timeoutMs),
@@ -59,6 +63,7 @@ async function callAnthropic(prompt, { baseUrl, apiKey, model, timeoutMs = TIMEO
       model,
       max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
+      temperature: 0,
     }),
     signal: AbortSignal.timeout(timeoutMs),
   });

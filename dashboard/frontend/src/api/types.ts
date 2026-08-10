@@ -1,6 +1,10 @@
 export type TestStatus = 'running' | 'passed' | 'failed' | 'skipped' | 'timedOut' | 'interrupted';
 export type RunStatus = 'queued' | 'running' | 'passed' | 'failed' | 'stopped';
-export type JobStatus = 'queued' | 'running' | 'passed' | 'failed' | 'stopped';
+// 'stalled' means the job was killed for going silent past the stall
+// threshold rather than finishing on its own (see runManager.skipStalledJob)
+// — the queue still moved on to the next module, but this one's own results
+// are incomplete/unknown, distinct from a normal 'failed' exit.
+export type JobStatus = 'queued' | 'running' | 'passed' | 'failed' | 'stopped' | 'stalled';
 
 export interface TestAttachment {
   name: string;
@@ -34,11 +38,18 @@ export interface DiffRow {
   text: string;
 }
 
-/** A change that would make the test pass without fixing the cause. */
+/**
+ * A change that would make the test pass without fixing the cause.
+ * 'high' means it defeats the test's purpose outright (assertion rewritten,
+ * removed, or the test skipped) — applying it requires explicit
+ * acknowledgement, and a passing verification rerun does not vouch for it
+ * (an edit like this is reverse-engineered to pass by construction).
+ */
 export interface SpotFixRisk {
   id: string;
   label: string;
   detail: string;
+  severity?: 'high' | 'low';
 }
 
 export interface SpotFixEdit {
@@ -153,6 +164,13 @@ export interface RunStats {
   running: number;
 }
 
+/** Proactive plain-English summary of one run's results, generated automatically on completion. */
+export interface RunSummary {
+  text: string;
+  model: string;
+  generatedAt: string;
+}
+
 export interface RunRecord {
   runId: string;
   createdAt: string;
@@ -167,6 +185,18 @@ export interface RunRecord {
    * Cleared if events resume.
    */
   stalledSince?: string | null;
+  aiSummary?: RunSummary | null;
+}
+
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatReply {
+  reply: string;
+  model: string;
+  generatedAt: string;
 }
 
 export interface ProjectsManifest {

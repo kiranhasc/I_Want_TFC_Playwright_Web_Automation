@@ -1,11 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { RUNS_DIR, REPORTS_DIR, REPO_ROOT } = require('./paths');
-const { spawnPlaywrightJob, killJobTree } = require('./processRunner');
+const { RUNS_DIR, REPORTS_DIR, REPO_ROOT, ARTIFACTS_DIR, PROJECTS_MANIFEST } = require('./paths');
+const { spawnPlaywrightJob, killJobTree, listTestCount } = require('./processRunner');
 const { analyzeTest: runRcaAnalysis } = require('./rca');
 const { proposeSpotFix, applySpotFix, revertSpotFix, registry: spotFixRegistry } = require('./spotfix');
+const { assessRisks, hasHighRisk, languageRisk } = require('./spotfix/risk');
 const { KeepAwake } = require('./keepAwake');
+const { archiveAttachments } = require('./artifactArchive');
+const { syncRun, deleteRunFromIndex } = require('./db');
+const { generateRunSummary } = require('./runSummary');
 
 const FAILURE_STATUSES = new Set(['failed', 'timedOut', 'interrupted']);
 
@@ -14,6 +18,11 @@ const FAILURE_STATUSES = new Set(['failed', 'timedOut', 'interrupted']);
 // test.setTimeout), hence a default well clear of that.
 const STALL_THRESHOLD_MS = Number(process.env.DASHBOARD_STALL_TIMEOUT_MS) || 10 * 60 * 1000;
 const STALL_AUTO_STOP = process.env.DASHBOARD_STALL_ACTION === 'stop';
+// 'skip' kills only the wedged job and continues with the next queued
+// project/module — the whole point being a browser dying on one module
+// doesn't have to cost every module after it. 'stop' (above) remains the
+// stronger, kill-everything option for when that's actually what's wanted.
+const STALL_AUTO_SKIP = process.env.DASHBOARD_STALL_ACTION === 'skip';
 
 /**
  * Playwright's reporter API gives test.location.file as an absolute path.
@@ -77,12 +86,45 @@ class RunManager {
 
   _saveRun(run) {
     fs.writeFileSync(this._runFilePath(run.runId), JSON.stringify(run, null, 2));
+    // The run JSON file is still the single source of truth (read back by
+    // loadRun/listRuns exactly as before) — this just keeps the SQLite
+    // history index (db.js) from drifting out of sync with it. Best-effort:
+    // syncRun never throws, so an indexing hiccup can never break a run.
+    syncRun(run);
+  }
+
+  /**
+   * Recomputes every stored spot-fix edit's risks from its oldCode/newCode on
+   * every read, rather than trusting whatever was persisted.
+   *
+   * risk.js's rule set (and what counts as 'high' severity) can change after
+   * a proposal was already generated and saved to disk — exactly what
+   * happened today: a proposal saved before 'severity' existed still reads
+   * back with risks that have no severity, so the apply-time guard silently
+   * never triggers for it. Recomputing is cheap (a few regexes over a
+   * handful of KB) and means a run's spot-fix data can never go stale
+   * relative to the code guarding it.
+   */
+  _healSpotFixRisks(run) {
+    for (const test of Object.values(run.tests || {})) {
+      const spotFix = test.spotFix;
+      const proposalHedge = languageRisk(spotFix?.explanation);
+      for (const edit of spotFix?.edits || []) {
+        if (typeof edit.oldCode === 'string' && typeof edit.newCode === 'string') {
+          const risks = assessRisks({ oldCode: edit.oldCode, newCode: edit.newCode });
+          const hedge = proposalHedge || languageRisk(edit.reason);
+          if (hedge) risks.push(hedge);
+          edit.risks = risks;
+        }
+      }
+    }
+    return run;
   }
 
   loadRun(runId) {
     const file = this._runFilePath(runId);
     if (!fs.existsSync(file)) return null;
-    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    return this._healSpotFixRisks(JSON.parse(fs.readFileSync(file, 'utf-8')));
   }
 
   listRuns(limit = 20) {
@@ -123,6 +165,10 @@ class RunManager {
     fs.rmSync(this._runFilePath(runId), { force: true });
     // The Playwright json reporter writes one file per dashboard run.
     fs.rmSync(path.join(REPORTS_DIR, `${runId}.json`), { force: true });
+    // This run's archived attachments (see artifactArchive.js) — otherwise
+    // deleted runs would leak screenshots/traces on disk forever.
+    fs.rmSync(path.join(ARTIFACTS_DIR, runId), { recursive: true, force: true });
+    deleteRunFromIndex(runId);
 
     this.activeRuns.delete(runId);
     this.lastEventAt.delete(runId);
@@ -168,17 +214,71 @@ class RunManager {
       status: 'queued',
       stats: { total: 0, passed: 0, failed: 0, skipped: 0, running: 0 },
       tests: {},
+      // True once stats.total reflects the REAL grand total rather than
+      // however many modules' 'begin' events have arrived so far — see
+      // start()/rerun() (which set it) and ingestEvent (which respects it).
+      totalKnownUpfront: false,
     };
     this._saveRun(run);
     this.activeRuns.set(run.runId, run);
     return run;
   }
 
-  /** Manual run trigger from the "New Run" form. */
+  /**
+   * Manual run trigger from the "New Run" form.
+   *
+   * A specific project is still one job — nothing to split. "All projects"
+   * used to also be one job, with Playwright itself sequencing through every
+   * project inside that single process. That made a stall unrecoverable
+   * except by ending the whole run: the dashboard's own job queue (and so
+   * skipStalledJob) only ever saw ONE job, with no next entry to advance to,
+   * no matter how many of the real projects had already finished. Splitting
+   * "all projects" into one dashboard job per project — same grouping
+   * rerun() already uses — is what actually makes "skip the stuck module and
+   * continue" mean something for the common case (a fresh run, not just a
+   * rerun of failures).
+   *
+   * That splitting has its own side effect worth guarding against: stats.total
+   * used to be known instantly (one combined Playwright invocation reports
+   * its true total on its single 'begin' event), but split across N jobs it
+   * would otherwise only grow as each module's own job starts, showing a
+   * misleadingly small total for most of the run. listTestCount asks
+   * Playwright to list (never run) the same target up front so the real
+   * total is known before the first module even starts.
+   */
   start({ env, project, grep }) {
     const run = this._newRun({ type: 'manual', env, project: project || null, grep: grep || null, sourceRunId: null });
-    this._runJobQueue(run, [{ project: project || null, targets: [] }], { env, grep });
+    const jobSpecs = project ? [{ project, targets: [] }] : this._allProjectJobSpecs();
+
+    if (!project) {
+      const total = listTestCount({ env, grep });
+      if (total != null) {
+        run.stats.total = total;
+        run.totalKnownUpfront = true;
+        this._saveRun(run);
+        this.broadcast({ type: 'run-event', runId: run.runId, event: 'stats', payload: { stats: run.stats } });
+      }
+      // total === null: listTestCount already logged why; fall back to the
+      // old incremental behavior rather than blocking the run on this.
+    }
+
+    this._runJobQueue(run, jobSpecs, { env, grep });
     return run.runId;
+  }
+
+  /** One job spec per configured project, in manifest order. */
+  _allProjectJobSpecs() {
+    let manifest;
+    try {
+      manifest = JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'));
+    } catch {
+      // Manifest unreadable — fall back to the old single-job behavior
+      // rather than failing the run outright.
+      return [{ project: null, targets: [] }];
+    }
+    const projects = manifest.projects || [];
+    if (!projects.length) return [{ project: null, targets: [] }];
+    return projects.map((p) => ({ project: p.name, targets: [] }));
   }
 
   /** Convenience shortcut: rerun via Playwright's own --last-failed (immediately-preceding CLI run only). */
@@ -225,6 +325,13 @@ class RunManager {
       scope,
       target: target || null,
     });
+    // Already known exactly — targetTests is the literal list of tests about
+    // to be rerun, one dashboard-job-queue entry per project it spans. No
+    // need for a listTestCount pass here (unlike start()): unlike "all
+    // projects", where the true count isn't known until Playwright itself
+    // resolves it, a rerun's total IS just this length, for free.
+    run.stats.total = targetTests.length;
+    run.totalKnownUpfront = true;
     this._runJobQueue(run, jobSpecs, { env: source.trigger.env });
     return run.runId;
   }
@@ -240,6 +347,47 @@ class RunManager {
     run.status = 'stopped';
     this._saveRun(run);
     this.broadcast({ type: 'run-status', runId, status: 'stopped' });
+    return true;
+  }
+
+  /**
+   * Kills only the currently-wedged job and lets the queue continue with the
+   * next module — the recovery path for a run that is "stuck between
+   * modules" rather than genuinely needing to stop altogether.
+   *
+   * Deliberately does NOT touch `run.status`. stop() halts the whole queue by
+   * setting run.status = 'stopped', which runNext (in _runJobQueue) checks
+   * before spawning anything further. Leaving that alone here means runNext
+   * behaves exactly as it already does for a job that crashed on its own —
+   * its 'close' handler unconditionally advances to the next job regardless
+   * of exit code — so killing the wedged process is enough to make the
+   * existing queueing logic pick up and continue on its own; nothing about
+   * _runJobQueue itself needs to change.
+   */
+  skipStalledJob(runId) {
+    const run = this.activeRuns.get(runId);
+    if (!run || run.status !== 'running') return false;
+    const runningJob = run.jobs.find((j) => j.status === 'running');
+    if (!runningJob) return false;
+    const active = this.activeJobs.get(runningJob.jobId);
+    if (!active) return false;
+
+    // Set BEFORE killing: the 'close' handler only fills in a status when it
+    // finds the job still 'running' (see stop() using the same pattern), so
+    // this is what keeps the job recorded as stalled rather than a plain
+    // 'failed' — the record should say what actually happened.
+    runningJob.status = 'stalled';
+    runningJob.finishedAt = new Date().toISOString();
+    // Prevents the next 60s stall-check tick from immediately re-flagging
+    // this run before the next module's process has had a chance to spawn
+    // and emit its own first event.
+    this.lastEventAt.set(runId, Date.now());
+    run.stalledSince = null;
+    this._saveRun(run);
+    this.broadcast({ type: 'job-status', runId, jobId: runningJob.jobId, status: 'stalled' });
+    this.broadcast({ type: 'run-stalled', runId, stalledSince: null });
+
+    killJobTree(active.child);
     return true;
   }
 
@@ -265,7 +413,11 @@ class RunManager {
         return;
       }
       if (index >= jobSpecs.length) {
-        const finalStatus = run.jobs.some((j) => j.status === 'failed')
+        // A 'stalled' module counts as a failure for the run's own headline
+        // status, same as 'failed' — the run did continue past it (that's
+        // the whole point of skipStalledJob), but that module's results are
+        // still incomplete/unknown, which is not a 'passed' run.
+        const finalStatus = run.jobs.some((j) => j.status === 'failed' || j.status === 'stalled')
           ? 'failed'
           : run.jobs.some((j) => j.status === 'stopped')
             ? 'stopped'
@@ -278,6 +430,9 @@ class RunManager {
         this.keepAwake.release();
         // Keep or roll back any spot fix whose verification rerun this was.
         this._resolvePendingVerification(run);
+        // A stopped run's data is a partial/interrupted snapshot, not a
+        // meaningful result to summarize — only passed/failed runs qualify.
+        if (finalStatus === 'passed' || finalStatus === 'failed') this._generateRunSummaryAsync(run.runId);
         return;
       }
 
@@ -356,7 +511,7 @@ class RunManager {
   async proposeSpotFix(runId, testId) {
     const { run, test } = this._getTest(runId, testId);
 
-    const proposal = await proposeSpotFix(test, test.rca);
+    const proposal = await proposeSpotFix(test, test.rca, { runId });
     test.spotFix = proposal;
     this._saveRun(run);
     this.broadcast({ type: 'run-event', runId, event: 'test-spot-fix', payload: { testId, spotFix: proposal } });
@@ -368,11 +523,23 @@ class RunManager {
    * after, which is the whole point of a spot fix — confirming the change
    * actually turns the test green.
    */
-  applySpotFix(runId, testId, { rerun = false, verify = false } = {}) {
+  applySpotFix(runId, testId, { rerun = false, verify = false, acknowledgeRisks = false } = {}) {
     const { run, test } = this._getTest(runId, testId);
     if (!test.spotFix) throw new Error('No spot-fix proposal exists for this test — generate one first');
     if (test.spotFix.applied) throw new Error('This spot fix has already been applied');
     if (verify && !rerun) throw new Error('Verifying a spot fix requires rerunning the test');
+    // High-severity risks (assertion-flipped/-removed, test-skipped) defeat
+    // the test's purpose outright, and a rerun cannot catch that: an
+    // assertion rewritten to match what was observed will trivially pass by
+    // construction, so "verify" would falsely certify exactly the edits that
+    // most need a human's judgement. Applying one requires saying so
+    // explicitly — a risk label alone was proven not enough to stop this in
+    // practice. See spotfix/risk.js.
+    if (hasHighRisk(test.spotFix.edits) && !acknowledgeRisks) {
+      throw new Error(
+        'This fix changes what the test checks (not just how it checks it) — review the warning above the diff, then confirm to apply anyway. A passing rerun would not prove this is correct.'
+      );
+    }
 
     const applyRecord = applySpotFix(test.spotFix);
     // Registered so the fix stays revertable from anywhere, including after
@@ -530,11 +697,15 @@ class RunManager {
    * so anything past ~4 minutes of silence is already abnormal. The default
    * leaves generous headroom on top of that.
    *
-   * Flagging is the default rather than killing, because ending someone's
+   * Flagging is the default rather than acting, because ending someone's
    * long run on a heuristic is worse than showing them it needs attention.
-   * Set DASHBOARD_STALL_ACTION=stop to have it stopped automatically.
+   * Two opt-in auto-actions, via DASHBOARD_STALL_ACTION:
+   *   - "stop": stop the whole run — nothing further runs.
+   *   - "skip": kill only the wedged module and continue with the rest of
+   *     the queue (see skipStalledJob) — a browser dying on one module
+   *     doesn't have to cost every module after it.
    */
-  checkStalledRuns({ thresholdMs = STALL_THRESHOLD_MS, autoStop = STALL_AUTO_STOP } = {}) {
+  checkStalledRuns({ thresholdMs = STALL_THRESHOLD_MS, autoStop = STALL_AUTO_STOP, autoSkip = STALL_AUTO_SKIP } = {}) {
     const now = Date.now();
     const stalled = [];
 
@@ -559,7 +730,7 @@ class RunManager {
         });
         console.warn(
           `[dashboard] run ${run.runId} has emitted no events for ${Math.round((now - since) / 60000)} min` +
-            (autoStop ? ' — stopping it' : ' — it may be wedged; stop it from the dashboard')
+            (autoStop ? ' — stopping it' : autoSkip ? ' — skipping the stuck module and continuing' : ' — it may be wedged; stop it from the dashboard')
         );
       }
 
@@ -568,6 +739,12 @@ class RunManager {
           this.stop(run.runId);
         } catch (err) {
           console.error(`[dashboard] could not auto-stop stalled run ${run.runId}:`, err.message);
+        }
+      } else if (autoSkip) {
+        try {
+          this.skipStalledJob(run.runId);
+        } catch (err) {
+          console.error(`[dashboard] could not auto-skip stalled module in run ${run.runId}:`, err.message);
         }
       }
     }
@@ -652,7 +829,12 @@ class RunManager {
     }
 
     if (event === 'begin') {
-      run.stats.total += payload.totalTests || 0;
+      // When the true grand total was already established up front (see
+      // start()/rerun()), each module's own 'begin' event must NOT also add
+      // to it — that would double-count. Without totalKnownUpfront this is
+      // the only way a multi-job run's total is known at all, so it still
+      // needs to accumulate incrementally as the fallback.
+      if (!run.totalKnownUpfront) run.stats.total += payload.totalTests || 0;
     } else if (event === 'test-begin') {
       run.tests[payload.testId] = {
         testId: payload.testId,
@@ -670,6 +852,10 @@ class RunManager {
       this._recomputeStats(run);
     } else if (event === 'test-end') {
       const existing = run.tests[payload.testId] || {};
+      // Copy attachments out of test-results/ now, before the next Playwright
+      // invocation (of anything, anywhere in the suite) wipes that directory
+      // out from under this run's history — see artifactArchive.js.
+      const attachments = archiveAttachments(runId, payload.testId, payload.attachments || []);
       run.tests[payload.testId] = {
         ...existing,
         testId: payload.testId,
@@ -682,13 +868,46 @@ class RunManager {
         status: payload.status,
         duration: payload.duration,
         error: payload.error || null,
-        attachments: payload.attachments || [],
+        attachments,
       };
       this._recomputeStats(run);
     }
 
     this._saveRun(run);
     this.broadcast({ type: 'run-event', runId, jobId, event, payload });
+  }
+
+  /**
+   * Fire-and-forget: called right after a run finishes, never blocks the
+   * run-finish flow on an AI call. A missing provider or a failed call is
+   * logged and otherwise invisible — a summary is a convenience, not
+   * something a run's completion should ever depend on.
+   */
+  _generateRunSummaryAsync(runId) {
+    generateRunSummary(runId)
+      .then((summary) => {
+        if (!summary) return; // no AI provider configured — silently skip
+        const run = this.loadRun(runId);
+        if (!run) return;
+        run.aiSummary = summary;
+        this._saveRun(run);
+        this.broadcast({ type: 'run-event', runId, event: 'run-summary', payload: { summary } });
+      })
+      .catch((err) => {
+        console.error(`[dashboard] run summary generation failed for ${runId}:`, err.message);
+      });
+  }
+
+  /** User-triggered (re)generation — awaited, so the caller can show the real error if it fails. */
+  async generateRunSummaryNow(runId) {
+    const run = this.loadRun(runId);
+    if (!run) throw new Error(`Run ${runId} not found`);
+    const summary = await generateRunSummary(runId);
+    if (!summary) throw new Error('No AI provider is configured on the dashboard server.');
+    run.aiSummary = summary;
+    this._saveRun(run);
+    this.broadcast({ type: 'run-event', runId, event: 'run-summary', payload: { summary } });
+    return summary;
   }
 }
 

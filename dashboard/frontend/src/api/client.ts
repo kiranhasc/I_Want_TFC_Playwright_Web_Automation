@@ -1,10 +1,13 @@
 import type {
   AppliedSpotFix,
   AutoUpdateStatus,
+  ChatReply,
+  ChatTurn,
   ProjectsManifest,
   RcaResult,
   RerunScope,
   RunRecord,
+  RunSummary,
   SpotFixApplied,
   SpotFixProposal,
   SpotFixReverted,
@@ -37,6 +40,10 @@ export const api = {
 
   stopRun: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}/stop`, { method: 'POST' }),
 
+  // Kills only the currently-wedged module and continues with the rest of
+  // the queue, instead of stopping the whole run.
+  skipStalledModule: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}/skip-stalled`, { method: 'POST' }),
+
   deleteRun: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}`, { method: 'DELETE' }),
 
   /** Deletes finished runs, keeping the `keepLast` most recent. */
@@ -59,11 +66,16 @@ export const api = {
   proposeSpotFix: (runId: string, testId: string) =>
     request<SpotFixProposal>(`/api/runs/${runId}/tests/${encodeURIComponent(testId)}/spot-fix`, { method: 'POST' }),
 
-  /** With verify, the fix is rolled back automatically unless the rerun passes. */
-  applySpotFix: (runId: string, testId: string, rerun: boolean, verify = false) =>
+  /**
+   * With verify, the fix is rolled back automatically unless the rerun
+   * passes. acknowledgeRisks is required when the proposal has a
+   * high-severity risk (rewrites/removes an assertion, skips the test) — the
+   * server refuses otherwise, since a rerun passing proves nothing for those.
+   */
+  applySpotFix: (runId: string, testId: string, rerun: boolean, verify = false, acknowledgeRisks = false) =>
     request<{ applied: SpotFixApplied; rerunRunId: string | null; verifying: boolean }>(
       `/api/runs/${runId}/tests/${encodeURIComponent(testId)}/spot-fix/apply`,
-      { method: 'POST', body: JSON.stringify({ rerun, verify }) }
+      { method: 'POST', body: JSON.stringify({ rerun, verify, acknowledgeRisks }) }
     ),
 
   revertSpotFix: (runId: string, testId: string) =>
@@ -82,6 +94,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ env, project }),
     }),
+
+  // (Re)generates the proactive summary — runs also get one automatically on
+  // completion; this is for older runs or an explicit refresh.
+  generateRunSummary: (runId: string) => request<RunSummary>(`/api/runs/${runId}/summary`, { method: 'POST' }),
+
+  // Stateless on the server: prior turns are resent as `history` each call.
+  askAboutHistory: (message: string, history: ChatTurn[] = []) =>
+    request<ChatReply>('/api/chat', { method: 'POST', body: JSON.stringify({ message, history }) }),
 
   screenshotUrl: (path: string) => `/api/files/screenshot?path=${encodeURIComponent(path)}`,
   videoUrl: (path: string) => `/api/files/video?path=${encodeURIComponent(path)}`,

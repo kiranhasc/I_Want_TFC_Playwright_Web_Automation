@@ -24,12 +24,16 @@ const {
   resolveEditableFile,
   collectCandidateFiles,
   addErrorLiteralMatches,
+  addCalledMethodSources,
+  addTestFlowSources,
   normalizeEol,
   applyEol,
 } = require('./sourceFiles');
 const { buildSpotFixPrompt } = require('./prompt');
 const { diffLines } = require('./diff');
-const { assessRisks } = require('./risk');
+const { assessRisks, languageRisk } = require('./risk');
+const { buildReceiverIndex, findUngroundedCall } = require('./locatorIndex');
+const { findPriorFailedAttempts, matchesPriorFailedAttempt } = require('./priorAttempts');
 const registry = require('./registry');
 
 // Generating code needs a longer leash than summarising an error.
@@ -77,36 +81,7 @@ function allOccurrences(haystack, needle) {
 
 const lineOf = (content, offset) => content.slice(0, offset).split('\n').length; // 1-based
 
-// A test/describe declaration, which is what bounds one test's body.
-const TEST_DECLARATION = /^\s*(?:test|it|describe)\s*(?:\.\s*\w+\s*)*\(/;
-
-/**
- * The line range of the test containing `anchorLine`: from its own declaration
- * up to (not including) the next one.
- *
- * A fixed line radius does not work here — assertions repeat every 11 to 42
- * lines in these spec files, so any window wide enough to reach the target
- * also catches its neighbours. The test declaration is the real boundary.
- */
-function enclosingTestBlock(lines, anchorLine) {
-  let start = 0;
-  for (let i = Math.min(anchorLine, lines.length) - 1; i >= 0; i -= 1) {
-    if (TEST_DECLARATION.test(lines[i])) {
-      start = i + 1; // 1-based
-      break;
-    }
-  }
-  if (!start) return null; // Not inside a test — caller falls back to uniqueness.
-
-  let end = lines.length + 1;
-  for (let i = start; i < lines.length; i += 1) {
-    if (TEST_DECLARATION.test(lines[i])) {
-      end = i + 1;
-      break;
-    }
-  }
-  return { start, end };
-}
+const { enclosingTestBlock } = require('./testBlocks');
 
 /**
  * Picks which occurrence of a repeated snippet the edit refers to.
@@ -218,7 +193,7 @@ function unavailable(reason) {
  * Generates a spot-fix proposal for a failed test. Never writes to disk.
  * Returns { available, reason?, edits, explanation?, confidence?, model?, generatedAt }.
  */
-async function proposeSpotFix(test, rca) {
+async function proposeSpotFix(test, rca, { runId } = {}) {
   if (!rca) {
     return unavailable('Run "Analyze failure" first — a spot fix needs a diagnosis to work from.');
   }
@@ -238,9 +213,30 @@ async function proposeSpotFix(test, rca) {
   // Widen the excerpts to include wherever the error's strings are declared —
   // under the Page Object pattern that is usually far from the stack frame.
   addErrorLiteralMatches(files, stripAnsi(test.error?.message));
+  // A value assertion (expect(x).toContain(...)) can fail because the helper
+  // method that produced x returned the wrong thing without throwing — that
+  // method never appears in the stack trace and shares no literal with the
+  // error text, so it would otherwise never be shown to the model at all.
+  addCalledMethodSources(files, test);
+  // Widens the excerpts further to include every helper the test itself
+  // calls on the way to the failing line — not just the one adjacent to the
+  // assertion — so a bug in an earlier step's actual behavior (as opposed to
+  // what its name suggests) is visible rather than invented around.
+  addTestFlowSources(files, test);
+
+  // Every page-object instance this test/file touches, mapped to its real
+  // method/locator catalog — the ground truth an edit is checked against
+  // below, independent of which model proposed it.
+  const receiverIndex = buildReceiverIndex(files.map((f) => f.content));
+
+  // Real evidence, not a guess: fixes already applied to this exact test and
+  // rerun for real that the app still failed. Both shown to the model (so it
+  // has a chance to avoid repeating one) and checked deterministically below
+  // (so it doesn't matter whether the model actually heeds that).
+  const priorAttempts = findPriorFailedAttempts(test, { excludeRunId: runId });
 
   const errorContext = loadErrorContext(test);
-  const prompt = buildSpotFixPrompt(test, rca, errorContext, files);
+  const prompt = buildSpotFixPrompt(test, rca, errorContext, files, priorAttempts);
 
   const { raw, model } = await complete(prompt, { timeoutMs: TIMEOUT_MS, maxTokens: MAX_TOKENS });
   const parsed = extractJson(raw);
@@ -262,11 +258,43 @@ async function proposeSpotFix(test, rca) {
   // these from the test location and its in-repo stack frames.
   const anchorsByFile = new Map(files.map((f) => [f.relative, [...f.lines].filter(Boolean).sort((a, b) => a - b)]));
 
+  const explanation = typeof parsed.explanation === 'string' ? parsed.explanation : '';
+  // Independent of the code-shape checks in assessRisks: catches the model
+  // hedging on the very thing it changed, in either the proposal-level
+  // explanation or this specific edit's own reason. See risk.js.
+  const proposalHedge = languageRisk(explanation);
+
   const edits = [];
   const rejected = [];
   for (const rawEdit of rawEdits) {
     try {
-      edits.push(validateEdit(rawEdit, anchorsByFile));
+      const edit = validateEdit(rawEdit, anchorsByFile);
+      // Hard rejection, not a risk warning: a call on a known page-object
+      // instance to a method that class doesn't declare cannot be real,
+      // regardless of how plausible the name sounds or which model wrote
+      // it. This is what keeps behavior consistent across different
+      // models — every one of them is checked against the same source.
+      const ungrounded = findUngroundedCall(edit.oldCode, edit.newCode, receiverIndex);
+      if (ungrounded) {
+        rejected.push(
+          `Edit to ${edit.file} calls ${ungrounded.receiver}.${ungrounded.method}(), which ${ungrounded.className} does not declare — likely a fabricated method name.`
+        );
+        continue;
+      }
+      // Hard rejection, same reasoning as the grounding check above: this
+      // exact change was already applied to this exact test, actually rerun,
+      // and actually still failed. No self-reported confidence overrides a
+      // real rerun's result, regardless of how the model words it this time.
+      const repeat = matchesPriorFailedAttempt(edit, priorAttempts);
+      if (repeat) {
+        rejected.push(
+          `Edit to ${edit.file} repeats a change already applied and rerun against this exact test in run ${repeat.runId}, which still failed — not proposing it again.`
+        );
+        continue;
+      }
+      const hedge = proposalHedge || languageRisk(edit.reason);
+      if (hedge) edit.risks = [...edit.risks, hedge];
+      edits.push(edit);
     } catch (err) {
       rejected.push(err.message);
     }
@@ -279,8 +307,15 @@ async function proposeSpotFix(test, rca) {
   return {
     available: true,
     proposalId: crypto.randomUUID(),
-    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
-    confidence: ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'low',
+    explanation,
+    // Trust the model's self-reported confidence unless its own words
+    // contradict it — "medium confidence" alongside "might not be accurate"
+    // is not actually medium confidence.
+    confidence: proposalHedge
+      ? 'low'
+      : ['high', 'medium', 'low'].includes(parsed.confidence)
+        ? parsed.confidence
+        : 'low',
     model,
     provider: getConfig().provider,
     edits,

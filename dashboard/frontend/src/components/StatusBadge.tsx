@@ -9,6 +9,7 @@ const STATUS_META: Record<string, { label: string; icon: string; color: string }
   running: { label: 'Running', icon: '●', color: 'var(--status-running)' },
   queued: { label: 'Queued', icon: '…', color: 'var(--text-muted)' },
   stopped: { label: 'Stopped', icon: '■', color: 'var(--status-warning)' },
+  stalled: { label: 'Skipped (stuck)', icon: '⚠', color: 'var(--status-warning)' },
 };
 
 const LIVE_STATUSES = new Set(['running', 'queued']);

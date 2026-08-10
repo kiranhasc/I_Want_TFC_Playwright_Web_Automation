@@ -24,7 +24,10 @@ async function completeWithOllama(prompt, { url = DEFAULT_URL, model = DEFAULT_M
   const res = await fetch(`${url}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, prompt, stream: false }),
+    // temperature: 0 for the same reason as apiProvider.js — this output is
+    // checked against ground truth afterward (locatorIndex.js), so
+    // consistency matters more than variety here.
+    body: JSON.stringify({ model, prompt, stream: false, options: { temperature: 0 } }),
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {

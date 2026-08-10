@@ -275,26 +275,60 @@ export async function verifyBecauseYouWatchedRail(
       break;
     }
   }
-  
+
   await heading.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
   await heading.scrollIntoViewIfNeeded().catch(() => undefined);
   await page.evaluate(() => window.scrollBy(0, 220));
   await page.waitForTimeout(1000);
 
   const railVisible = await heading.isVisible().catch(() => false);
+  let metadataMatches = false;
 
   logger.assertion('Because You Watched rail visible', railVisible);
   if (railVisible) {
     await detailsPage.clickFirstContentInRailByLocator();
     await page.waitForTimeout(3000);
 
-    const postClickMetadataValue = await page.locator('//div[contains(@class,"genre")]/div/p').first().innerText().catch(() => '');
-    const metadataMatches = Boolean(
-      metadataValue && postClickMetadataValue && metadataValue.trim().toLowerCase() === postClickMetadataValue.trim().toLowerCase()
-    );
+    // Use page-object helper to read genres from the details page after clicking the tray item
+    const postGenresArray = await detailsPage.getDetailsPageGenres().catch(() => [] as string[]);
+    // Preserve original metadata variable name but align with framework helper (do not hardcode locator)
+    const postClickMetadataValue = await detailsPage.getMetadataBeforePlay().catch(() => '');
+    // Normalize and extract genre-like tokens from concatenated metadata strings
+    const normalizeGenresFromMetadata = (s: string) => {
+      if (!s) return [] as string[];
+      // Insert spaces between camel-cased or concatenated words (e.g., ComedyRomance -> Comedy Romance)
+      let t = String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+      // Replace any non-letter with a space
+      t = t.replace(/[^A-Za-z]+/g, ' ');
+      const blacklist = new Set(['min', 'hr', 'h', 'pg', 'g', 'tv', 'hd', 'sd', 'runtime', 'm', 'pghd', 'ghd']);
+      const tokens = t
+        .split(/\s+/)
+        .map((x) => String(x || '').trim().toLowerCase())
+        .filter(Boolean)
+        .filter((tok) => tok.length > 2 && !blacklist.has(tok));
+      return Array.from(new Set(tokens));
+    };
+
+    const watchedGenres = normalizeGenresFromMetadata(metadataValue || '');
+    // Normalize tray genres the same way as watched metadata to handle concatenated values
+    const trayTokenSet = new Set<string>();
+    for (const pg of postGenresArray) {
+      const toks = normalizeGenresFromMetadata(String(pg || ''));
+      toks.forEach((t) => trayTokenSet.add(t));
+    }
+    const trayGenres = Array.from(trayTokenSet);
+    logger.info(`Normalized watched genres: ${JSON.stringify(watchedGenres)}`);
+    logger.info(`Normalized tray genres: ${JSON.stringify(trayGenres)}`);
+    metadataMatches = Boolean(watchedGenres.length > 0 && trayGenres.some((g) => watchedGenres.includes(g)));
 
     logger.info(`Metadata before play: ${metadataValue}`);
     logger.info(`Metadata after clicking tray content: ${postClickMetadataValue}`);
+    const matchedGenres = trayGenres.filter((g) => watchedGenres.includes(g));
+    if (matchedGenres.length) {
+      logger.info(`Matching genre(s): ${JSON.stringify(matchedGenres)}`);
+    } else {
+      logger.info('No matching genres found between watched and tray genres');
+    }
     logger.assertion('Metadata after clicking tray content matches the previously captured metadata', metadataMatches);
   }
 
@@ -302,8 +336,8 @@ export async function verifyBecauseYouWatchedRail(
     isLoggedIn,
     railVisible,
     railTitles: [],
-    hasSameGenreContent: railVisible,
-    metadataMatches:true,
+    hasSameGenreContent: metadataMatches,
+    metadataMatches,
   };
 }
 

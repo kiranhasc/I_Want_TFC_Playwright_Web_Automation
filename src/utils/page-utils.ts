@@ -1,6 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { PageElement } from '../../src/types/index';
 import { logger } from './logger';
+export type Platform = 'web' | 'mweb';
 
 /**
  * Enhanced page utilities for common UI interactions
@@ -189,4 +190,16 @@ export class PageUtils {
     });
     return this.page.locator(selector);
   }
+}
+
+// utils/platform.ts
+export async function getPlatform(page: any): Promise<Platform> {
+  const isMobileContext = page.context()?._options?.isMobile === true; // true when using devices['iPhone 13'] etc.
+  const viewport = page.viewportSize();
+  const isNarrowViewport = viewport ? viewport.width < 768 : false;
+
+  if (isMobileContext || isNarrowViewport) {
+    return 'mweb';
+  }
+  return 'web';
 }

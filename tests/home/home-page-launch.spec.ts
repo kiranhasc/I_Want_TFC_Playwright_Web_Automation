@@ -185,4 +185,12 @@ test.describe('Home Page Launch', () => {
        expect(result.playAttempted).toBe(true);
        expect(result.playbackStarted).toBe(true);
    });
+    
+    //delete this line
+    test.only('IW3-: Verify user is able to login', async ({ page }) => {
+       const data = testCaseData['tc-auth-006-valid-login'];
+       const result = await loginToOTT(page, { mode: data.mode });
+       expect(result.isLoggedIn).toBe(true);
+       expect(result.homeTabVisible).toBe(true);
+   });
 });

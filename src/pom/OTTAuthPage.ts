@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { PageUtils } from '../utils/page-utils';
+import { getPlatform, PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { config } from '../utils/config-manager';
 import { logger } from '../utils/logger';
@@ -138,7 +138,7 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { text: 'Home', selector: 'div#home' };
+        this.homeTab = { selector: 'div#home' };
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
         this.moviesTab = { selector: 'div#movies' };
         this.showsTab = { text: 'Shows', selector: 'div#shows' };
@@ -434,8 +434,25 @@ export class OTTAuthPage {
         await this.pageUtils.scrollIntoView(this.helpAndSupportLink);
     }
 
-    async isHomeTabVisible(): Promise<boolean> {
+    async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+     private async isHomeTabVisibleMobile(): Promise<boolean> {
+        // if mweb hides nav behind a hamburger menu, open it first
+        const hamburger = this.page.locator('[alt="account-arrow"]');
+        if (await hamburger.isVisible().catch(() => false)) {
+            await hamburger.click();
+        }
+        return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async isHomeTabVisible(): Promise<boolean> {
+        const platform =await getPlatform(this.page);
+        console.log("Platform ",platform)
+        return await platform === 'mweb'
+            ? this.isHomeTabVisibleMobile()
+            : this.isHomeTabVisibleWeb();
     }
 
     async isMoviesTabVisible(): Promise<boolean> {

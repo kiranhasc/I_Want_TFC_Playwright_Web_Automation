@@ -32,6 +32,11 @@ export async function getRandomYopmailAddress(): Promise<string> {
   return email;
 }
 
+export async function clearYopmailInbox(mailUsername: string): Promise<void> {
+  const fullMail = `${mailUsername}@yopmail.com`;
+  await easyYopmail.deleteInbox(fullMail);
+}
+
 export async function getOtpFromYopmail(
   mailUsername: string,
   options: GetOtpOptions = {}

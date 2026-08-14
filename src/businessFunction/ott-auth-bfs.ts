@@ -337,46 +337,6 @@ export interface EmptyCredentialsOutput {
     errorMessage: string;
 }
 
-export interface VerifyMidRailAdsInput {
-    mode?: string;
-    expectedAdHost: string;
-}
-
-export interface VerifyMidRailAdsOutput {
-    adRequestsFound: boolean;
-    matchedUrls: string[];
-    homeAdVisible: boolean;
-    moviesAdVisible: boolean;
-    showsAdVisible: boolean;
-    allTabsAdVisible: boolean;
-    adElementVisible: boolean;
-}
-
-export interface VerifyMidRailAdAutoRefreshInput {
-    mode?: string;
-    expectedAdHost: string;
-    refreshWindowMs?: number;
-    minimumRefreshRequests?: number;
-}
-
-export interface VerifyMidRailAdAutoRefreshOutput {
-    isLoggedIn: boolean;
-    adVisible: boolean;
-    initialRequestCount: number;
-    finalRequestCount: number;
-    refreshObserved: boolean;
-    matchedUrls: string[];
-    tabResults: Array<{
-        tabName: string;
-        adVisible: boolean;
-        initialRequestCount: number;
-        finalRequestCount: number;
-        refreshObserved: boolean;
-        triggerCount: number;
-        latestTriggerUrl: string | null;
-    }>;
-}
-
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
     mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' | 'unwatched' = 'invalid'
@@ -616,17 +576,6 @@ export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInp
 
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
-
-    if (process.env.BROWSER === 'mchrome') {
-        await authPage.navigate();
-        console.log('Skipping login for mchrome');
-        logger.step('Skipping login for Mobile Web (mchrome)');
-
-        return {
-            isLoggedIn: true,
-            homeTabVisible: true,
-        };
-    } else{
      const mode = normalizeLoginMode(input?.mode);
     const storageFile = modeToFile[mode];
     const storagePath = storageFile ? path.join(authDir, storageFile) : null;
@@ -671,7 +620,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
     // ---- SLOW PATH (original login flow, unchanged) ----
     logger.step(`Starting ${mode} login flow`);
     await page.context().clearCookies();
-
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
@@ -691,7 +639,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         isLoggedIn: homeVisible,
         homeTabVisible: homeVisible,
     };
-}
 }
 
 async function verifyMidRailAdOnCurrentTab(page: any, authPage: OTTAuthPage): Promise<boolean> {

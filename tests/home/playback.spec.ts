@@ -389,10 +389,7 @@ test.describe('Play Back', () => {
   test('@High IW3-T1975 - playback starts post tapping Play/Resume CTA', async ({ page }) => {
     const data = testData['tc-sub-004-resume-playback'] as Record<string, any>;
     const result = await verifyPlaybackResumeFlow(page, {
-      query: data.query,
       mode: data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
     });
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialPlayed).toBeTruthy();

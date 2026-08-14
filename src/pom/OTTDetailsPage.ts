@@ -319,7 +319,8 @@ export class OTTDetailsPage {
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
     this.subtitleDisplayIndicator = { selector: 'xpath=//*[@id="player-container-main"]/div[6]/div' };
     this.nextEpisodeButton = { selector: 'button[aria-label*="next"], button:has-text("Next"), [data-testid*="next-episode"]' };
-    this.upNextMarker = { selector: 'button:has-text("Up Next"), button:has-text("Up next"), [data-testid*="up-next"], [aria-label*="Up Next"], [aria-label*="up next"], text=/up next/i' };
+    // Include the player-specific up-next widget (div) and common aria/testid/button patterns
+    this.upNextMarker = { selector: '.player-upNextWidget, .player-upNextWidget-button, .player-upNextWidget.visible, button:has-text("Up Next"), button:has-text("Up next"), [data-testid*="up-next"], [aria-label*="Up Next"], [aria-label*="up next"], text=/up next/i' };
     this.backButton = { selector: 'button[aria-label*="back"], button:has-text("Back"), [data-testid*="back"]' };
     this.adScreenBackToPlayer = { selector: '//*[@id="player-container-main"]/div[1]/div[1]' };
     this.fullscreenButton = { selector: 'button[aria-label*="fullscreen"], button[title*="fullscreen"], [data-testid*="fullscreen"]' };
@@ -1891,7 +1892,6 @@ export class OTTDetailsPage {
       if (!count) {
         return false;
       }
-
       for (let index = 0; index < Math.min(count, 8); index += 1) {
         const candidate = tagCandidates.nth(index);
         const visible = await candidate.isVisible().catch(() => false);
@@ -1902,7 +1902,6 @@ export class OTTDetailsPage {
         await this.page.waitForTimeout(750);
         return true;
       }
-
       await this.page.mouse.wheel(0, 400);
       await this.page.waitForTimeout(1000);
       return await tagCandidates.first().isVisible().catch(() => false);
@@ -1923,7 +1922,6 @@ export class OTTDetailsPage {
         await clickableAncestor.click({ timeout: 20000, force: true });
         return true;
       }
-
       await earlyAccessTag.click({ timeout: 20000, force: true });
       return true;
     } catch (error) {
@@ -1937,17 +1935,14 @@ export class OTTDetailsPage {
     try {
       const earlyAccessTag = this.page.locator('//img[@alt="early_access"]').first();
       await earlyAccessTag.waitFor({ state: 'visible', timeout: 15000 });
-
       const currentEpisodeCard = earlyAccessTag.locator(this.episodeCardAncestor.selector).first();
       if (!await currentEpisodeCard.count()) {
         return false;
       }
-
       const previousEpisode = currentEpisodeCard.locator('xpath=preceding-sibling::*[1]').first();
       if (!await previousEpisode.count()) {
         return false;
       }
-
       const clickableAncestor = previousEpisode.locator('xpath=.//a[1] | .//button[1] | .//*[@role="button"][1]').first();
       const target = await (await clickableAncestor.count()) ? clickableAncestor : previousEpisode;
       await target.scrollIntoViewIfNeeded().catch(() => undefined);
@@ -2035,7 +2030,6 @@ export class OTTDetailsPage {
     if (markerType === 'intro') {
       return this.isSkipIntroMarkerVisible();
     }
-
     return this.isSkipRecapMarkerVisible();
   }
 
@@ -2860,7 +2854,6 @@ export class OTTDetailsPage {
           try { walker(obj[k]); } catch { }
         }
       };
-
       walker(resp);
       return firstAsset;
     } catch (err) {
@@ -3835,16 +3828,9 @@ export class OTTDetailsPage {
   }
 
   async hoverPlaybackScreen(): Promise<void> {
-    logger.elementInteraction('hover', 'Playback screen');
-    const playerScreen = this.page.locator(this.playerScreen.selector).first();
-    await playerScreen.waitFor({ state: 'visible', timeout: 15000 });
-    await this.page.locator(`${this.playerLoaderOverlay.selector}, ${this.playerMidSpacer.selector}`).waitFor({ state: 'hidden', timeout: 15000 }).catch(() => { });
-    const box = await playerScreen.boundingBox();
-    if (box) {
-      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    } else {
-      await playerScreen.hover();
-    }
+    const controls = this.page.locator(this.playerLoaderOverlay.selector);
+    await controls.waitFor({ state: "attached" });
+    await controls.hover();
   }
 
   async isResumeButtonVisible(): Promise<boolean> {
@@ -4262,14 +4248,23 @@ export class OTTDetailsPage {
   }
 
   async waitForUpNextMarker(timeout: number = 20000): Promise<boolean> {
-    const deadline = Date.now() + timeout;
-    while (Date.now() < deadline) {
-      if (await this.isUpNextMarkerVisible()) {
-        return true;
+    // First try waiting for the player widget element which is the most reliable
+    const widget = this.page.locator(this.upNextMarker.selector).first();
+    try {
+      await widget.waitFor({ state: 'visible', timeout });
+      const box = await widget.boundingBox().catch(() => null);
+      return Boolean(box && box.width > 0 && box.height > 0);
+    } catch {
+      // Fallback to original polling behavior (broader checks)
+      const deadline = Date.now() + timeout;
+      while (Date.now() < deadline) {
+        if (await this.isUpNextMarkerVisible()) {
+          return true;
+        }
+        await this.page.waitForTimeout(1000);
       }
-      await this.page.waitForTimeout(1000);
+      return false;
     }
-    return false;
   }
 
   async isNextEpisodeButtonBelowSeekBar(): Promise<boolean> {

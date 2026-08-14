@@ -102,6 +102,7 @@ export default defineConfig({
         '**/details-page.spec.ts',
         '**/registration-launch.spec.ts',
         '**/iwant-originals.spec.ts',
+        '**/landing-page.spec.ts'
       ],
     },
 

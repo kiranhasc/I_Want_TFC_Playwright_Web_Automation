@@ -101,7 +101,7 @@ test.describe('Continue Watching - No Watch History', () => {
         expect(result.confirmationVisible).toBeTruthy();
     });
 
-        test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {
+    test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-auth-030-continue-watching-resume-to-play-after-removal'] as { mode?: string; season?: string; episodeName?: string };
         const result = await verifyResumeToPlayAfterRemovingFromContinueWatching(page, {

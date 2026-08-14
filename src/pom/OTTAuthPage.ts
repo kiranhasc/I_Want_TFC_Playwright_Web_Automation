@@ -287,6 +287,8 @@ export class OTTAuthPage {
         this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
         this.pageBody = { selector: 'body' };
         this.bodyTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
+        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
+        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
         this.accountSettingsTextLink = { text: 'Account & Settings', selector: 'text=Account & Settings' };
         this.profileValidationTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
         this.searchResultsContainer = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], h2, h3' };
@@ -610,6 +612,12 @@ export class OTTAuthPage {
             logger.debug('Mid rail ad visibility check failed', error);
             return false;
         }
+
+        return false;
+    }
+
+    getGoogleAdsIframeSelector(): string {
+        return this.googleAdsIframeSelector.selector;
     }
 
     async getApplicationVersionText(): Promise<string> {

@@ -447,14 +447,20 @@ export async function verifyBecauseYouWatchedRail(
     metadataMatches = Boolean(watchedGenres.length > 0 && trayGenres.some((g) => watchedGenres.includes(g)));
     logger.info(`Metadata before play: ${metadataValue}`);
     logger.info(`Metadata after clicking tray content: ${postClickMetadataValue}`);
+    const matchedGenres = trayGenres.filter((g) => watchedGenres.includes(g));
+    if (matchedGenres.length) {
+      logger.info(`Matching genre(s): ${JSON.stringify(matchedGenres)}`);
+    } else {
+      logger.info('No matching genres found between watched and tray genres');
+    }
     logger.assertion('Metadata after clicking tray content matches the previously captured metadata', metadataMatches);
   }
   return {
     isLoggedIn,
     railVisible,
     railTitles: [],
-    hasSameGenreContent: railVisible,
-    metadataMatches:true,
+    hasSameGenreContent: metadataMatches,
+    metadataMatches,
   };
 }
 

@@ -1503,13 +1503,10 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
   const settingsPage = new OTTSettingsPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching playback validation from tray with parental PIN enabled');
-
   const parentalPin = (input?.parentalPin).trim();
-
   const modeToUse = input?.mode;
   const loginResult = await loginToOTT(page, { mode: modeToUse });
   const password = input?.password;
-
   if (!loginResult?.isLoggedIn) {
     return {
       itemFound: false,
@@ -1518,7 +1515,6 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
       parentalPinSubmitted: false,
     };
   }
-
   // Ensure PIN is disabled before seeding Continue Watching content
   await settingsPage.clickAccountIcon();
   await settingsPage.clickAccountAndSettings();

@@ -534,10 +534,7 @@
         "query": "Karnal"
     },
     "tc-sub-004-resume-playback": {
-        "mode": "valid",
-        "query": "The Secrets of Hotel 88",
-        "expectedTitle": "The Secrets of Hotel 88",
-        "expectedEpisode": "The Secrets of Hotel 88"
+        "mode": "valid"
     },
     "tc-sub-003-play-content": {
         "mode": "valid",
@@ -1018,19 +1015,19 @@
         "mode": "valid",
         "searchTerm": "You Got Me"
     },
-    "tc-auth-029-continue-watching-less-than-five-percent": {
-        "mode": "valid",
-        "searchTerm": "altar"
+    "tc-auth-040-landing-page-ui": {
+        "mode": "valid"
     },
+    "tc-auth-029-continue-watching-less-than-five-percent": {
+        "mode": "valid"
+        },
         "tc-auth-030-continue-watching-resume-to-play-after-removal": {
         "mode": "valid",
-        "searchTerm": "Tayong Dalawa",
         "season": "Season 1",
         "episodeName": "E4"
     },
     "tc-cw-1930-latest-watched-episode": {
         "mode": "valid",
-        "searchTerm": "Lobo",
         "expectedSeasonNumber": "1",
         "expectedEpisodeNumber": "6"
     },
@@ -1045,7 +1042,6 @@
     },
     "tc-cw-1946-season-episode-update": {
         "mode": "valid",
-        "query": "Can't Buy Me Love",
         "seasonOneEpisode": "E5",
         "seasonOneSeekPosition": 0.5,
         "seasonTwoSeekPosition": 0.2,
@@ -1060,9 +1056,7 @@
     }
     ,
     "tc-sub-046-iw3-t1956-next-season-autoplay": {
-        "mode": "valid",
-        "query": "Can't Buy Me Love",
-        "expectedTitle": "Can't Buy Me Love"
+        "mode": "valid"
     },
     "tc-live-2010-pause-resume-live-playback": {
         "mode": "valid"
@@ -1095,6 +1089,9 @@
         "searchQuery": "Alibi"
     },
     "tc-auth-033-related-content-trays-outside-ph": {
+        "mode": "valid"
+    },
+    "tc-auth-content-watchlist-2030": {
         "mode": "valid"
     }
 }

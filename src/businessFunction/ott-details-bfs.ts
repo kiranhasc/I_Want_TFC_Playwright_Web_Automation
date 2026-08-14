@@ -225,6 +225,85 @@ export interface VerifyVPNWhitelistedPlaybackOutput {
   playbackStarted: boolean;
 }
 
+export interface VerifySkipIntroFunctionalityOutput {
+  isDetailsPageVisible: boolean;
+  isSkipIntroMarkerVisible: boolean;
+  skipIntroClicked: boolean;
+  timeBeforeSkipIntro: string;
+  timeAfterSkipIntro: string;
+}
+
+export interface VerifySkipRecapFunctionalityOutput {
+  isDetailsPageVisible: boolean;
+  isSkipRecapMarkerVisible: boolean;
+  skipRecapClicked: boolean;
+  timeBeforeSkipRecap: string;
+  timeAfterSkipRecap: string;
+}
+
+export interface VerifySkipIntroAndRecapAdvancePlaybackDurationOutput {
+  isDetailsPageVisible: boolean;
+  isSkipIntroMarkerVisible: boolean;
+  skipIntroClicked: boolean;
+  timeBeforeSkipIntro: string;
+  timeAfterSkipIntro: string;
+  isSkipRecapMarkerVisible: boolean;
+  skipRecapClicked: boolean;
+  timeBeforeSkipRecap: string;
+  timeAfterSkipRecap: string;
+}
+
+export interface VerifyGuestShareFunctionalityInput {
+  expectedShareMessage?: string;
+}
+
+export interface VerifyGuestShareFunctionalityOutput {
+  isContentDetailsPageVisible: boolean;
+  headingText: string;
+  isContentMetadataVisible: boolean;
+  isContentTitleImageVisible: boolean;
+  isContentGenreVisible: boolean;
+  isContentCastVisible: boolean;
+  isShareIconVisible: boolean;
+  shareMessageText: string;
+}
+
+export interface VerifyContentDetailsPageUiInput {
+  mode?: string;
+}
+
+export interface VerifyContentDetailsPageUiOutput {
+  isLoggedIn: boolean;
+  isContentDetailsPageVisible: boolean;
+  contentDetailsHeading: string;
+  selectedMovieTitle: string;
+  isContentMetadataVisible: boolean;
+  contentDescriptionText: string;
+  isContentTitleImageVisible: boolean;
+  isContentGenreVisible: boolean;
+  isContentYearVisible: boolean;
+  isContentAgeRatingVisible: boolean;
+  isContentDurationVisible: boolean;
+  isContentCastVisible: boolean;
+  isPrimaryPlaybackActionVisible: boolean;
+  isContentLanguageIconVisible: boolean;
+  isContentSubtitleIconVisible: boolean;
+  isAddToWatchlistButtonVisible: boolean;
+  isContentShareIconVisible: boolean;
+}
+
+export interface VerifyBackNavigationFromDetailsPageInput {
+  mode?: string;
+  query?: string;
+}
+
+export interface VerifyBackNavigationFromDetailsPageOutput {
+  isLoggedIn: boolean;
+  detailsPageVisibleBeforeBack: boolean;
+  detailsPageVisibleAfterBack: boolean;
+  previousPageVisible: boolean;
+}
+
 export async function verifyVPNWhitelistedPlayback(
   page: any,
   input: VerifyVPNWhitelistedPlaybackInput
@@ -294,11 +373,9 @@ export async function verifyVPNPlaybackRestriction(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting VPN playback restriction validation');
-
   const loginResult = await loginToOTT(page, { mode: input.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before VPN playback check', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -307,23 +384,18 @@ export async function verifyVPNPlaybackRestriction(
       playbackStarted: false,
     };
   }
-
   await authPage.clickSearchBar();
   await authPage.searchAndGetResults(input.searchQuery);
   await page.locator(`img[alt="${input.searchQuery}"]`).click({ timeout: 10000 }).catch(() => { });
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => { });
-
   await detailsPage.clickPlayButton();
   await page.waitForTimeout(5000);
-
   const vpnErrorVisible = await detailsPage.isVPNErrorMessageVisible(input.expectedVPNErrorMessage);
   const playbackStarted = await detailsPage.isPlaybackStarted();
   const errorMessage = vpnErrorVisible ? input.expectedVPNErrorMessage : '';
-
   logger.assertion('VPN-specific error displayed', vpnErrorVisible);
   logger.assertion('Playback did not start when VPN error is displayed', !playbackStarted);
-
   return {
     isLoggedIn,
     vpnErrorVisible,
@@ -339,11 +411,9 @@ export async function navigateToShowDetailsFromShowsPage(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting navigation to show details from Shows page');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before navigating to show details', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -356,19 +426,17 @@ export async function navigateToShowDetailsFromShowsPage(
       genreVisible: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
   const continueWatchingTray = page.locator('text=Continue Watching').first();
   if (await continueWatchingTray.count().catch(() => 0)) {
     await continueWatchingTray.scrollIntoViewIfNeeded().catch(() => undefined);
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
   }
-
-  await detailsPage.clickShowsSection();
+  await authPage.clickShowsTab();
+  await page.waitForTimeout(3000);
   await detailsPage.clickFirstShowContent();
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const showDetailsHeading = isDetailsPageVisible
@@ -381,18 +449,32 @@ export async function navigateToShowDetailsFromShowsPage(
   const metadataText = isContentMetadataVisible
     ? await detailsPage.getContentMetadataText()
     : '';
-  const yearVisible = input?.expectedYear
-    ? metadataText.toLowerCase().includes(input.expectedYear.toLowerCase())
+  const yearText = isContentMetadataVisible
+    ? await detailsPage.getContentYearText()
+    : '';
+  const genreText = isContentMetadataVisible
+    ? await detailsPage.getContentGenreText()
+    : '';
+  const normalizedDescription = contentDescriptionText.toLowerCase();
+  const normalizedMetadata = metadataText.toLowerCase();
+  const normalizedYear = yearText.toLowerCase();
+  const normalizedGenre = genreText.toLowerCase();
+  const yearVisible = yearText.length > 0;
+  const genreVisible = genreText.length > 0;
+  const yearMatchesExpected = input?.expectedYear
+    ? [normalizedMetadata, normalizedYear, normalizedDescription].some((value) => value.includes(input.expectedYear.toLowerCase()))
     : false;
-  const genreVisible = input?.expectedGenre
-    ? metadataText.toLowerCase().includes(input.expectedGenre.toLowerCase())
+  const genreMatchesExpected = input?.expectedGenre
+    ? [normalizedMetadata, normalizedGenre, normalizedDescription].some((value) => value.includes(input.expectedGenre.toLowerCase()))
     : false;
-
+  logger.info(`Detected year text: "${yearText || 'N/A'}"`);
+  logger.info(`Detected genre text: "${genreText || 'N/A'}"`);
+  logger.info(`Expected year matched: ${yearMatchesExpected}`);
+  logger.info(`Expected genre matched: ${genreMatchesExpected}`);
   logger.assertion('Show details page visible', isDetailsPageVisible);
   logger.assertion('Content metadata visible', isContentMetadataVisible);
   logger.assertion('Details page year visible', yearVisible);
   logger.assertion('Details page genre visible', genreVisible);
-
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -405,30 +487,6 @@ export async function navigateToShowDetailsFromShowsPage(
   };
 }
 
-export interface VerifyContentDetailsPageUiInput {
-  mode?: string;
-}
-
-export interface VerifyContentDetailsPageUiOutput {
-  isLoggedIn: boolean;
-  isContentDetailsPageVisible: boolean;
-  contentDetailsHeading: string;
-  selectedMovieTitle: string;
-  isContentMetadataVisible: boolean;
-  contentDescriptionText: string;
-  isContentTitleImageVisible: boolean;
-  isContentGenreVisible: boolean;
-  isContentYearVisible: boolean;
-  isContentAgeRatingVisible: boolean;
-  isContentDurationVisible: boolean;
-  isContentCastVisible: boolean;
-  isPrimaryPlaybackActionVisible: boolean;
-  isContentLanguageIconVisible: boolean;
-  isContentSubtitleIconVisible: boolean;
-  isAddToWatchlistButtonVisible: boolean;
-  isContentShareIconVisible: boolean;
-}
-
 export async function verifyContentDetailsPageUi(
   page: any,
   input?: VerifyContentDetailsPageUiInput
@@ -436,12 +494,9 @@ export async function verifyContentDetailsPageUi(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting content details page UI validation flow');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before validating content details page UI', isLoggedIn);
-
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -463,16 +518,13 @@ export async function verifyContentDetailsPageUi(
       isContentShareIconVisible: false,
     };
   }
-
   await authPage.acceptCookieSettingsIfVisible();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
-  await detailsPage.clickMoviesSection();
+  await authPage.clickMoviesTab();
   const selectedMovieTitle = await detailsPage.clickFirstMovieContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
   const isContentDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   const contentDetailsHeading = isContentDetailsPageVisible
     ? await detailsPage.getShowDetailsHeadingText()
@@ -492,7 +544,6 @@ export async function verifyContentDetailsPageUi(
   const isContentSubtitleIconVisible = await detailsPage.isContentSubtitleIconVisible();
   const isAddToWatchlistButtonVisible = await detailsPage.isAddToWatchlistButtonVisible();
   const isContentShareIconVisible = await detailsPage.isContentShareIconVisible();
-
   logger.assertion('Content details page visible', isContentDetailsPageVisible);
   logger.assertion('Selected movie title captured', selectedMovieTitle.length > 0);
   logger.assertion('Content metadata visible', isContentMetadataVisible);
@@ -507,7 +558,6 @@ export async function verifyContentDetailsPageUi(
   logger.assertion('Content subtitle icon visible', isContentSubtitleIconVisible);
   logger.assertion('Add to watchlist button visible', isAddToWatchlistButtonVisible);
   logger.assertion('Share icon visible', isContentShareIconVisible);
-
   return {
     isLoggedIn,
     isContentDetailsPageVisible,
@@ -590,26 +640,6 @@ export async function verifyIWantOriginalsPreviewOnDetailsPage(
     previewVideoVisible,
     previewPlaybackStarted,
   };
-}
-
-export interface VerifyGuestShareFunctionalityInput {
-  expectedShareMessage?: string;
-}
-
-export interface VerifyGuestShareFunctionalityOutput {
-  isContentDetailsPageVisible: boolean;
-  headingText: string;
-  isContentMetadataVisible: boolean;
-  isContentTitleImageVisible: boolean;
-  isContentGenreVisible: boolean;
-  isContentCastVisible: boolean;
-  isShareIconVisible: boolean;
-  shareMessageText: string;
-}
-
-export interface VerifyGuestSearchNavigationInput {
-  searchTerm?: string;
-  expectedTitle?: string;
 }
 
 export async function verifyAutoPlaybackOfPreviewOnDetailsPage(
@@ -748,17 +778,6 @@ export async function verifySharedDeeplinkRedirectToDetailsPage(
     shortDescriptionMatchesAsset,
   };
 }
-export interface VerifyBackNavigationFromDetailsPageInput {
-  mode?: string;
-  query?: string;
-}
-
-export interface VerifyBackNavigationFromDetailsPageOutput {
-  isLoggedIn: boolean;
-  detailsPageVisibleBeforeBack: boolean;
-  detailsPageVisibleAfterBack: boolean;
-  previousPageVisible: boolean;
-}
 
 export async function verifyBackNavigationFromDetailsPage(
   page: any,
@@ -767,13 +786,10 @@ export async function verifyBackNavigationFromDetailsPage(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting details page back navigation verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before details page back navigation validation', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -782,7 +798,6 @@ export async function verifyBackNavigationFromDetailsPage(
       previousPageVisible: false,
     };
   }
-
   const tabActions = [
     {
       name: 'Home',
@@ -809,87 +824,40 @@ export async function verifyBackNavigationFromDetailsPage(
       },
     },
   ];
-
   let detailsPageVisibleBeforeBack = false;
   let detailsPageVisibleAfterBack = false;
   let previousPageVisible = false;
   let sawSuccessfulTab = false;
-
   for (const tab of tabActions) {
     try {
       await tab.click();
       await page.waitForTimeout(5000);
-
       await detailsPage.clickFirstContentInRail();
       await page.waitForTimeout(3000);
-
       const currentDetailsPageVisibleBeforeBack = await detailsPage.isShowDetailsPageVisible();
       logger.assertion(`Details page visible before back navigation on ${tab.name}`, currentDetailsPageVisibleBeforeBack);
-
       if (!currentDetailsPageVisibleBeforeBack) {
         continue;
       }
-
       sawSuccessfulTab = true;
       detailsPageVisibleBeforeBack = currentDetailsPageVisibleBeforeBack;
-
       await page.goBack();
       await page.waitForTimeout(3000);
-
       const currentDetailsPageVisibleAfterBack = await detailsPage.isShowDetailsPageVisible();
       const currentPreviousPageVisible = await page.locator('img.title-image, [data-testid="content-card"], [data-testid="show-card"], a[href*="/content"], a[href*="/show"]').first().isVisible().catch(() => false);
-
       logger.assertion(`Back navigation completed for ${tab.name}`, currentPreviousPageVisible);
-
       detailsPageVisibleAfterBack = currentDetailsPageVisibleAfterBack || detailsPageVisibleAfterBack;
       previousPageVisible = currentPreviousPageVisible || previousPageVisible;
     } catch (error) {
       logger.debug(`Back navigation flow failed on tab ${tab.name}`, error);
     }
   }
-
   return {
     isLoggedIn,
     detailsPageVisibleBeforeBack: sawSuccessfulTab && detailsPageVisibleBeforeBack,
     detailsPageVisibleAfterBack: sawSuccessfulTab && detailsPageVisibleAfterBack,
     previousPageVisible: sawSuccessfulTab && previousPageVisible,
   };
-}
-
-export interface PlayEpisodeFromDetailsInput {
-  mode?: string;
-  searchTerm?: string;
-}
-
-export interface PlayEpisodeFromDetailsOutput {
-  isDetailsPageVisible: boolean;
-  isEpisodeListVisible: boolean;
-  isPlayerVisible: boolean;
-  showDetailsHeading: string;
-  playbackContentTitle: string;
-  selectedEpisodeTitle: string;
-  playerTopLeftVisible: boolean;
-  playerContainsTitleEpisode: boolean;
-}
-
-export interface VerifyEpisodePlaybackStartsFromDetailsInput {
-  mode?: string;
-}
-
-export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
-  isLoggedIn: boolean;
-  isDetailsPageVisible: boolean;
-  seasonSectionVisible: boolean;
-  selectedEpisodeTitle: string;
-  showName: string;
-  seasonNumber: string;
-  episodeNumber: string;
-  playerVisible: boolean;
-  playbackStarted: boolean;
-  playerEpisodeTitleVisible: boolean;
-  playerSeasonVisible: boolean;
-  playerEpisodeVisible: boolean;
-  playerMetadataText: string;
 }
 
 export async function verifyEpisodePlaybackStartsFromDetailsPage(
@@ -998,15 +966,12 @@ export async function verifyGuestShareFunctionalityFromFreeAsset(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting guest content-details share functionality flow');
-
   await authPage.navigate();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   await detailsPage.doubleClickFirstVisibleContentCard();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   const isContentDetailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   const headingText = isContentDetailsPageVisible ? await detailsPage.getShowDetailsHeadingText().catch(() => '') : '';
   const isContentMetadataVisible = await detailsPage.isContentMetadataVisible();
@@ -1017,7 +982,6 @@ export async function verifyGuestShareFunctionalityFromFreeAsset(
   await detailsPage.clickContentShareIcon();
   const shareMessageText = await detailsPage.getShareCopyConfirmationMessage();
   const shareMessageMatches = shareMessageText.toLowerCase().includes((input?.expectedShareMessage ?? 'share link copied').toLowerCase());
-
   logger.assertion('Guest content details page visible', isContentDetailsPageVisible);
   logger.assertion('Guest content metadata visible', isContentMetadataVisible);
   logger.assertion('Guest content title image visible', isContentTitleImageVisible);
@@ -1026,7 +990,6 @@ export async function verifyGuestShareFunctionalityFromFreeAsset(
   logger.assertion('Guest share icon visible', isShareIconVisible);
   logger.assertion('Guest share confirmation message displayed', shareMessageMatches);
   logger.info(`Share confirmation message: ${shareMessageText}`);
-
   return {
     isContentDetailsPageVisible,
     headingText,
@@ -1115,7 +1078,7 @@ export async function verifyEpisodesGroupedBySeason(
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
   }
-  await detailsPage.clickShowsSection();
+  await authPage.clickShowsTab();
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
@@ -1306,7 +1269,7 @@ export async function verifyShowEpisodeListScrollableToEnd(
   await detailsPage.scrollContinueWatchingTrayIntoView();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await detailsPage.clickShowsSection();
+  await authPage.clickShowsTab();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await detailsPage.clickFirstShowContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
@@ -1457,54 +1420,6 @@ export async function playEpisodeFromDetailsPage(
   };
 }
 
-export interface VerifySkipIntroMarkerInput {
-  mode?: string;
-  searchTerm?: string;
-}
-
-export interface VerifySkipIntroMarkerOutput {
-  isDetailsPageVisible: boolean;
-  isSkipIntroMarkerVisible: boolean;
-}
-
-export interface VerifySkipIntroFunctionalityOutput {
-  isDetailsPageVisible: boolean;
-  isSkipIntroMarkerVisible: boolean;
-  skipIntroClicked: boolean;
-  timeBeforeSkipIntro: string;
-  timeAfterSkipIntro: string;
-}
-
-export interface VerifySkipRecapMarkerInput {
-  mode?: string;
-  searchTerm?: string;
-}
-
-export interface VerifySkipRecapMarkerOutput {
-  isDetailsPageVisible: boolean;
-  isSkipRecapMarkerVisible: boolean;
-}
-
-export interface VerifySkipRecapFunctionalityOutput {
-  isDetailsPageVisible: boolean;
-  isSkipRecapMarkerVisible: boolean;
-  skipRecapClicked: boolean;
-  timeBeforeSkipRecap: string;
-  timeAfterSkipRecap: string;
-}
-
-export interface VerifySkipIntroAndRecapAdvancePlaybackDurationOutput {
-  isDetailsPageVisible: boolean;
-  isSkipIntroMarkerVisible: boolean;
-  skipIntroClicked: boolean;
-  timeBeforeSkipIntro: string;
-  timeAfterSkipIntro: string;
-  isSkipRecapMarkerVisible: boolean;
-  skipRecapClicked: boolean;
-  timeBeforeSkipRecap: string;
-  timeAfterSkipRecap: string;
-}
-
 export async function verifySkipIntroMarkerDuringPlayback(
   page: any,
   input?: VerifySkipIntroMarkerInput
@@ -1544,35 +1459,29 @@ export async function verifySkipIntroFunctionalityDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro functionality verification flow');
-
   const searchTerm = input?.searchTerm ?? '';
-
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
     await detailsPage.clickFirstSearchResult();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   let isSkipIntroMarkerVisible = false;
   let skipIntroClicked = false;
   let timeBeforeSkipIntro = '';
   let timeAfterSkipIntro = '';
-
   if (isDetailsPageVisible) {
     await detailsPage.clickFirstEpisodeCard();
     await detailsPage.clickNextEpisodeButton();
     await detailsPage.clickSkipRecapMarker();
     await page.waitForTimeout(2000);
     isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
-
     if (isSkipIntroMarkerVisible) {
       await page.waitForTimeout(5000);
       timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       await page.waitForTimeout(5000);
       // await detailsPage.hoverPlaybackScreen();
-
       skipIntroClicked = await detailsPage.clickSkipIntroMarker();
       timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       logger.info(`Skip Intro clicked: ${skipIntroClicked}, initial time: ${timeBeforeSkipIntro}, updated time: ${timeAfterSkipIntro}`);
@@ -1626,9 +1535,7 @@ export async function verifySkipRecapFunctionalityDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap functionality verification flow');
-
   const searchTerm = input?.searchTerm ?? '';
-
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1636,34 +1543,28 @@ export async function verifySkipRecapFunctionalityDuringPlayback(
     await page.waitForTimeout(2000);
     await detailsPage.clickFirstSearchResult();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   let isSkipRecapMarkerVisible = false;
   let skipRecapClicked = false;
   let timeBeforeSkipRecap = '';
   let timeAfterSkipRecap = '';
-
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
     await detailsPage.clickNextEpisodeButton();
     // await page.waitForTimeout(3000);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
-
     if (isSkipRecapMarkerVisible) {
       timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
       skipRecapClicked = await detailsPage.clickSkipRecapMarker();
       await page.waitForTimeout(3000);
       timeAfterSkipRecap = await detailsPage.getTrimmedPlaybackTime();
       logger.info(`Skip Recap clicked: ${skipRecapClicked}, initial time: ${timeBeforeSkipRecap}, updated time: ${timeAfterSkipRecap}`);
-
     }
   }
-
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
   logger.assertion('Skip Recap was clicked successfully', skipRecapClicked);
   logger.assertion('Playback time advanced after Skip Recap click', timeBeforeSkipRecap !== timeAfterSkipRecap);
-
   return {
     isDetailsPageVisible,
     isSkipRecapMarkerVisible,
@@ -1680,9 +1581,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro and recap playback advancement verification flow');
-
   const searchTerm = input?.searchTerm ?? '';
-
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1690,7 +1589,6 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
     await page.waitForTimeout(2000);
     await detailsPage.clickFirstSearchResult();
   }
-
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   let isSkipIntroMarkerVisible = false;
   let skipIntroClicked = false;
@@ -1700,7 +1598,6 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
   let skipRecapClicked = false;
   let timeBeforeSkipRecap = '';
   let timeAfterSkipRecap = '';
-
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
     await page.waitForTimeout(3000);
@@ -1717,7 +1614,6 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
     }
   }
   await page.waitForTimeout(3000);
-
   isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
   if (isSkipIntroMarkerVisible) {
     timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
@@ -1728,9 +1624,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(
     timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
     console.log(`[IW3-T2115] Playback time after Skip Intro click: ${timeAfterSkipIntro}`);
     await page.waitForTimeout(3000);
-
   }
-
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
   logger.assertion('Skip Recap was clicked successfully', skipRecapClicked);

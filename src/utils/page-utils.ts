@@ -20,10 +20,10 @@ export class PageUtils {
   /**
    * Safe click with automatic waiting
    */
-  async safeClick(element: PageElement, timeout: number = 10000): Promise<void> {
+  async safeClick(element: PageElement, timeout: number = 30000): Promise<void> {
     const locator = this.getLocator(element);
-    await locator.waitFor({ state: 'visible', timeout });
-    await locator.waitFor({ state: 'attached', timeout });
+    // await locator.waitFor({ state: 'visible', timeout });
+    // await locator.waitFor({ state: 'attached', timeout });
     await locator.click({ timeout });
     logger.info(`Clicked on element : ${element.selector || element.text || element.testId}`);
   }

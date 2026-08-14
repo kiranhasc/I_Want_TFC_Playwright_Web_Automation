@@ -2,9 +2,10 @@ import { test, expect } from '../../src/fixtures/test-hooks';
 import { loginToOTT } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyLiveContentWatchlistAbsence, addContentToWatchlistFromSearchPageStep, removeContentFromWatchlistFromSearchPageStep, addPremiumContentToWatchlist, removePremiumContentFromWatchlist, verifyFreeTagInWatchlist, addFreeContentToWatchlist, removeFreeContentFromWatchlist, verifyWatchlistContentMetadataAndThumbnails, playContentFromWatchlist, verifyWatchlistTaggedContentFlow } from '../../src/businessFunction/ott-watchlist-bfs';
+import { playselectedContentFromWatchlist } from '../../src/businessFunction/ott-playback-bfs'  ;
 
 test.describe('Watchlist management', () => {
-  
+
   test('@Medium @D IW3-T2047: Verify Add to Watchlist option is not displayed for Live content', async ({ page }) => {
     test.setTimeout(90000);
     const data = testCaseData['tc-auth-018-live-content-watchlist-absence'];

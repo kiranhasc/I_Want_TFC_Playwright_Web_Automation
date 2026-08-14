@@ -1,6 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 test.setTimeout(180_000);
-import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifySkipAdDuringPreRollAdFlow, verifyAdCountdownFlow, verifyMidRollAdInterruptionFlow, verifyAdLearnMoreRedirectFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow,  verifyMoviePlaybackReturnsToDetailsFlow, verifyEarlyAccessMaybeLaterFlow, verifyEarlyAccessSubscriptionFlow, verifySubscribedEarlyAccessUpNextFlow } from '../../src/businessFunction/ott-playback-bfs';
+import { openContentAndPlay, verifyLivePlaybackPauseResume,verifySeekbarPreviewFlow, verifyPlaybackResumeFlow, verifySmoothPlaybackFlow, verifyFullscreenFunctionalityFlow, verifySubtitleDisplayFlow, verifySubtitleDefaultOffFlow, verifySubtitleCarryOverFlow, verifySeekBarDragFlow, verifyBrowserSeekBarFlow, verifyPlayerControlsFlow, verifyPlayerControlsAutoDismissFlow, verifyPlayerControlsHoverDismissFlow, verifyVolumeControlFlow, verifyFullscreenButtonVisibilityFlow, verifyPlaybackTimestampFormatFlow, verifyPlaybackShortDurationTimestampFormatFlow, verifySubtitleSelectionFlow, verifySubtitlePersistenceFlow, verifySubtitleSynchronizationFlow, verifyLivePlaybackGoLiveFlow, verifyLiveStreamSeekRestrictionFlow, verifyPreRollAdPlaybackFlow, verifySkipAdDuringPreRollAdFlow, verifyAdCountdownFlow, verifyMidRollAdInterruptionFlow, verifyAdLearnMoreRedirectFlow, verifyPausePlaybackFlow, verifyTapToPausePlaybackFlow, verifyPauseforwardBackwardButtonsFlow, verifyforwardBackwardButtonsFlow, verifyPlayerUIFlow, verifyNextEpisodeCtaVisibilityFlow, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerNavigationFlow, verifyAutomaticNextEpisodePlaybackFlow, verifyBackButtonNavigationFlow, verifyLiveTagOnPlayer, verifyAdPlaybackUIFlow, verifyAdLabelVisibilityFlow, verifyAdSeekBarHiddenDuringAdFlow, verifyAdDurationFlow,  verifyMoviePlaybackReturnsToDetailsFlow, verifyEarlyAccessMaybeLaterFlow, verifyEarlyAccessSubscriptionFlow, verifySubscribedEarlyAccessUpNextFlow, playselectedContentFromWatchlist } from '../../src/businessFunction/ott-playback-bfs';
 import { verifyLastSeasonLastEpisodeCompletionNavigationFlow } from '../../src/businessFunction/ott-playback-bfs';
 import { verifySubscribeToWatchRedirectsToAccountScreen } from '../../src/businessFunction/ott-subscription-bfs';
 import testData from '../../src/data/ott-test-cases.json';
@@ -192,7 +192,6 @@ test.describe('Play Back', () => {
         const result = await verifyLivePlaybackPauseResume(page, {
           mode: data.mode,
         });
-
         expect(result.liveSectionSelected).toBeTruthy();
         expect(result.channelSelected).toBeTruthy();
         expect(result.playbackStarted).toBeTruthy();
@@ -385,6 +384,20 @@ test.describe('Play Back', () => {
     expect(result.initialPlaybackTime).toBeTruthy();
     expect(result.pausedPlaybackTime).toBeTruthy();
     expect(result.playbackPaused).toBeTruthy();
+  });
+
+  test('@High IW3-T1975 - playback starts post tapping Play/Resume CTA', async ({ page }) => {
+    const data = testData['tc-sub-004-resume-playback'] as Record<string, any>;
+    const result = await verifyPlaybackResumeFlow(page, {
+      query: data.query,
+      mode: data.mode,
+      expectedTitle: data.expectedTitle,
+      expectedEpisode: data.expectedEpisode,
+    });
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.initialPlayed).toBeTruthy();
+    expect(result.resumed).toBeTruthy();
+    expect(result.seekBarVisible).toBeTruthy();
   });
 
   test('@Medium IW3-T1976 - Verify that tapping the seek forward or backward button (CTA) skips the video playback ahead or back by exactly 10 seconds', async ({ page }) => {
@@ -674,5 +687,19 @@ test.describe('Play Back', () => {
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.isSubscribeToWatchCtaVisible).toBe(true);
     expect(result.isPlaybackBlocked).toBe(true);
+  });
+
+    test('@High IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testData['tc-auth-content-watchlist-2030'];
+    const result = await playselectedContentFromWatchlist(page, {
+      mode: data.mode,
+    });
+    expect(result.isLoggedIn).toBeTruthy();
+    expect(result.watchlistOpened).toBeTruthy();
+    expect(result.contentSelected).toBeTruthy();
+    expect(result.playClicked).toBeTruthy();
+    expect(result.contentPlayed).toBeTruthy();
+    expect(result.playbackStarted).toBeTruthy();
   });
 });

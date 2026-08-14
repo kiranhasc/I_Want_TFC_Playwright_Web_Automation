@@ -85,6 +85,7 @@ export class OTTAuthPage {
     private readonly railAncestorSelector: PageElement;
     private readonly iWantOriginalsRailName: string;
     private readonly iWantOriginalsArrowSelectorTemplate: PageElement;
+    private readonly iWantOriginalsArrowCandidateSelector: PageElement;
     private readonly iWantOriginalsCardSelector: PageElement;
     private readonly iWantOriginalsClickableCardSelector: PageElement;
     private readonly iWantOriginalsTitleContainerSelector: PageElement;
@@ -137,6 +138,8 @@ export class OTTAuthPage {
     private readonly lastNameValidationError: PageElement;
     private readonly pageBody: PageElement;
     private readonly bodyTextPattern: PageElement;
+    private readonly midRailAdBanner: PageElement;
+    private readonly googleAdsIframeSelector: PageElement;
     private readonly accountSettingsTextLink: PageElement;
     private readonly profileValidationTextPattern: PageElement;
     private readonly searchResultsContainer: PageElement;
@@ -148,10 +151,12 @@ export class OTTAuthPage {
     private readonly searchResultContainerSelector: PageElement;
     private readonly searchResultCandidateSelector: PageElement;
     private readonly continueWatchingContent: PageElement;
+    private readonly iWantLogo: PageElement;
     private continueWatchingGraphQL?: GraphQLResult<ContinueWatchingResponse>;
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
+    private readonly mobileMainMenu: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -168,7 +173,7 @@ export class OTTAuthPage {
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
         this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
-        this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")'};
+        this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")' };
         this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
@@ -177,7 +182,7 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { text: 'Home', selector: 'div#home' };
+        this.homeTab = { selector: 'div#home' };
         this.homeTabFallbackById = { selector: 'div#home' };
         this.homeTabFallbackByText = { selector: 'a:has-text("Home"), button:has-text("Home"), [aria-label="Home"], [data-testid*="home"], text=Home' };
         this.homeTabFallbackByHref = { selector: 'a[href="/"], [href="/"], [role="link"][aria-label*="home" i]' };
@@ -185,7 +190,7 @@ export class OTTAuthPage {
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
         this.moviesTab = { selector: 'div#movies' };
         this.showsTab = { text: 'Shows', selector: 'div#shows' };
-        this.myWatchlistTab = {  selector: 'div#my_watchlist' };
+        this.myWatchlistTab = { selector: 'div#my_watchlist' };
         this.gmaTab = { selector: 'div#gma' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
@@ -252,6 +257,7 @@ export class OTTAuthPage {
         this.railAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "rail")][1]' };
         this.iWantOriginalsRailName = 'iWant Originals';
         this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
+        this.iWantOriginalsArrowCandidateSelector = { selector: 'img[alt*="arrow" i], img[alt*="chevron" i], [data-testid*="arrow" i], button[aria-label*="arrow" i], svg, .arrow, .chevron' };
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.iWantOriginalsClickableCardSelector = { selector: 'a, button, [role="button"], li, article, figure' };
         this.iWantOriginalsTitleContainerSelector = { selector: 'xpath=ancestor::div[contains(@class, "relative") and contains(@class, "w-auto") and .//img[contains(@class, "title")]][1]' };
@@ -277,6 +283,8 @@ export class OTTAuthPage {
         this.profileSaveButton = { role: 'button', text: 'Save', selector: 'button:has-text("Save")' };
         this.firstNameValidationError = { selector: '//*[@id="first name-helper-text"]' };
         this.lastNameValidationError = { selector: '//*[@id="last name-helper-text"]' };
+        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
+        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
         this.pageBody = { selector: 'body' };
         this.bodyTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
         this.accountSettingsTextLink = { text: 'Account & Settings', selector: 'text=Account & Settings' };
@@ -291,8 +299,10 @@ export class OTTAuthPage {
         this.searchResultCandidateSelector = { selector: 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]' };
         this.searchResultImages = { selector: '[class*="flex flex-wrap gap-[1rem]"] img[alt]' };
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
+        this.iWantLogo = { selector: 'img[alt*="iWant"], [aria-label*="iWant"], [data-testid*="logo"], img[alt*="logo"], svg[aria-label*="iWant"]' };
         this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
+        this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
     }
 
     async navigate(): Promise<void> {
@@ -512,28 +522,95 @@ export class OTTAuthPage {
     }
 
     async scrollToBottomOfPage(): Promise<void> {
-    logger.elementInteraction('scroll', 'Scroll to page footer');
+        logger.elementInteraction('scroll', 'Scroll to page footer');
+        const footer = this.page.locator('footer');
+        const scrollStep = 300;
+        while (!(await footer.isVisible().catch(() => false))) {
+            await this.page.mouse.wheel(0, scrollStep);
+            await this.page.waitForTimeout(400);
+            const isBottom = await this.page.evaluate(() => {
+                return window.innerHeight + window.scrollY >= document.body.scrollHeight;
+            });
+            if (isBottom) {
+                break;
+            }
+        }
+        logger.info('Reached page footer.');
+    }
 
-    const footer = this.page.locator('footer');
-    const scrollStep = 300;
-
-    while (!(await footer.isVisible().catch(() => false))) {
-
-        await this.page.mouse.wheel(0, scrollStep);
-
-        await this.page.waitForTimeout(400);
-
-        const isBottom = await this.page.evaluate(() => {
-            return window.innerHeight + window.scrollY >= document.body.scrollHeight;
-        });
-
-        if (isBottom) {
-            break;
+    async scrollToMidRailAdBanner(): Promise<boolean> {
+        logger.elementInteraction('scroll', 'mid rail ad banner');
+        try {
+            const bannerSelector = this.midRailAdBanner.selector;
+            const iframeSelector = this.googleAdsIframeSelector.selector;
+            const bannerVisible = await this.scrollUntilVisible(bannerSelector);
+            if (bannerVisible) {
+                return true;
+            }
+            const iframe = this.page.locator(iframeSelector).first();
+            if (await iframe.count() > 0) {
+                await iframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+                await this.page.waitForTimeout(1200);
+                return await iframe.isVisible().catch(() => false);
+            }
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad banner scroll failed', error);
+            return false;
         }
     }
 
-    logger.info('Reached page footer.');
-}
+    async scrollUntilVisible(selector: string, maxAttempts = 8): Promise<boolean> {
+        const locator = this.page.locator(selector).first();
+        const scrollFactor = 0.75;
+        const pauseMs = 900;
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+            await this.page.evaluate((factor) => {
+                window.scrollBy(0, window.innerHeight * factor);
+            }, scrollFactor).catch(() => undefined);
+            await this.page.waitForTimeout(pauseMs);
+            if (await locator.isVisible().catch(() => false)) {
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                return true;
+            }
+            const atBottom = await this.page.evaluate(() => {
+                return window.innerHeight + window.scrollY >= document.body.scrollHeight - 5;
+            }).catch(() => false);
+            if (atBottom) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    getGoogleAdsIframeSelector(): string {
+        return this.googleAdsIframeSelector.selector;
+    }
+
+    async isAdTagVisible(): Promise<boolean> {
+        try {
+            const banner = this.page.locator(this.midRailAdBanner.selector).first();
+            if (await banner.count()) {
+                await banner.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                if (await banner.isVisible().catch(() => false)) {
+                    return true;
+                }
+            }
+            const iframe = this.page.locator(this.googleAdsIframeSelector.selector).first();
+            if (await iframe.count()) {
+                await iframe.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
+                return await iframe.isVisible().catch(() => false);
+            }
+            return false;
+        } catch (error) {
+            logger.debug('Mid rail ad visibility check failed', error);
+            return false;
+        }
+    }
 
     async getApplicationVersionText(): Promise<string> {
         const locator = this.page.locator(this.appVersionText.selector).first();
@@ -555,7 +632,6 @@ export class OTTAuthPage {
 
     async clickHomeTab(): Promise<void> {
         logger.info('click', 'Home tab');
-
         let clicked = false;
         for (const selector of this.homeTabSelectors) {
             try {
@@ -576,7 +652,6 @@ export class OTTAuthPage {
                 logger.debug('Home tab fallback selector failed', error);
             }
         }
-
         if (!clicked) {
             logger.debug('Home tab was not reachable through the normal selectors; falling back to a full home navigation');
             await this.page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' })).catch(() => undefined);
@@ -929,6 +1004,53 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.searchBarIcon, 10000);
     }
 
+    async isIWantLogoVisible(): Promise<boolean> {
+        const logo = this.page.locator(this.iWantLogo.selector).first();
+        if (!(await logo.count())) {
+            return false;
+        }
+        await logo.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+        return await logo.isVisible().catch(() => false);
+    }
+
+    async isTabSelected(tabName: 'home' | 'movies' | 'shows' | 'watchlist' | 'gma'): Promise<boolean> {
+        const selectors: Record<string, PageElement> = {
+            home: this.homeTab,
+            movies: this.moviesTab,
+            shows: this.showsTab,
+            watchlist: this.myWatchlistTab,
+            gma: this.gmaTab,
+        };
+        const target = this.page.locator(selectors[tabName].selector).first();
+        if (!(await target.count())) {
+            return false;
+        }
+        const classValue = (await target.getAttribute('class').catch(() => '') || '').toLowerCase();
+        const ariaCurrent = (await target.getAttribute('aria-current').catch(() => '') || '').toLowerCase();
+        const ariaSelected = (await target.getAttribute('aria-selected').catch(() => '') || '').toLowerCase();
+        const combinedState = `${classValue} ${ariaCurrent} ${ariaSelected}`;
+        if (/(active|selected|current|is-active|router-link-active)/.test(combinedState)) {
+            return true;
+        }
+        const url = this.page.url().toLowerCase();
+        if (tabName === 'home' && (url.endsWith('/') || /\/home/.test(url))) {
+            return true;
+        }
+        if (tabName === 'movies' && /\/movies/.test(url)) {
+            return true;
+        }
+        if (tabName === 'shows' && /\/shows/.test(url)) {
+            return true;
+        }
+        if (tabName === 'watchlist' && /\/watchlist|\/my-watchlist|my_watchlist/.test(url)) {
+            return true;
+        }
+        if (tabName === 'gma' && /\/gma/.test(url)) {
+            return true;
+        }
+        return false;
+    }
+
     async isContinueWatchingRailVisible(): Promise<boolean> {
         try {
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
@@ -1246,7 +1368,7 @@ export class OTTAuthPage {
                 const section = document.querySelector('...');
                 const values = new Set<string>();
 
-            section?.querySelectorAll(selector).forEach((element) => {
+                section?.querySelectorAll(selector).forEach((element) => {
                     const value = (
                         element.getAttribute('alt') ||
                         element.getAttribute('aria-label') ||
@@ -1255,7 +1377,7 @@ export class OTTAuthPage {
                     ).replace(/\s+/g, ' ').trim();
 
                     if (value) values.add(value);
-            });
+                });
 
                 return [...values];
             }, this.continueWatchingContent.selector); // or the string directly
@@ -1514,11 +1636,39 @@ export class OTTAuthPage {
     }
 
     private getIWantOriginalsArrowLocator(direction: 'left' | 'right') {
-        const positionClass = direction === 'right' ? 'right-0' : 'left-0';
-        const selector = this.iWantOriginalsArrowSelectorTemplate.selector.replace('{positionClass}', positionClass);
         const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
         const rail = heading.locator(this.railAncestorSelector.selector).first();
-        return rail.locator(selector).first();
+        // Generic arrow candidates: images/icons/buttons commonly used for rails (configurable)
+        const candidateSelector = this.iWantOriginalsArrowCandidateSelector.selector;
+        const candidates = rail.locator(candidateSelector);
+        return (async () => {
+            const count = await candidates.count().catch(() => 0);
+            if (!count) return candidates.first();
+            let chosenIndex = 0;
+            let chosenX = Infinity;
+            for (let i = 0; i < count; i++) {
+                try {
+                    const el = candidates.nth(i);
+                    const box = await el.boundingBox().catch(() => null);
+                    if (!box) continue;
+                    const centerX = box.x + box.width / 2;
+                    if (direction === 'right') {
+                        if (centerX > (chosenX === Infinity ? -Infinity : chosenX)) {
+                            chosenIndex = i;
+                            chosenX = centerX;
+                        }
+                    } else {
+                        if (chosenX === Infinity || centerX < chosenX) {
+                            chosenIndex = i;
+                            chosenX = centerX;
+                        }
+                    }
+                } catch {
+                    continue;
+                }
+            }
+            return candidates.nth(chosenIndex);
+        })();
     }
 
     async getIWantOriginalsRailScrollLeft(): Promise<number> {
@@ -1547,20 +1697,62 @@ export class OTTAuthPage {
         if (!await rail.count()) {
             return false;
         }
-
         await rail.scrollIntoViewIfNeeded();
-        const arrowLocator = this.getIWantOriginalsArrowLocator(direction);
-        const arrowVisible = await arrowLocator.isVisible().catch(() => false);
-        if (!arrowVisible) {
+        // Attempt multiple strategies to cause the rail to scroll. Verify by checking
+        // `scrollLeft` before/after the interaction. Retry a few times before falling
+        // back to a direct `scrollLeft` assignment.
+        const beforeScroll = await rail.evaluate((el: HTMLElement) => el.scrollLeft).catch(() => 0);
+        // Resolve locator (may be a Promise because getIWantOriginalsArrowLocator is async)
+        const arrowLocatorAny: any = await this.getIWantOriginalsArrowLocator(direction).catch(() => null);
+        const attempts = 3;
+        for (let attempt = 1; attempt <= attempts; attempt += 1) {
+            try {
+                if (!arrowLocatorAny) throw new Error('arrow not found');
+                const visible = await arrowLocatorAny.isVisible().catch(() => false);
+                if (!visible) {
+                    // try hovering the rail center to reveal controls
+                    const railBox = await rail.boundingBox().catch(() => null);
+                    if (railBox) {
+                        await this.page.mouse.move(railBox.x + railBox.width / 2, railBox.y + railBox.height / 2);
+                        await this.page.waitForTimeout(300);
+                    }
+                }
+                // Prefer a real mouse click at the element's center (works with transforms/overlays)
+                const box = await arrowLocatorAny.boundingBox().catch(() => null);
+                if (box) {
+                    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+                    await this.page.waitForTimeout(150);
+                    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { delay: 50 });
+                } else {
+                    // Fallback to playright click
+                    await arrowLocatorAny.click({ force: true, timeout: 5000 }).catch(() => undefined);
+                }
+                await this.page.waitForTimeout(600);
+                const afterScroll = await rail.evaluate((el: HTMLElement) => el.scrollLeft).catch(() => 0);
+                if (afterScroll !== beforeScroll) {
+                    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
+                    return true;
+                }
+            } catch (err) {
+                logger.debug(`clickIWantOriginalsRailArrow attempt ${attempt} failed`, err);
+            }
+            // small backoff before retry
+            await this.page.waitForTimeout(400);
+        }
+        // Final fallback: perform a programmatic scroll of the rail element
+        try {
+            await rail.evaluate((el: HTMLElement, dir: string) => {
+                const amount = el.clientWidth * 0.6 * (dir === 'right' ? 1 : -1);
+                el.scrollBy({ left: amount, behavior: 'auto' });
+            }, direction).catch(() => undefined);
+            await this.page.waitForTimeout(400);
+            return true;
+        } catch (err) {
+            logger.debug('Final scrollLeft fallback failed', err);
             return false;
         }
-
-        await arrowLocator.hover({ timeout: 5000 }).catch(() => undefined);
-        await arrowLocator.click({ timeout: 10000 }).catch(() => undefined);
-        await this.page.waitForTimeout(1500);
-        await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
-        return true;
     }
+
     async isGmaPinoyBundleMetadataVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.gmaPinoyBundleMetadata, 10000);
     }

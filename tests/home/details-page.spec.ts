@@ -52,6 +52,17 @@ test.describe('Content details navigation', () => {
     expect(result.isAddToWatchlistButtonVisible).toBe(true);
   });
 
+  test('@Medium IW3-T1897: Verify the redirection to the Detail Page via shared Deeplink URL', async ({ page }) => {
+    const data = testCaseData['tc-disc-012-shared-deeplink-redirect'] as Record<string, any>;
+    const result = await verifySharedDeeplinkRedirectToDetailsPage(page, {
+      mode: data?.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.isDetailsPageVisible).toBe(true);
+    expect(result.titleMatchesAsset).toBe(true);
+    expect(result.shortDescriptionMatchesAsset).toBe(true);
+  });
+
   test('@Medium IW3-T1899: Verify premium icon is displayed on Detail page for premium contents', async ({ page }) => {
     const data = testCaseData['tc-disc-009-premium-icon-display'] as Record<string, any>;
     const result = await verifyPremiumIconOnDetailsPage(page, {
@@ -61,6 +72,17 @@ test.describe('Content details navigation', () => {
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.premiumIconVisible).toBe(true);
+  });
+
+  test('@High IW3-T1900: Verify auto playback of preview/trailer on detail page', async ({ page }) => {
+    const data = testCaseData['tc-disc-013-trailer-autoplay'] as Record<string, any>;
+    const result = await verifyAutoPlaybackOfPreviewOnDetailsPage(page, {
+      mode: data?.mode,
+    });
+    expect(result.isLoggedIn).toBe(true);
+    expect(result.isDetailsPageVisible).toBe(true);
+    expect(result.previewVideoVisible).toBe(true);
+    expect(result.previewPlaybackStarted).toBe(true);
   });
 
   test('@Medium IW3-T1903: Verify Subscribe CTA is displayed on detail page for Non premium users', async ({ page }) => {
@@ -74,7 +96,6 @@ test.describe('Content details navigation', () => {
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.isSubscribeToWatchCtaVisible).toBe(true);
   });
-
 
   test('@Medium IW3-T1905: Verify that Free users navigate to plans page post tapping on Subscribe CTA', async ({ page }) => {
     const data = testCaseData['tc-sub-002-upgrade-plan'];
@@ -92,7 +113,18 @@ test.describe('Content details navigation', () => {
     expect(result.isGmaTabVisible).toBe(true);
     expect(result.isPremiumContentOpened).toBe(true);
     expect(result.isSubscriptionInstructionVisible).toBe(true);
-    expect(result.subscriptionInstructionText.toLowerCase()).toContain('subscription');
+    expect(result.subscriptionInstructionText.toLowerCase()).toContain('subscribe to watch');
+  });
+
+  test('@High IW3-T1907: playback starts post tapping Play/Resume CTA', async ({ page }) => {
+    const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
+    const result = await verifyPlaybackResumeFlow(page, {
+      mode: data.mode,
+    });
+    expect(result.detailsVisible).toBeTruthy();
+    expect(result.initialPlayed).toBeTruthy();
+    expect(result.resumed).toBeTruthy();
+    expect(result.seekBarVisible).toBeTruthy();
   });
 
   test('@Medium IW3-T1908: Verify that user can add and remove the content to My Watchlist on the Details Page', async ({ page }) => {
@@ -110,8 +142,7 @@ test.describe('Content details navigation', () => {
   test('@Medium IW3-T1909: Verify that user redirect back to detail page post killing/closing the player', async ({ page }) => {
     const data = testCaseData['tc-disc-004-player-close-return'] as Record<string, any>;
     const result = await verifyPlayerCloseReturnsToDetailsFlow(page, {
-      mode: data?.mode ,
-      query: data?.query,
+      mode: data?.mode,
     });
     expect(result.isLoggedIn).toBe(true);
     expect(result.detailsVisible).toBe(true);
@@ -132,28 +163,6 @@ test.describe('Content details navigation', () => {
     expect(result.postDetailsVisible).toBe(true);
     expect(result.playButtonVisible).toBe(true);
     expect(result.resumeButtonVisible).toBe(false);
-  });
-
-  test('@High IW3-T1900: Verify auto playback of preview/trailer on detail page', async ({ page }) => {
-    const data = testCaseData['tc-disc-013-trailer-autoplay'] as Record<string, any>;
-    const result = await verifyAutoPlaybackOfPreviewOnDetailsPage(page, {
-      mode: data?.mode,
-    });
-    expect(result.isLoggedIn).toBe(true);
-    expect(result.isDetailsPageVisible).toBe(true);
-    expect(result.previewVideoVisible).toBe(true);
-    expect(result.previewPlaybackStarted).toBe(true);
-  });
-
-  test('@Medium IW3-T1897: Verify the redirection to the Detail Page via shared Deeplink URL', async ({ page }) => {
-    const data = testCaseData['tc-disc-012-shared-deeplink-redirect'] as Record<string, any>;
-    const result = await verifySharedDeeplinkRedirectToDetailsPage(page, {
-      mode: data?.mode,
-    });
-    expect(result.isLoggedIn).toBe(true);
-    expect(result.isDetailsPageVisible).toBe(true);
-    expect(result.titleMatchesAsset).toBe(true);
-    expect(result.shortDescriptionMatchesAsset).toBe(true);
   });
 
   test('@Medium IW3-T1913: Verify on tapping "Share" icon "Share link copied to clipboard" message is displayed', async ({ page }) => {
@@ -213,20 +222,4 @@ test.describe('Content details navigation', () => {
     expect(result.playerSeasonVisible).toBe(true);
     expect(result.playerEpisodeVisible).toBe(true);
   });
-
-  test('@High IW3-T1907 - IW3-T1975 - playback starts post tapping Play/Resume CTA', async ({ page }) => {
-    const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
-    const result = await verifyPlaybackResumeFlow(page, {
-      query: data.query,
-      mode:data.mode,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
-    });
-
-    expect(result.detailsVisible).toBeTruthy();
-    expect(result.initialPlayed).toBeTruthy();
-    expect(result.resumed).toBeTruthy();
-    expect(result.seekBarVisible).toBeTruthy();
-  });
-
 });

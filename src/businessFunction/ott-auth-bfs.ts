@@ -183,7 +183,7 @@ export interface VerifyWelcomeIntroductionPagePaginationOutput {
 //     return mode === 'valid' ? 'valid' : 'invalid';
 // }
 
-function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' {
+function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' | 'unwatched' {
     if (mode === 'valid') {
         return 'valid';
     }
@@ -195,6 +195,9 @@ function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | '
     }
     if (mode === 'freeUser') {
         return 'freeUser';
+    }
+    if (mode === 'unwatched') {
+        return 'unwatched';
     }
     return 'invalid';
 }
@@ -376,7 +379,7 @@ export interface VerifyMidRailAdAutoRefreshOutput {
 
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
-    mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' = 'invalid'
+    mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' | 'unwatched' = 'invalid'
 ) {
     const prefix =
         mode === 'valid'
@@ -387,7 +390,9 @@ function resolveLoginCredentials(
                     ? 'MOBILE_LOGIN_'
                     : mode === 'freeUser'
                         ? 'FREE_USER_'
-                        : 'INVALID_LOGIN_';
+                        : mode === 'unwatched'
+                            ? 'UNWATCHED_USER_'
+                            : 'INVALID_LOGIN_';
 
     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
@@ -609,10 +614,9 @@ export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInp
     };
 }
 
-
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
-    const mode = normalizeLoginMode(input?.mode);
+     const mode = normalizeLoginMode(input?.mode);
     const storageFile = modeToFile[mode];
     const storagePath = storageFile ? path.join(authDir, storageFile) : null;
     // ---- FAST PATH ----
@@ -656,7 +660,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
     // ---- SLOW PATH (original login flow, unchanged) ----
     logger.step(`Starting ${mode} login flow`);
     await page.context().clearCookies();
-
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
@@ -3284,19 +3287,30 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting login flow for Continue Watching absence validation');
-    // Prefer explicit input credentials, then UNWATCHED env vars, then resolveLoginCredentials
     const loginResult = await loginToOTT(page, { mode });
     const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForLoadingToDisappear();
-    const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
-    const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
-    const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
-    logger.assertion('Continue Watching rail presence', isVisible);
-    logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
-    if (itemsCount > 0) {
-        const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
-        logger.assertion('All continue-watching items have progress indicators', allHaveProgress);
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+    await page.waitForTimeout(2000);
+    const trayHeadingCount = await page.getByText('Continue Watching', { exact: true }).count();
+    if (trayHeadingCount === 0) {
+        logger.assertion('Continue Watching is absent for an unwatched user', true);
+        return { isContinueWatchingVisible: false, continueWatchingItemsCount: 0, continueWatchingItemsDetails: [] };
     }
+    const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
+    if (!isVisible) {
+        logger.assertion('Continue Watching is absent or hidden for an unwatched user', true);
+        return { isContinueWatchingVisible: false, continueWatchingItemsCount: 0, continueWatchingItemsDetails: [] };
+    }
+    const itemsCount = await authPage.getContinueWatchingItemsCount().catch(() => 0);
+    const itemsDetails = await authPage.getContinueWatchingItemsDetails().catch(() => []);
+    if (itemsCount === 0) {
+        logger.assertion('Continue Watching tray is empty for an unwatched user', true);
+        return { isContinueWatchingVisible: true, continueWatchingItemsCount: 0, continueWatchingItemsDetails: [] };
+    }
+    logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
+    const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
+    logger.assertion('All continue-watching items have progress indicators', allHaveProgress);
     return { isContinueWatchingVisible: isVisible, continueWatchingItemsCount: itemsCount, continueWatchingItemsDetails: itemsDetails };
 }
 

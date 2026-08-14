@@ -3471,11 +3471,17 @@ screen.
 3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
-6. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
-6. Select the show from the **Continue Watching** tray.
-7. Scroll and Select the last episode of **Season 1**.
-8. Drag the seekbar until it reaches the end.
-9. Observe the playback after the episode ends.
+6. Using graphQL API response for continue watching collect only **shows** which has **2 seasons**.
+7. Search and select the content name.
+8. Play episode 5 of season 1.
+9. Drag the seekbar until 50%.
+10. Exit the player and return to the **Home** page.
+11. Select the same content that was played from **continue watching** tray.
+12. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
+13. Select the show from the **Continue Watching** tray.
+14. Scroll and Select the last episode of **Season 1**.
+15. Drag the seekbar until it reaches the end.
+16. Observe the playback after the episode ends.
    - **Expect:** The first episode of **Season 2** should automatically start playing after the last episode of **Season 1** is completed.
 
 ### 5.17 IW3-T1942 Verify that Ad gets played for the free user on resuming the content.

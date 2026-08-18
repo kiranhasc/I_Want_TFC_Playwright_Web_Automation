@@ -96,23 +96,28 @@ function sweepOrphanedBrowsers(preExistingPids) {
  * The true test count for a run BEFORE any job spawns — no browser launch,
  * so this is fast (~1-2s even across every project).
  *
- * Needed because splitting "all projects" into one job per project (see
- * runManager._allProjectJobSpecs) means the dashboard's own stats.total,
+ * Needed because splitting a run into one job per spec file (see
+ * runManager._specFileJobSpecs) means the dashboard's own stats.total,
  * left to accumulate from each job's own 'begin' event as before, would
- * only reflect whichever modules have already started — showing a
+ * only reflect whichever files have already started — showing a
  * misleadingly small "total" for most of the run instead of the real
  * grand total, which used to be known instantly because everything ran as
  * one combined Playwright invocation. Asking Playwright to just list
  * (never run) the same target this run is about to execute sidesteps that
  * — it costs a few seconds up front in exchange for an accurate total for
- * the entire run instead of one that only fills in as modules start.
+ * the entire run instead of one that only fills in as files start.
+ *
+ * `project` optionally scopes this the same way a single-project run does
+ * — otherwise the count would be the whole suite's total even when only
+ * one project was actually requested.
  *
  * Returns null (never throws) on any failure — a run must still start even
  * if this optional accuracy pass fails; callers fall back to the old
  * incremental accumulation.
  */
-function listTestCount({ env, grep }) {
+function listTestCount({ env, grep, project }) {
   const args = ['cross-env', `TEST_ENV=${env}`, 'playwright', 'test', '--list'];
+  if (project) args.push(`--project=${project}`);
   if (grep) args.push('--grep', grep);
   try {
     const out = execSync(`npx ${args.join(' ')}`, {

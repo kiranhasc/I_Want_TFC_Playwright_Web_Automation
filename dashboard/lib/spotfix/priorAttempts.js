@@ -15,52 +15,37 @@
  * "reverted" alone, which also covers a human simply changing their mind
  * about a fix that may well have worked. Only a rerun-proven failure is
  * strong enough evidence to tell a model its own past proposal was wrong.
+ *
+ * Matches "this exact test" by its stable ticket-id identity (see
+ * ../testCaseIdentity.js), not file+line — a source-file refactor that
+ * shifts every line number used to silently and permanently lose this
+ * history with no error, just an empty result.
  */
-const fs = require('fs');
-const path = require('path');
-const { RUNS_DIR } = require('../paths');
 const { normalizeEol } = require('./sourceFiles');
+const { testCaseKey } = require('../testCaseIdentity');
+const { findTestOccurrences } = require('../testCaseHistory');
 
 /**
- * Every run record on disk whose test at (test.file, test.line) has a
- * verification-failed spot-fix attempt, most recent first. Best-effort: a
- * missing/corrupt run file is skipped rather than failing the whole lookup —
- * this is supporting evidence for a proposal, not something that should be
- * able to break generating one.
+ * Every prior occurrence of this exact test case with a verification-failed
+ * spot-fix attempt, most recent first. Best-effort — see
+ * testCaseHistory.findTestOccurrences for the failure-tolerant scan this is
+ * built on; this is supporting evidence for a proposal, not something that
+ * should be able to break generating one.
  */
 function findPriorFailedAttempts(test, { excludeRunId, limit = 3 } = {}) {
-  let runFiles;
-  try {
-    runFiles = fs.readdirSync(RUNS_DIR).filter((f) => f.endsWith('.json'));
-  } catch {
-    return [];
-  }
-
+  const key = testCaseKey(test);
   const out = [];
-  for (const fileName of runFiles) {
-    const runId = fileName.replace(/\.json$/, '');
-    if (runId === excludeRunId) continue;
+  for (const { runId, test: t } of findTestOccurrences(key, { excludeRunId })) {
+    const sf = t.spotFix;
+    if (!sf?.available || !sf.edits?.length) continue;
+    if (sf.verification?.status !== 'failed') continue;
 
-    let run;
-    try {
-      run = JSON.parse(fs.readFileSync(path.join(RUNS_DIR, fileName), 'utf-8'));
-    } catch {
-      continue;
-    }
-
-    for (const t of Object.values(run.tests || {})) {
-      if (t.file !== test.file || t.line !== test.line) continue;
-      const sf = t.spotFix;
-      if (!sf?.available || !sf.edits?.length) continue;
-      if (sf.verification?.status !== 'failed') continue;
-
-      out.push({
-        runId,
-        generatedAt: sf.generatedAt,
-        explanation: sf.explanation || '',
-        edits: sf.edits.map((e) => ({ file: e.file, oldCode: e.oldCode, newCode: e.newCode, reason: e.reason || '' })),
-      });
-    }
+    out.push({
+      runId,
+      generatedAt: sf.generatedAt,
+      explanation: sf.explanation || '',
+      edits: sf.edits.map((e) => ({ file: e.file, oldCode: e.oldCode, newCode: e.newCode, reason: e.reason || '' })),
+    });
   }
 
   out.sort((a, b) => String(b.generatedAt).localeCompare(String(a.generatedAt)));
@@ -88,4 +73,4 @@ function matchesPriorFailedAttempt(edit, priorAttempts) {
   return null;
 }
 
-module.exports = { findPriorFailedAttempts, matchesPriorFailedAttempt };
+module.exports = { findPriorFailedAttempts, matchesPriorFailedAttempt, normalizeForCompare };

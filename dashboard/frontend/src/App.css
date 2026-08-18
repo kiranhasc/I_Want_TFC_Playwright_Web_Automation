@@ -146,6 +146,46 @@ h3 {
   color: var(--text-muted);
 }
 
+/* Groups the generated per-platform links (see App.tsx) under a heading, so
+   they read as a set rather than as more top-level destinations. */
+.sidebar-section-label {
+  margin: 14px 0 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* A platform declared but not pointed at a repo. Deliberately quiet rather
+   than alarm-coloured: nothing is broken, it just is not set up yet. */
+.sidebar-link-tag {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+}
+
+.platform-unconfigured-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.platform-unconfigured-path {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+}
+
 .sidebar-link:hover {
   background: color-mix(in srgb, var(--status-running) 8%, transparent);
   color: var(--text-primary);
@@ -456,6 +496,16 @@ h3 {
 
 .link-button:hover {
   text-decoration: underline;
+}
+
+.link-button-warning {
+  color: var(--status-warning);
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  text-decoration: none;
 }
 
 .copy-button {
@@ -777,6 +827,83 @@ h3 {
   color: var(--text-muted);
 }
 
+.test-group-header td {
+  background: var(--surface-page);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--gridline);
+  padding: 8px 10px;
+}
+
+.test-group-header td:last-child {
+  text-align: right;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Deliberately plain text, not a second colored pill — sitting next to the
+   (now-authoritative) StatusBadge, a competing color here is exactly what
+   read as contradictory before. This is supporting context, not a status. */
+.last-rerun-note {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.last-rerun-note:hover {
+  text-decoration: underline;
+}
+
+.rerun-pending {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.module-running-badge {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-running) 16%, transparent);
+  color: var(--status-running);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.module-stalled-badge {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-warning) 16%, transparent);
+  color: var(--status-warning);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* A stalled file's automatic retry is in flight — reuses the "running"
+   badge's color (it genuinely is running again, just via a background
+   retry rather than this project's original job) instead of the warning
+   color "incomplete" uses, so it doesn't read as still-broken. */
+.module-retrying-badge {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-running) 16%, transparent);
+  color: var(--status-running);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .test-file {
   font-size: 11px;
 }
@@ -815,6 +942,52 @@ h3 {
   border-radius: 8px;
   padding: 14px;
   animation: page-fade-in 0.2s ease both;
+}
+
+/* Cross-run track record for this exact test case (see
+   TestCaseHistoryPanel.tsx) — collapsed by default, quiet until opened, and
+   entirely absent when there's no history (a test's first-ever failure). */
+.test-history {
+  margin-bottom: 12px;
+}
+
+.test-history-toggle {
+  font-size: 13px;
+  color: var(--status-warning);
+}
+
+/* All prior occurrences passed — informational, not a warning. */
+.test-history-toggle-clean {
+  color: var(--text-secondary);
+}
+
+.test-history-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-history-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--surface-1);
+  border-radius: 6px;
+}
+
+.test-history-date {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.test-history-detail {
+  flex-basis: 100%;
 }
 
 .failure-error-header {
@@ -1039,6 +1212,82 @@ h3 {
   margin: 0 0 10px;
 }
 
+/* A real, measured signal (independent models agreeing) rather than one
+   model's self-report — distinguished visually from spotfix-confidence
+   (a plain pill, not the model's own claim about itself) but the same
+   size/weight so it reads as a peer of it, not a lesser detail. */
+.spotfix-consensus {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.spotfix-consensus-agree {
+  background: color-mix(in srgb, var(--status-good) 15%, transparent);
+  color: var(--status-good);
+}
+
+.spotfix-consensus-disagree {
+  background: color-mix(in srgb, var(--status-warning) 20%, transparent);
+  color: var(--status-warning);
+}
+
+.spotfix-disagreement {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--status-warning);
+  background: color-mix(in srgb, var(--status-warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-warning) 35%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+/* Real corroboration (or a real warning) from an actual headless-browser
+   check against the live app — see dashboard/lib/spotfix/liveProbe.js —
+   distinct from spotfix-risks (model-authored warnings about the edit's
+   own shape) since this is measured, not inferred. Small and inline under
+   the diff it belongs to, not a competing banner. */
+.spotfix-live-probe {
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.spotfix-live-probe-ok {
+  background: color-mix(in srgb, var(--status-good) 12%, transparent);
+  color: var(--status-good);
+}
+
+.spotfix-live-probe-warn {
+  background: color-mix(in srgb, var(--status-warning) 15%, transparent);
+  color: var(--status-warning);
+}
+
+/* Deliberately neutral, not warning-coloured: this is a transparency note
+   about a formatting self-correction, not something to be concerned about. */
+.spotfix-recovered {
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--border, rgba(128, 128, 128, 0.35));
+  opacity: 0.9;
+}
+
+.spotfix-recovered-title {
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.spotfix-recovered ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
 /* Deliberately loud: this is the "the fix cheats" warning. */
 .spotfix-risks {
   background: color-mix(in srgb, var(--status-critical) 8%, transparent);
@@ -1260,6 +1509,14 @@ h3 {
   flex-shrink: 0;
 }
 
+/* The "a stalled-file retry is in flight" banner — informational, not a
+   warning, so it uses the calmer "running" tone rather than the critical-red
+   the stuck-run banner above uses for the same box shape. */
+.stalled-banner-info {
+  background: color-mix(in srgb, var(--status-running) 10%, transparent);
+  border-color: color-mix(in srgb, var(--status-running) 40%, transparent);
+}
+
 /* --- Applied spot fixes banner (uncommitted edits in the working tree) --- */
 
 .applied-fixes-banner {
@@ -1335,6 +1592,101 @@ h3 {
 .spotfix-verification.is-failed {
   background: color-mix(in srgb, var(--status-critical) 10%, transparent);
   border-color: color-mix(in srgb, var(--status-critical) 35%, transparent);
+}
+
+/* A green rerun that proves nothing. Deliberately warning-coloured rather
+   than green: the whole point is that it must not read as a pass. */
+.spotfix-verification.is-inconclusive {
+  background: color-mix(in srgb, var(--status-warning, #d98324) 12%, transparent);
+  border-color: color-mix(in srgb, var(--status-warning, #d98324) 38%, transparent);
+}
+
+/* Audit trail of what was and wasn't checked. Neutral by default — it is a
+   record, not a verdict — and only tinted when something actively failed. */
+.spotfix-evidence {
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+}
+
+.spotfix-evidence.is-contradicted {
+  background: color-mix(in srgb, var(--status-critical) 8%, transparent);
+  border-color: color-mix(in srgb, var(--status-critical) 32%, transparent);
+}
+
+.spotfix-evidence-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.spotfix-evidence-heading {
+  font-weight: 600;
+}
+
+.spotfix-evidence-counts {
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.spotfix-evidence-toggle {
+  margin-left: auto;
+  text-decoration: underline;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.spotfix-evidence-summary {
+  margin: 5px 0 0;
+  opacity: 0.85;
+  line-height: 1.5;
+}
+
+.spotfix-evidence-list {
+  list-style: none;
+  margin: 9px 0 0;
+  padding: 0;
+}
+
+.spotfix-evidence-list li {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.18));
+  line-height: 1.45;
+}
+
+.spotfix-evidence-icon {
+  flex: 0 0 1.1em;
+  font-weight: 700;
+}
+
+.spotfix-evidence-list li.is-pass .spotfix-evidence-icon { color: var(--status-good); }
+.spotfix-evidence-list li.is-fail .spotfix-evidence-icon { color: var(--status-critical); }
+.spotfix-evidence-list li.is-unknown .spotfix-evidence-icon { opacity: 0.6; }
+.spotfix-evidence-list li.is-not-applicable { opacity: 0.6; }
+
+.spotfix-evidence-detail {
+  opacity: 0.8;
+}
+
+.spotfix-unvalidatable {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.spotfix-unvalidatable li {
+  margin-top: 3px;
 }
 
 .spotfix-reverted,

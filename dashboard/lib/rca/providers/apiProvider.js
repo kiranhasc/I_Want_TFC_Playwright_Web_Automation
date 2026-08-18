@@ -13,8 +13,6 @@
  *   - 'anthropic': POST {baseUrl}/messages, x-api-key auth. For a direct
  *     Claude API key against api.anthropic.com.
  */
-const { buildPrompt, parseModelResponse } = require('../promptFormat');
-
 const TIMEOUT_MS = 30000;
 
 const FORMAT_DEFAULTS = {
@@ -103,14 +101,4 @@ async function completeWithApi(prompt, { format = 'openai', apiKey, baseUrl, mod
   return { raw, model: resolvedModel };
 }
 
-async function runApiProvider(test, errorContext, { format = 'openai', apiKey, baseUrl, model } = {}) {
-  const { raw, model: resolvedModel } = await completeWithApi(buildPrompt(test, errorContext), {
-    format,
-    apiKey,
-    baseUrl,
-    model,
-  });
-  return { source: 'api', model: resolvedModel, ...parseModelResponse(raw) };
-}
-
-module.exports = { runApiProvider, completeWithApi, FORMAT_DEFAULTS };
+module.exports = { completeWithApi, FORMAT_DEFAULTS };

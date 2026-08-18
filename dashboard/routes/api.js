@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const { PROJECTS_MANIFEST } = require('../lib/paths');
 const { askAboutHistory } = require('../lib/chat');
+const { listPlatforms, isKnownPlatform } = require('../lib/platforms');
 
 // A chat message is free text a human typed, not an id used in a file path
 // or object-key lookup — the injection surface isSafeId guards against
@@ -89,9 +90,23 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     res.json(loadManifest());
   });
 
+  // Every platform the dashboard knows about, including ones declared but not
+  // yet pointed at a repo — the UI needs those to render an honest "nothing
+  // wired up yet" page rather than an empty one. See lib/platforms.js.
+  router.get('/platforms', (req, res) => {
+    res.json({ platforms: listPlatforms() });
+  });
+
   router.get('/runs', (req, res) => {
     const limit = req.query.limit ? Number(req.query.limit) : 20;
-    res.json(runManager.listRuns(limit));
+    const platform = req.query.platform;
+    // An unknown platform is a 400 rather than an empty list: silently
+    // returning nothing for a typo looks exactly like "this platform has no
+    // runs", which is the one distinction these pages exist to make.
+    if (platform !== undefined && !isKnownPlatform(platform)) {
+      return res.status(400).json({ error: `Unknown platform "${platform}"` });
+    }
+    res.json(runManager.listRuns(limit, { platform: platform || null }));
   });
 
   router.get('/runs/:runId', (req, res) => {
@@ -140,6 +155,20 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     res.json({ ok: true });
   });
 
+  // Kills the wedged file's job AND immediately retries just that file,
+  // merging the outcome back onto this run once it finishes — so a stall
+  // partway through a large module doesn't cost a restart from test 1 or a
+  // second run to reconcile. See runManager.retryStalledJob.
+  router.post('/runs/:runId/retry-stalled', (req, res) => {
+    const ok = runManager.retryStalledJob(req.params.runId);
+    if (!ok) {
+      return res
+        .status(400)
+        .json({ error: 'No stuck module to retry on this run right now (or its file target is unknown)' });
+    }
+    res.json({ ok: true });
+  });
+
   router.post('/runs/:runId/rerun', (req, res) => {
     const { scope, target } = req.body || {};
     if (!['test', 'file', 'project', 'all-failed'].includes(scope)) {
@@ -148,6 +177,18 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
     try {
       const runId = runManager.rerun(req.params.runId, { scope, target });
       res.status(202).json({ runId });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Read-only: every past run where this exact test case showed up (matched
+  // by ticket id, not file+line — see dashboard/lib/testCaseIdentity.js),
+  // with what RCA/spot-fix concluded each time.
+  router.get('/runs/:runId/tests/:testId/history', (req, res) => {
+    try {
+      const result = runManager.getTestCaseHistory(req.params.runId, req.params.testId);
+      res.json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }

@@ -4,8 +4,9 @@
  * A spot fix is the only feature in this dashboard that modifies files on
  * disk, so which files it may touch is deliberately narrow and enforced
  * here rather than trusted from the model's output. Everything a Playwright
- * failure could legitimately need to change lives in tests/ (specs) or src/
- * (page objects, business functions, utils, test data).
+ * failure could legitimately need to change lives in the project's spec and
+ * source roots (specs, page objects, business functions, utils, test data) —
+ * discovered per project rather than hardcoded, see ../projectConventions.js.
  *
  * Explicitly NOT editable: playwright.config.ts (run/environment config, not
  * a test-logic bug), .env and anything at the repo root, dashboard/ itself,
@@ -14,9 +15,10 @@
 const fs = require('fs');
 const path = require('path');
 const { REPO_ROOT } = require('../paths');
+const { getConventions } = require('../projectConventions');
 const { enclosingTestBlock } = require('./testBlocks');
 
-const EDITABLE_ROOTS = [path.join(REPO_ROOT, 'tests'), path.join(REPO_ROOT, 'src')];
+const EDITABLE_ROOTS = getConventions().editableRoots;
 
 const EDITABLE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
 
@@ -66,7 +68,8 @@ function resolveEditableFile(rawPath) {
   const resolved = path.resolve(REPO_ROOT, rawPath.trim());
 
   if (!isUnderEditableRoot(resolved)) {
-    throw new Error(`Refusing to edit "${rawPath}": only files under tests/ and src/ may be changed`);
+    const allowed = EDITABLE_ROOTS.map((r) => `${path.relative(REPO_ROOT, r).split(path.sep).join('/')}/`).join(', ');
+    throw new Error(`Refusing to edit "${rawPath}": only files under ${allowed} may be changed`);
   }
   if (!EDITABLE_EXTENSIONS.has(path.extname(resolved).toLowerCase())) {
     throw new Error(`Refusing to edit "${rawPath}": not a source file`);
@@ -258,23 +261,20 @@ function addErrorLiteralMatches(files, errorText) {
 
 // Where a failing test's page-object/business-function calls actually live,
 // searched when neither the stack trace nor an error-message literal points
-// at the right file (see addCalledMethodSources below).
-const HELPER_SEARCH_DIRS = [path.join(REPO_ROOT, 'src', 'pom'), path.join(REPO_ROOT, 'src', 'businessFunction')];
-
+// at the right file (see addCalledMethodSources below). Discovered per
+// project — see ../projectConventions.js.
 function listHelperFiles() {
-  const out = [];
-  for (const dir of HELPER_SEARCH_DIRS) {
+  return getConventions().helperDirs.flatMap((dir) => {
     let entries;
     try {
       entries = fs.readdirSync(dir);
     } catch {
-      continue;
+      return [];
     }
-    for (const name of entries) {
-      if (EDITABLE_EXTENSIONS.has(path.extname(name).toLowerCase())) out.push(path.join(dir, name));
-    }
-  }
-  return out;
+    return entries
+      .filter((name) => EDITABLE_EXTENSIONS.has(path.extname(name).toLowerCase()))
+      .map((name) => path.join(dir, name));
+  });
 }
 
 /**
@@ -362,16 +362,28 @@ function splitCallee(expr) {
  *      resolved the same way as hop 1, one level in).
  * `expect(await recv.method(...))` (no intermediate variable) is handled too.
  */
-function addCalledMethodSources(files, test, { maxNewFiles = 3 } = {}) {
+/**
+ * What the failing assertion is actually reading, traced back to the call
+ * that produced it: `{ callee: { receiver, name }, propertyName, frame }`,
+ * or null when the failing statement isn't an expect() over a traceable
+ * call.
+ *
+ * Split out of addCalledMethodSources (its original and still its main
+ * caller) so a second analysis can ask the same question without
+ * re-deriving it — see ./swallowedFailures.js, which needs to know exactly
+ * which method produced an empty value in order to check whether that
+ * method could have discarded a failure on the way.
+ */
+function resolveAssertedCallee(files, test) {
   const [frame] = describeFailingLines(test, { limit: 1 });
-  if (!frame) return files;
+  if (!frame) return null;
 
   // What expect() is actually reading: `await recv.method(...)`,
   // `recv.property`, or a bare `recv` (possibly with a trailing builtin
   // chain like `.toLowerCase()`, which must NOT be mistaken for a traced
   // call — hence `await` being required for the inline-call shape).
   const exprMatch = frame.text.match(/expect\(\s*(await\s+)?(\w+)(\.\w+)?/);
-  if (!exprMatch) return files;
+  if (!exprMatch) return null;
   const isInlineAwait = Boolean(exprMatch[1]);
   const receiver = exprMatch[2];
   const trailing = exprMatch[3] ? exprMatch[3].slice(1) : null;
@@ -398,7 +410,14 @@ function addCalledMethodSources(files, test, { maxNewFiles = 3 } = {}) {
     }
     if (!isInlineAwait && trailing) propertyName = trailing;
   }
-  if (!callee?.name) return files;
+  if (!callee?.name) return null;
+  return { callee, propertyName, frame };
+}
+
+function addCalledMethodSources(files, test, { maxNewFiles = 3 } = {}) {
+  const traced = resolveAssertedCallee(files, test);
+  if (!traced) return files;
+  const { callee, propertyName } = traced;
 
   const known = new Set(files.map((f) => f.path));
   let budget = maxNewFiles;
@@ -432,8 +451,47 @@ function addCalledMethodSources(files, test, { maxNewFiles = 3 } = {}) {
   const propLines = findIdentifierLines(hop1.entry.content, propertyName);
   for (const line of propLines) hop1.entry.lines.add(line);
 
-  const computeLine = hop1.entry.content.split('\n')[propLines[0] - 1] || '';
-  const nested = computeLine.match(new RegExp(`${propertyName}\\s*=\\s*await\\s+([\\w.]+)\\s*\\(`));
+  // Must find the line that actually COMPUTES the value, not just any line
+  // mentioning the name in file order. This repo's businessFunction modules
+  // declare a TS return-type interface (e.g. `isLiveContentVisible: boolean;`)
+  // above the function body, and that field appears — and, in source order,
+  // is found first — before the real assignment inside the return statement.
+  // Blindly using propLines[0] silently picked the type declaration, which
+  // never matches either pattern below, so the trace gave up one hop short
+  // of the method actually responsible — the model then correctly declined
+  // to guess without ever having been shown that method's source at all.
+  const hop1Lines = hop1.entry.content.split('\n');
+  // Two real shapes seen in this repo's return objects:
+  //   1. `propertyName: await x(...)` or `propertyName = await x(...)` —
+  //      computed inline, right where it's returned.
+  //   2. `propertyName: someOtherName,` — an object-literal field returning
+  //      a DIFFERENTLY-named local variable that was computed earlier in the
+  //      same function (e.g. `isLiveContentVisible: isLiveIconVisible,` after
+  //      `const isLiveIconVisible = await detailsPage.isLiveIconVisible();`
+  //      several lines above) — a renaming for the public return shape.
+  //      Shape 1's pattern alone can never match this; it has to chase the
+  //      aliased name's own assignment as a second, separate lookup.
+  const inlinePattern = new RegExp(`${propertyName}\\s*[:=]\\s*await\\s+([\\w.]+)\\s*\\(`);
+  const aliasPattern = new RegExp(`${propertyName}\\s*:\\s*(\\w+)\\s*[,}]`);
+  let nested = null;
+  for (const line of propLines) {
+    const text = hop1Lines[line - 1] || '';
+    const inline = text.match(inlinePattern);
+    if (inline) {
+      nested = inline;
+      break;
+    }
+    const alias = text.match(aliasPattern);
+    if (alias && alias[1] !== propertyName) {
+      const assignPattern = new RegExp(`\\b${alias[1]}\\s*=\\s*await\\s+([\\w.]+)\\s*\\(`);
+      const assignLine = hop1Lines.find((l) => assignPattern.test(l));
+      const assignMatch = assignLine ? assignLine.match(assignPattern) : null;
+      if (assignMatch) {
+        nested = assignMatch;
+        break;
+      }
+    }
+  }
   const nestedCallee = nested ? splitCallee(nested[1]) : null;
   if (nestedCallee?.name) {
     for (const candidatePath of listHelperFiles()) {
@@ -665,4 +723,10 @@ module.exports = {
   normalizeEol,
   applyEol,
   EDITABLE_ROOTS,
+  // Exported for ./swallowedFailures.js, which re-walks the same
+  // assertion→method trace to inspect that method's error handling.
+  resolveAssertedCallee,
+  listHelperFiles,
+  findDeclarationLine,
+  functionSpan,
 };

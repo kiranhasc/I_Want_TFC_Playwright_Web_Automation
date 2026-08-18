@@ -199,7 +199,7 @@ export function OverviewPage() {
           </Link>
         </div>
         {runs.length === 0 ? (
-          <p className="muted">No runs yet — start one from Run history.</p>
+          <p className="muted">No runs yet — start one from a platform page.</p>
         ) : (
           <div className="run-card-grid">
             {runs.slice(0, 6).map((r) => (

@@ -3,6 +3,7 @@ import type {
   AutoUpdateStatus,
   ChatReply,
   ChatTurn,
+  Platform,
   ProjectsManifest,
   RcaResult,
   RerunScope,
@@ -11,6 +12,7 @@ import type {
   SpotFixApplied,
   SpotFixProposal,
   SpotFixReverted,
+  TestCaseHistory,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -31,7 +33,10 @@ export const api = {
 
   getAutoUpdateStatus: () => request<AutoUpdateStatus>('/api/auto-update/status'),
 
-  listRuns: (limit = 20) => request<RunRecord[]>(`/api/runs?limit=${limit}`),
+  getPlatforms: () => request<{ platforms: Platform[] }>('/api/platforms'),
+
+  listRuns: (limit = 20, platform?: string) =>
+    request<RunRecord[]>(`/api/runs?limit=${limit}${platform ? `&platform=${encodeURIComponent(platform)}` : ''}`),
 
   getRun: (runId: string) => request<RunRecord>(`/api/runs/${runId}`),
 
@@ -43,6 +48,7 @@ export const api = {
   // Kills only the currently-wedged module and continues with the rest of
   // the queue, instead of stopping the whole run.
   skipStalledModule: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}/skip-stalled`, { method: 'POST' }),
+  retryStalledModule: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}/retry-stalled`, { method: 'POST' }),
 
   deleteRun: (runId: string) => request<{ ok: true }>(`/api/runs/${runId}`, { method: 'DELETE' }),
 
@@ -61,6 +67,11 @@ export const api = {
 
   analyzeTest: (runId: string, testId: string) =>
     request<RcaResult>(`/api/runs/${runId}/tests/${encodeURIComponent(testId)}/analyze`, { method: 'POST' }),
+
+  // Read-only: every past run where this exact test case (matched by ticket
+  // id, not file+line) showed up, with what RCA/spot-fix concluded each time.
+  getTestCaseHistory: (runId: string, testId: string) =>
+    request<TestCaseHistory>(`/api/runs/${runId}/tests/${encodeURIComponent(testId)}/history`),
 
   // Generates a proposal only; nothing is written until applySpotFix.
   proposeSpotFix: (runId: string, testId: string) =>

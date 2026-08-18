@@ -11,29 +11,44 @@
  * ground truth, so a model that invents a plausible-sounding method name
  * gets rejected exactly as reliably as one that doesn't.
  */
-const LOCATOR_DECL = /^\s*this\.(\w+)\s*=\s*\{\s*selector:\s*(['"`])((?:\\.|(?!\2).)*)\2/;
+const { parseLocatorDeclarations, describeLocator } = require('./locatorSyntax');
+
 const METHOD_DECL = /^\s*(?:private\s+|public\s+|protected\s+)?(?:async\s+)?(\w+)\s*\([^)]*\)\s*(?::|\{)/;
 // Excludes control-flow keywords and the constructor, which match METHOD_DECL's
 // shape but are never something a spot fix would call by name.
 const NOT_A_METHOD = new Set(['constructor', 'if', 'for', 'while', 'switch', 'catch', 'function']);
 
-/** { locators: [{ name, selector, line }], methods: [{ name, line }] } for one file's content. */
+/**
+ * { locators: [{ name, selector, line }], methods: [{ name, line }] } for one
+ * file's content.
+ *
+ * Locator parsing is delegated to ./locatorSyntax.js so both dialects the
+ * project's standards allow are catalogued. It used to be one regex looking
+ * for `{ selector: '...' }`, which meant a page object written the way
+ * `.mcp-context/skills/locator.skill.md` actually mandates —
+ * `page.getByRole('button', { name: 'Login' })` — produced an empty locator
+ * list, while the catalog header still told the model those were the only
+ * real locators there are.
+ */
 function buildLocatorIndex(content) {
   const lines = content.split('\n');
-  const locators = [];
   const methods = [];
   const seenMethods = new Set();
 
+  const locators = parseLocatorDeclarations(content).map((decl) => ({
+    name: decl.name,
+    selector: describeLocator(decl),
+    line: decl.line,
+    dialect: decl.dialect,
+  }));
+  const locatorLines = new Set(locators.map((l) => l.line));
+
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
+    // A locator declaration can look like a method signature to METHOD_DECL
+    // (`foo = page.getByRole(...)`); the locator parse already claimed it.
+    if (locatorLines.has(i + 1)) continue;
 
-    const loc = line.match(LOCATOR_DECL);
-    if (loc) {
-      locators.push({ name: loc[1], selector: loc[3], line: i + 1 });
-      continue;
-    }
-
-    const method = line.match(METHOD_DECL);
+    const method = lines[i].match(METHOD_DECL);
     if (method && !NOT_A_METHOD.has(method[1]) && !seenMethods.has(method[1])) {
       methods.push({ name: method[1], line: i + 1 });
       seenMethods.add(method[1]);
@@ -57,31 +72,15 @@ ${locatorLines ? `Locators:\n${locatorLines}\n` : ''}${methodLines ? `Methods:\n
 }
 
 const fs = require('fs');
-const path = require('path');
-const { REPO_ROOT } = require('../paths');
-
-const HELPER_DIRS = [path.join(REPO_ROOT, 'src', 'pom'), path.join(REPO_ROOT, 'src', 'businessFunction')];
-
-function listHelperFiles() {
-  const out = [];
-  for (const dir of HELPER_DIRS) {
-    let entries;
-    try {
-      entries = fs.readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of entries) {
-      if (name.endsWith('.ts') || name.endsWith('.js')) out.push(path.join(dir, name));
-    }
-  }
-  return out;
-}
+// Discovered rather than hardcoded to src/pom + src/businessFunction, so the
+// same engine works on a suite that names those directories anything else.
+// See ../projectConventions.js.
+const { listHelperFiles } = require('../projectConventions');
 
 /**
  * Maps each `const x = new SomeClass(...)` instance in the shown source to
- * that class's full locator/method catalog, by finding whichever file under
- * src/pom declares `class SomeClass`.
+ * that class's full locator/method catalog, by finding whichever page-object
+ * file declares `class SomeClass`.
  *
  * This is what turns "detailsPage.someMethod()" from an opaque string into
  * something checkable: once `detailsPage` is known to be an OTTDetailsPage,

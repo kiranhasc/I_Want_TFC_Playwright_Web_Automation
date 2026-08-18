@@ -122,4 +122,91 @@ function runHeuristics(test, errorContext) {
   };
 }
 
-module.exports = { runHeuristics };
+const BARE_TIMEOUT_RE = /test timeout of \d+ms exceeded/i;
+// Playwright renders a failed expect() as its own block containing
+// "expect(received)" (or expect(locator), expect(page), ...) followed by a
+// matcher call — a concrete sign that test code actually ran and evaluated a
+// condition, as opposed to the test just hanging with nothing to show for it.
+const EXPECTATION_FAILURE_RE = /expect\([^)]*\)\s*\.\s*\w+\(/i;
+// Rules whose category is already backed by concrete, specific evidence
+// (an Akamai block page, a genuinely empty content area, a network-level
+// failure) — never worth overriding just because the failure also happens to
+// carry the generic "Test timeout of Nms exceeded" wrapper text.
+const STRONG_EVIDENCE_RULE_IDS = new Set(['cdn-access-denied', 'empty-content-area', 'network-error']);
+
+/**
+ * Bare "Test timeout of Nms exceeded" is the single most common failure
+ * shape in this suite, and on its own it says nothing about *why* — an AI
+ * asked to classify it has to guess from a long, generic page snapshot, and
+ * two failures with near-identical evidence can land in different
+ * categories purely depending on how the model reads that snapshot each
+ * time. (Observed directly: two timeouts in the same run, same spec file —
+ * one called "environment", one called "code" — with no rule enforcing
+ * either was actually right.)
+ *
+ * This runs *after* whichever provider produced a result (AI or heuristic)
+ * and corrects the category using the one concrete signal available: did a
+ * real assertion actually run and fail before the timeout, or did the test
+ * just hang with no evidence either way? It leaves the provider's own
+ * summary/rootCause/suggestedFix text alone — only the category (and an
+ * explanatory note) are touched, and only for the bare-timeout shape.
+ */
+function applyTimeoutCategoryGuard(test, errorContext, result, hangingAction = null) {
+  if (!result) return result;
+  const message = stripAnsi(test.error?.message) || '';
+  if (!BARE_TIMEOUT_RE.test(message)) return result;
+  if (STRONG_EVIDENCE_RULE_IDS.has(result.ruleId)) return result;
+
+  // A timeout is only evidence-free when we genuinely cannot see where it
+  // got stuck. When the trace names the exact call still in flight (see
+  // ../rca/traceActions.js), that is real, specific evidence — a named
+  // locator that can be checked against the DOM snapshot — so the
+  // downgrade below no longer applies. The whole point of forcing "unknown"
+  // was to refuse to guess with nothing to go on; with the hanging locator
+  // in hand there is something to go on, and the provider was shown it.
+  if (hangingAction?.selector) {
+    return {
+      ...result,
+      note: [
+        result.note,
+        `Trace shows the test was still waiting on ${hangingAction.title || hangingAction.method} (${hangingAction.describedParams}) when the timeout fired — this categorisation is based on that, not on a bare timeout alone.`,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    };
+  }
+
+  const hasFailedExpectation = EXPECTATION_FAILURE_RE.test(errorContext?.errorDetails || '');
+
+  if (hasFailedExpectation) {
+    if (result.category === 'code') return result;
+    return {
+      ...result,
+      category: 'code',
+      note: [
+        result.note,
+        'Category corrected to "code": the captured error details show a specific assertion (expect(...)) actually ran and failed before the timeout — this is not a bare hang.',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    };
+  }
+
+  // Bare hang, zero assertion evidence — don't let a model's read of the
+  // page snapshot pass as a confident "code" or "environment" verdict when
+  // nothing in the evidence actually distinguishes the two. Honest
+  // "unknown" beats a coin flip dressed up as analysis.
+  if (result.category === 'unknown') return result;
+  return {
+    ...result,
+    category: 'unknown',
+    note: [
+      result.note,
+      'Category corrected to "unknown": this is a bare timeout with no assertion ever captured — nothing in the evidence distinguishes a stale selector/locator (code) from the app never reaching the expected state (environment). Check the page snapshot manually.',
+    ]
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
+module.exports = { runHeuristics, applyTimeoutCategoryGuard };

@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import type { FailureCategory, RcaResult, TestRecord } from '../api/types';
 import { CopyButton } from './CopyButton';
 import { SpotFixPanel } from './SpotFixPanel';
+import { TestCaseHistoryPanel } from './TestCaseHistoryPanel';
 import { stripAnsi } from '../utils/ansi';
 
 function attachmentsByName(test: TestRecord, name: string) {
@@ -66,6 +67,8 @@ export function FailureDetailPanel({
 
   return (
     <div className="failure-panel">
+      <TestCaseHistoryPanel runId={runId} testId={test.testId} />
+
       {test.error && (
         <div className="failure-error">
           <div className="failure-error-header">

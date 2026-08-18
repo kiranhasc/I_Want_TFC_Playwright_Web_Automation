@@ -5,11 +5,15 @@ const { RUNS_DIR, REPORTS_DIR, REPO_ROOT, ARTIFACTS_DIR, PROJECTS_MANIFEST } = r
 const { spawnPlaywrightJob, killJobTree, listTestCount } = require('./processRunner');
 const { analyzeTest: runRcaAnalysis } = require('./rca');
 const { proposeSpotFix, applySpotFix, revertSpotFix, registry: spotFixRegistry } = require('./spotfix');
-const { assessRisks, hasHighRisk, languageRisk } = require('./spotfix/risk');
+const { assessRisks, hasHighRisk, languageRisk, unvalidatableRisks } = require('./spotfix/risk');
 const { KeepAwake } = require('./keepAwake');
 const { archiveAttachments } = require('./artifactArchive');
+const { recordBaseline, discardBaselineFromRun } = require('./spotfix/baselineStore');
+const { platformOfRun, DEFAULT_PLATFORM_ID } = require('./platforms');
 const { syncRun, deleteRunFromIndex } = require('./db');
 const { generateRunSummary } = require('./runSummary');
+const { testCaseKey } = require('./testCaseIdentity');
+const { getTestCaseHistory: loadTestCaseHistory } = require('./testCaseHistory');
 
 const FAILURE_STATUSES = new Set(['failed', 'timedOut', 'interrupted']);
 
@@ -63,6 +67,25 @@ class RunManager {
     // "verify" mode is provisional until the rerun it triggered comes back
     // green; see _resolvePendingVerification.
     this.pendingVerifications = new Map();
+    // rerunRunId -> { sourceRunId, testIds }. Every plain rerun() call
+    // registers here so its outcome can be written back onto the source
+    // run's own test record(s) once it finishes — see
+    // _resolvePendingManualRerun. This is what lets "Rerun test"/"Rerun
+    // file" stay on the run you're already looking at instead of
+    // navigating away: the row updates itself in place via the normal
+    // live-event path rather than the page having to jump elsewhere to
+    // show a result.
+    this.pendingManualReruns = new Map();
+    // retryRunId -> { sourceRunId, project, file }. retryStalledJob() kicks
+    // off a small background rerun of just the ONE file that stalled,
+    // tracked here so _resolvePendingStalledRetry can merge every test IT
+    // produces back onto the source run — filling in results for tests that
+    // never even got a chance to start, not just correcting ones already
+    // recorded as failed (which is all pendingManualReruns handles). This is
+    // what lets a run that stalls at test 100 of 200 finish as ONE complete
+    // 200-test report instead of forcing a full restart or leaving a
+    // permanent gap — see retryStalledJob's own comment for the reasoning.
+    this.pendingStalledRetries = new Map();
     // The single authoritative in-memory object per run while it's
     // queued/running. stop(), ingestEvent(), and the job-queue's own
     // `close` handler must all mutate this SAME object rather than each
@@ -127,10 +150,19 @@ class RunManager {
     return this._healSpotFixRisks(JSON.parse(fs.readFileSync(file, 'utf-8')));
   }
 
-  listRuns(limit = 20) {
+  /**
+   * Newest runs first. `platform` filters to one platform's suite; omitting it
+   * returns every platform's runs, which is what the cross-platform Overview
+   * and Run history pages want.
+   *
+   * Filtering happens BEFORE the limit is applied, so asking for 20 mobile
+   * runs cannot come back short just because web ran more recently.
+   */
+  listRuns(limit = 20, { platform = null } = {}) {
     if (!fs.existsSync(RUNS_DIR)) return [];
     const files = fs.readdirSync(RUNS_DIR).filter((f) => f.endsWith('.json'));
-    const runs = files.map((f) => JSON.parse(fs.readFileSync(path.join(RUNS_DIR, f), 'utf-8')));
+    let runs = files.map((f) => JSON.parse(fs.readFileSync(path.join(RUNS_DIR, f), 'utf-8')));
+    if (platform) runs = runs.filter((run) => platformOfRun(run) === platform);
     runs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return runs.slice(0, limit);
   }
@@ -210,6 +242,13 @@ class RunManager {
       runId,
       createdAt: new Date().toISOString(),
       trigger,
+      // Which platform's suite this run belongs to (see lib/platforms.js).
+      // Stamped at creation rather than inferred later, because the registry
+      // can gain or lose entries between a run finishing and someone opening
+      // it, and a run's origin must not change retroactively. Every run
+      // recorded before platforms existed has no field at all and is read as
+      // web — see platformOfRun.
+      platform: DEFAULT_PLATFORM_ID,
       jobs: [],
       status: 'queued',
       stats: { total: 0, passed: 0, failed: 0, skipped: 0, running: 0 },
@@ -218,6 +257,11 @@ class RunManager {
       // however many modules' 'begin' events have arrived so far — see
       // start()/rerun() (which set it) and ingestEvent (which respects it).
       totalKnownUpfront: false,
+      // Set while retryStalledJob's background retry of a stalled file is in
+      // flight; cleared by _resolvePendingStalledRetry once it merges back.
+      // Purely informational for the UI (see stalledFilesByProject in
+      // RunDetailPage) — never read by any scheduling/stall-detection logic.
+      retryingFile: null,
     };
     this._saveRun(run);
     this.activeRuns.set(run.runId, run);
@@ -227,58 +271,87 @@ class RunManager {
   /**
    * Manual run trigger from the "New Run" form.
    *
-   * A specific project is still one job — nothing to split. "All projects"
-   * used to also be one job, with Playwright itself sequencing through every
-   * project inside that single process. That made a stall unrecoverable
-   * except by ending the whole run: the dashboard's own job queue (and so
-   * skipStalledJob) only ever saw ONE job, with no next entry to advance to,
-   * no matter how many of the real projects had already finished. Splitting
-   * "all projects" into one dashboard job per project — same grouping
-   * rerun() already uses — is what actually makes "skip the stuck module and
-   * continue" mean something for the common case (a fresh run, not just a
-   * rerun of failures).
+   * Both "one project" and "all projects" used to run as a single dashboard
+   * job each, with Playwright itself sequencing through every spec file
+   * inside that one process. That made a stall unrecoverable except by
+   * ending the whole run: the dashboard's own job queue (and so
+   * skipStalledJob) only ever saw ONE job, with no next entry to advance
+   * to — killing it lost every file still queued behind the stuck one, not
+   * just the stuck file itself. Splitting all the way down to one dashboard
+   * job per SPEC FILE (not just per project) is what actually fixes that:
+   * a stall now only costs the one file it happened in, and the queue
+   * keeps working through the rest of that same module's files before
+   * moving on — see _specFileJobSpecs.
    *
    * That splitting has its own side effect worth guarding against: stats.total
    * used to be known instantly (one combined Playwright invocation reports
    * its true total on its single 'begin' event), but split across N jobs it
-   * would otherwise only grow as each module's own job starts, showing a
+   * would otherwise only grow as each file's own job starts, showing a
    * misleadingly small total for most of the run. listTestCount asks
    * Playwright to list (never run) the same target up front so the real
-   * total is known before the first module even starts.
+   * total is known before the first file even starts — scoped to `project`
+   * when one was given, so a single-project run's total is that project's
+   * total, not the whole suite's.
    */
   start({ env, project, grep }) {
     const run = this._newRun({ type: 'manual', env, project: project || null, grep: grep || null, sourceRunId: null });
-    const jobSpecs = project ? [{ project, targets: [] }] : this._allProjectJobSpecs();
+    const jobSpecs = this._specFileJobSpecs({ project: project || null });
 
-    if (!project) {
-      const total = listTestCount({ env, grep });
-      if (total != null) {
-        run.stats.total = total;
-        run.totalKnownUpfront = true;
-        this._saveRun(run);
-        this.broadcast({ type: 'run-event', runId: run.runId, event: 'stats', payload: { stats: run.stats } });
-      }
-      // total === null: listTestCount already logged why; fall back to the
-      // old incremental behavior rather than blocking the run on this.
+    const total = listTestCount({ env, grep, project });
+    if (total != null) {
+      run.stats.total = total;
+      run.totalKnownUpfront = true;
+      this._saveRun(run);
+      this.broadcast({ type: 'run-event', runId: run.runId, event: 'stats', payload: { stats: run.stats } });
     }
+    // total === null: listTestCount already logged why; fall back to the
+    // old incremental behavior rather than blocking the run on this.
 
     this._runJobQueue(run, jobSpecs, { env, grep });
     return run.runId;
   }
 
-  /** One job spec per configured project, in manifest order. */
-  _allProjectJobSpecs() {
+  /**
+   * One job spec per (project, spec file) pair — the finest grain that
+   * still maps onto one real `npx playwright test <project> <file>`
+   * invocation. Optionally scoped to a single project (a project-specific
+   * "New Run"); otherwise every project in the manifest, in order, each
+   * expanded into its own list of files.
+   *
+   * This granularity is what makes stall recovery actually mean something:
+   * one job per whole PROJECT meant a stall anywhere in a module (e.g.
+   * account, which spans 4 spec files) killed every file in it that hadn't
+   * run yet, not just the one that was actually stuck. One job per file
+   * means skipStalledJob only ever loses the single file that wedged —
+   * the rest of that module's files still get their turn before the queue
+   * moves on to the next module.
+   */
+  _specFileJobSpecs({ project = null } = {}) {
     let manifest;
     try {
       manifest = JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'));
     } catch {
-      // Manifest unreadable — fall back to the old single-job behavior
-      // rather than failing the run outright.
-      return [{ project: null, targets: [] }];
+      // Manifest unreadable — fall back to the old single-job-per-project
+      // behavior rather than failing the run outright.
+      return [{ project, targets: [] }];
     }
-    const projects = manifest.projects || [];
-    if (!projects.length) return [{ project: null, targets: [] }];
-    return projects.map((p) => ({ project: p.name, targets: [] }));
+    const projects = (manifest.projects || []).filter((p) => !project || p.name === project);
+    if (!projects.length) return [{ project, targets: [] }];
+
+    const specs = [];
+    for (const p of projects) {
+      if (!p.specs || !p.specs.length) {
+        // No file list in the manifest for this project — fall back to one
+        // job covering the whole project rather than silently running
+        // nothing for it.
+        specs.push({ project: p.name, targets: [] });
+        continue;
+      }
+      for (const file of p.specs) {
+        specs.push({ project: p.name, targets: [file] });
+      }
+    }
+    return specs;
   }
 
   /** Convenience shortcut: rerun via Playwright's own --last-failed (immediately-preceding CLI run only). */
@@ -332,6 +405,10 @@ class RunManager {
     // resolves it, a rerun's total IS just this length, for free.
     run.stats.total = targetTests.length;
     run.totalKnownUpfront = true;
+    this.pendingManualReruns.set(run.runId, {
+      sourceRunId,
+      testIds: targetTests.map((t) => t.testId),
+    });
     this._runJobQueue(run, jobSpecs, { env: source.trigger.env });
     return run.runId;
   }
@@ -344,6 +421,10 @@ class RunManager {
       if (active) killJobTree(active.child);
       if (jobMeta.status === 'running' || jobMeta.status === 'queued') jobMeta.status = 'stopped';
     }
+    // Whatever test was mid-execution when the kill landed never gets its
+    // own 'test-end' — see _interruptRunningTests for why that otherwise
+    // leaves it stuck reading "Running" forever.
+    this._interruptRunningTests(run);
     run.status = 'stopped';
     this._saveRun(run);
     this.broadcast({ type: 'run-status', runId, status: 'stopped' });
@@ -383,12 +464,168 @@ class RunManager {
     // and emit its own first event.
     this.lastEventAt.set(runId, Date.now());
     run.stalledSince = null;
+    // Whichever test this module's worker was mid-execution on never gets
+    // its own 'test-end' — see _interruptRunningTests for why that
+    // otherwise leaves it stuck reading "Running" forever, immune to every
+    // rerun action. Scoped to this job's own project so it doesn't touch a
+    // genuinely-running test in a module that hasn't started yet.
+    this._interruptRunningTests(run, { project: runningJob.project });
     this._saveRun(run);
     this.broadcast({ type: 'job-status', runId, jobId: runningJob.jobId, status: 'stalled' });
     this.broadcast({ type: 'run-stalled', runId, stalledSince: null });
 
     killJobTree(active.child);
     return true;
+  }
+
+  /**
+   * The recovery path a stall actually calls for: kill the wedged file's job
+   * (same as skipStalledJob) and IMMEDIATELY retry just that one file,
+   * merging its results back onto THIS run once it finishes — rather than
+   * abandoning it and leaving a permanent gap that only a full fresh run of
+   * the whole module could fill.
+   *
+   * Why this doesn't need to touch this run's own job queue at all: killing
+   * the wedged job already lets _runJobQueue's existing 'close' handler
+   * advance to whatever comes next for THIS run on its own (that's the whole
+   * mechanism skipStalledJob relies on) — so the queue keeps moving
+   * regardless. The retry is a second, independent _runJobQueue of exactly
+   * one job spec (this file), and _resolvePendingStalledRetry is what stitches
+   * its outcome back in, the same pattern _resolvePendingManualRerun already
+   * uses for "Rerun test"/"Rerun file" staying on the run you're viewing
+   * instead of forcing you to a second page.
+   *
+   * Deliberately retries the WHOLE file, not just the one test that was
+   * mid-execution: a stall can leave later tests in the same file with no
+   * record at all (they never got a chance to start), and there is no
+   * reliable way to grep-target "whatever never ran" the way a rerun can
+   * target a named failed test. Re-running the file is the same unit
+   * "Rerun file" already uses elsewhere in this dashboard, just triggered
+   * automatically instead of by hand — a handful of already-passed tests in
+   * that one file re-run as a side effect, which is a small, bounded cost
+   * against the alternative (a permanent gap, or restarting the ENTIRE
+   * module from test 1 — the actual complaint this exists to fix, for
+   * someone running hundreds of cases end to end who wants one complete
+   * report instead of two runs to reconcile).
+   *
+   * Returns false (no-op) when there's nothing running to retry, or when
+   * the stalled job has no known file (the whole-project fallback shape
+   * used only when the projects manifest itself is unreadable — see
+   * _specFileJobSpecs) — that shape has no single file to retarget, so
+   * "Skip module & continue" remains the only recovery for it.
+   */
+  retryStalledJob(runId) {
+    const run = this.activeRuns.get(runId);
+    if (!run || run.status !== 'running') return false;
+    const runningJob = run.jobs.find((j) => j.status === 'running');
+    if (!runningJob) return false;
+    const { project, file } = runningJob; // captured before skipStalledJob mutates the job's status
+
+    if (!this.skipStalledJob(runId)) return false;
+    if (!file) return false; // Killed it, but nothing specific to retry automatically.
+
+    // Purely informational — lets the UI show "Retrying <file>…" instead of
+    // the "incomplete" badge while the background retry is in flight.
+    // Deliberately NOT flipping the killed job's own status back to
+    // 'running': the real Playwright process that reports progress for the
+    // retry tags every event with the RETRY run's id, not this one, so this
+    // run would never receive another event and checkStalledRuns would
+    // wrongly re-flag it as stalled again within the same threshold.
+    run.retryingFile = file;
+    this._saveRun(run);
+    this.broadcast({ type: 'run-event', runId, event: 'stalled-retry-started', payload: { project, file } });
+
+    const retryRun = this._newRun({
+      type: 'rerun',
+      env: run.trigger.env,
+      project: project || null,
+      grep: null,
+      sourceRunId: runId,
+    });
+    retryRun.stats.total = 0; // Unknown until the retry's own 'begin' events arrive — same as a normal multi-file start().
+    this.pendingStalledRetries.set(retryRun.runId, { sourceRunId: runId, project, file });
+    this._runJobQueue(retryRun, [{ project, targets: [file] }], { env: run.trigger.env });
+    return true;
+  }
+
+  /**
+   * Merges a stalled-file retry's results back onto the run it stalled in —
+   * the counterpart to _resolvePendingManualRerun, but able to do something
+   * that one can't: insert a result for a test that never had ANY record on
+   * the source run (pendingManualReruns only ever updates an existing
+   * test's `lastRerun` note, since it was built for retrying already-failed
+   * tests, which by definition already have a record).
+   */
+  _resolvePendingStalledRetry(finishedRun) {
+    const pending = this.pendingStalledRetries.get(finishedRun.runId);
+    if (!pending) return;
+    this.pendingStalledRetries.delete(finishedRun.runId);
+
+    let sourceRun;
+    try {
+      sourceRun = this._getMutableRun(pending.sourceRunId);
+    } catch {
+      sourceRun = null;
+    }
+    if (!sourceRun) return; // source run has since been deleted; nothing to merge onto
+
+    if (sourceRun.retryingFile === pending.file) sourceRun.retryingFile = null;
+
+    // Every test the retry produced for this file replaces whatever was (or
+    // wasn't) on the source run — filling genuine gaps (tests that never
+    // started) and overwriting the one stale 'interrupted' record with its
+    // real outcome, in one pass.
+    let dirty = false;
+    for (const test of Object.values(finishedRun.tests)) {
+      if (test.file !== pending.file) continue;
+      sourceRun.tests[test.testId] = test;
+      dirty = true;
+    }
+    if (!dirty) {
+      this._saveRun(sourceRun);
+      return;
+    }
+
+    // The stalled job entry now has a real outcome instead of a permanent
+    // "stalled" reading.
+    const job = sourceRun.jobs.find((j) => j.project === pending.project && j.file === pending.file && j.status === 'stalled');
+    if (job) {
+      const fileTests = Object.values(sourceRun.tests).filter((t) => t.file === pending.file);
+      job.status = fileTests.some((t) => FAILURE_STATUSES.has(t.status)) ? 'failed' : 'passed';
+      job.finishedAt = new Date().toISOString();
+    }
+
+    this._recomputeStats(sourceRun);
+    // A run that had already reached a terminal status purely because this
+    // file was 'stalled' needs that verdict re-checked now that it isn't —
+    // same computation _runJobQueue itself uses when the queue first ends.
+    if (sourceRun.status !== 'running' && sourceRun.status !== 'queued') {
+      sourceRun.status = this._computeFinalStatus(sourceRun);
+    }
+
+    this._saveRun(sourceRun);
+    this.broadcast({
+      type: 'run-event',
+      runId: pending.sourceRunId,
+      event: 'stalled-retry-merged',
+      payload: { file: pending.file, stats: sourceRun.stats, status: sourceRun.status },
+    });
+  }
+
+  /**
+   * A 'stalled' module counts as a failure for the run's own headline
+   * status, same as 'failed' — the run did continue past it (that's the
+   * whole point of skipStalledJob), but that module's results are still
+   * incomplete/unknown, which is not a 'passed' run. Extracted so
+   * _resolvePendingStalledRetry can re-derive the same verdict after
+   * filling in a stall's gap, without duplicating this logic.
+   */
+  _computeFinalStatus(run) {
+    return run.jobs.some((j) => j.status === 'failed' || j.status === 'stalled')
+      ? 'failed'
+      : run.jobs.some((j) => j.status === 'stopped')
+        ? 'stopped'
+        : 'passed';
   }
 
   /** Spawns job specs one project at a time, chaining the next job off the previous process's 'close' event. */
@@ -410,18 +647,12 @@ class RunManager {
         this.keepAwake.release();
         // A stopped rerun proves nothing, so any fix riding on it is rolled back.
         this._resolvePendingVerification(run);
+        this._resolvePendingManualRerun(run);
+        this._resolvePendingStalledRetry(run);
         return;
       }
       if (index >= jobSpecs.length) {
-        // A 'stalled' module counts as a failure for the run's own headline
-        // status, same as 'failed' — the run did continue past it (that's
-        // the whole point of skipStalledJob), but that module's results are
-        // still incomplete/unknown, which is not a 'passed' run.
-        const finalStatus = run.jobs.some((j) => j.status === 'failed' || j.status === 'stalled')
-          ? 'failed'
-          : run.jobs.some((j) => j.status === 'stopped')
-            ? 'stopped'
-            : 'passed';
+        const finalStatus = this._computeFinalStatus(run);
         run.status = finalStatus;
         this._saveRun(run);
         this.broadcast({ type: 'run-status', runId: run.runId, status: finalStatus });
@@ -430,6 +661,8 @@ class RunManager {
         this.keepAwake.release();
         // Keep or roll back any spot fix whose verification rerun this was.
         this._resolvePendingVerification(run);
+        this._resolvePendingManualRerun(run);
+        this._resolvePendingStalledRetry(run);
         // A stopped run's data is a partial/interrupted snapshot, not a
         // meaningful result to summarize — only passed/failed runs qualify.
         if (finalStatus === 'passed' || finalStatus === 'failed') this._generateRunSummaryAsync(run.runId);
@@ -441,6 +674,10 @@ class RunManager {
       const jobMeta = {
         jobId,
         project: spec.project,
+        // Which spec file this job covers, when the queue was split down
+        // to file granularity (see _specFileJobSpecs) — null for the
+        // whole-project/whole-suite fallback shapes (targets: []).
+        file: spec.targets?.[0] || null,
         pid: null,
         status: 'running',
         startedAt: new Date().toISOString(),
@@ -486,7 +723,7 @@ class RunManager {
     const test = run.tests[testId];
     if (!test) throw new Error(`Test ${testId} not found in run ${runId}`);
 
-    const rca = await runRcaAnalysis(test);
+    const rca = await runRcaAnalysis(test, { excludeRunId: runId });
     test.rca = rca;
     // A fresh diagnosis invalidates any proposal built from the previous one.
     delete test.spotFix;
@@ -501,6 +738,19 @@ class RunManager {
     const test = run.tests[testId];
     if (!test) throw new Error(`Test ${testId} not found in run ${runId}`);
     return { run, test };
+  }
+
+  /**
+   * Every past run where this exact test case (matched by its stable
+   * ticket-id identity, not file+line — see testCaseIdentity.js) showed up,
+   * with what RCA concluded and what happened to any spot fix each time.
+   * Read-only, and separate from analyze/proposeSpotFix — this is for a
+   * human browsing a test's own track record, not for generating anything.
+   */
+  getTestCaseHistory(runId, testId) {
+    const { test } = this._getTest(runId, testId);
+    const key = testCaseKey(test);
+    return { key, history: loadTestCaseHistory(key, { excludeRunId: runId, limit: 15 }) };
   }
 
   /**
@@ -535,9 +785,19 @@ class RunManager {
     // most need a human's judgement. Applying one requires saying so
     // explicitly — a risk label alone was proven not enough to stop this in
     // practice. See spotfix/risk.js.
+    //
+    // The same gate covers architecture violations (a selector or a wait
+    // pushed into a spec file, Playwright reaching into a business function —
+    // see spotfix/layering.js) for the same reason: a rerun goes green either
+    // way, so passing proves nothing about whether the change was acceptable.
     if (hasHighRisk(test.spotFix.edits) && !acknowledgeRisks) {
+      const labels = [
+        ...new Set(
+          test.spotFix.edits.flatMap((e) => (e.risks || []).filter((r) => r.severity === 'high').map((r) => r.label))
+        ),
+      ];
       throw new Error(
-        'This fix changes what the test checks (not just how it checks it) — review the warning above the diff, then confirm to apply anyway. A passing rerun would not prove this is correct.'
+        `${labels.join('; ') || 'This fix carries a high-severity risk'} — review the warning above the diff, then confirm to apply anyway. A passing rerun would not prove this is correct.`
       );
     }
 
@@ -584,12 +844,49 @@ class RunManager {
 
     let verification;
     if (passed) {
-      verification = {
-        status: 'passed',
-        rerunRunId: finishedRun.runId,
-        detail: 'The test passed on rerun, so this fix was kept.',
-        checkedAt: new Date().toISOString(),
-      };
+      // A green rerun is not proof for every kind of edit. Where the evidence
+      // already says the change cannot be what made the test pass — a locator
+      // that matches nothing, an assertion rewritten to fit — reporting
+      // "verified" is worse than reporting nothing, because it retires the
+      // one question a reviewer should still be asking. See unvalidatableRisks
+      // in spotfix/risk.js for the fix that made this necessary.
+      let blockers = [];
+      try {
+        const { test: sourceTest } = this._getTest(pending.sourceRunId, pending.testId);
+        blockers = unvalidatableRisks(sourceTest?.spotFix?.edits);
+      } catch {
+        /* source run gone — fall back to reporting the plain pass */
+      }
+
+      // The pass wrote a baseline at test-end, before this verdict existed.
+      // Now that it does, take it back: a page the app only reached via a fix
+      // nothing could validate must not become the reference every future
+      // repair for this test case is matched against.
+      if (blockers.length) {
+        try {
+          discardBaselineFromRun(rerunTest, finishedRun.runId);
+        } catch {
+          /* best-effort — never disturb recording the run */
+        }
+      }
+
+      verification = blockers.length
+        ? {
+            status: 'inconclusive',
+            rerunRunId: finishedRun.runId,
+            detail:
+              `The test passed on rerun, but that does not confirm this fix: ${blockers
+                .map((b) => b.why)
+                .join('; ')}. The change is still applied — review it, and revert if the test is now passing for the wrong reason.`,
+            unvalidatable: blockers,
+            checkedAt: new Date().toISOString(),
+          }
+        : {
+            status: 'passed',
+            rerunRunId: finishedRun.runId,
+            detail: 'The test passed on rerun, so this fix was kept.',
+            checkedAt: new Date().toISOString(),
+          };
     } else {
       const outcome = rerunTest ? `still ${rerunTest.status}` : 'did not report a result';
       let detail = `The test ${outcome} on rerun, so the fix was rolled back.`;
@@ -623,6 +920,50 @@ class RunManager {
     } catch {
       // Source run is gone; the working tree is already in the right state.
     }
+  }
+
+  /**
+   * Writes a plain rerun's outcome back onto the source run's own test
+   * record(s), once the rerun it triggered finishes. Unlike
+   * _resolvePendingVerification, this never touches the working tree — it
+   * only records what happened, so a person watching the ORIGINAL run's
+   * failure list sees each row update itself (Rerunning… -> passed/failed)
+   * without having to leave that page to find out.
+   */
+  _resolvePendingManualRerun(finishedRun) {
+    const pending = this.pendingManualReruns.get(finishedRun.runId);
+    if (!pending) return;
+    this.pendingManualReruns.delete(finishedRun.runId);
+
+    let sourceRun;
+    try {
+      sourceRun = this._getMutableRun(pending.sourceRunId);
+    } catch {
+      sourceRun = null;
+    }
+    if (!sourceRun) return; // source run has since been deleted; nothing to update
+
+    let dirty = false;
+    for (const testId of pending.testIds) {
+      const sourceTest = sourceRun.tests[testId];
+      if (!sourceTest) continue;
+      const rerunTest = finishedRun.tests[testId];
+      sourceTest.lastRerun = {
+        status: rerunTest?.status ?? 'unknown',
+        runId: finishedRun.runId,
+        checkedAt: new Date().toISOString(),
+      };
+      dirty = true;
+    }
+    if (!dirty) return;
+
+    this._saveRun(sourceRun);
+    this.broadcast({
+      type: 'run-event',
+      runId: pending.sourceRunId,
+      event: 'test-rerun-result',
+      payload: { testIds: pending.testIds, rerunRunId: finishedRun.runId },
+    });
   }
 
   /** Restores the files an applied spot fix overwrote. */
@@ -804,6 +1145,45 @@ class RunManager {
     return adopted;
   }
 
+  /**
+   * Marks any test still recorded 'running' as 'interrupted' instead of
+   * leaving it that way forever.
+   *
+   * Killing a job (stop(), skipStalledJob()) means whatever test its worker
+   * was mid-execution on will never get the 'test-end' event that would
+   * normally resolve its status — nothing else ever sends one, since the
+   * process that would have is the one just killed. Left alone, that test's
+   * badge reads "Running" indefinitely, its stats bucket stays wrong, and —
+   * critically — none of the rerun actions can ever reach it, because they
+   * only operate on the FAILURE_STATUSES set and 'running' isn't in it. This
+   * is what "the tag still says running, and rerunning the file does
+   * nothing for it" turned out to mean: that specific test was never
+   * eligible for a rerun in the first place. 'interrupted' is Playwright's
+   * own vocabulary for exactly this situation, and is already treated as a
+   * failure everywhere that matters (FAILURE_STATUSES on both sides, rerun
+   * targeting, stats).
+   */
+  _interruptRunningTests(run, { project } = {}) {
+    let changed = false;
+    for (const test of Object.values(run.tests)) {
+      if (test.status !== 'running') continue;
+      if (project !== undefined && test.project !== project) continue;
+      test.status = 'interrupted';
+      test.error = {
+        message: test.error?.message || 'Interrupted: its module was stopped or skipped before this test finished.',
+      };
+      changed = true;
+      this.broadcast({
+        type: 'run-event',
+        runId: run.runId,
+        event: 'test-end',
+        payload: { testId: test.testId, title: test.title, status: 'interrupted' },
+      });
+    }
+    if (changed) this._recomputeStats(run);
+    return changed;
+  }
+
   _recomputeStats(run) {
     const stats = { total: run.stats.total, passed: 0, failed: 0, skipped: 0, running: 0 };
     for (const t of Object.values(run.tests)) {
@@ -870,6 +1250,13 @@ class RunManager {
         error: payload.error || null,
         attachments,
       };
+      // A passing test's DOM becomes the reference a future spot fix for this
+      // same test case is matched against — see spotfix/baselineStore.js.
+      // Runs after archiving so the stored copy is read from the archived
+      // path, which survives test-results/ being wiped. Never throws.
+      // Stamped with this run so _resolvePendingVerification can take the
+      // baseline back if this pass turns out not to confirm anything.
+      recordBaseline(run.tests[payload.testId], { runId });
       this._recomputeStats(run);
     }
 

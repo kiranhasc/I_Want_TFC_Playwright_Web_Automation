@@ -96,6 +96,123 @@ const RISKS = [
     },
   },
   {
+    /**
+     * A subtler variant of hardcoded-boolean-result: instead of hardcoding a
+     * literal, the new code redirects a named result field to a DIFFERENT
+     * pre-existing variable — one already computed (and already known true)
+     * from an earlier, unrelated step — rather than fixing why the correct
+     * variable was wrong.
+     *
+     * Observed for real: `isLiveContentVisible: isLiveIconVisible` (the
+     * real post-navigation "Live" badge check, which was returning false
+     * because its locator was stale — role: 'button' on what's actually a
+     * <span>) became `isLiveContentVisible: isLiveChannelsTrayVisible` (an
+     * earlier, already-true precondition from before the tray was even
+     * opened). The assertion started passing, but it no longer checked what
+     * its own name says it checks — and because the swap targets a real
+     * variable rather than a boolean literal, it evaded
+     * hardcoded-boolean-result's BOOL_LITERAL check entirely. Applied and
+     * verified (by a rerun that could only ever pass, since the field was
+     * now aliased to something already true) before this rule existed to
+     * catch it.
+     */
+    id: 'result-field-rerouted',
+    label: 'Redirects a named result field to a different pre-computed value',
+    severity: 'high',
+    detail:
+      'The old code populated this field from one variable; the new code swaps in an entirely different one instead of fixing why the original was wrong. If that other variable was already true for unrelated reasons, this makes the check pass without validating what it is actually named for — the same harm as hardcoding the literal, just one layer removed.',
+    test: ({ oldCode, newCode }) => {
+      const BARE_IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+      const BOOL_OR_NULLISH = /^(true|false|null|undefined)$/;
+      // Both sides must be bare identifiers (not literals, not calls, not
+      // property access) — a real variable name swapped for another real
+      // variable name. Boolean/nullish literals are hardcoded-boolean-
+      // result's job, not this rule's, to avoid double-reporting the same
+      // edit under two different risk ids.
+      const isRerouted = (oldValue, newValue) =>
+        Boolean(oldValue) &&
+        Boolean(newValue) &&
+        oldValue !== newValue &&
+        BARE_IDENTIFIER.test(oldValue) &&
+        BARE_IDENTIFIER.test(newValue) &&
+        !BOOL_OR_NULLISH.test(oldValue) &&
+        !BOOL_OR_NULLISH.test(newValue);
+
+      // Pass 1 — key each `field: value` by the FIELD'S OWN NAME, so the
+      // check survives lines being inserted or removed around it.
+      //
+      // This rule was originally index-aligned only (pass 2 below), and
+      // bailed outright when the line counts differed. A real proposal
+      // walked straight through that hole: it rerouted
+      // `isLiveContentVisible: isLiveIconVisible` to `: isLiveTagVisible`
+      // while ALSO adding a new const and an extra logger.assertion line,
+      // so the snippet grew by two lines, the rule skipped it entirely, and
+      // the edit reached the user carrying zero risks. Same reroute the rule
+      // was written for — only the surrounding line churn differed.
+      //
+      // Deliberately ignores `const x = ...` declarations (the name is
+      // followed by a space then `=`, not matched here): a new local being
+      // introduced is not a reroute. Only object/property assignment of the
+      // form `name: value` or `name = value` counts.
+      const FIELD_ASSIGN = /^\s*([A-Za-z_$][\w$]*)\s*(?::|=(?!=))\s*([^;,}\n]+?)\s*[;,]?\s*$/;
+      const fieldsOf = (code) => {
+        const out = new Map();
+        for (const line of code.split('\n')) {
+          const m = line.match(FIELD_ASSIGN);
+          // First occurrence wins, so a later same-named line can't mask it.
+          if (m && !out.has(m[1])) out.set(m[1], m[2].trim());
+        }
+        return out;
+      };
+      const newFields = fieldsOf(newCode);
+      const oldFields = fieldsOf(oldCode);
+      for (const [name, oldValue] of oldFields) {
+        if (isRerouted(oldValue, newFields.get(name))) return true;
+      }
+
+      // Pass 1b — the same reroute written as object shorthand.
+      //
+      // Observed live, immediately after pass 1 started catching the plain
+      // form: rather than `isLiveContentVisible: isLiveTagVisible`, the model
+      // emitted `isLiveContentVisible,` (shorthand) plus a NEW
+      // `const isLiveContentVisible = await detailsPage.isLiveTagVisible();`
+      // above it. Identical effect — the field's value now comes from a
+      // different source — but no `field: value` pair to compare, so pass 1
+      // saw nothing. The field is what the assertion reads, so a change in
+      // what computes it is worth a human's eyes regardless of the syntax
+      // used to express it.
+      const SHORTHAND = (code, name) =>
+        new RegExp(`^\\s*${name}\\s*,?\\s*$`, 'm').test(code);
+      const DECLARED_AS = (code, name) =>
+        code.match(new RegExp(`\\b(?:const|let|var)\\s+${name}\\s*=\\s*([^;\\n]+)`))?.[1]?.trim() || null;
+
+      for (const [name, oldValue] of oldFields) {
+        // Was an explicit `name: value`, is now shorthand...
+        if (newFields.has(name) || !SHORTHAND(newCode, name)) continue;
+        const newDecl = DECLARED_AS(newCode, name);
+        if (!newDecl) continue; // Shorthand for a variable that already existed — not a reroute.
+        const oldDecl = DECLARED_AS(oldCode, name);
+        // ...and the value backing it is not what the field used to read.
+        if (newDecl !== oldValue && newDecl !== oldDecl) return true;
+      }
+
+      // Pass 2 — the original index-aligned scan, kept because it also
+      // covers `return <identifier>;`, which has no field name to key on.
+      const oldLines = oldCode.split('\n');
+      const newLines = newCode.split('\n');
+      if (oldLines.length === newLines.length) {
+        const VALUE_POSITION = /(?::|=(?!=)|return)\s*([^;,}\n]+?)\s*[;,}]?\s*$/;
+        for (let i = 0; i < oldLines.length; i += 1) {
+          if (oldLines[i].trim() === newLines[i].trim()) continue;
+          const oldValue = oldLines[i].match(VALUE_POSITION)?.[1]?.trim();
+          const newValue = newLines[i].match(VALUE_POSITION)?.[1]?.trim();
+          if (isRerouted(oldValue, newValue)) return true;
+        }
+      }
+      return false;
+    },
+  },
+  {
     id: 'hard-coded-sleep',
     label: 'Adds a fixed sleep',
     severity: 'low',
@@ -179,4 +296,53 @@ function hasHighRisk(edits) {
   return (edits || []).some((edit) => (edit.risks || []).some((r) => r.severity === 'high'));
 }
 
-module.exports = { assessRisks, hasHighRisk, hasHedgeLanguage, languageRisk };
+/**
+ * Risks that a passing rerun cannot clear, and the reason why for each.
+ *
+ * A green rerun is the strongest signal this dashboard has, and it is
+ * routinely treated as proof. It is not, in two distinct situations:
+ *
+ *   - The edit changed what the test checks. It now passes by construction.
+ *   - The edit changed a locator to one the evidence says matches nothing.
+ *     If the test still went green, it went green for some OTHER reason —
+ *     very often a page object that catches its own errors and returns
+ *     false/'' (see ./swallowedFailures.js), leaving an assertion satisfied
+ *     by a value that no longer means what it says.
+ *
+ * The second case is not hypothetical: a locator built from the page's
+ * <title> was applied, rerun, passed, and was kept — while being unable to
+ * match anything and having nothing to do with the property under test.
+ * That is exactly the outcome "verify" exists to prevent, so a pass in this
+ * state must be reported as inconclusive rather than as verification.
+ */
+const RERUN_CANNOT_VALIDATE = new Map([
+  ['assertion-flipped', 'it rewrites what the test expects, so the test passes by construction'],
+  ['assertion-removed', 'it removes an assertion, so there is less being checked than before'],
+  ['test-skipped', 'the test no longer runs'],
+  ['hardcoded-boolean-result', 'the checked value is hardcoded, so the assertion cannot fail'],
+  ['result-field-rerouted', 'the asserted value now comes from a different source than the one under test'],
+  ['live-selector-no-match', 'the new locator matched nothing when checked against the live page'],
+  ['baseline-element-mismatch', 'the replacement points at a different element than the one this test passed against, so it can go green while checking something else'],
+  ['locator-off-subject', 'the new locator does not distinguish the condition the method is meant to establish, so it can pass either way'],
+  ['locator-text-not-in-captured-dom', 'the new locator looks for text that was not on the page captured at failure'],
+  ['swallowed-action-not-addressed', 'the underlying action may still never run — the error proving it is discarded'],
+  ['action-call-swapped-for-read', 'an action was replaced by a read, which cannot make the action happen'],
+  ['ambiguous-locator-reuse', 'the reused locator matches more than one element, so a position-based .first()/[0] pick can land on the right one by chance — a pass proves the pick happened to be right this time, not that it will be next time'],
+]);
+
+/**
+ * [{ id, label, why }] for every risk across `edits` that a rerun cannot
+ * settle. Empty means a passing rerun is meaningful.
+ */
+function unvalidatableRisks(edits) {
+  const found = new Map();
+  for (const edit of edits || []) {
+    for (const risk of edit.risks || []) {
+      const why = RERUN_CANNOT_VALIDATE.get(risk.id);
+      if (why && !found.has(risk.id)) found.set(risk.id, { id: risk.id, label: risk.label, why });
+    }
+  }
+  return [...found.values()];
+}
+
+module.exports = { assessRisks, hasHighRisk, hasHedgeLanguage, languageRisk, unvalidatableRisks };

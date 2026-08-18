@@ -37,8 +37,8 @@ async function completeWithOllama(prompt, { url = DEFAULT_URL, model = DEFAULT_M
   return data.response || '';
 }
 
-async function runOllama(test, errorContext, { url = DEFAULT_URL, model = DEFAULT_MODEL } = {}) {
-  const raw = await completeWithOllama(buildPrompt(test, errorContext), { url, model });
+async function runOllama(test, errorContext, { url = DEFAULT_URL, model = DEFAULT_MODEL } = {}, context = {}) {
+  const raw = await completeWithOllama(buildPrompt(test, errorContext, context), { url, model });
   return { source: 'ollama', model, ...parseModelResponse(raw) };
 }
 

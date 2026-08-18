@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useDashboardSocket } from '../api/useDashboardSocket';
-import type { ProjectsManifest, RunRecord, RunStatus } from '../api/types';
-import { NewRunForm } from '../components/NewRunForm';
+import type { RunRecord, RunStatus } from '../api/types';
 import { RunCard } from '../components/RunCard';
 import { ExportButtons } from '../components/ExportButtons';
 import { exportRunsCSV } from '../utils/export';
@@ -17,16 +15,19 @@ function matchesStatus(status: RunStatus, filter: StatusFilter) {
   return status === filter;
 }
 
+/**
+ * The record of everything that has already run, across every platform.
+ * Starting a run is deliberately NOT here — that belongs to a single platform
+ * and lives on its page, so this page never has to imply which suite a new run
+ * would go to.
+ */
 export function RunHistoryPage() {
-  const [manifest, setManifest] = useState<ProjectsManifest | null>(null);
   const [runs, setRuns] = useState<RunRecord[]>([]);
-  const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearResult, setClearResult] = useState<string | null>(null);
-  const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
 
   const refetchRuns = useCallback(() => {
@@ -34,7 +35,6 @@ export function RunHistoryPage() {
   }, []);
 
   useEffect(() => {
-    api.getProjects().then(setManifest).catch(() => {});
     refetchRuns();
   }, [refetchRuns]);
 
@@ -95,24 +95,12 @@ export function RunHistoryPage() {
     }
   }
 
-  async function handleStart(args: { env: string; project?: string; grep?: string }) {
-    setStarting(true);
-    try {
-      const { runId } = await api.startRun(args);
-      navigate(`/runs/${runId}`);
-    } finally {
-      setStarting(false);
-    }
-  }
-
   return (
     <div className="run-history page-fade">
       <div className="page-heading">
         <h2>Run history</h2>
-        <p className="muted">Start a new run, or dig back through past ones.</p>
+        <p className="muted">Every run so far, across all platforms. Start a new one from its platform page.</p>
       </div>
-
-      {manifest && <NewRunForm manifest={manifest} onStart={handleStart} starting={starting} />}
 
       <div className="card run-list">
         <div className="table-toolbar">
@@ -171,7 +159,7 @@ export function RunHistoryPage() {
         {clearResult && <div className="clear-history-result muted">{clearResult}</div>}
 
         {runs.length === 0 ? (
-          <p className="muted">No runs yet — start one above.</p>
+          <p className="muted">No runs yet — start one from a platform page.</p>
         ) : filtered.length === 0 ? (
           <p className="muted">No runs match this filter.</p>
         ) : (

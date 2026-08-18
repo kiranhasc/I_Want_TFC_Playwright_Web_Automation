@@ -855,6 +855,7 @@ export class OTTDetailsPage {
       if (await removeIcon.isVisible().catch(() => false)) {
         await removeIcon.click({ timeout: 15000, force: true });
         await this.page.waitForTimeout(1000);
+        return await this.validateRemovedFromWatchlistPopup();
       }
       await addIcon.waitFor({ state: 'visible', timeout: 15000 });
       await addIcon.click({ timeout: 15000, force: true });
@@ -1498,6 +1499,16 @@ async validateRemovedFromWatchlistPopup(): Promise<string> {
 async addToWatchlistAndGetToast(): Promise<string> {
     logger.elementInteraction('click', 'Add to Watchlist');
     try {
+      // The Add control is not rendered at all while the title is already in
+      // the watchlist — a state these tests routinely inherit from an earlier
+      // run against the same shared account. Clear it first so this method
+      // behaves the same whichever state it starts from; without this the
+      // click below simply never happens and the caller sees only an empty
+      // toast, which reads as a toast problem rather than a state one.
+      const removeLocator = this.page.locator(this.removeFromWatchlistButton.selector).first();
+      if (await removeLocator.isVisible().catch(() => false)) {
+        await removeLocator.click({ timeout: 15000, force: true });
+      }
       const locator = this.page.locator(this.addToWatchlistButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       await locator.click({ timeout: 15000 });

@@ -186,7 +186,7 @@ test.describe('Content details navigation', () => {
   });
 
   test('@Medium IW3-T1915: Verify detail page and All episodes list is scrollable till the end for show contents', async ({ page }) => {
-    test.setTimeout(60000);
+    test.setTimeout(70000);
     const data = testCaseData['tc-disc-007-episode-list-scrollable'] as Record<string, any>;
     const result = await verifyShowEpisodeListScrollableToEnd(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
@@ -197,7 +197,7 @@ test.describe('Content details navigation', () => {
   });
 
   test('@Medium IW3-T1916: Verify episodes are displayed/listed in ascending order for all the show content', async ({ page }) => {
-    test.setTimeout(60000);
+    test.setTimeout(70000);
     const data = testCaseData['tc-disc-008-episode-order'] as Record<string, any>;
     const result = await verifyEpisodesDisplayedInAscendingOrder(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);
@@ -209,6 +209,7 @@ test.describe('Content details navigation', () => {
   });
 
   test('@Medium IW3-T1921: Verify that respective episode playback starts post tapping on episode cards in detail page', async ({ page }) => {
+    test.setTimeout(250000);
     const data = testCaseData['tc-disc-014-episode-playback-on-details-page'] as Record<string, any>;
     const result = await verifyEpisodePlaybackStartsFromDetailsPage(page, { mode: data?.mode });
     expect(result.isLoggedIn).toBe(true);

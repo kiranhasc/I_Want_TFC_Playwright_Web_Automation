@@ -660,6 +660,13 @@ export class OTTAuthPage {
     }
 
     async isHomeTabVisible(): Promise<boolean> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+            const isVisible = await this.pageUtils.isVisible(this.homeTab, 10000);
+            await this.clickMobileMainMenu();
+            await this.page.waitForTimeout(1000);
+            return isVisible;
+        }
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
 
@@ -733,10 +740,9 @@ export class OTTAuthPage {
 
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
-        if (process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
-
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;

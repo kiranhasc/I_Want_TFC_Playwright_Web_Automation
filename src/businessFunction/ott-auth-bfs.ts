@@ -711,29 +711,32 @@ export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInp
 
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
-
     if (process.env.BROWSER === 'mchrome') {
         await authPage.navigate();
+        console.log('Skipping login for mchrome');
         logger.step('Skipping login for Mobile Web (mchrome)');
-
+        const homeTabVisible = await authPage.isHomeTabVisible();
         return {
             isLoggedIn: true,
-            homeTabVisible: false,
+            homeTabVisible: homeTabVisible,
         };
     } else {
         const mode = normalizeLoginMode(input?.mode);
         const storageFile = modeToFile[mode];
         const storagePath = storageFile ? path.join(authDir, storageFile) : null;
+        // ---- FAST PATH ----
         if (storagePath && fs.existsSync(storagePath)) {
             const age = Date.now() - fs.statSync(storagePath).mtimeMs;
             if (age < MAX_AGE_MS) {
                 logger.step(`Reusing saved ${mode} session from storageState`);
+                // clear any existing session state first — prevents mixing across modes
                 await page.context().clearCookies();
                 await page.evaluate(() => {
                     try {
                         window.localStorage.clear();
                         window.sessionStorage.clear();
                     } catch (e) {
+                        // no-op if page isn't on a real origin yet
                     }
                 }).catch(() => { });
                 const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
@@ -741,7 +744,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
                 if (state.origins?.length) {
                     await page.goto(state.origins[0].origin);
                     await page.evaluate((origins: any[]) => {
-                        window.localStorage.clear();
+                        window.localStorage.clear(); // clear again post-navigation, before setting new values
                         for (const o of origins) {
                             for (const item of o.localStorage ?? []) {
                                 window.localStorage.setItem(item.name, item.value);
@@ -754,26 +757,15 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
                 const homeVisible = await authPage.isHomeTabVisible();
                 logger.assertion('Home tab visible after session restore', homeVisible);
                 if (homeVisible) {
-                    return {
-                        isLoggedIn: homeVisible,
-                        homeTabVisible: homeVisible
-                    };
+                    return { isLoggedIn: homeVisible, homeTabVisible: homeVisible };
                 }
                 logger.step(`Cached ${mode} session invalid, falling back to live login`);
             }
         }
-
+        // ---- SLOW PATH (original login flow, unchanged) ----
         logger.step(`Starting ${mode} login flow`);
         await page.context().clearCookies();
-
-        const credentials = resolveLoginCredentials(
-            input ?? {
-                email: '',
-                password: '',
-                networkConnection: ''
-            },
-            mode
-        );
+        const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
         await authPage.navigate();
         await authPage.acceptCookieSettingsIfVisible();
         await authPage.clickEmailField();
@@ -790,7 +782,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         }
         return {
             isLoggedIn: homeVisible,
-            homeTabVisible: homeVisible
+            homeTabVisible: homeVisible,
         };
     }
 }
@@ -3045,7 +3037,9 @@ export async function verifyGuestPHCarouselTabTrayLoad(page: any, input?: Partia
     await authPage.navigate();
     logger.info('Navigated to OTT home page for guest PH carousel, tab, and tray load validation');
     const homeRailVisible = await authPage.isHomeTabVisible();
-    logger.assertion('Home tab visible', homeRailVisible);
+    logger.assertion('Home tab continue watching rail visible', homeRailVisible);
+    const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
+    logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
     let homePageScrolledToEnd = true;
     try {
         await authPage.scrollToBottomOfPage();

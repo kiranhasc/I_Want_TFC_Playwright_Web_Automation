@@ -2,7 +2,6 @@ import { test, expect } from '../../src/fixtures/test-hooks';
 import { loginToOTT } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyLiveContentWatchlistAbsence, addContentToWatchlistFromSearchPageStep, removeContentFromWatchlistFromSearchPageStep, addPremiumContentToWatchlist, removePremiumContentFromWatchlist, verifyFreeTagInWatchlist, addFreeContentToWatchlist, removeFreeContentFromWatchlist, verifyWatchlistContentMetadataAndThumbnails, playContentFromWatchlist, verifyWatchlistTaggedContentFlow } from '../../src/businessFunction/ott-watchlist-bfs';
-import { playselectedContentFromWatchlist } from '../../src/businessFunction/ott-playback-bfs'  ;
 
 test.describe('Watchlist management', () => {
 

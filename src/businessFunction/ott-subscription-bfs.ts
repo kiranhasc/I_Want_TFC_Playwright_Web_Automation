@@ -388,6 +388,7 @@ export async function verifyPremiumContentDeepLinkSubscriptionBlocker(
   const episodeParser = new TVShowEpisodesParser(episodeResponse as any);
   const paidEpisode = episodeParser.findEpisode((episode) => episode.monetization?.type === 'paid');
   const paidEpisodeId = episodeParser.getContentId(paidEpisode);
+  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Premium episode ID was resolved from TV show episodes GraphQL data', !!paidEpisodeId);
   if (!paidEpisodeId) {
     return {
@@ -405,7 +406,7 @@ export async function verifyPremiumContentDeepLinkSubscriptionBlocker(
   await page.waitForTimeout(5000);
   await detailsPage.clickPlayVideoOverlayButton();
   await page.waitForTimeout(3000);
-  const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+  // const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
   const isSubscribeToWatchCtaVisible = await detailsPage.isSubscribeToWatchCtaVisible().catch(() => false);
   const premiumGateVisible = await playbackPage.isPremiumContentGateVisible().catch(() => false);
   const maybeLaterVisible = await playbackPage.isMaybeLaterVisible().catch(() => false);

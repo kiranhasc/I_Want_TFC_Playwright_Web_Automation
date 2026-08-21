@@ -3469,6 +3469,169 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     };
 }
 
+export async function verifyForgotPasswordOtpNavigation(page: any, input: VerifyForgotPasswordOtpNavigationInput): Promise<VerifyForgotPasswordOtpNavigationOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    logger.step('Starting forgot password OTP navigation verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    await authPage.enterCreateAccountEmail(input.email);
+    logger.info(`Using email for registration: ${input.email}`);
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    await authPage.enterCreateAccountPassword(input.password);
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    await authPage.fetchAndFillOtp(input.email);
+    const firstOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`First OTP fetched and filled: ${firstOTPFetchedAndFilled}`);
+    await authPage.clickVerifyButton();
+    const homeTabVisible = await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickSignOut();
+    await authPage.clickForgotPassword();
+    const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
+    logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickProceed();
+    const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const otpHeadingText = isOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible', isOTPPageVisible);
+    await clearYopmailInbox(input.email);
+    const secondOtp = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`OTP fetched for forgot password flow: ${secondOtp}`);
+    await authPage.clickVerifyButton();
+    await page.waitForTimeout(2000);
+    const isSetNewPasswordScreenVisible = await authPage.isSetNewPasswordScreenVisible();
+    const setNewPasswordHeadingText = isSetNewPasswordScreenVisible ? await authPage.getSetNewPasswordHeadingText() : '';
+    logger.assertion('Set a New Password screen visible', isSetNewPasswordScreenVisible);
+    if (input.expectedOTPHeading) {
+        logger.assertion('Forgot password OTP heading matches expected', otpHeadingText === input.expectedOTPHeading);
+    }
+    if (input.expectedNewPasswordHeading) {
+        logger.assertion('Set a New Password heading matches expected', setNewPasswordHeadingText === input.expectedNewPasswordHeading);
+    }
+    return {
+        isOTPPageVisible,
+        otpHeadingText,
+        isSetNewPasswordScreenVisible,
+        setNewPasswordHeadingText,
+    };
+}
+
+export async function verifyForgotPasswordResetFlow(page: any, input: VerifyForgotPasswordResetFlowInput): Promise<VerifyForgotPasswordResetFlowOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting forgot password reset flow verification');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password ?? '');
+    await authPage.enterCreateAccountConfirmPassword(input.password ?? '');
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const otpHeadingText = isVerifyOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible during registration', isVerifyOTPPageVisible);
+    await authPage.fetchAndFillOtp(input.email);
+    const firstOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`First OTP fetched and filled: ${firstOTPFetchedAndFilled}`);
+    await authPage.clickVerifyButton();
+    await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickSignOut();
+    await authPage.clickForgotPassword();
+    const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
+    logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickProceed();
+    const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const secondOtpHeadingText = isOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible for password reset', isOTPPageVisible);
+    await clearYopmailInbox(input.email);
+    const secondOtp = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`OTP fetched for forgot password flow: ${secondOtp}`);
+    await authPage.clickVerifyButton();
+    await page.waitForTimeout(2000);
+    const isSetNewPasswordScreenVisible = await authPage.isSetNewPasswordScreenVisible();
+    const setNewPasswordHeadingText = isSetNewPasswordScreenVisible ? await authPage.getSetNewPasswordHeadingText() : '';
+    logger.assertion('Set a New Password screen visible', isSetNewPasswordScreenVisible);
+    const newPassword = input.newPassword ?? input.password ?? '';
+    await authPage.enterNewPassword(newPassword);
+    await authPage.enterConfirmNewPassword(newPassword);
+    await authPage.clickProceed();
+    const isSuccessPopupVisible = await authPage.isPasswordResetSuccessMessageVisible();
+    const successMessageText = isSuccessPopupVisible ? await authPage.getPasswordResetSuccessMessageText() : '';
+    logger.assertion('Password reset success popup visible', isSuccessPopupVisible);
+    await authPage.clickDoneButton();
+    const isLoginScreenVisible = await authPage.isLoginFormVisible();
+    logger.assertion('Login screen visible after reset completion', isLoginScreenVisible);
+    if (input.expectedOTPHeading) {
+        logger.assertion('Forgot password OTP heading matches expected', secondOtpHeadingText === input.expectedOTPHeading);
+    }
+    if (input.expectedNewPasswordHeading) {
+        logger.assertion('Set a New Password heading matches expected', setNewPasswordHeadingText === input.expectedNewPasswordHeading);
+    }
+    if (input.expectedSuccessMessage) {
+        logger.assertion('Password reset success message matches expected', successMessageText.includes(input.expectedSuccessMessage));
+    }
+    return {
+        isOTPPageVisible,
+        otpHeadingText: secondOtpHeadingText,
+        isSetNewPasswordScreenVisible,
+        setNewPasswordHeadingText,
+        isSuccessPopupVisible,
+        successMessageText,
+        isLoginScreenVisible,
+    };
+}
+
+export async function verifyLoginWithNewPasswordCredentials(page: any, input: VerifyLoginWithNewPasswordInput): Promise<VerifyLoginWithNewPasswordOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting login with new password credentials verification');
+    await verifyForgotPasswordResetFlow(page, {
+        email: input.email,
+        password: input.password,
+        newPassword: input.newPassword,
+        expectedMarketingText: input.expectedMarketingText,
+        expectedOTPHeading: input.expectedOTPHeading,
+        expectedNewPasswordHeading: input.expectedNewPasswordHeading,
+        expectedSuccessMessage: input.expectedSuccessMessage,
+    });
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(input.newPassword ?? input.password ?? '');
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const isHomeScreenVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home screen visible after login with new password', isHomeScreenVisible);
+    await authPage.clickAccountIcon();
+    await authPage.clickAccountAndSettings();
+    const isAccountPageVisible = await authPage.isEmailVisibleOnAccountPage(input.email);
+    logger.assertion('Account page visible with created email', isAccountPageVisible);
+    return {
+        isHomeScreenVisible,
+        isAccountPageVisible,
+        displayedEmail: input.email,
+    };
+}
+
 export async function verifySupportAndPolicyLinks(page: any, input?: Partial<VerifySupportAndPolicyLinksInput>): Promise<VerifySupportAndPolicyLinksOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -3797,6 +3960,69 @@ export async function verifyRegistrationNavigation(
         emailFieldValue,
         passwordFieldValue,
         confirmPasswordFieldValue,
+    };
+}
+
+export async function verifyRegistrationNavigationToHomePage(page: any,input: VerifyRegistrationNavigationInput): Promise<VerifyRegistrationNavigationToHomePageOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    logger.step('Starting registration navigation validation flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    await authPage.enterCreateAccountEmail(input.email);
+    logger.info(`Using email for registration: ${input.email}`);
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    await authPage.enterCreateAccountPassword(input.password);
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    await authPage.fetchAndFillOtp(input.email);
+    const isOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    await authPage.clickVerifyButton();
+    const homeTabVisible = await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickAccountAndSettings();
+    await detailsPage.isAccountHeadingVisible();
+    const isAccountHeadingVisible = await detailsPage.isAccountHeadingVisible();
+    const isGeneratedEmailVisibleOnAccountPage = await authPage.isEmailVisibleOnAccountPage(input.email);
+    logger.assertion('Create account heading visible', isHeadingVisible);
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+    logger.assertion('Create account password field visible', isPasswordFieldVisible);
+    logger.assertion('Create account confirm password field visible', isConfirmPasswordFieldVisible);
+    logger.assertion('Create account terms checkbox visible', isTermsCheckboxVisible);
+    logger.assertion('Create account marketing checkbox visible', isMarketingCheckboxVisible);
+    logger.assertion('Create account continue button visible', isContinueButtonVisible);
+    logger.assertion('Verify OTP page visible after submitting registration', isVerifyOTPPageVisible);
+    logger.info(`OTP fetched and filled: ${isOTPFetchedAndFilled}`);
+    logger.assertion('Home tab visible after registration and OTP verification', homeTabVisible);
+    logger.assertion('Account heading visible after navigating to account details', isAccountHeadingVisible);
+    logger.assertion('Generated email visible on account page', isGeneratedEmailVisibleOnAccountPage);
+    return {
+        isHeadingVisible,
+        headingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isConfirmPasswordFieldVisible,
+        isTermsCheckboxVisible,
+        termsText,
+        isMarketingCheckboxVisible,
+        marketingText,
+        isContinueButtonVisible,
+        isVerifyOTPPageVisible,
+        isAccountHeadingVisible,
+        isGeneratedEmailVisibleOnAccountPage
     };
 }
 

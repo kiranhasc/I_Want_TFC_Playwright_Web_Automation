@@ -304,7 +304,7 @@ export class OTTDetailsPage {
     this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
-    this.playerScreen = { selector: '[data-testid="player"], .player-screen, video, //*[@id="player-container-main"], .player-loader' };
+    this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
     this.seekBar = { selector: '.player-progress-indicator, [class*="progress-bar"], [class*="player-progress"], [class*="seekbar"], [role="slider"], .progress-bar, //div[contains(@class,"player-progress-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
     // this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
@@ -2356,7 +2356,7 @@ export class OTTDetailsPage {
 
   async isSubscribeToWatchCtaVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator(this.subscribeToWatchCta.selector).first();
+      const locator = this.page.locator(this.subscribeToWatchCtaButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
       return true;
     } catch {

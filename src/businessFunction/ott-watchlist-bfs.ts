@@ -384,8 +384,6 @@ export async function playContentFromWatchlist(
     };
   }
 
-  
-
   await page.waitForTimeout(4000);
   await searchAndOpenFreeContent(page);
   const watchlistContentTitle = await detailsPage.assertContentTitleFromTitleImageLocator();
@@ -395,7 +393,6 @@ export async function playContentFromWatchlist(
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(4000);
   await detailsPage.clickFirstSearchResult();
-  await detailsPage.ensureWatchlistIsAddable();
   const contentOpened = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page opened from watchlist', contentOpened);
 

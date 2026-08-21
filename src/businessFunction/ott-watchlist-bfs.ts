@@ -163,6 +163,7 @@ export interface RemovePremiumContentFromWatchlistInput {
   mode?: string;
   email?: string;
   password?: string;
+  graphqlQueryName?: string;
   query?: string;
 }
 
@@ -180,6 +181,7 @@ export interface AddPremiumContentToWatchlistInput {
   email?: string;
   password?: string;
   query?: string;
+  graphqlQueryName?: string;
 }
 
 export interface AddPremiumContentToWatchlistOutput {
@@ -281,27 +283,21 @@ export async function verifyWatchlistTaggedContentFlow(
     const contentTitle = String(found.asset.title || found.asset.name || '').trim();
     logger.info(`Found ${label} content for watchlist: ${contentTitle}`);
     await authPage.clickSearchBar();
+    //await authPage.clearSearchInput().catch(() => undefined);
     await authPage.enterSearchQuery(contentTitle);
     await authPage.submitSearchQuery();
+    await page.waitForTimeout(2000);
     const searchTagged = await detailsPage.isSearchResultTaggedWithLabel(label, contentTitle);
-    const actionState = await detailsPage.getWatchlistActionState(contentTitle).catch(() => 'none');
-    let addedToWatchlist = false;
-    if (actionState === 'add') {
-      const toastText = await detailsPage.hoverContentThumbnailAndClickWatchlistIcon(contentTitle).catch(() => '');
-      //await detailsPage.ensureWatchlistIsAddable();
-      await detailsPage.addToWatchlistAndGetToast();
-      addedToWatchlist = toastText.toLowerCase().includes('added');
-
-    } else if (actionState === 'remove') {
-      addedToWatchlist = true;
-    } else {
-
-      await detailsPage.clickFirstSearchResult().catch(() => undefined);
-      const toastText = await detailsPage.addToWatchlistAndGetToast().catch(() => '');
-      addedToWatchlist = toastText.toLowerCase().includes('added');
-    }
+    await detailsPage.clickFirstSearchResult();
+    await detailsPage.ensureWatchlistIsAddable();
+    const toastText = await detailsPage.addToWatchlistAndGetToast().catch(() => '');
+    await page.waitForTimeout(2000);
+    const addedToWatchlist = toastText.toLowerCase().includes('added');
     await authPage.clickMyWatchlistTab();
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    const watchlistPageVisible = await authPage.isMyWatchlistPageVisible();
+    logger.assertion('My Watchlist page visible after navigation', watchlistPageVisible);
+    await page.waitForTimeout(2000);
     const visibleInWatchlist = await detailsPage.isContentThumbnailVisibleInWatchlist(contentTitle).catch(() => false);
     const watchlistTagged = await detailsPage.isWatchlistItemTaggedWithLabel(contentTitle, label).catch(() => false);
     validationResults.push({
@@ -319,6 +315,7 @@ export async function verifyWatchlistTaggedContentFlow(
     validationResults,
   };
 }
+
 
 export interface RemoveFreeContentFromWatchlistInput {
   mode?: string;
@@ -388,7 +385,7 @@ export async function playContentFromWatchlist(
   }
 
   await page.waitForTimeout(4000);
-  await detailsPage.clickFirstFreeContentOnHome();
+  await searchAndOpenFreeContent(page);
   const watchlistContentTitle = await detailsPage.assertContentTitleFromTitleImageLocator();
   await detailsPage.ensureWatchlistIsAddable();
   await detailsPage.clickWatchlistIcon();
@@ -529,6 +526,94 @@ async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: st
   }
 }
 
+async function resolvePremiumQueryFromCollectionGraphQL(
+  page: any,
+  graphqlQueryName: string = 'Collection'
+): Promise<string | undefined> {
+  try {
+    const gql = GraphQLHelper.getInstance(page);
+    const collectionResponse = await gql.waitForOperation<any>(graphqlQueryName, 20000);
+    const parser = new CollectionParser(collectionResponse as any);
+    const premiumAsset = parser.findAsset((asset: any) => {
+      const labels = Array.isArray(asset?.labels)
+        ? asset.labels.map((label: any) => String(label?.text ?? '').toLowerCase())
+        : [];
+      const monetizationType = asset?.monetization?.type
+        ?? asset?.monetizationType
+        ?? asset?.monetization?.monetizationType
+        ?? asset?.pricing?.type
+        ?? asset?.pricing?.pricingType;
+      const monetizationText = String(monetizationType ?? '').toLowerCase();
+      return labels.some((label: string) => /premium|paid|subscription/.test(label))
+        || /premium|paid|subscription|ppv|rent|purchase/.test(monetizationText);
+    });
+    const title = String(premiumAsset?.asset?.title ?? '').trim();
+    if (!title) {
+      logger.warn('No premium or paid collection asset available from GraphQL response');
+      return undefined;
+    }
+    logger.info(`Resolved premium collection search query from GraphQL asset: ${title}`);
+    return title;
+  } catch (error) {
+    logger.warn('Unable to resolve premium query from Collection GraphQL response', error);
+    return undefined;
+  }
+}
+
+export async function resolveFreeLiveContentFromCollectionGraphQL(
+  page: any,
+  graphqlQueryName: string = 'Collection'
+): Promise<{ title?: string; id?: string; asset?: any } | undefined> {
+  try {
+    logger.info('Waiting for Collection GraphQL response to resolve free live content');
+    const gql = GraphQLHelper.getInstance(page);
+    const collectionResponse = await gql.waitForOperation<any>(graphqlQueryName, 20000);
+    if (!collectionResponse?.response?.data?.collection?.rails) {
+      logger.warn('Collection GraphQL response missing rails');
+      return undefined;
+    }
+
+    const parser = new CollectionParser(collectionResponse as any);
+    const rails = parser.getRails();
+
+    const isMonetizationFree = (asset: any) => {
+      const monetType = asset.monetization?.type
+        ?? asset.monetizationType
+        ?? asset.monetization?.monetizationType
+        ?? asset.pricing?.type
+        ?? asset.pricing?.pricingType;
+      return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
+    };
+
+    const isLive = (asset: any) => {
+      const genres = normalizeAssetGenres(asset);
+      const labels = Array.isArray(asset.labels) ? asset.labels.map((l: any) => String(l?.text ?? '').toLowerCase()) : [];
+      const title = String(asset.title ?? '').toLowerCase();
+      return (
+        genres.some((g: string) => g.includes('live')) ||
+        labels.some((t: string) => t.includes('live')) ||
+        /live/.test(title)
+      );
+    };
+
+    for (const rail of rails) {
+      for (const asset of rail.assets?.items ?? []) {
+        if (!asset) continue;
+        if (isLive(asset) && isMonetizationFree(asset)) {
+          const title = String(asset.title ?? '').trim();
+          logger.info(`Resolved free live asset from GraphQL: ${title}`);
+          return { title, id: asset.id, asset };
+        }
+      }
+    }
+    logger.warn('No free live asset found in Collection GraphQL response');
+    return undefined;
+  } catch (error) {
+    logger.warn('Error resolving free live content from Collection GraphQL', error);
+    return undefined;
+  }
+}
+
 function normalizeAssetGenres(asset: any): string[] {
   const genres: string[] = [];
   if (Array.isArray(asset?.genres)) {
@@ -573,7 +658,6 @@ function isFreeAsset(asset: any): boolean {
     ?? asset.pricing?.pricingType;
 
   const monetFree = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
-
   const genres = normalizeAssetGenres(asset);
   if (!genres.length) {
     return false;
@@ -602,6 +686,23 @@ function resolveFreeSearchQueryFromCollection(collectionResponse: any): string |
   return undefined;
 }
 
+async function searchAndOpenFreeContent(page: any, graphqlQueryName: string = 'Collection'): Promise<void> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const collectionResponse = await GraphQLHelper.getInstance(page).waitForOperation(graphqlQueryName, 20000);
+  const freeTitle = resolveFreeSearchQueryFromCollection(collectionResponse);
+
+  if (!freeTitle) {
+    throw new Error('No free non-channel, non-live, non-clip content was returned by Collection GraphQL');
+  }
+
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(freeTitle);
+  await authPage.submitSearchQuery();
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.clickFirstSearchResult();
+}
+
 export async function manageWatchlistItem(
   page: any,
   input?: Partial<ManageWatchlistItemInput>
@@ -615,6 +716,8 @@ export async function manageWatchlistItem(
   await authPage.enterSearchText(query);
   await authPage.submitSearch();
   await detailsPage.clickFirstSearchResult();
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.ensureWatchlistIsAddable();
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const isAddedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Add to Watchlist toast displayed', isAddedToWatchlist);
@@ -661,6 +764,7 @@ export async function addContentToWatchlistFromSearchPage(
 
 export interface AddContentToWatchlistFromSearchPageStepInput {
   query?: string;
+  graphqlQueryName?: string;
 }
 
 export interface AddContentToWatchlistFromSearchPageStepOutput {
@@ -676,8 +780,10 @@ export async function addContentToWatchlistFromSearchPageStep(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting IW3-T2056 search watchlist flow');
+  const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
+  const searchQuery = (input?.query?.trim() ?? queryFromCollection ?? 'Everybody Sing').trim();
   await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(input?.query ?? 'Everybody Sing');
+  await authPage.enterSearchQuery(searchQuery);
   await authPage.submitSearchQuery();
   await page.waitForTimeout(2000);
   await detailsPage.clickFirstSearchResult();
@@ -727,6 +833,10 @@ export async function addFreeContentToWatchlist(
       const parser = new CollectionParser(collectionResp as any);
       const rails = parser.getRails();
       const freePredicate = (asset: any) => {
+      const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
+      if (String(assetTypeVal).toLowerCase() === 'clip') {
+        return false;
+      }
         const labels = asset.labels ?? [];
         if (labels.some((label: any) => /free/i.test(label?.text ?? ''))) return true;
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
@@ -755,9 +865,7 @@ export async function addFreeContentToWatchlist(
     await authPage.submitSearchQuery();
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
-  } else {
-    await detailsPage.clickFirstFreeContentOnHome();
-  }
+  } 
   await page.waitForTimeout(2000); // Wait for 2 seconds to ensure the page is fully loaded before interacting with the watchlist icon
   await detailsPage.ensureWatchlistIsAddable();
   const titleBeforeAddToWatchlist = await detailsPage.assertContentTitleFromTitleImageLocator();
@@ -778,9 +886,6 @@ export async function addFreeContentToWatchlist(
   logger.assertion('Free content title asserted before adding to watchlist', Boolean(titleBeforeAddToWatchlist));
   logger.assertion('Free content title asserted before clicking watchlist icon', Boolean(titleBeforeWatchlistIcon));
   logger.assertion('Added content title matches the title captured before clicking watchlist icon', contentMatchesFirstWatchlistItem);
-
-
-
   return {
     isLoggedIn: true,
     addedToWatchlist,
@@ -789,7 +894,6 @@ export async function addFreeContentToWatchlist(
     toastText,
   };
 }
-
 export async function verifyFreeTagInWatchlist(
   page: any,
   input?: Partial<VerifyFreeTagInWatchlistInput>
@@ -839,12 +943,10 @@ export async function verifyFreeTagInWatchlist(
     await authPage.submitSearchQuery();
     await page.waitForTimeout(5000);
     await detailsPage.clickFirstSearchResult();
-    //await detailsPage.ensureWatchlistIsAddable();
-  }
-  else {
-    await detailsPage.clickFirstFreeContentOnHome();
-  }
-
+    
+  }{
+    await searchAndOpenFreeContent(page);
+    }  await detailsPage.ensureWatchlistIsAddable();
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Free content added to watchlist', addedToWatchlist);
@@ -855,7 +957,7 @@ export async function verifyFreeTagInWatchlist(
   const isFreeTagVisible = await detailsPage.isFreeTagVisibleInWatchlist();
   logger.assertion('Free content visible in My Watchlist', isVisibleInMyWatchlist);
   logger.assertion('Free tag visible for the first content in My Watchlist', isFreeTagVisible);
-  await detailsPage.clickFirstFreeContentOnHome();
+  await searchAndOpenFreeContent(page);
   await page.waitForTimeout(2000);
   await detailsPage.removeFromWatchlist();
   await page.waitForTimeout(2000);
@@ -908,7 +1010,6 @@ export async function removeContentFromWatchlistFromSearchPageStep(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
-
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
   });
@@ -1000,7 +1101,14 @@ export async function addPremiumContentToWatchlist(
     };
   }
 
-  const query = input?.query ?? 'Everybody, Sing!';
+  const queryFromCollection = await resolvePremiumQueryFromCollectionGraphQL(
+    page,
+    input?.graphqlQueryName
+  );
+  const query = (queryFromCollection ?? input?.query ?? '').trim();
+  if (!query) {
+    throw new Error('Unable to resolve premium content title from Collection GraphQL');
+  }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1011,8 +1119,8 @@ export async function addPremiumContentToWatchlist(
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Premium content added to watchlist', addedToWatchlist);
-  await page.waitForTimeout(2000);
   await authPage.clickMyWatchlistTab();
+  await page.waitForTimeout(2000);
   await detailsPage.clickFirstSearchResult();
   await page.waitForTimeout(3000);
   const watchlistItem = page.getByRole('img', { name: query }).nth(1);
@@ -1054,7 +1162,15 @@ export async function removePremiumContentFromWatchlist(
     };
   }
 
-  const query = input?.query ?? 'The Master Cutter';
+  const queryFromCollection = await resolvePremiumQueryFromCollectionGraphQL(
+    page,
+    input?.graphqlQueryName
+  );
+  const query = (queryFromCollection ?? input?.query ?? '').trim();
+  if (!query) {
+    throw new Error('Unable to resolve premium content title from Collection GraphQL');
+  }
+
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1140,6 +1256,10 @@ export async function removeFreeContentFromWatchlist(
       const parser = new CollectionParser(collectionResp as any);
       const rails = parser.getRails();
       const freePredicate = (asset: any) => {
+      const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
+      if (String(assetTypeVal).toLowerCase() === 'clip') {
+        return false;
+      }
         const labels = asset.labels ?? [];
         if (labels.some((label: any) => /free/i.test(label?.text ?? ''))) return true;
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
@@ -1169,10 +1289,10 @@ export async function removeFreeContentFromWatchlist(
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
   } else {
-    await detailsPage.clickFirstFreeContentOnHome();
+    await searchAndOpenFreeContent(page);
   }
 
-  //await detailsPage.ensureWatchlistIsAddable();
+  await detailsPage.ensureWatchlistIsAddable();
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Free content added to watchlist', addedToWatchlist);

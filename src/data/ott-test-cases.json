@@ -293,7 +293,7 @@
     },
     "tc-disc-005-skip-recap": {
         "mode": "valid",
-        "searchTerm": "Incognito"
+        "searchTerm": "Lavender Fields"
     },
     "tc-disc-006-skip-recap": {
         "mode": "valid",
@@ -404,11 +404,11 @@
     },
     "tc-watch-004-add-content-from-search-page": {
         "mode": "valid",
-        "query": "Everybody Sing"
+        "graphqlQueryName": "Collection"
     },
     "tc-watch-005-add-premium-content-to-watchlist": {
         "mode": "freeUser",
-        "query": "Everybody, Sing!"
+        "graphqlQueryName": "Collection"
     },
     "tc-watch-007-free-tag-visible-in-watchlist": {
         "mode": "freeUser",
@@ -424,7 +424,7 @@
     },
     "tc-watch-006-remove-premium-content-from-watchlist": {
         "mode": "freeUser",
-        "query": "Everybody, Sing!"
+        "graphqlQueryName": "Collection"
     },
     "tc-watch-009-watchlist-thumbnail-metadata": {
         "mode": "freeUser"
@@ -625,10 +625,11 @@
     },
     "tc-ad-3985-pause-ad-disappears-on-resume": {
         "mode": "freeUser",
-        "query": "DZMM Teleradyo"
+        "graphqlQueryName": "Collection"
     },
     "tc-ad-4017-pause-ad-not-displayed-while-playing": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
     },
     "tc-ad-3981-pause-ad-clickable": {
         "mode": "freeUser"
@@ -666,7 +667,7 @@
     },
     "tc-ad-4018-pause-ad-controls-dismissed": {
         "mode": "freeUser",
-        "query": "Can't buy me love"
+        "query": "Incognito"
     },
     "tc-ad-3995-pause-ad-back-navigation": {
         "mode": "freeUser",
@@ -681,7 +682,8 @@
         "graphqlQueryName": "Collection"
     },
     "tc-ad-3980-billboard-ad-banner": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-013-pause-playback": {
         "mode": "valid",
@@ -1071,5 +1073,17 @@
     },
     "tc-auth-content-watchlist-2030": {
         "mode": "valid"
+    },
+    "tc-ad-2135-sponsored-rail-visibility": {
+        "mode": "freeUser"
+    },
+    "tc-ad-2137-sponsored-rail-advertiser-logo": {
+        "mode": "freeUser"
+    },
+    "tc-ad-2149-sponsored-rail-content-details-navigation": {
+        "mode": "freeUser"
+    },
+    "tc-ad-2146-sponsored-rail-non-clickable": {
+        "mode": "freeUser"
     }
 }

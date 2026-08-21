@@ -15,6 +15,9 @@ export class OTTLandingPage {
   private readonly top10FirstImageLocator: PageElement;
   private readonly searchInputLocator: PageElement;
   private readonly top10BadgeLocator: PageElement;
+  private readonly sponsoredRailLocator: PageElement;
+  private readonly sponsoredRailNonContentAreaLocator: PageElement;
+  private readonly sponsoredRailAdvertiserLogoLocator: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +30,10 @@ export class OTTLandingPage {
     this.top10FirstImageLocator = { selector: 'xpath=(.//div[contains(@class,\'flex items-end justify-end\')]//img[contains(@class,\'title-image\')])[1]' };
     this.searchInputLocator = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
     this.top10BadgeLocator = { selector: "//img[@alt='top_10']" };
+    this.sponsoredRailLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')][.//img[contains(@src,\'_Ad_Portrait_Thumbnail\') or contains(@srcset,\'_Ad_Portrait_Thumbnail\')]]' };
+    // this.sponsoredRailLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')][.//div[contains(@class,\'rail-container\')]][.//div[contains(@class,\'title\')]//img[contains(@class,\'object-contain\')]]' };
+    this.sponsoredRailNonContentAreaLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')]//div[contains(@class,\'title\')]//img[contains(@class,\'object-contain\')]' };
+    this.sponsoredRailAdvertiserLogoLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')]//div[contains(@class,\'title\')]//img[contains(@class,\'object-contain\')]' };
   }
 
   async scrollToTop10ShowsTray(): Promise<void> {
@@ -141,5 +148,62 @@ export class OTTLandingPage {
     await locator.scrollIntoViewIfNeeded().catch(() => undefined);
     await locator.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
     return await locator.isVisible().catch(() => false);
+  }
+
+  async scrollTillSponsoredRail(maxScrolls: number = 15): Promise<void> {
+    logger.elementInteraction('scroll', 'Sponsored Rail content');
+    const sponsoredRailLocator = this.page.locator(this.sponsoredRailLocator.selector).first();
+
+    for (let attempt = 0; attempt < maxScrolls; attempt += 1) {
+      if (await sponsoredRailLocator.count().catch(() => 0) > 0) {
+        await sponsoredRailLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+        break;
+      }
+      await this.page.mouse.wheel(0, 500).catch(() => undefined);
+      await this.page.waitForTimeout(800);
+    }
+
+    await this.page.waitForTimeout(2000);
+  }
+
+  async isSponsoredRailVisible(): Promise<boolean> {
+    logger.elementInteraction('verify', 'Sponsored Rail visibility');
+    const sponsoredRailLocator = this.page.locator(this.sponsoredRailLocator.selector).first();
+
+    if (!(await sponsoredRailLocator.count().catch(() => 0) > 0)) {
+      return false;
+    }
+
+    await sponsoredRailLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+    await this.page.waitForTimeout(1000);
+    return await sponsoredRailLocator.isVisible().catch(() => false);
+  }
+
+  async isSponsoredRailAdvertiserLogoVisible(): Promise<boolean> {
+    logger.elementInteraction('verify', 'Sponsored Rail advertiser logo');
+    const advertiserLogoLocator = this.page.locator(this.sponsoredRailAdvertiserLogoLocator.selector).first();
+
+    if (!(await advertiserLogoLocator.count().catch(() => 0) > 0)) {
+      return false;
+    }
+
+    await advertiserLogoLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+    await advertiserLogoLocator.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    return await advertiserLogoLocator.isVisible().catch(() => false);
+  }
+
+  async clickOnSponsoredRailNonContentArea(): Promise<void> {
+    logger.elementInteraction('click', 'Sponsored Rail non-content area (title)');
+    const nonContentAreaLocator = this.page.locator(this.sponsoredRailNonContentAreaLocator.selector).first();
+
+    if (!(await nonContentAreaLocator.count().catch(() => 0) > 0)) {
+      logger.debug('Sponsored Rail non-content area not found');
+      return;
+    }
+
+    await nonContentAreaLocator.scrollIntoViewIfNeeded().catch(() => undefined);
+    await this.page.waitForTimeout(500);
+    await nonContentAreaLocator.click({ timeout: 10000 }).catch(() => undefined);
+    await this.page.waitForTimeout(2000);
   }
 }

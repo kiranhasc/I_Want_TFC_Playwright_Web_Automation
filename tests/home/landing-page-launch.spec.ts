@@ -147,7 +147,7 @@ test.describe('Home Page Landing', () => {
         expect(result.playerTitleVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T1888: Verify that the user navigates back to the previous page on tapping the back button from the details page', async ({ page }) => {
+    test('@Medium @DM IW3-T1888: Verify that the user navigates back to the previous page on tapping the back button from the details page', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-auth-034-details-page-back-navigation'];
         const result = await verifyBackNavigationFromDetailsPage(page, {
@@ -156,7 +156,7 @@ test.describe('Home Page Landing', () => {
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.detailsPageVisibleBeforeBack).toBe(true);
-        expect(result.detailsPageVisibleAfterBack).toBe(true);
+        expect(result.detailsPageVisibleAfterBack).toBe(false);
         expect(result.previousPageVisible).toBe(true);
     });
 
@@ -197,7 +197,6 @@ test.describe('Home Page Landing', () => {
     });
 
     test('@Medium @D IW3-T1886: Verify that related content and trays are displayed under Shows, Movies, and GMA (only outside the Philippines)', async ({ page }) => {
-        test.setTimeout(120000);
         const data = testCaseData['tc-auth-033-related-content-trays-outside-ph'];
         const result = await verifyLandingPageRelatedContentTraysOutsidePH(page, {
             mode: data.mode,
@@ -220,7 +219,7 @@ test.describe('Home Page Landing', () => {
         expect(result.metadataMatches).toBe(true);
     });
 
-    test('@Medium @D IW3-T4660: Verify that the "Because You Watched {Movie Title/Show Title}" rail updates dynamically when the user watches a movie from a different genre', async ({ page }) => {
+    test('@Medium @DM IW3-T4660: Verify that the "Because You Watched {Movie Title/Show Title}" rail updates dynamically when the user watches a movie from a different genre', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-039-because-you-watched-genre-update'];
         const result = await verifyBecauseYouWatchedRailGenreUpdate(page, {
@@ -236,7 +235,17 @@ test.describe('Home Page Landing', () => {
         expect(result.genreUpdated).toBe(true);
     });
 
-    test('@High @D IW3-T2127 - IW3-T2130: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
+    test('@High @D IW3-T2127: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
+        test.setTimeout(90000);
+        const data = testCaseData['tc-auth-037-mid-rail-banner-adl'];
+        const result = await verifyMidRailBannerAdlVisibility(page, {
+            mode: data.mode,
+        });
+
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.allPagesVisible).toBe(true);
+    });
+    test('@Medium @D IW3-T2130: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-037-mid-rail-banner-adl'];
         const result = await verifyMidRailBannerAdlVisibility(page, {

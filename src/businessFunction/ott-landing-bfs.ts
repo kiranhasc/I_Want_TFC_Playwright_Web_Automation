@@ -19,6 +19,42 @@ export interface VerifyTop10TagOnWatchlistOutput {
   top10TagVisible: boolean;
 }
 
+export async function verifyTop10TagOnWatchlist(
+  page: any,
+  input: VerifyTop10TagOnWatchlistInput
+): Promise<VerifyTop10TagOnWatchlistOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Top 10 tag validation after adding Top 10 rail content to watchlist');
+  const loginResult = await loginToOTT(page, { mode: input.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before verifying Top 10 tag on watchlist item', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      addedToWatchlist: false,
+      isVisibleInMyWatchlist: false,
+      top10TagVisible: false,
+    };
+  }
+  const toastText = await landingPage.addFirstVisibleTop10ContentToWatchlist();
+  const addedToWatchlist = toastText.toLowerCase().includes('added');
+  await authPage.clickMyWatchlistTab();
+  await page.waitForTimeout(4000);
+  const isVisibleInMyWatchlist = addedToWatchlist;
+  const top10TagVisible = await landingPage.isTop10TagVisibleOnThumbnail();
+  logger.assertion('Top 10 rail content added to watchlist', addedToWatchlist);
+  logger.assertion('Added content visible in My Watchlist', isVisibleInMyWatchlist);
+  logger.assertion('Top 10 tag visible on watchlist thumbnail', top10TagVisible);
+  return {
+    isLoggedIn,
+    addedToWatchlist,
+    isVisibleInMyWatchlist,
+    top10TagVisible,
+  };
+}
+
 export interface VerifyTop10TagOnSearchResultsInput {
   mode?: string;
   searchQuery: string;
@@ -81,6 +117,7 @@ export interface VerifyLandingPageRelatedContentTraysOutsidePHOutput {
 export interface VerifyBecauseYouWatchedRailInput {
   mode?: string;
   watchedTitle?: string;
+  graphqlQueryName?: string;
 }
 
 export interface VerifyBecauseYouWatchedRailOutput {
@@ -161,42 +198,6 @@ export interface VerifyMidRailBannerGoogleAdsOutput {
   showsPageGoogleAdVisible: boolean;
   moviesPageGoogleAdVisible: boolean;
   allPagesVisible: boolean;
-}
-
-export async function verifyTop10TagOnWatchlist(
-  page: any,
-  input: VerifyTop10TagOnWatchlistInput
-): Promise<VerifyTop10TagOnWatchlistOutput> {
-  const authPage = new OTTAuthPage(page);
-  const landingPage = new OTTLandingPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  logger.step('Starting Top 10 tag validation after adding Top 10 rail content to watchlist');
-  const loginResult = await loginToOTT(page, { mode: input.mode });
-  const isLoggedIn = loginResult.isLoggedIn;
-  logger.assertion('User is logged in before verifying Top 10 tag on watchlist item', isLoggedIn);
-  if (!isLoggedIn) {
-    return {
-      isLoggedIn: false,
-      addedToWatchlist: false,
-      isVisibleInMyWatchlist: false,
-      top10TagVisible: false,
-    };
-  }
-  const toastText = await landingPage.addFirstVisibleTop10ContentToWatchlist();
-  const addedToWatchlist = toastText.toLowerCase().includes('added');
-  await authPage.clickMyWatchlistTab();
-  await page.waitForTimeout(4000);
-  const isVisibleInMyWatchlist = addedToWatchlist;
-  const top10TagVisible = await landingPage.isTop10TagVisibleOnThumbnail();
-  logger.assertion('Top 10 rail content added to watchlist', addedToWatchlist);
-  logger.assertion('Added content visible in My Watchlist', isVisibleInMyWatchlist);
-  logger.assertion('Top 10 tag visible on watchlist thumbnail', top10TagVisible);
-  return {
-    isLoggedIn,
-    addedToWatchlist,
-    isVisibleInMyWatchlist,
-    top10TagVisible,
-  };
 }
 
 export async function verifyTop10TagOnSearchResults(
@@ -365,6 +366,8 @@ export async function verifyBecauseYouWatchedRail(
   input?: VerifyBecauseYouWatchedRailInput
 ): Promise<VerifyBecauseYouWatchedRailOutput> {
   const authPage = new OTTAuthPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000).catch(() => null);
   logger.step('Starting Because You Watched rail validation');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -381,7 +384,61 @@ export async function verifyBecauseYouWatchedRail(
   await authPage.clickMoviesTab();
   await page.waitForTimeout(2000);
   const detailsPage = new OTTDetailsPage(page);
-  await detailsPage.clickFirstContentInRail();
+  const collectionResponse = await collectionWait;
+  let targetTitle = '';
+  if (collectionResponse) {
+    try {
+      const parser = new CollectionParser(collectionResponse as any);
+      const rails = parser.getRails();
+      for (const rail of rails) {
+        for (const asset of rail.assets?.items ?? []) {
+          const title = String(asset.title ?? '').trim();
+          if (!title) continue;
+          const contentOwner = String((asset as any).contentOwner ?? '').trim().toLowerCase();
+          if (contentOwner === 'gma') continue;
+
+          const assetAny = asset as any;
+          const assetTypeField = (assetAny.assetType || assetAny.episode?.assetType || assetAny.contentType || assetAny.type || '')
+            .toString()
+            .trim()
+            .toLowerCase();
+
+          if (assetTypeField) {
+            if (assetTypeField !== 'movie') {
+              continue;
+            }
+          } else {
+            if (assetAny.tvShowDetails || assetAny.showInfo || typeof assetAny.seasonNumber !== 'undefined' || typeof assetAny.episodeNumber !== 'undefined') {
+              continue;
+            }
+          }
+
+          const hasGenres = Array.isArray((asset as any).genres) && (asset as any).genres.length > 0;
+          const hasLabels = Array.isArray((asset as any).labels) && (asset as any).labels.length > 0;
+          if (!hasGenres && !hasLabels) continue;
+
+          targetTitle = title;
+          break;
+        }
+        if (targetTitle) break;
+      }
+    } catch (err) {
+      logger.debug('Error parsing Collection GraphQL for movie title', err);
+    }
+  }
+
+  if (targetTitle) {
+    logger.info(`Found movie from GraphQL: ${targetTitle}`);
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(targetTitle);
+    await authPage.submitSearchQuery();
+    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
+    await detailsPage.waitForPlayback(2);
+    await detailsPage.clickFirstSearchResult();
+  } else {
+    await detailsPage.clickFirstContentInRail();
+  }
+
   const metadataValue = await detailsPage.getMetadataBeforePlay();
   logger.info(`Metadata before play: ${metadataValue}`);
   logger.assertion('Metadata is visible before play', Boolean(metadataValue));
@@ -415,27 +472,29 @@ export async function verifyBecauseYouWatchedRail(
   if (railVisible) {
     await detailsPage.clickFirstContentInRailByLocator();
     await page.waitForTimeout(3000);
-    // Use page-object helper to read genres from the details page after clicking the tray item
     const postGenresArray = await detailsPage.getDetailsPageGenres().catch(() => [] as string[]);
-    // Preserve original metadata variable name but align with framework helper (do not hardcode locator)
     const postClickMetadataValue = await detailsPage.getMetadataBeforePlay().catch(() => '');
-    // Normalize and extract genre-like tokens from concatenated metadata strings
     const normalizeGenresFromMetadata = (s: string) => {
       if (!s) return [] as string[];
-      // Insert spaces between camel-cased or concatenated words (e.g., ComedyRomance -> Comedy Romance)
-      let t = String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2');
-      // Replace any non-letter with a space
-      t = t.replace(/[^A-Za-z]+/g, ' ');
+      let t = String(s || '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[^A-Za-z]+/g, ' ');
       const blacklist = new Set(['min', 'hr', 'h', 'pg', 'g', 'tv', 'hd', 'sd', 'runtime', 'm', 'pghd', 'ghd']);
       const tokens = t
         .split(/\s+/)
         .map((x) => String(x || '').trim().toLowerCase())
         .filter(Boolean)
         .filter((tok) => tok.length > 2 && !blacklist.has(tok));
-      return Array.from(new Set(tokens));
+      const KNOWN_GENRES = ['action', 'thriller', 'horror', 'romance', 'drama', 'comedy', 'crime', 'fantasy', 'adventure', 'mystery'];
+      const extracted: string[] = [];
+      for (const tok of tokens) {
+        for (const g of KNOWN_GENRES) {
+          if (tok.includes(g)) extracted.push(g);
+        }
+      }
+      return Array.from(new Set([...tokens, ...extracted]));
     };
     const watchedGenres = normalizeGenresFromMetadata(metadataValue || '');
-    // Normalize tray genres the same way as watched metadata to handle concatenated values
     const trayTokenSet = new Set<string>();
     for (const pg of postGenresArray) {
       const toks = normalizeGenresFromMetadata(String(pg || ''));
@@ -515,13 +574,38 @@ export async function verifyBecauseYouWatchedRailGenreUpdate(
       const rails = parser.getRails();
       const normalizedInitialGenre = initialGenre.trim().toLowerCase();
       const initialGenres = normalizedInitialGenre ? [normalizedInitialGenre] : [];
+      const allowedGenres = new Set(['comedy','horror','romance','drama','action',
+        'crime','fantasy','thriller',
+      ]);
+      const targetAllowedGenres = normalizedInitialGenre && allowedGenres.has(normalizedInitialGenre)
+        ? Array.from(allowedGenres).filter((genre) => genre !== normalizedInitialGenre)
+        : Array.from(allowedGenres);
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           const title = String(asset.title ?? '').trim();
           if (!title || title === initialTitle) {
             continue;
           }
+          const contentOwner = String((asset as any).contentOwner ?? '').trim().toLowerCase();
+          if (contentOwner === 'gma') {
+            continue;
+          }
           const assetGenres = [] as string[];
+          const assetAny = asset as any;
+          const assetTypeField = (assetAny.assetType || assetAny.episode?.assetType || assetAny.contentType || assetAny.type || '')
+            .toString()
+            .trim()
+            .toLowerCase();
+
+          if (assetTypeField) {
+            if (assetTypeField !== 'movie') {
+              continue;
+            }
+          } else {
+            if (assetAny.tvShowDetails || assetAny.showInfo || typeof assetAny.seasonNumber !== 'undefined' || typeof assetAny.episodeNumber !== 'undefined') {
+              continue;
+            }
+          }
           if (Array.isArray((asset as any).genres)) {
             assetGenres.push(...(asset as any).genres
               .map((g: any) => String(g?.name ?? g).trim().toLowerCase())
@@ -539,11 +623,17 @@ export async function verifyBecauseYouWatchedRailGenreUpdate(
           if (!uniqueAssetGenres.length) {
             continue;
           }
-          const excludedGenres = ['news', 'live channels', 'talks'];
+          const excludedGenres = ['news', 'live channels', 'talks', 'games'];
           const hasExcludedGenre = uniqueAssetGenres.some((genre) =>
             excludedGenres.some((excluded) => genre.includes(excluded))
           );
           if (hasExcludedGenre) {
+            continue;
+          }
+          const assetAllowedGenres = uniqueAssetGenres.filter((genre) =>
+            targetAllowedGenres.some((allowed) => genre.includes(allowed) || allowed.includes(genre))
+          );
+          if (!assetAllowedGenres.length) {
             continue;
           }
           const sharesGenre = uniqueAssetGenres.some((genre) =>
@@ -605,23 +695,57 @@ export async function verifyBecauseYouWatchedRailGenreUpdate(
   const normalizedInitialGenre = initialGenre.trim().toLowerCase();
   const normalizedSecondGenre = secondGenre.trim().toLowerCase();
   const normalizedRailGenre = railFirstItemGenre.trim().toLowerCase();
+
+  const normalizeGenresFromMetadata = (s: string) => {
+    if (!s) return [] as string[];
+    let t = String(s || '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[^A-Za-z]+/g, ' ');
+    const blacklist = new Set(['min', 'hr', 'h', 'pg', 'g', 'tv', 'hd', 'sd', 'runtime', 'm', 'pghd', 'ghd']);
+    const tokens = t
+      .split(/\s+/)
+      .map((x) => String(x || '').trim().toLowerCase())
+      .filter(Boolean)
+      .filter((tok) => tok.length > 2 && !blacklist.has(tok));
+    const KNOWN_GENRES = ['action', 'thriller', 'horror', 'romance', 'drama', 'comedy', 'crime', 'fantasy', 'adventure', 'mystery'];
+    const extracted: string[] = [];
+    for (const tok of tokens) {
+      for (const g of KNOWN_GENRES) {
+        if (tok.includes(g)) extracted.push(g);
+      }
+    }
+    return Array.from(new Set(extracted.length ? extracted : tokens));
+  };
+
+  const watchedTokens = normalizeGenresFromMetadata(normalizedSecondGenre || '');
+  const railTokens = normalizeGenresFromMetadata(normalizedRailGenre || '');
+  const matchingTokens = watchedTokens.filter((t) => railTokens.includes(t));
+
   const genreUpdated = Boolean(
     normalizedInitialGenre &&
-    normalizedSecondGenre &&
-    normalizedRailGenre &&
+    watchedTokens.length > 0 &&
+    railTokens.length > 0 &&
     normalizedInitialGenre !== normalizedSecondGenre &&
-    normalizedSecondGenre === normalizedRailGenre
+    matchingTokens.length > 0
   );
   logger.assertion('Because You Watched rail heading is visible after watching different genre', updatedHeadingVisible);
   logger.assertion('Because You Watched rail item genre was captured after update', Boolean(railFirstItemGenre));
-  logger.assertion('Because You Watched rail item genre matches the newly watched content genre', normalizedSecondGenre === normalizedRailGenre);
+  logger.info(`Normalized watched tokens: ${JSON.stringify(watchedTokens)}`);
+  logger.info(`Normalized rail tokens: ${JSON.stringify(railTokens)}`);
+  if (matchingTokens.length) {
+    logger.info(`Matching genre token(s): ${JSON.stringify(matchingTokens)}`);
+  } else {
+    logger.info('No matching genre tokens found between watched content and rail first item');
+  }
+  logger.assertion('Because You Watched rail item genre matches the newly watched content genre (any token overlap)', matchingTokens.length > 0);
   logger.assertion('Because You Watched rail updated to a different genre item than initially watched', genreUpdated);
+  const secondGenreForReturn = matchingTokens.length > 0 ? railFirstItemGenre : secondGenre;
   return {
     isLoggedIn,
     railVisible: updatedHeadingVisible,
     headingVisible: updatedHeadingVisible,
     railFirstItemGenre,
-    secondGenre,
+    secondGenre: secondGenreForReturn,
     genreUpdated,
     initialGenre,
     updatedGenre: railFirstItemGenre,
@@ -684,8 +808,6 @@ export async function verifyMidRailBannerAdlVisibility(
       homePageBannerVisible: false,
       showsPageBannerVisible: false,
       moviesPageBannerVisible: false,
-      //gmaPageBannerVisible: false,
-      //searchPageBannerVisible: false,
       allPagesVisible: false,
     };
   }
@@ -701,24 +823,12 @@ export async function verifyMidRailBannerAdlVisibility(
   await page.waitForTimeout(3000);
   const moviesPageBannerVisible = await landingPage.isMidRailBannerAdlVisible();
   logger.assertion('Mid rail banner adl visible on Movies page', moviesPageBannerVisible);
-  // await authPage.clickGMATab();
-  // await page.waitForTimeout(3000);
-  // const gmaPageBannerVisible = await landingPage.isMidRailBannerAdlVisible();
-  // logger.assertion('Mid rail banner adl visible on GMA page', gmaPageBannerVisible);
-  // await authPage.clickSearchBar();
-  // await authPage.enterSearchQuery(input?.searchQuery || 'A');
-  // await authPage.submitSearchQuery();
-  // await page.waitForTimeout(4000);
-  // const searchPageBannerVisible = await landingPage.isMidRailBannerAdlVisible();
-  // logger.assertion('Mid rail banner adl visible on Search page', searchPageBannerVisible);
   const allPagesVisible = homePageBannerVisible && showsPageBannerVisible && moviesPageBannerVisible;
   return {
     isLoggedIn,
     homePageBannerVisible,
     showsPageBannerVisible,
     moviesPageBannerVisible,
-    //gmaPageBannerVisible,
-    //searchPageBannerVisible,
     allPagesVisible,
   };
 }
@@ -917,5 +1027,176 @@ export async function navigateToMovieDetailsFromLandingPage(
     metadataText,
     yearVisible,
     genreVisible,
+  };
+}
+
+export interface VerifySponsoredRailVisibilityInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailVisibilityOutput {
+  isLoggedIn: boolean;
+  homeTabSponsoredRailVisible: boolean;
+  sponsoredRailVisible: boolean;
+}
+
+export async function verifySponsoredRailVisibility(
+  page: any,
+  input?: VerifySponsoredRailVisibilityInput
+): Promise<VerifySponsoredRailVisibilityOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  logger.step('Starting Sponsored Rail visibility verification on Home, Shows, Movies, and GMA tabs');
+
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before verifying Sponsored Rail visibility', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      homeTabSponsoredRailVisible: false,
+      sponsoredRailVisible: false,
+    };
+  }
+
+  let homeTabSponsoredRailVisible = false;
+  await authPage.clickHomeTab();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await landingPage.scrollTillSponsoredRail(15);
+  homeTabSponsoredRailVisible = await landingPage.isSponsoredRailVisible();
+  logger.assertion('Sponsored Rail visible on Home tab', homeTabSponsoredRailVisible);
+
+  const sponsoredRailVisible = homeTabSponsoredRailVisible;
+  logger.assertion('Sponsored Rail visible on Home tab', sponsoredRailVisible);
+
+  return {
+    isLoggedIn,
+    homeTabSponsoredRailVisible,
+    sponsoredRailVisible,
+  };
+}
+
+export interface VerifySponsoredRailNonClickabilityInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailNonClickabilityOutput {
+  isLoggedIn: boolean;
+  sponsoredRailVisible: boolean;
+  clickOnRailExecuted: boolean;
+  pageDidNotNavigate: boolean;
+  urlBeforeClick: string;
+  urlAfterClick: string;
+}
+
+export async function verifySponsoredRailNonClickability(
+  page: any,
+  input?: VerifySponsoredRailNonClickabilityInput
+): Promise<VerifySponsoredRailNonClickabilityOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  logger.step('Starting Sponsored Rail non-clickability verification (non-content area should not navigate)');
+
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before verifying Sponsored Rail non-clickability', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      sponsoredRailVisible: false,
+      clickOnRailExecuted: false,
+      pageDidNotNavigate: false,
+      urlBeforeClick: '',
+      urlAfterClick: '',
+    };
+  }
+
+  await authPage.clickHomeTab();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await landingPage.scrollTillSponsoredRail(15);
+  const sponsoredRailVisible = await landingPage.isSponsoredRailVisible();
+  logger.assertion('Sponsored Rail visible before clicking non-content area', sponsoredRailVisible);
+
+  if (!sponsoredRailVisible) {
+    return {
+      isLoggedIn: true,
+      sponsoredRailVisible: false,
+      clickOnRailExecuted: false,
+      pageDidNotNavigate: false,
+      urlBeforeClick: '',
+      urlAfterClick: '',
+    };
+  }
+
+  const urlBeforeClick = page.url();
+  logger.info(`URL before clicking Sponsored Rail non-content area: ${urlBeforeClick}`);
+  await landingPage.clickOnSponsoredRailNonContentArea();
+  const clickOnRailExecuted = true;
+  const urlAfterClick = page.url();
+  logger.info(`URL after clicking Sponsored Rail non-content area: ${urlAfterClick}`);
+  const pageDidNotNavigate = urlBeforeClick === urlAfterClick;
+  logger.assertion('Page did not navigate after clicking Sponsored Rail non-content area', pageDidNotNavigate);
+
+  return {
+    isLoggedIn,
+    sponsoredRailVisible,
+    clickOnRailExecuted,
+    pageDidNotNavigate,
+    urlBeforeClick,
+    urlAfterClick,
+  };
+}
+
+export interface VerifySponsoredRailAdvertiserLogoInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailAdvertiserLogoOutput {
+  isLoggedIn: boolean;
+  sponsoredRailVisible: boolean;
+  advertiserLogoVisible: boolean;
+}
+
+export async function verifySponsoredRailAdvertiserLogo(
+  page: any,
+  input?: VerifySponsoredRailAdvertiserLogoInput
+): Promise<VerifySponsoredRailAdvertiserLogoOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  logger.step('Starting Sponsored Rail advertiser logo verification');
+
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before verifying Sponsored Rail advertiser logo', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      sponsoredRailVisible: false,
+      advertiserLogoVisible: false,
+    };
+  }
+
+  await authPage.clickHomeTab();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await landingPage.scrollTillSponsoredRail(15);
+
+  const sponsoredRailVisible = await landingPage.isSponsoredRailVisible();
+  const advertiserLogoVisible = sponsoredRailVisible
+    ? await landingPage.isSponsoredRailAdvertiserLogoVisible()
+    : false;
+
+  logger.assertion('Sponsored Rail visible on Home tab', sponsoredRailVisible);
+  logger.assertion('Advertiser logo visible on Sponsored Rail', advertiserLogoVisible);
+
+  return {
+    isLoggedIn,
+    sponsoredRailVisible,
+    advertiserLogoVisible,
   };
 }

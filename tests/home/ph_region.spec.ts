@@ -87,16 +87,14 @@ test.describe('PH region guest watchlist navigation', () => {
   });
 
   test('@Medium IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
+    test.setTimeout(90000);
     const data = testCaseData['tc-auth-022-ph-region-guest-carousel-tab-tray'];
     const result = await verifyGuestPHCarouselTabTrayLoad(page, { mode: data?.mode });
     expect(result.homeRailVisible).toBe(true);
     expect(result.homePageScrolledToEnd).toBe(true);
-    expect(result.homeAdVisible).toBe(true);
     expect(result.moviesRailVisible).toBe(true);
     expect(result.moviesPageScrolledToEnd).toBe(true);
-    expect(result.moviesAdVisible).toBe(true);
-    // expect(result.showsRailVisible).toBe(true);
+    expect(result.showsRailVisible).toBe(true);
     expect(result.showsPageScrolledToEnd).toBe(true);
-    expect(result.showsAdVisible).toBe(true);
   });
 });

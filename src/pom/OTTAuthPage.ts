@@ -7,6 +7,7 @@ import { title } from 'process';
 import { GraphQLResult } from '../utils/graphql/graphql-helper';
 import { ContinueWatchingResponse, ContinueWatchingItem } from '../utils/graphql/graphql-types';
 import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
+import { getOtpFromYopmail } from '../utils/yopmail-helper';
 
 export class OTTAuthPage {
     private static readonly searchResultContainerSelector = '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]';
@@ -55,6 +56,7 @@ export class OTTAuthPage {
     private readonly clearSearchButton: PageElement;
     private readonly accountIcon: PageElement;
     private readonly signOutOption: PageElement;
+    private readonly signInOption: PageElement;
     private readonly accountAndSettingsOption: PageElement;
     private readonly editProfileButton: PageElement;
     private readonly continueWatchingRail: PageElement;
@@ -157,6 +159,12 @@ export class OTTAuthPage {
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
     private readonly mobileMainMenu: PageElement;
+    private readonly otpInput: PageElement;
+    private readonly setNewPasswordHeading: PageElement;
+    private readonly passwordResetSuccessMessage: PageElement;
+    private readonly doneButton: PageElement;
+    private readonly NewPassword: PageElement;
+    private readonly ConfirmNewPassword: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -197,6 +205,7 @@ export class OTTAuthPage {
         this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
+        this.signInOption = { selector: '//p[normalize-space()="Sign In"]' };
         this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
         this.editProfileButton = { selector: 'text=Edit Profile, button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
@@ -305,6 +314,12 @@ export class OTTAuthPage {
         this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
         this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
+        this.otpInput = { selector: "input[inputmode='numeric'][maxlength='1']" };
+        this.setNewPasswordHeading = { selector: '//h1[normalize-space()="Set a New Password"]' };
+        this.passwordResetSuccessMessage = { selector: 'text=/New Password Set Successfully/i' };
+        this.doneButton = { role: 'button', text: 'Done', selector: 'button:has-text("Done"), a:has-text("Done")' };
+        this.NewPassword = { selector: 'input[placeholder="New Password"], input[name*="new"], input[id*="new"], input[aria-label*="new"]' };
+        this.ConfirmNewPassword = { selector: 'input[placeholder="Confirm Password"], input[name*="confirm"], input[id*="confirm"], input[aria-label*="confirm"]' };
     }
 
     async navigate(): Promise<void> {
@@ -348,6 +363,20 @@ export class OTTAuthPage {
         logger.elementInteraction('type', 'password field');
         await this.page.locator(this.passwordField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeType(this.passwordField, password);
+    }
+
+    async enterNewPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'new password field');
+        const passwordLocator = this.page.locator(this.NewPassword.selector).first();
+        await passwordLocator.waitFor({ state: 'visible', timeout: 30000 });
+        await passwordLocator.fill(password);
+    }
+
+    async enterConfirmNewPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'confirm new password field');
+        const confirmPasswordLocator = this.page.locator(this.ConfirmNewPassword.selector).first();
+        await confirmPasswordLocator.waitFor({ state: 'visible', timeout: 30000 });
+        await confirmPasswordLocator.fill(password);
     }
 
     async clickContinue(): Promise<void> {
@@ -612,12 +641,6 @@ export class OTTAuthPage {
             logger.debug('Mid rail ad visibility check failed', error);
             return false;
         }
-
-        return false;
-    }
-
-    getGoogleAdsIframeSelector(): string {
-        return this.googleAdsIframeSelector.selector;
     }
 
     async getApplicationVersionText(): Promise<string> {
@@ -635,6 +658,11 @@ export class OTTAuthPage {
     }
 
     async isHomeTabVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+
+    async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
 
@@ -735,6 +763,11 @@ export class OTTAuthPage {
         }
         return false;
     }
+
+    async isShowsTabVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.showsTab, 10000);
+    }
+
 
     async clickCreateAccountLink(): Promise<void> {
         logger.elementInteraction('click', 'Create Account link');
@@ -2210,12 +2243,27 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.signOutOption);
     }
 
+    async clickSignIn(): Promise<void> {
+        logger.elementInteraction('click', 'Sign In option');
+        await this.pageUtils.safeClick(this.signInOption);
+    }
+
     async isSignOutOptionVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.signOutOption, 10000);
     }
 
     async isAccountAndSettingsVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.accountAndSettingsOption, 10000);
+    }
+
+    async isEmailVisibleOnAccountPage(email: string): Promise<boolean> {
+        try {
+            const locator = this.page.getByText(email, { exact: false }).first();
+            await locator.waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     async clickAccountAndSettings(): Promise<void> {
@@ -2328,6 +2376,35 @@ export class OTTAuthPage {
         return await this.pageUtils.getTextContent(this.createAccountMarketingText, 10000);
     }
 
+    async fetchAndFillOtp(mailUsername: string, subjectContains: string = 'Verification Code'): Promise<string> {
+        logger.step('Fetching OTP from Yopmail');
+
+        const resolvedMailUsername = mailUsername.includes('@')
+            ? mailUsername.split('@')[0]
+            : mailUsername;
+
+        const otp = await getOtpFromYopmail((resolvedMailUsername), {
+            subjectContains,
+        });
+
+        logger.info(`Fetched OTP: ${otp}`);
+
+        const otpInputs = this.page.locator(this.otpInput.selector);
+
+        await otpInputs.first().waitFor({
+            state: 'visible',
+            timeout: 30000,
+        });
+
+        // Fill each OTP digit
+        for (const [index, digit] of [...otp].entries()) {
+            await otpInputs.nth(index).fill(digit);
+        }
+
+        return otp;
+    }
+
+
     async isVerifyOTPMessageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.verifyOTPMessage, 10000);
     }
@@ -2377,8 +2454,34 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.verifyButton, 10000);
     }
 
+    async clickVerifyButton(): Promise<void> {
+        logger.elementInteraction('click', 'Verify button');
+        await this.pageUtils.safeClick(this.verifyButton);
+    }
+
     async isBackToLoginLinkVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.backToLoginLink, 10000);
+    }
+
+    async isSetNewPasswordScreenVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.setNewPasswordHeading, 10000);
+    }
+
+    async getSetNewPasswordHeadingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.setNewPasswordHeading, 10000);
+    }
+
+    async isPasswordResetSuccessMessageVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.passwordResetSuccessMessage, 10000);
+    }
+
+    async getPasswordResetSuccessMessageText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.passwordResetSuccessMessage, 10000);
+    }
+
+    async clickDoneButton(): Promise<void> {
+        logger.elementInteraction('click', 'Done button');
+        await this.pageUtils.safeClick(this.doneButton);
     }
 
     async selectCreateAccountMarketingCheckbox(): Promise<void> {

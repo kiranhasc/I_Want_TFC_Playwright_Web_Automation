@@ -263,7 +263,7 @@
     },
     "tc-disc-004-skip-intro": {
         "mode": "valid",
-        "searchTerm": "Lavender Fields"
+        "searchTerm": "Incognito"
     },
     "tc-disc-004-player-close-return": {
         "mode": "valid"
@@ -301,7 +301,7 @@
     },
     "tc-disc-007-skip-outro": {
         "mode": "valid",
-        "searchTerm": "Incognito"
+        "graphqlQueryName": "Collection"
     },
     "tc-disc-008-skip-markers-continue-watching": {
         "mode": "valid",
@@ -544,7 +544,8 @@
         "query": "Karnal"
     },
     "tc-sub-004-resume-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-003-play-content": {
         "mode": "valid",
@@ -707,21 +708,15 @@
     },
     "tc-sub-026-landscape-player-ui": {
         "mode": "valid",
-        "query": "Hey babe",
-        "expectedTitle": "Hey babe",
-        "expectedEpisode": "Hey babe"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-027-next-episode-cta": {
         "mode": "valid",
-        "query": "Altar",
-        "expectedTitle": "Altar",
-        "expectedEpisode": "Altar"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-028-up-next-marker": {
         "mode": "valid",
-        "query": "Ghosting",
-        "expectedTitle": "Ghosting",
-        "expectedEpisode": "Ghosting"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-029-back-button-navigation": {
         "mode": "valid",
@@ -730,33 +725,23 @@
     },
     "tc-sub-035-up-next-marker-navigation": {
         "mode": "valid",
-        "query": "Are you G?",
-        "expectedTitle": "Are you G?",
-        "expectedEpisode": "Are you G?"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-036-auto-next-episode-playback": {
         "mode": "valid",
-        "query": "Annaliza",
-        "expectedTitle": "Annaliza",
-        "expectedEpisode": "Annaliza"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-037-up-next-marker-functionality": {
         "mode": "valid",
-        "query": "Mirabella",
-        "expectedTitle": "Mirabella",
-        "expectedEpisode": "Mirabella"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-038-up-next-close-button": {
         "mode": "valid",
-        "query": "Araw Gabi",
-        "expectedTitle": "Araw Gabi",
-        "expectedEpisode": "Araw Gabi"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-039-up-next-marker-click-navigation": {
         "mode": "valid",
-        "query": "Araw Gabi",
-        "expectedTitle": "Araw Gabi",
-        "expectedEpisode": "Araw Gabi"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-030-player-controls-autodismiss": {
         "mode": "valid",
@@ -779,15 +764,12 @@
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",
-        "query": "captain barbell",
-        "expectedTitle": "Captain Barbell",
-        "expectedEpisode": "Captain Barbell"
+        "graphqlQueryName": "Collection"
+
     },
     "tc-sub-018-short-duration-timestamp-format": {
         "mode": "valid",
-        "query": "captain barbell",
-        "expectedTitle": "Captain Barbell",
-        "expectedEpisode": "Captain Barbell"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-019-subtitle-selection": {
         "mode": "valid",
@@ -795,34 +777,23 @@
     },
     "tc-sub-020-subtitle-next-episode": {
         "mode": "valid",
-        "query": "Blood vs duty",
-        "expectedTitle": "Blood vs Duty",
-        "expectedEpisode": "Blood vs Duty"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-021-subtitle-carry-over": {
         "mode": "valid",
-        "query": "Miss behave",
-        "secondQuery": "will you fake marry me",
-        "expectedTitle": "Miss behave",
-        "expectedEpisode": "Miss behave"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-022-subtitle-default-off": {
         "mode": "valid",
-        "query": "fractured",
-        "expectedTitle": "Fractured",
-        "expectedEpisode": "Fractured"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-023-subtitle-display": {
         "mode": "valid",
-        "query": "doble kara",
-        "expectedTitle": "Doble Kara",
-        "expectedEpisode": "Doble Kara"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-024-subtitle-synchronization": {
         "mode": "valid",
-        "query": "Beauty and the bestie",
-        "expectedTitle": "Beauty and the bestie",
-        "expectedEpisode": "Beauty and the bestie"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-034-seekbar-preview": {
         "mode": "valid",
@@ -1007,14 +978,11 @@
     },
     "tc-sub-039-last-season-last-episode": {
         "mode": "valid",
-        "query": "Can't buy me love",
-        "expectedTitle": "Can't Buy Me Love",
-        "expectedEpisode": "Can't buy me love"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-040-movie-complete-details-navigation": {
         "mode": "valid",
-        "query": "Sukob",
-        "expectedTitle": "Sukob"
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-041-subscribe-to-watch-redirect-account": {
         "mode": "freeUser",

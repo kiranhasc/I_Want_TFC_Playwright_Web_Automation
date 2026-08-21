@@ -2371,8 +2371,6 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
     ? Boolean(nextNumbers.seasonNumber && currentNumbers.seasonNumber && nextNumbers.seasonNumber > currentNumbers.seasonNumber && nextNumbers.episodeNumber === 1)
     : true;
   const autoPlaybackStarted = markerVisible && await detailsPage.isPlayerScreenVisible().catch(() => false);
-  console.log(`Current season/episode before next: ${currentSeasonNumber || 'N/A'} / ${currentEpisodeNumber || 'N/A'}`);
-  console.log(`Updated season/episode after next: ${nextSeasonNumber || 'N/A'} / ${nextEpisodeNumber || 'N/A'}`);
   logger.assertion(`Up Next marker visible from Continue Watching resume - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, markerVisible);
   logger.assertion(`Automatic next episode playback started - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, autoPlaybackStarted);
   logger.assertion(`Episode progression validated - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, episodeProgressionValid);
@@ -2446,8 +2444,6 @@ export async function verifyClickUpNextBingeMarkerFromContinueWatching(
     ? Boolean(nextNumbers.seasonNumber && currentNumbers.seasonNumber && nextNumbers.seasonNumber > currentNumbers.seasonNumber && nextNumbers.episodeNumber === 1)
     : true;
   const autoPlaybackStarted = markerVisible && await detailsPage.isPlayerScreenVisible().catch(() => false);
-  console.log(`Current season/episode before next: ${currentSeasonNumber || 'N/A'} / ${currentEpisodeNumber || 'N/A'}`);
-  console.log(`Updated season/episode after next: ${nextSeasonNumber || 'N/A'} / ${nextEpisodeNumber || 'N/A'}`);
   logger.assertion(`Up Next marker visible from Continue Watching resume - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, markerVisible);
   logger.assertion(`Automatic next episode playback started - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, autoPlaybackStarted);
   logger.assertion(`Episode progression validated - current ${currentSeasonNumber || 'N/A'}/${currentEpisodeNumber || 'N/A'} -> next ${nextSeasonNumber || 'N/A'}/${nextEpisodeNumber || 'N/A'}`, episodeProgressionValid);

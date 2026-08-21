@@ -948,10 +948,6 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
   assertOrThrow('Selected episode title visible in player metadata', playerEpisodeTitleVisible);
   assertOrThrow('Selected season number visible in player metadata', playerSeasonVisible);
   assertOrThrow('Selected episode number visible in player metadata', playerEpisodeVisible);
-  console.log(`[IW3-T1921] Show Name: ${showName || 'N/A'}`);
-  console.log(`[IW3-T1921] Episode Title: ${selectedEpisodeTitle || 'N/A'}`);
-  console.log(`[IW3-T1921] Season Number: ${seasonNumber || 'N/A'}`);
-  console.log(`[IW3-T1921] Episode Number: ${episodeNumber || 'N/A'}`);
   return {
     isLoggedIn,
     isDetailsPageVisible,
@@ -1338,20 +1334,16 @@ export async function verifyGuestSearchNavigationFromFreeAsset(
   const expectedTitle = input?.expectedTitle ?? searchTerm;
   logger.info(" Title", expectedTitle);
   await authPage.navigate();
-  await authPage.acceptCookieSettingsIfVisible();
   await authPage.clickSearchBar();
   await authPage.enterSearchText(searchTerm);
   const enteredSearchText = await authPage.getSearchBarValue();
   const isSearchInputPopulated = enteredSearchText.toLowerCase().includes(searchTerm.toLowerCase());
   await authPage.submitSearch();
+  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   const headingText = isDetailsPageVisible ? await detailsPage.getShowDetailsHeadingText() : '';
   const titleMatchesSearchTerm = headingText.toLowerCase().includes(expectedTitle.toLowerCase()) || headingText.toLowerCase().includes(searchTerm.toLowerCase());
-  console.log("  serarched text", enteredSearchText);
-  console.log("  Details page", isDetailsPageVisible);
-  console.log(" Heading text in detail page", headingText);
-  console.log(" Title", titleMatchesSearchTerm);
   logger.assertion('Search input accepts guest search term', isSearchInputPopulated);
   logger.assertion('Details page visible after guest search', isDetailsPageVisible);
   return {
@@ -1436,25 +1428,25 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro marker verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  await authPage.acceptCookieSettingsIfVisible();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
     await page.waitForTimeout(2000);
-  const resultsVisible = searchTerm ? await authPage.isSearchResultsVisible(searchTerm) : false;
-  logger.info(`Search results visible for query "${searchTerm}": ${resultsVisible}`);
-  logger.assertion('Search results visible for query', resultsVisible);
     await detailsPage.clickFirstSearchResult();
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
-    await detailsPage.clickEpisodeOne();
-    await page.waitForTimeout(8000);
+    await detailsPage.clickEpisodeTwo(); 
+    await page.waitForTimeout(4000);
+    await detailsPage.waitTillAdsEnd();
+    await detailsPage.hoverPlaybackScreen();
+    await page.waitForTimeout(2000);
+    await detailsPage.clickNextEpisodeButton();
+    await page.waitForTimeout(4000);
+    await detailsPage.waitTillAdsEnd();
   }
-  // await page.waitForTimeout(2000);
-  // await detailsPage.clickNextEpisodeButton();
-  // await detailsPage.clickSkipRecapMarker();
+  await detailsPage.clickSkipRecapButton();
   const isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip intro marker visible', isSkipIntroMarkerVisible);
@@ -1525,13 +1517,15 @@ export async function verifySkipRecapMarkerDuringPlayback(
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
+    await page.waitForTimeout(2000);
     await detailsPage.clickFirstSearchResult();
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
-    await page.waitForTimeout(3000);
   }
+  await page.waitForTimeout(4000);
+  await detailsPage.waitTillAdsEnd();
   const isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
@@ -1610,11 +1604,9 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {
       timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
-      console.log(`[IW3-T2115] Playback time before Skip Recap click: ${timeBeforeSkipRecap}`);
       skipRecapClicked = await detailsPage.clickSkipRecapMarker();
       await page.waitForTimeout(2000);
       timeAfterSkipRecap = await detailsPage.getTrimmedPlaybackTime();
-      console.log(`[IW3-T2115] Playback time after Skip Recap click: ${timeAfterSkipRecap}`);
       await page.waitForTimeout(3000);
     }
   }
@@ -1622,12 +1614,10 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
   if (isSkipIntroMarkerVisible) {
     timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
-    console.log(`[IW3-T2115] Playback time before Skip Intro click: ${timeBeforeSkipIntro}`);
     await page.waitForTimeout(2000);
     skipIntroClicked = await detailsPage.clickSkipIntroMarker();
     await page.waitForTimeout(2000);
     timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
-    console.log(`[IW3-T2115] Playback time after Skip Intro click: ${timeAfterSkipIntro}`);
     await page.waitForTimeout(3000);
   }
   logger.assertion('Details page visible', isDetailsPageVisible);

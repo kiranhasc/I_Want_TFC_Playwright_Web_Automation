@@ -48,6 +48,7 @@ export class OTTAuthPage {
     private readonly homeTabSelectors: PageElement[];
     private readonly loadingIndicator: PageElement;
     private readonly moviesTab: PageElement;
+    private readonly mobileMainMenu: PageElement;
     private readonly showsTab: PageElement;
     private readonly myWatchlistTab: PageElement;
     private readonly gmaTab: PageElement;
@@ -158,7 +159,6 @@ export class OTTAuthPage {
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
-    private readonly mobileMainMenu: PageElement;
     private readonly otpInput: PageElement;
     private readonly setNewPasswordHeading: PageElement;
     private readonly passwordResetSuccessMessage: PageElement;
@@ -231,6 +231,7 @@ export class OTTAuthPage {
         this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
+        this.signInOption = { selector: '//p[normalize-space()="Sign In"]' };
         this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
         this.myWatchListPage = { selector: '.min-h-screen' };
@@ -252,6 +253,7 @@ export class OTTAuthPage {
         this.marketingCheckbox = { selector: '//input[@id="cem"]/following-sibling::label/span' };
         this.createAccountMarketingText = { selector: 'text=I agree to receive marketing communications', text: 'I agree to receive marketing communications' };
         this.marketingCheckboxDescription = { selector: 'form' };
+        this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
         this.verifyOTPContainer = { selector: 'span.text-white\\/60' };
         this.verifyOTPMessage = { selector: 'text=/A verification OTP was sent to/i' };
         this.verifyOTPEmail = { selector: 'span.text-white\\/60 span.italic' };
@@ -668,6 +670,9 @@ export class OTTAuthPage {
 
     async clickHomeTab(): Promise<void> {
         logger.info('click', 'Home tab');
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
         let clicked = false;
         for (const selector of this.homeTabSelectors) {
             try {
@@ -718,8 +723,20 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.emailErrorMessage, 10000);
     }
 
+    async clickMobileMainMenu(): Promise<void> {
+    logger.elementInteraction('click', 'mobile main menu');
+    const locator = this.page.locator(this.mobileMainMenu.selector).first();
+    await locator.waitFor({ state: 'visible', timeout: 15000 });
+    await locator.click({ timeout: 20000, force: true });
+  }
+
+
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
+        if (process.env.BROWSER === 'mchrome'){
+            await this.clickMobileMainMenu();
+        }
+
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;
@@ -1002,6 +1019,11 @@ export class OTTAuthPage {
         }
     }
 
+    async clickSignIn(): Promise<void> {
+        logger.elementInteraction('click', 'Sign In option');
+        await this.pageUtils.safeClick(this.signInOption);
+    }
+ 
     async closeCurrentTabAndReturnToMain(): Promise<void> {
         const pages = this.page.context().pages();
         const mainPage = pages.find((candidate) => candidate !== this.page);
@@ -1020,12 +1042,18 @@ export class OTTAuthPage {
     }
 
     async clickShowsTab(): Promise<void> {
+        if( process.env.BROWSER === 'mchrome' ){
+            await this.clickMobileMainMenu();
+        }
         logger.elementInteraction('click', 'Shows tab');
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.showsTab);
     }
 
     async clickMyWatchlistTab(): Promise<void> {
+        if( process.env.BROWSER === 'mchrome'){
+            await this.clickMobileMainMenu();
+        }
         logger.elementInteraction('click', 'My Watchlist tab');
         const locator = this.page.locator(this.myWatchlistTab.selector);
         await locator.waitFor({ state: 'attached', timeout: 15000 });
@@ -1036,6 +1064,9 @@ export class OTTAuthPage {
     }
 
     async clickGMATab(): Promise<void> {
+        if( process.env.BROWSER === 'mchrome'){
+            await this.clickMobileMainMenu();
+        }
         logger.elementInteraction('click', 'GMA tab');
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.gmaTab);
@@ -2241,11 +2272,6 @@ export class OTTAuthPage {
     async clickSignOut(): Promise<void> {
         logger.elementInteraction('click', 'Sign Out option');
         await this.pageUtils.safeClick(this.signOutOption);
-    }
-
-    async clickSignIn(): Promise<void> {
-        logger.elementInteraction('click', 'Sign In option');
-        await this.pageUtils.safeClick(this.signInOption);
     }
 
     async isSignOutOptionVisible(): Promise<boolean> {

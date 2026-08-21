@@ -216,6 +216,62 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-sponsored-rail-visibility"
+  name: "Verify Sponsored Rail is Displayed on Home, Shows, Movies, GMA pages"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailVisibility"
+  tags:
+    - landing
+    - ads
+    - ui
+  testCases:
+    - "IW3-T2135"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-non-clickability"
+  name: "Verify Sponsored Rail is non-clickable except content cards"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailNonClickability"
+  tags:
+    - landing
+    - ads
+    - ui
+  testCases:
+    - "IW3-T2146"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-advertiser-logo"
+  name: "Verify advertiser logo is displayed on the CMS-configured Sponsored Rail"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailAdvertiserLogo"
+  tags:
+    - landing
+    - ads
+    - ui
+    - mweb
+  testCases:
+    - "IW3-T2137"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-content-details-navigation"
+  name: "Verify Sponsored Rail content navigates to the respective details page"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySponsoredRailContentDetailsNavigation"
+  tags:
+    - playback
+    - landing
+    - ads
+    - navigation
+    - ui
+    - mweb
+  testCases:
+    - "IW3-T2149"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "login-with-mobile-number"
   name: "Login with mobile number"
   path: "src/businessFunction/ott-auth-bfs.ts"

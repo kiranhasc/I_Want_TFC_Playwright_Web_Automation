@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { logger } from '../utils/logger';
+import { config } from '../utils/config-manager';
 
 export class OTTPlaybackPage {
     private readonly page: Page;
@@ -83,7 +84,7 @@ export class OTTPlaybackPage {
     }
 
     async navigateToHomePage(): Promise<void> {
-        await this.page.goto('https://www.iwanttfc.com/');
+        await this.page.goto(config.getBaseURL());
         await this.pageUtils.waitForPageLoad();
     }
 

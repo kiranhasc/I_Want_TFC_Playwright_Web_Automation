@@ -216,7 +216,7 @@ export class OTTDetailsPage {
   private readonly subscriptionBlockerMessage: PageElement;
   private readonly railThumbnailSelector: PageElement;
   private readonly dbfirstTitleImageCard: PageElement;
-
+  private readonly sponsoredRailContentCard: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -297,8 +297,10 @@ export class OTTDetailsPage {
     this.watchlistContentCard = { selector: 'img[alt="My Illegal Wife"]' };
     this.freeTagBadge = { selector: "img[alt='free'], img[alt='Free'], img[title='free'], img[title='Free'], [aria-label*='free']" };
     this.loginCta = { selector: '#login div' };
-    this.skipRecapMarker = { selector: '//*[@id="player-container-main-skipRecapButton"]' };
+    //this.skipRecapMarker = { selector: 'button:has-text("Skip Recap"), [data-testid*="skip-recap"], [aria-label*="Skip Recap"],' };
+    //this.skipIntroMarker = { selector: 'button:has-text("Skip Intro"), [data-testid*="skip-intro"], [aria-label*="Skip Intro"],'};
     this.skipIntroMarker = { selector: '//button[@id="player-container-main-skipIntroButton"]' };
+    this.skipRecapMarker = { selector: '//button[@id="player-container-main-skipRecapButton"]' };
     this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
@@ -320,9 +322,9 @@ export class OTTDetailsPage {
     this.subtitleLanguageOption = { selector: 'text=/English\\(Philippines\\)/i' };
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
     this.subtitleDisplayIndicator = { selector: 'xpath=//*[@id="player-container-main"]/div[6]/div' };
-    this.nextEpisodeButton = { selector: 'button[aria-label*="next"], button:has-text("Next"), [data-testid*="next-episode"]' };
+    this.nextEpisodeButton = { selector: '//*[@id="player-container-main-nextButton"]/img' };
     // Include the player-specific up-next widget (div) and common aria/testid/button patterns
-    this.upNextMarker = { selector: '//*[@id="player-container-main"]/div[5]/div[1][contains(@class,"player-upNextWidget-forground-gradient")]' };
+    this.upNextMarker = { selector: '//*[@id="player-container-main"]/div[5]/div[1]' };
     this.backButton = { selector: 'button[aria-label*="back"], button:has-text("Back"), [data-testid*="back"]' };
     this.adScreenBackToPlayer = { selector: '//*[@id="player-container-main"]/div[1]/div[1]' };
     this.fullscreenButton = { selector: '//*[@id="player-container-main-fullscreenButton"]' };
@@ -384,9 +386,7 @@ export class OTTDetailsPage {
     this.watchlistTooltipRemove = { selector: "//div[contains(@class,'tooltip')]//p[normalize-space()='Remove from watchlist']" };
     this.removeWatchlistFallbackIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"]' };
     this.liveChannelsHeading = { selector: 'text=Live Channels', text: 'Live Channels' };
-    this.playerLoaderOverlay = { selector: '.player-loader' };
-    // this.playerLoaderOverlay = { selector: '//*[@id="player-container-main"]/div[4]' };
-
+    this.playerLoaderOverlay = { selector: '//div[contains(@class,"player-mid-spacer")]' };
     this.midRailAdBanner = { selector: 'xpath=//div[contains(@id,"gpt-banner-ad-10")]' };
     this.subscribeCtaContainer = { selector: '#play' };
     this.subscribeCtaInteractiveTarget = { selector: 'main button, main a, main [role="button"]' };
@@ -434,6 +434,7 @@ export class OTTDetailsPage {
     this.firstCarouselRail = { selector: '(//div[contains(@class,"rail-container")])[1]' };
     this.subscriptionBlockerMessage = { selector: "//h2[contains(text(),'A valid subscription is required')]" };
     this.railThumbnailSelector = { selector: "(//div[contains(@class,'thumbnail') and contains(@class,'cursor-pointer')])[1]" };
+    this.sponsoredRailContentCard = { selector: "xpath=((//div[contains(@class,'rail z-1')][.//div[contains(@class,'rail-container')]][.//div[contains(@class,'title')]//img[contains(@class,'object-contain')]])[1]//img[contains(@class,'title-image')])[2]" };
     this.adBanner = { selector: '//a[@id="aw0"]/img' };
   }
 
@@ -660,8 +661,8 @@ export class OTTDetailsPage {
   async doubleClickFirstVisibleContentCard(): Promise<void> {
     logger.elementInteraction('doubleclick', 'first visible content card on home page');
     const contentCard = this.page.locator(this.dbfirstTitleImageCard.selector).first();
-    await contentCard.waitFor({state: 'visible', timeout: 15000, });
-    await contentCard.dblclick({ timeout: 20000,});
+    await contentCard.waitFor({ state: 'visible', timeout: 15000, });
+    await contentCard.dblclick({ timeout: 20000, });
   }
 
   async getFirstFreeContentTitleOnHome(): Promise<string> {
@@ -777,49 +778,49 @@ export class OTTDetailsPage {
     }
   }
 
-  // async isMidRailAdBannerVisible(): Promise<boolean> {
+  async isMidRailAdBannerVisible(): Promise<boolean> {
+    try {
+      const selector = this.midRailAdBanner.selector;
+      return await this.page.evaluate((selector) => {
+        return Array.from(document.querySelectorAll<HTMLElement>(selector)).some((element) => {
+          const rect = element.getBoundingClientRect();
+          const style = window.getComputedStyle(element);
+          const text = (element.textContent || '').toLowerCase();
+          const className = (element.className || '').toLowerCase();
+          const ariaLabel = (element.getAttribute('aria-label') || '').toLowerCase();
+          const looksLikeAd = text.includes('ad') || className.includes('ad') || ariaLabel.includes('ad') || text.includes('banner') || className.includes('banner') || ariaLabel.includes('banner');
+          return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && looksLikeAd;
+        });
+      }, selector);
+    } catch (error) {
+      logger.debug('Mid rail ad banner visibility check failed', error);
+      return false;
+    }
+  }
+
+
+  //   async isMidRailBannerVisible(): Promise<{
+  //   value: string;
+  //   isVisible: boolean;
+  // }> {
   //   try {
-  //     const selector = this.midRailAdBanner.selector;
-  //     return await this.page.evaluate((selector) => {
-  //       return Array.from(document.querySelectorAll<HTMLElement>(selector)).some((element) => {
-  //         const rect = element.getBoundingClientRect();
-  //         const style = window.getComputedStyle(element);
-  //         const text = (element.textContent || '').toLowerCase();
-  //         const className = (element.className || '').toLowerCase();
-  //         const ariaLabel = (element.getAttribute('aria-label') || '').toLowerCase();
-  //         const looksLikeAd = text.includes('ad') || className.includes('ad') || ariaLabel.includes('ad') || text.includes('banner') || className.includes('banner') || ariaLabel.includes('banner');
-  //         return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && looksLikeAd;
-  //       });
-  //     }, selector);
-  //   } catch (error) {
-  //     logger.debug('Mid rail ad banner visibility check failed', error);
-  //     return false;
+  //     const locator = this.getLocator(this.midRailAdBanner);
+
+  //     await locator.waitFor({ state: 'attached', timeout: 10000 });
+
+  //     const value = await locator.textContent();
+
+  //     return {
+  //       value: value?.trim() ?? '',
+  //       isVisible: true
+  //     };
+  //   } catch {
+  //     return {
+  //       value: '',
+  //       isVisible: false
+  //     };
   //   }
   // }
-
-
-//   async isMidRailBannerVisible(): Promise<{
-//   value: string;
-//   isVisible: boolean;
-// }> {
-//   try {
-//     const locator = this.getLocator(this.midRailAdBanner);
-
-//     await locator.waitFor({ state: 'attached', timeout: 10000 });
-
-//     const value = await locator.textContent();
-
-//     return {
-//       value: value?.trim() ?? '',
-//       isVisible: true
-//     };
-//   } catch {
-//     return {
-//       value: '',
-//       isVisible: false
-//     };
-//   }
-// }
 
   async isMidRailBannerVisible(): Promise<boolean> {
     const player = this.page.locator(this.midRailAdBanner.selector).first();
@@ -876,96 +877,96 @@ export class OTTDetailsPage {
 
 
   async verifyMidRailAdSpacing(): Promise<boolean> {
-  try {
-    const adLocator = this.page.locator(this.midRailAdBanner.selector).first();
+    try {
+      const adLocator = this.page.locator(this.midRailAdBanner.selector).first();
 
-    await adLocator.waitFor({
-      state: 'visible',
-      timeout: 10000
-    });
-
-    const spacingValid = await adLocator.evaluate((adElement) => {
-      const adRect = adElement.getBoundingClientRect();
-      const adStyle = window.getComputedStyle(adElement);
-
-      const marginTop = parseFloat(adStyle.marginTop) || 0;
-      const marginBottom = parseFloat(adStyle.marginBottom) || 0;
-
-      // Check spacing from the previous visible element
-      let previousElement = adElement.previousElementSibling as HTMLElement | null;
-      let gapAbove = 0;
-
-      while (previousElement) {
-        const rect = previousElement.getBoundingClientRect();
-        const style = window.getComputedStyle(previousElement);
-
-        if (
-          rect.width > 0 &&
-          rect.height > 0 &&
-          style.display !== 'none' &&
-          style.visibility !== 'hidden'
-        ) {
-          gapAbove = adRect.top - rect.bottom;
-          break;
-        }
-
-        previousElement = previousElement.previousElementSibling as HTMLElement | null;
-      }
-
-      // Check spacing from the next visible element
-      let nextElement = adElement.nextElementSibling as HTMLElement | null;
-      let gapBelow = 0;
-
-      while (nextElement) {
-        const rect = nextElement.getBoundingClientRect();
-        const style = window.getComputedStyle(nextElement);
-
-        if (
-          rect.width > 0 &&
-          rect.height > 0 &&
-          style.display !== 'none' &&
-          style.visibility !== 'hidden'
-        ) {
-          gapBelow = rect.top - adRect.bottom;
-          break;
-        }
-
-        nextElement = nextElement.nextElementSibling as HTMLElement | null;
-      }
-
-      const totalStyleSpacing = marginTop + marginBottom;
-
-      console.log({
-        marginTop,
-        marginBottom,
-        gapAbove,
-        gapBelow,
-        totalStyleSpacing
+      await adLocator.waitFor({
+        state: 'visible',
+        timeout: 10000
       });
 
-      // Consider spacing valid if either:
-      // 1. CSS margins provide sufficient spacing
-      // 2. There is sufficient physical spacing above/below the ad
-      return (
-        totalStyleSpacing > 12 ||
-        gapAbove > 24 ||
-        gapBelow > 24
+      const spacingValid = await adLocator.evaluate((adElement) => {
+        const adRect = adElement.getBoundingClientRect();
+        const adStyle = window.getComputedStyle(adElement);
+
+        const marginTop = parseFloat(adStyle.marginTop) || 0;
+        const marginBottom = parseFloat(adStyle.marginBottom) || 0;
+
+        // Check spacing from the previous visible element
+        let previousElement = adElement.previousElementSibling as HTMLElement | null;
+        let gapAbove = 0;
+
+        while (previousElement) {
+          const rect = previousElement.getBoundingClientRect();
+          const style = window.getComputedStyle(previousElement);
+
+          if (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.display !== 'none' &&
+            style.visibility !== 'hidden'
+          ) {
+            gapAbove = adRect.top - rect.bottom;
+            break;
+          }
+
+          previousElement = previousElement.previousElementSibling as HTMLElement | null;
+        }
+
+        // Check spacing from the next visible element
+        let nextElement = adElement.nextElementSibling as HTMLElement | null;
+        let gapBelow = 0;
+
+        while (nextElement) {
+          const rect = nextElement.getBoundingClientRect();
+          const style = window.getComputedStyle(nextElement);
+
+          if (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.display !== 'none' &&
+            style.visibility !== 'hidden'
+          ) {
+            gapBelow = rect.top - adRect.bottom;
+            break;
+          }
+
+          nextElement = nextElement.nextElementSibling as HTMLElement | null;
+        }
+
+        const totalStyleSpacing = marginTop + marginBottom;
+
+        console.log({
+          marginTop,
+          marginBottom,
+          gapAbove,
+          gapBelow,
+          totalStyleSpacing
+        });
+
+        // Consider spacing valid if either:
+        // 1. CSS margins provide sufficient spacing
+        // 2. There is sufficient physical spacing above/below the ad
+        return (
+          totalStyleSpacing > 12 ||
+          gapAbove > 24 ||
+          gapBelow > 24
+        );
+      });
+
+      logger.info(
+        `Mid-rail ad spacing validation result: ${spacingValid}`
       );
-    });
 
-    logger.info(
-      `Mid-rail ad spacing validation result: ${spacingValid}`
-    );
+      return spacingValid;
+    } catch (error) {
+      logger.debug(
+        `Mid rail ad spacing validation failed: ${error}`
+      );
 
-    return spacingValid;
-  } catch (error) {
-    logger.debug(
-      `Mid rail ad spacing validation failed: ${error}`
-    );
-
-    return false;
+      return false;
+    }
   }
-}
 
   async scrollContinueWatchingTrayIntoView(): Promise<void> {
     logger.elementInteraction('scroll', 'Continue Watching tray');
@@ -1470,7 +1471,7 @@ export class OTTDetailsPage {
             return true;
           }
         }
-      } catch (err) { 
+      } catch (err) {
         logger.debug('clickLastEpisodeFromEpisodesList: failed to click descendant anchor/button', err);
       }
       // 2) try clicking thumbnail image via DOM
@@ -1485,7 +1486,7 @@ export class OTTDetailsPage {
             return true;
           }
         }
-      } catch (err) { 
+      } catch (err) {
         logger.debug('clickLastEpisodeFromEpisodesList: failed to click thumbnail image', err);
       }
       // 3) final DOM fallback: click the episode container itself via evaluate
@@ -1497,7 +1498,7 @@ export class OTTDetailsPage {
           await this.page.waitForTimeout(2000).catch(() => undefined);
           return true;
         }
-      } catch (err) { 
+      } catch (err) {
         logger.debug('clickLastEpisodeFromEpisodesList: failed to click episode container', err);
       }
       return false;
@@ -1705,16 +1706,16 @@ export class OTTDetailsPage {
   async ensureWatchlistIsAddable(): Promise<void> {
     logger.elementInteraction('precondition', 'ensure watchlist is addable');
     try {
-      // If a remove icon is visible, click it to make the item addable
-      const removeIconLocator = this.page.locator(this.removeWatchlistIcon.selector ?? '').first();
+      const watchlistContainer = this.page.locator(this.addToWatchlistButtonIcon.selector ?? '').first();
+      await watchlistContainer.waitFor({ state: 'visible', timeout: 15000 });
+
+      const removeIconLocator = watchlistContainer.locator(this.removeWatchlistIcon.selector ?? '').first();
       if ((await removeIconLocator.count().catch(() => 0)) > 0 && (await removeIconLocator.isVisible().catch(() => false))) {
         await removeIconLocator.scrollIntoViewIfNeeded().catch(() => undefined);
         await removeIconLocator.click({ timeout: 15000, force: true }).catch(() => undefined);
         return;
       }
-
-      // Otherwise, hover the configured add-to-watchlist element (XPath) and check tooltip
-      const addButton = this.page.locator(this.addToWatchlistButton.selector ?? '').first();
+      const addButton = watchlistContainer.locator(this.addToWatchlistButton.selector ?? '').first();
       if ((await addButton.count().catch(() => 0)) > 0) {
         await addButton.scrollIntoViewIfNeeded().catch(() => undefined);
         await addButton.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
@@ -3702,6 +3703,26 @@ export class OTTDetailsPage {
     }
   }
 
+  async clickSecondSponsoredRailContent(): Promise<{ clicked: boolean; cardTitle: string }> {
+    logger.elementInteraction('click', 'second content card in Sponsored Rail');
+    const contentCard = this.page.locator(this.sponsoredRailContentCard.selector).first();
+
+    try {
+      await contentCard.scrollIntoViewIfNeeded().catch(() => undefined);
+      await contentCard.waitFor({ state: 'visible', timeout: 20000 });
+      const cardTitle = (await contentCard.getAttribute('alt').catch(() => ''))?.trim() || '';
+      const clickableTarget = contentCard.locator('xpath=ancestor::a[1]').first();
+      const targetToClick = (await clickableTarget.count().catch(() => 0)) ? clickableTarget : contentCard;
+      await targetToClick.click({ timeout: 20000, force: true });
+      await this.page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
+      return { clicked: true, cardTitle };
+    } catch (error) {
+      logger.debug('Sponsored Rail content-card navigation failed', error);
+      return { clicked: false, cardTitle: '' };
+    }
+  }
+
   async clickFirstContentInRailByLocator(): Promise<void> {
     logger.info('click', 'first content in the Because You Watched tray using the provided locator');
     const railTarget = this.page.locator(this.becauseYouWatchedFirstItem.selector).first();
@@ -4167,10 +4188,9 @@ export class OTTDetailsPage {
 
   async pauseAdBannerNotVisible(): Promise<boolean> {
     try {
-      const iframe = this.page.frameLocator(this.thirdPartyAdFrame.selector).first();
-      const pauseAd = iframe.locator(this.adBanner.selector).first();
-      await pauseAd.waitFor({ state: 'attached', timeout: 30000 });
-      return await pauseAd.isVisible();
+      const pauseBannerAd = this.page.locator(this.pauseAdMidBanner.selector).first();
+      await pauseBannerAd.waitFor({ state: 'visible', timeout: 20000 });
+      return await pauseBannerAd.isVisible();
     }
     catch {
       return false;
@@ -4431,23 +4451,24 @@ export class OTTDetailsPage {
   }
 
   async isPauseUpNextMarkerVisible(): Promise<boolean> {
-    const candidateSelectors = [
-      this.upNextMarker.selector,
-      this.nextEpisodeButton.selector,
-      'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
-    ];
-    for (const selector of candidateSelectors) {
+    const selector = '//*[@id="player-container-main"]/div[5]/div[1][contains(@class,"player-upNextWidget-forground-gradient")]';
+    try {
       const marker = this.page.locator(selector).first();
-      try {
-        await marker.waitFor({ state: 'visible', timeout: 3000 });
-        if (await marker.isVisible()) {
-          return true;
-        }
-      } catch {
+      const count = await marker.count().catch(() => 0);
+      if (!count) {
         return false;
       }
+      await marker.waitFor({ state: 'attached', timeout: 3000 }).catch(() => undefined);
+      const isVisible = await marker.isVisible().catch(() => false);
+      if (!isVisible) {
+        return false;
+      }
+      const box = await marker.boundingBox().catch(() => null);
+      return Boolean(box && box.width > 0 && box.height > 0);
+    } catch (error) {
+      logger.debug(`Pause Up Next marker selector failed: ${selector}`, error);
+      return false;
     }
-    return false;
   }
 
   async waitForUpNextMarker(timeout: number = 20000): Promise<boolean> {
@@ -4559,25 +4580,24 @@ export class OTTDetailsPage {
   // }
 
   async isSubtitleDisplayedOnPlayer(): Promise<boolean> {
-  const subtitleDisplayIndicator = this.page
-    .locator(this.subtitleDisplayIndicator.selector)
-    .first();
+    const subtitleDisplayIndicator = this.page
+      .locator(this.subtitleDisplayIndicator.selector)
+      .first();
 
-  try {
-    await subtitleDisplayIndicator.waitFor({
-      state: 'visible',
-      timeout: 30000
-    });
+    try {
+      await subtitleDisplayIndicator.waitFor({
+        state: 'visible',
+        timeout: 30000
+      });
 
-    return true;
-  } catch (error) {
-    throw new Error(
-      `Subtitle was not displayed on the player within 30 seconds. ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+      return true;
+    } catch (error) {
+      throw new Error(
+        `Subtitle was not displayed on the player within 30 seconds. ${error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
-}
   async isFullscreenButtonVisible(): Promise<boolean> {
     const fullscreenButton = this.page.locator(this.fullscreenButton.selector).first();
     await fullscreenButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -4677,21 +4697,21 @@ export class OTTDetailsPage {
   }
 
   async isPlaybackTimeInMMSSFormat(): Promise<{
-  playbackTime: string;
-  isValid: boolean;
-}> {
-  const playbackTime = (await this.getPlaybackTimestampText()).trim();
+    playbackTime: string;
+    isValid: boolean;
+  }> {
+    const playbackTime = (await this.getPlaybackTimestampText()).trim();
 
-  // Extract current playback time before "/"
-  const currentTime = playbackTime.split('/')[0].trim();
+    // Extract current playback time before "/"
+    const currentTime = playbackTime.split('/')[0].trim();
 
-  const isValid = /^\d{2}:\d{2}$/.test(currentTime);
+    const isValid = /^\d{2}:\d{2}$/.test(currentTime);
 
-  return {
-    playbackTime: currentTime,
-    isValid,
-  };
-}
+    return {
+      playbackTime: currentTime,
+      isValid,
+    };
+  }
 
   async getTrimmedPlaybackTime(): Promise<string> {
     const playbackText = await this.getPlaybackTimeText();
@@ -5241,4 +5261,23 @@ export class OTTDetailsPage {
     }
     await this.page.waitForTimeout(2000);
   }
+
+  async waitTillAdsEnd(): Promise<void> {
+    const adOverlay = this.page.locator('#ad-ui-overlay');
+
+    while (true) {
+      const adVisible = await adOverlay.isVisible().catch(() => false);
+
+      console.log(`Ad present: ${adVisible}`);
+
+      if (!adVisible) {
+        break;
+      }
+
+      await adOverlay.waitFor({ state: 'hidden' });
+    }
+
+    console.log('Ad has ended. Proceeding to next step.');
+  }
+
 }

@@ -9,7 +9,7 @@ const browserConfig = {
   chrome: {
     ...devices['Desktop Chrome'],
     channel: 'chrome',
-    launchOptions: {
+          launchOptions: {
       ignoreDefaultArgs: ['--disable-component-update'],
     },
   },
@@ -132,6 +132,10 @@ export default defineConfig({
       testDir: 'tests/home',
       testMatch: '**/ph_region.spec.ts',
     },
-
+    {
+      name: 'Ads',
+      testDir: 'tests/home',
+      testMatch: '**/ads.spec.ts',
+    },
   ],
 });

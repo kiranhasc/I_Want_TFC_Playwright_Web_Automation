@@ -4,6 +4,7 @@ import { verifyGuestPHCarouselTabTrayLoad } from '../../src/businessFunction/ott
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyGuestSubscribeNavigationFromFreeAsset, verifyPremiumCrownIconOnSearchResults } from '../../src/businessFunction/ott-subscription-bfs';
 import { verifyGuestSearchNavigationFromFreeAsset, verifyGuestShareFunctionalityFromFreeAsset } from '../../src/businessFunction/ott-details-bfs';
+import {verifyGuestSearchResultsWithoutLogin} from '../../src/businessFunction/ott-auth-bfs';
 
 test.describe('PH region guest watchlist navigation', () => {
   test('@High IW3-T1872: Verify the navigation on tapping Watchlist icon for the PH region guest user', async ({ page }) => {
@@ -59,7 +60,7 @@ test.describe('PH region guest watchlist navigation', () => {
       expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test.skip('@Medium @D IW3-T1876: Verify the search functionality for the PH region guest user', async ({ page }) => {
+  test('@Medium @D IW3-T1876: Verify the search functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-018-ph-region-guest-search'];
     const result = await verifyGuestSearchNavigationFromFreeAsset(page, {
       searchTerm: data.searchTerm,
@@ -98,5 +99,17 @@ test.describe('PH region guest watchlist navigation', () => {
     // expect(result.showsRailVisible).toBe(true);
     expect(result.showsPageScrolledToEnd).toBe(true);
     expect(result.showsAdVisible).toBe(true);
+  });
+
+    test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-025-search-results-guest'];
+    const result = await verifyGuestSearchResultsWithoutLogin(page, {
+      searchQuery: data.searchQuery,
+    });
+    expect.soft(result.isLoggedIn).toBe(false);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.resultsVisible).toBe(true);
+    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 });

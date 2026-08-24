@@ -4133,7 +4133,7 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
     logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-    const pinPassword = (input?.password ?? '').trim() || '';
+    const pinPassword = (input?.password ?? '').trim() || credentials.password;
     logger.step('Starting parental PIN password submission flow');
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
@@ -4585,6 +4585,7 @@ export async function verifyParentalPinPlaybackAllowedWhenDisabled(page: any, in
     } else {
         await detailsPage.clickFirstShowContent();
     }
+    await page.waitForTimeout(2000);
     await detailsPage.clickResumeButton();
     const parentalPinPromptVisible = await detailsPage.isParentalPinPlaybackPromptVisible();
     const playbackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);

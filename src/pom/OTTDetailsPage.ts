@@ -250,7 +250,7 @@ export class OTTDetailsPage {
     this.continueWatchingRemoveButton = { selector: 'button[aria-label*="Remove"], button:has-text("Remove"), button:has-text("X"), [data-testid*="remove"], .remove-continue-watching' };
     this.showDetailsHeading = { selector: 'main h1' };
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]' };
-    this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
+    this.resumeButton = { selector: '//p[starts-with(normalize-space(),"Resume")]/parent::div' };
     this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
     this.parentalPinEntryInputs = { selector: 'input[id^="parental-pin-input-"]' };
     this.parentalPinValidateButton = { selector: 'button:has-text("Submit"), button:has-text("Continue")' };

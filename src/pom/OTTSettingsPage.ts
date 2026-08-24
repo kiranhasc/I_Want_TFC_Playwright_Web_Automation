@@ -32,14 +32,14 @@ export class OTTSettingsPage {
         // The parental control section contains both the toggle and an Edit button.
         // Use a more specific selector to target only the round toggle button.
         this.parentalPinToggle = { selector: '#parentalControls >> button.relative.rounded-full.w-12.h-6' };
-        this.parentalPinPasswordField = { selector: 'role=textbox[name="Password"]'};
+        this.parentalPinPasswordField = { selector: '//input[@id="login-password-input"]'};
         this.passwordSubmitButton = { selector: 'role=button[name="Submit"]' };
         this.parentalPinSetupMessage = { selector: 'role=heading[name="Set an account owner PIN"]' };
         this.passwordVisibilityToggle = { selector: 'role=button[name="Toggle Password Visibility"]' };
         this.parentalPinErrorMessage = { selector: 'text=Invalid credentials. Please try again.' };
         this.parentalPinInputs = { selector: '.flex.flex-wrap.gap-2 input' };
         this.parentalPinSaveButton = { selector: 'role=button[name="Save"]' };
-        this.parentalPinSuccessHeader = { selector: 'text=Parental Controls Updated' };
+        this.parentalPinSuccessHeader = { selector: '//h1[text()="Parental Controls Updated"]' };
         this.parentalPinSuccessDetails = { selector: 'text=Your changes to the parental controls have been saved successfully.' };
         this.parentalPinSuccessContinueButton = { selector: 'role=button[name="Continue Button"]' };
     }
@@ -99,13 +99,20 @@ export class OTTSettingsPage {
     }
 
     async clickParentalPinToggle(): Promise<void> {
-        logger.elementInteraction('click', 'Parental PIN toggle');
-        await this.pageUtils.safeClick(this.parentalPinToggle);
-    }
+    logger.elementInteraction('click', 'Parental PIN toggle');
+    await this.page.locator(this.parentalPinToggle.selector).first().waitFor({state: 'visible',timeout: 20000});
+    await this.page.waitForTimeout(500);
+    await this.pageUtils.safeClick(this.parentalPinToggle);
+}
 
     async isParentalPinPasswordFieldVisible(): Promise<boolean> {
-        return await this.page.locator(this.parentalPinPasswordField.selector).first().isVisible().catch(() => false);
+    try {
+        await this.page.locator(this.parentalPinPasswordField.selector).first().waitFor({state: 'visible',timeout: 20000});
+        return true;
+    } catch {
+        return false;
     }
+}
 
     async enterParentalPinPassword(password: string): Promise<void> {
         logger.elementInteraction('type', 'Parental PIN password field');
@@ -113,10 +120,13 @@ export class OTTSettingsPage {
     }
 
     async clickParentalPinSubmitButton(): Promise<void> {
-        logger.elementInteraction('click', 'Parental PIN submit button');
-        await this.page.locator(this.passwordSubmitButton.selector).first().waitFor({ state: 'visible', timeout: 5000 });
-        await this.pageUtils.safeClick(this.passwordSubmitButton);
-    }
+    logger.elementInteraction('click', 'Parental PIN submit button');
+    const submitButton = this.page.locator(this.passwordSubmitButton.selector).first();
+    await submitButton.waitFor({ state: 'visible', timeout: 20000 });
+    await submitButton.scrollIntoViewIfNeeded();
+    await this.page.waitForTimeout(500);
+    await this.pageUtils.safeClick(this.passwordSubmitButton);
+}
 
     async getParentalPinSetupMessage(): Promise<string> {
         try {
@@ -196,7 +206,7 @@ export class OTTSettingsPage {
 
     async areParentalPinInputsVisible(): Promise<boolean> {
         try {
-            await this.page.waitForTimeout(10000);
+            await this.page.waitForTimeout(15000);
             const inputs = this.page.locator(this.parentalPinInputs.selector);
             const firstVisible = await inputs.first().isVisible().catch(() => false);
             const count = await inputs.count();

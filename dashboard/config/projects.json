@@ -43,7 +43,10 @@
         "early-access-launch.spec.ts",
         "synacor-page-launch.spec.ts",
         "vpn-page-launch.spec.ts",
-        "details-page.spec.ts"
+        "details-page.spec.ts",
+        "registration-launch.spec.ts",
+        "iwant-originals.spec.ts",
+        "landing-page.spec.ts"
       ]
     },
     {
@@ -72,6 +75,13 @@
       "label": "Region",
       "specs": [
         "ph_region.spec.ts"
+      ]
+    },
+    {
+      "name": "Ads",
+      "label": "Ads",
+      "specs": [
+        "ads.spec.ts"
       ]
     }
   ],

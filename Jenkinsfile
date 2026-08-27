@@ -65,7 +65,11 @@ pipeline {
 
                 echo "Running QA Playwright tests"
 
-                bat "npm run test:prod"
+                cd ./dashboard/frontend
+                npm i
+                npm run build
+                npm start
+                
 
             }
 

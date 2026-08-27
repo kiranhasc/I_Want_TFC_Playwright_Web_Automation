@@ -194,7 +194,7 @@ test.describe('Home Page Launch', () => {
         expect(result.homeTabVisible).toBe(true);
     });
 
-    test('@High IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+    test('@High @mWeb IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-play-001-free-asset-playback'];
         const result = await playFreeAsset(page, { mode: data.mode });

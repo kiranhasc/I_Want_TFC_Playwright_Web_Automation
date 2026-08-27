@@ -21,7 +21,7 @@ test.describe('Home Page Landing', () => {
         expect(result.isLoggedIn).toBe(true);
     });
 
-    test('@Medium @D IW3-T1879: Verify the UI of all the landing pages', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1879: Verify the UI of all the landing pages', async ({ page }) => {
         const data = testCaseData['tc-auth-040-landing-page-ui'];
         const result = await verifyLandingPageUI(page, {
             mode: data.mode,

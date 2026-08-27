@@ -138,19 +138,19 @@ test.describe('Parental controls', () => {
     expect(result.parentalPinInvalidErrorText).toContain(data.expectedInvalidPinErrorText);
   });
 
-  // test('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
-  //   test.setTimeout(300000);
-  //   const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
-  //   const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {
-  //     mode: data.mode,
-  //     password: data.password,
-  //     parentalPin: data.pin,
-  //   });
-  //   expect(result.itemFound).toBe(true);
-  //   expect(result.playerVisible).toBe(true);
-  //   expect(result.parentalPinPromptVisible).toBe(true);
-  //   expect(result.parentalPinSubmitted).toBe(true);
-  // });
+  test('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
+    test.setTimeout(300000);
+    const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
+    const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {
+      mode: data.mode,
+      password: data.password,
+      parentalPin: data.pin,
+    });
+    expect(result.itemFound).toBe(true);
+    expect(result.playerVisible).toBe(true);
+    expect(result.parentalPinPromptVisible).toBe(true);
+    expect(result.parentalPinSubmitted).toBe(true);
+  });
 
   test('@High - IW3-T2105 : Verify parental PIN toggle gets disabled after entering the password', async ({ page }) => {
     const data = testCaseData['tc-settings-012-parental-pin-toggle-disabled-after-password'];

@@ -87,6 +87,8 @@ export class OTTAuthPage {
     private readonly topStreamedRail: PageElement;
     private readonly railAncestorSelector: PageElement;
     private readonly iWantOriginalsRailName: string;
+    private readonly iWantOriginalsRailNameMobile: string;
+    private readonly iwantScrollLocatorMobile: string;
     private readonly iWantOriginalsArrowSelectorTemplate: PageElement;
     private readonly iWantOriginalsArrowCandidateSelector: PageElement;
     private readonly iWantOriginalsCardSelector: PageElement;
@@ -267,6 +269,8 @@ export class OTTAuthPage {
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
         this.railAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "rail")][1]' };
         this.iWantOriginalsRailName = 'iWant Originals';
+        this.iWantOriginalsRailNameMobile = 'FREE Lang DITO: iWant Originals';
+        this.iwantScrollLocatorMobile = 'text=iWant Originals >> xpath=ancestor::*[contains(@class, "rail")][1]' ;
         this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
         this.iWantOriginalsArrowCandidateSelector = { selector: 'img[alt*="arrow" i], img[alt*="chevron" i], [data-testid*="arrow" i], button[aria-label*="arrow" i], svg, .arrow, .chevron' };
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
@@ -731,12 +735,11 @@ export class OTTAuthPage {
     }
 
     async clickMobileMainMenu(): Promise<void> {
-    logger.elementInteraction('click', 'mobile main menu');
-    const locator = this.page.locator(this.mobileMainMenu.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 15000 });
-    await locator.click({ timeout: 20000, force: true });
-  }
-
+        logger.elementInteraction('click', 'mobile main menu');
+        const locator = this.page.locator(this.mobileMainMenu.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.click({ timeout: 20000, force: true });
+    }
 
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
@@ -1029,7 +1032,7 @@ export class OTTAuthPage {
         logger.elementInteraction('click', 'Sign In option');
         await this.pageUtils.safeClick(this.signInOption);
     }
- 
+
     async closeCurrentTabAndReturnToMain(): Promise<void> {
         const pages = this.page.context().pages();
         const mainPage = pages.find((candidate) => candidate !== this.page);
@@ -1048,7 +1051,7 @@ export class OTTAuthPage {
     }
 
     async clickShowsTab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome' ){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'Shows tab');
@@ -1057,7 +1060,7 @@ export class OTTAuthPage {
     }
 
     async clickMyWatchlistTab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'My Watchlist tab');
@@ -1070,7 +1073,7 @@ export class OTTAuthPage {
     }
 
     async clickGMATab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'GMA tab');
@@ -1594,34 +1597,64 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.topStreamedRail, 10000);
     }
 
+    getIwantScrollLocatorMobile(): string {
+        return this.iwantScrollLocatorMobile;
+    }
+
     async isIWantOriginalsRailVisible(): Promise<boolean> {
         try {
-            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-            await locator.waitFor({ state: 'visible', timeout: 15000 });
-            await locator.scrollIntoViewIfNeeded();
-            return true;
+            if (process.env.BROWSER === 'mchrome') {
+                const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+                await locator.waitFor({ state: 'visible', timeout: 15000 });
+                await locator.scrollIntoViewIfNeeded();
+                return true;
+            } else {
+                const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+                await locator.waitFor({ state: 'visible', timeout: 15000 });
+                await locator.scrollIntoViewIfNeeded();
+                return true;
+            }
         } catch {
             return false;
         }
     }
 
     async getIWantOriginalsRailTitle(): Promise<string> {
-        const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        await locator.waitFor({ state: 'visible', timeout: 15000 });
-        await locator.scrollIntoViewIfNeeded();
-        return (await locator.textContent()) || '';
+        if (process.env.BROWSER === 'mchrome') {
+            const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return (await locator.textContent()) || '';
+        } else {
+            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return (await locator.textContent()) || '';
+        }
     }
 
     async getIWantOriginalsRailCardCount(): Promise<number> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        await heading.waitFor({ state: 'visible', timeout: 15000 });
-        await heading.scrollIntoViewIfNeeded();
-        const rail = this.getRailContainerFromHeading(heading);
-        if (!await rail.count()) {
-            return 0;
+        if (process.env.BROWSER === 'mchrome'){
+            const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+            await heading.waitFor({ state: 'visible', timeout: 15000 });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) {
+                return 0;
+            }
+            await rail.scrollIntoViewIfNeeded();
+            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
+        }else{
+            const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await heading.waitFor({ state: 'visible', timeout: 15000 });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) {
+                return 0;
+            }
+            await rail.scrollIntoViewIfNeeded();
+            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
         }
-        await rail.scrollIntoViewIfNeeded();
-        return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
     }
 
     async ensureIWantOriginalsRailInView(timeout: number = 30000): Promise<boolean> {

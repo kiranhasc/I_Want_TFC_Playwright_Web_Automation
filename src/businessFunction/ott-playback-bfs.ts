@@ -1579,9 +1579,14 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible before playback', detailsVisible);
   await detailsPage.clickPlayButton();
+  const adsVisible = await detailsPage.isAdTagVisible();
+  if (adsVisible) {
+    await page.waitForTimeout(150000);
+  }
   await detailsPage.waitForPlayback(3);
   const playbackStarted = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Playback started for the selected movie', playbackStarted);
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(1.0);
   const playbackCompleted = await authPage.finishPlaybackFromCurrentItem().catch(() => false);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -2570,9 +2575,7 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting automatic next episode playback verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
@@ -2580,27 +2583,21 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
     const collectionResponse = await gql.waitForOperation(
       input?.graphqlQueryName ?? 'Collection'
     );
-
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-
     const multiSeasonAsset = rails
       .flatMap((rail) => rail.assets?.items ?? [])
       .find((asset: any) => {
         const totalSeasons = Number(
           (asset.tvShowDetails as any)?.totalSeasons ?? 0
         );
-
         return totalSeasons > 1;
       });
-
     query = (multiSeasonAsset?.title ?? '').trim();
-
     logger.assertion(
       'Asset with more than one season found in Collection GraphQL',
       Boolean(query)
     );
-
     logger.info(
       `Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0
       }`
@@ -2612,28 +2609,22 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForPlayback(2);
-
   const markerVisible = await detailsPage.waitForUpNextMarker(15000);
   logger.assertion('Up Next marker is visible', markerVisible);
-
   let autoPlaybackStarted = false;
   if (markerVisible) {
     await detailsPage.waitForPlayback(8);
     autoPlaybackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
   }
-
   logger.assertion('Next episode playback started automatically', autoPlaybackStarted);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2646,39 +2637,30 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting back button navigation verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (queryFromCollection).trim();
-  const expectedTitle = input?.expectedTitle ?? query;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
   await detailsPage.isPlayerScreenVisible();
   await detailsPage.clickBackButton();
   await detailsPage.waitForPlayback(1);
-
   const playerScreenHidden = await detailsPage.isPlayerScreenHidden();
   const backNavigationSuccessful = detailsVisible && playerScreenHidden;
-
   logger.assertion('Playback screen hidden after tapping back button', playerScreenHidden);
   logger.assertion('Back button navigation returned to the previous details screen', backNavigationSuccessful);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2692,13 +2674,10 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting close-player return to details verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before testing player close return flow', isLoggedIn);
-
   if (!isLoggedIn) {
     return {
       isLoggedIn: false,
@@ -2708,10 +2687,8 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
       returnedToDetails: false,
     };
   }
-
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -2721,26 +2698,24 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickPlayButton();
+  if(process.env.BROWSER === 'mchrome'){
+    page.waitForTimeout(90000);
+  }
   await detailsPage.waitForPlayback(2);
   const playerVisibleBeforeClose = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible before closing', playerVisibleBeforeClose);
-
   await detailsPage.clickBackButton().catch(() => undefined);
-
   await detailsPage.waitForPlayback(3);
   const playerHiddenAfterClose = await detailsPage.isPlayerScreenHidden();
   const contentDetailsVisibleAfterClose = await detailsPage.isContentDetailsPageVisible().catch(() => false);
   const detailsHeadingAfterClose = contentDetailsVisibleAfterClose ? await detailsPage.getShowDetailsHeadingText().catch(() => '') : '';
   const detailsMetadataVisibleAfterClose = contentDetailsVisibleAfterClose ? await detailsPage.isContentMetadataVisible().catch(() => false) : false;
   const returnedToDetails = detailsVisible && contentDetailsVisibleAfterClose && !!detailsHeadingAfterClose && detailsMetadataVisibleAfterClose;
-
   logger.assertion('Player screen hidden after closing', playerHiddenAfterClose);
   logger.assertion('Content details heading is visible after returning from the player', !!detailsHeadingAfterClose);
   logger.assertion('Content metadata is visible after returning from the player', detailsMetadataVisibleAfterClose);
   logger.assertion('User returned to the content details screen after closing the player', returnedToDetails);
-
   return {
     isLoggedIn,
     detailsVisible,

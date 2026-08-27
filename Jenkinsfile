@@ -63,14 +63,13 @@ pipeline {
 
             steps {
 
-                echo "Running QA Playwright tests"
-
-                cd ./dashboard/frontend
-                npm i
+            dir('./dashboard/frontend') {
+            sh '''
+                npm install
                 npm run build
-                npm start
-                
-
+                npm start &
+            '''
+                 }
             }
 
         }

@@ -45,7 +45,16 @@ async function analyzeTest(test, { excludeRunId } = {}) {
   // Only attempted for a timeout, since that's the sole case where nothing
   // else in the error identifies where it got stuck (see traceActions.js).
   const hangingAction = test.status === 'timedOut' ? loadHangingAction(test) : null;
-  const context = { files: contextFiles, domSnapshot: loadDomSnapshot(test), priorHistory, hangingAction };
+  // This project's own afterEach hook (src/fixtures/test-hooks.ts) captures
+  // page.content() fresh, from the actual failing test's page, after the
+  // failure/timeout already happened — unlike Playwright's built-in
+  // error-context.md, which was observed to carry over a stale snapshot from
+  // an earlier test in the same worker on a whole-test timeout (see
+  // TIMED_OUT_UNSAFE_RULE_IDS in heuristics.js). That makes this the one
+  // trustworthy source heuristics can use to actually check whether a hung
+  // selector exists on the page, instead of only speculating either way.
+  const domSnapshot = loadDomSnapshot(test);
+  const context = { files: contextFiles, domSnapshot, priorHistory, hangingAction };
 
   let result;
   if (config.provider === 'ollama') {
@@ -53,7 +62,7 @@ async function analyzeTest(test, { excludeRunId } = {}) {
       result = await runOllama(test, errorContext, { url: config.ollamaUrl, model: config.ollamaModel }, context);
     } catch (err) {
       result = {
-        ...runHeuristics(test, errorContext),
+        ...runHeuristics(test, errorContext, hangingAction, domSnapshot),
         note: `Ollama unavailable (${err.message}); showing heuristic analysis instead.`,
       };
     }
@@ -66,12 +75,12 @@ async function analyzeTest(test, { excludeRunId } = {}) {
       result = await runApiProviderChain(test, errorContext, config.apiChain, context);
     } catch (err) {
       result = {
-        ...runHeuristics(test, errorContext),
+        ...runHeuristics(test, errorContext, hangingAction, domSnapshot),
         note: `AI provider unavailable (${err.message}); showing heuristic analysis instead.`,
       };
     }
   } else {
-    result = runHeuristics(test, errorContext);
+    result = runHeuristics(test, errorContext, hangingAction, domSnapshot);
   }
 
   // Deterministic correction pass: a bare "Test timeout of Nms exceeded" is
@@ -79,7 +88,7 @@ async function analyzeTest(test, { excludeRunId } = {}) {
   // of the page snapshot, identical-looking timeouts can land in different
   // categories from one call to the next. This runs regardless of which
   // path produced `result` above. See heuristics.js for the reasoning.
-  result = applyTimeoutCategoryGuard(test, errorContext, result, hangingAction);
+  result = applyTimeoutCategoryGuard(test, result, hangingAction);
 
   return { ...result, generatedAt: generatedAt(), errorContextFile };
 }

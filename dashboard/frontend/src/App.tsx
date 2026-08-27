@@ -37,10 +37,7 @@ export default function App() {
           <span className="sidebar-logo-badge">
             <img src={igsLogo} alt="IGS" className="sidebar-logo-img" />
           </span>
-          <span className="sidebar-title">
-            I Want TFC v2
-            <small>Playwright Dashboard</small>
-          </span>
+          <span className="sidebar-title">Automation Dashboard</span>
         </NavLink>
 
         <nav className="sidebar-nav">

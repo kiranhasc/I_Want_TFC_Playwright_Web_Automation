@@ -345,12 +345,6 @@ export function SpotFixPanel({
 
   return (
     <div className="spotfix-section">
-      {!proposal && (
-        <button className="secondary-button" onClick={handlePropose} disabled={busy !== null}>
-          {busy === 'propose' ? 'Generating spot fix…' : 'Propose spot fix'}
-        </button>
-      )}
-
       {error && <div className="rca-error">{error}</div>}
 
       {proposal && !proposal.available && (

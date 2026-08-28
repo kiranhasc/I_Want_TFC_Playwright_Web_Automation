@@ -1,12 +1,10 @@
 pipeline {
-
     agent any
 
     stages {
-
-        stage('Checkout Repo B') {
+        stage('Checkout Repo') {
             steps {
-                echo "Repo B checkout handled by Pipeline from SCM"
+                echo "Repo checkout handled by Pipeline from SCM"
             }
         }
 
@@ -22,7 +20,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo "Installing npm dependencies"
+                echo "Installing root npm dependencies"
 
                 bat 'npm install'
             }
@@ -36,19 +34,28 @@ pipeline {
             }
         }
 
-        stage('Run Selected Playwright Test') {
+        stage('Build Dashboard') {
             steps {
-                echo "Building and starting frontend application"
+                echo "Installing dashboard dependencies and building frontend"
 
-                dir('./dashboard/frontend') {
-                    bat 'npm install'
-                    bat 'npm run build'
-                    bat 'start /B npm start'
-                }
+                bat 'npm run dashboard:install'
+                bat 'npm run dashboard:build'
+            }
+        }
 
+        stage('Start Dashboard') {
+            steps {
+                echo "Starting dashboard in background"
+
+                bat 'start /B npm run dashboard'
+            }
+        }
+
+        stage('Run Playwright Tests') {
+            steps {
                 echo "Running Playwright tests"
 
-                bat 'npx playwright test'
+                bat 'npx playwright test --reporter=html'
             }
         }
     }

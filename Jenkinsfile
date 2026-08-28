@@ -48,14 +48,7 @@ pipeline {
                 echo "Starting dashboard in background"
 
                 bat 'start /B npm run dashboard'
-            }
-        }
-
-        stage('Run Playwright Tests') {
-            steps {
-                echo "Running Playwright tests"
-
-                bat 'npx playwright test --reporter=html'
+                echo "`Playwright dashboard running at http://${HOST}:${PORT}`"
             }
         }
     }

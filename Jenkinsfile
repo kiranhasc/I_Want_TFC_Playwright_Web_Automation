@@ -48,7 +48,7 @@ pipeline {
                 echo "Starting dashboard in background"
 
                 bat 'start /B npm run dashboard'
-                echo "`Playwright dashboard running at http://${HOST}:${PORT}`"
+                echo "Playwright dashboard running at http://127.0.0.1:4300"
             }
         }
     }

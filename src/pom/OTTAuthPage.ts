@@ -1077,7 +1077,7 @@ export class OTTAuthPage {
         }
  
     async clickShowsTab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome' ){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'Shows tab');
@@ -1105,6 +1105,15 @@ export class OTTAuthPage {
         await locator.scrollIntoViewIfNeeded();
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.myWatchlistTab);
+    }
+
+    async clickGMATab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.gmaTab);
     }
 
     async isSearchIconVisible(): Promise<boolean> {

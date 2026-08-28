@@ -3015,16 +3015,20 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
     const expectedSearchPlaceholder = (input?.expectedSearchPlaceholder ?? '').trim();
     logger.step(`Starting valid login flow for tab navigation`);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-    const isMChrome = process.env.BROWSER === 'mchrome';
-    let homeRailVisible = false;
-    let mobileMenuVisible = false;
-    if (isMChrome) {
-        mobileMenuVisible = await authPage.isMobileMainMenuVisible();
-        logger.assertion('Mobile menu visible after login', mobileMenuVisible);
-    } else {
-        homeRailVisible = await authPage.isContinueWatchingRailVisible();
-        logger.assertion('Home tab rail active', homeRailVisible);
-    }
+    const homeRailVisible = await authPage.isContinueWatchingRailVisible();
+    logger.assertion('Home tab rail active', homeRailVisible);
+    await authPage.clickMoviesTab();
+    const moviesRailVisible = await authPage.isTrendingMoviesRailVisible();
+    logger.assertion('Movies tab rail active', moviesRailVisible);
+    await authPage.clickShowsTab();
+    const showsRailVisible = await authPage.isTrendingShowsRailVisible();
+    logger.assertion('Shows tab rail active', showsRailVisible);
+    await authPage.clickMyWatchlistTab();
+    const watchlistRailVisible = await authPage.isMyWatchlistRailVisible();
+    logger.assertion('Watchlist tab rail active', watchlistRailVisible);
+    await authPage.clickGMATab();
+    const gmaRailVisible = await authPage.isTopStreamedRailVisible();
+    logger.assertion('GMA tab rail active', gmaRailVisible);
     await authPage.clickSearchBar();
     const searchBarPlaceholder = await authPage.getSearchBarPlaceholder();
     const normalizePlaceholderText = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -3034,9 +3038,16 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
         ? normalizedActual.includes(normalizedExpected)
         : normalizedActual.includes('search');
     logger.assertion('Search bar placeholder visible', searchBarPlaceholder.length > 0);
-     return {
-        isLoggedIn: isMChrome ? mobileMenuVisible : homeRailVisible,
-        ...(isMChrome ? { mobileMenuVisible } : { homeRailVisible }),
+    await authPage.clickAccountIcon();
+    const signOutOptionVisible = await authPage.isSignOutOptionVisible();
+    logger.assertion('Sign Out option visible', signOutOptionVisible);
+    return {
+        isLoggedIn: homeRailVisible,
+        homeRailVisible,
+        moviesRailVisible,
+        showsRailVisible,
+        watchlistRailVisible,
+        gmaRailVisible,
         searchBarPlaceholder,
         searchBarPlaceholderMatches,
     };

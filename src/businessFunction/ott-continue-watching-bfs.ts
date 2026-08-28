@@ -1532,7 +1532,6 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
   }
   await authPage.navigate();
   await page.waitForLoadState('networkidle', { timeout: 60000 });
-  // Try to obtain a show title from Collection GraphQL, search it and play first episode partially
   try {
     const gql = GraphQLHelper.getInstance(page);
     const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
@@ -1551,7 +1550,6 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
         await page.waitForLoadState('networkidle', { timeout: 60000 });
         await page.waitForTimeout(3000);
         await detailsPage.clickFirstSearchResult();
-        // Ensure details page loaded and click the first episode to start episode playback
         const detailsVisible = await detailsPage.isContentDetailsPageVisible();
         if (detailsVisible) {
           await page.waitForLoadState('networkidle', { timeout: 60000 });
@@ -1757,14 +1755,12 @@ export async function verifyContinueWatchingTrayForNewUserAfterFivePercentPlayba
   await authPage.ensureContinueWatchingTrayInView();
   await page.waitForTimeout(5000);
   const trayVisible = await authPage.isContinueWatchingTrayTitleVisible();
-  // Use GraphQL ContinueWatching response to validate tray contents when possible
   let contentAppearsInTray = false;
   try {
     const cwOp = await gql.waitForOperationMatching<AssetResponse>((res) => Boolean(res.response?.data?.asset?.title), 10000, true);
     const cwParser = new ContinueWatchingParser(cwOp as any);
     contentAppearsInTray = Boolean(cwParser.getItemByTitle(detailPageTitle));
   } catch (err) {
-    // fallback to DOM extraction if GraphQL wasn't available
     const traySection = await authPage.getContinueWatchingTraySection();
     const trayItemTitles = await traySection.locator('img[alt]').evaluateAll((images) => images.map((img) => (img.getAttribute('alt') || '').trim())).catch(() => [] as string[]);
     contentAppearsInTray = trayItemTitles.some((title) => title.toLowerCase().includes(detailPageTitle.toLowerCase()));
@@ -1789,13 +1785,11 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
   const mode = input?.mode;
   logger.step(`Starting less-than-5% playback verification flow`);
   const loginResult = await loginToOTT(page, { mode });
-  // Derive a search term from the Collection GraphQL using CollectionParser
   let searchTerm = '';
   try {
     const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
     if (collectionOp && collectionOp.response) {
       const parser = new CollectionParser(collectionOp as any);
-      // Prefer movies first, then shows; fall back to any available title
       searchTerm = parser.getPreferredAssetTitle([/movies/i, 'movies', /shows/i, 'shows']) || '';
       if (!searchTerm) {
         const titles = parser.getPreferredRailTitles([/movies/i, 'movies', /shows/i, 'shows'], 1);
@@ -1868,14 +1862,12 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
   const mode = input?.mode;
   logger.step('Starting 50% playback verification flow for Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
-  // Derive a movie title from Collection GraphQL using CollectionParser (prefer movies only)
   const gql = GraphQLHelper.getInstance(page);
   let searchTerm = '';
   try {
     const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
     if (collectionOp && collectionOp.response) {
       const parser = new CollectionParser(collectionOp as any);
-      // Prefer movies only
       searchTerm = parser.getPreferredAssetTitle([/movies/i, 'movies']) || '';
       if (!searchTerm) {
         const titles = parser.getPreferredRailTitles([/movies/i, 'movies'], 1);
@@ -1928,7 +1920,6 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
   const trayItemTitles = await authPage.getContinueWatchingTrayItemTitles();
   const contentAppearsInTray = trayItemTitles.some((title) => title.toLowerCase().includes(searchTerm.toLowerCase()));
   const progressBarPercentage = await authPage.getContinueWatchingProgressBarPercentage(searchTerm);
-  // 0 means extraction failed — treat as invalid so test correctly fails
   const progressPercentageValid = progressBarPercentage > 0 && Math.abs(progressBarPercentage - 50) <= 2;
   logger.assertion('Continue Watching tray visible after 50% playback', trayVisible);
   logger.assertion('Watched content appears in tray after 50% playback', contentAppearsInTray);
@@ -2036,16 +2027,13 @@ export async function verifyContinueWatchingAcrossTabs(
   const isLoggedIn = loginResult.isLoggedIn;
   for (const tabName of tabsToTry) {
     try {
-      // switch to the requested tab
       if (tabName.toLowerCase() === 'movies') {
         await authPage.clickMoviesTab();
       } else if (tabName.toLowerCase() === 'shows') {
         await authPage.clickShowsTab();
       }
-      // wait for network idle and UI to render
       await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
       await page.waitForTimeout(2000);
-      // Choose an unwatched or first available content thumbnail and extract its title
       const thumbnailLocator = page.locator('div#movies img[alt], div#shows img[alt], main img[alt], .scrollable-list img[alt], img.title-image').first();
       if (!(await thumbnailLocator.count())) {
         logger.debug(`No thumbnails found on ${tabName} tab`);
@@ -2336,8 +2324,6 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
   const selectedShow = graphQLShowItems.find((item) => Boolean(item.showTitle)) || graphQLShowItems[0];
   const selectedContentTitle = selectedShow?.showTitle || selectedShow?.episodeTitle || '';
   logger.step(`Selected show content for IW3-T1961 from Continue Watching GraphQL: ${selectedContentTitle}`);
-  // Check if content is visible in Continue Watching BEFORE clicking the tray item
-  // Use GraphQL data as source of truth - if it was in the GraphQL response, it's visible
   const initialVisibility = graphQLShowItems.some((item) =>
   (item.showTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()) ||
     item.episodeTitle?.toLowerCase().includes(selectedContentTitle.toLowerCase()))
@@ -2605,7 +2591,6 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  // Step 5: Navigate to Home page and wait for CW tray
   let trayTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
   if (!trayTitleVisible) {
     logger.step('CW tray not present; creating partially watched content item to satisfy precondition');
@@ -2633,9 +2618,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
       reason: 'Precondition failed: Continue Watching tray is not visible even after playing content.',
     };
   }
-  // Scroll CW tray into view
   await authPage.ensureContinueWatchingTrayInView();
-  // Step 6: Select the first content item from the CW tray and extract content name
   const cardSelector = authPage.getContinueWatchingCardSelector();
   const traySectionFirst = await authPage.getContinueWatchingTraySection();
   const trayItems = traySectionFirst.locator(cardSelector);
@@ -2658,18 +2641,15 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   await firstItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
-  // Click Resume/Play via Page Object method if details page is shown
   await detailsPage.clickResumeAction().catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(7000);
-  // Step 7: Drag seekbar by requested minutes and extract player timer
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
   await detailsPage.dragSeekBarByMinutes(seekMinutes).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   const playerTimerBeforeExit = await detailsPage.getPlaybackTimeText().catch(() => '');
   logger.info(`Player timer captured: "${playerTimerBeforeExit}"`);
-  // Step 8: Navigate to Home page (UI action via Home tab)
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
   await detailsPage.clickBackButton();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -2677,7 +2657,6 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   await authPage.clickHomeTab();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
-  // Step 8 (second part): Click on the same content again from CW tray
   await authPage.ensureContinueWatchingTrayInView();
   const traySectionSecond = await authPage.getContinueWatchingTraySection();
   const reloadedItems = traySectionSecond.locator(cardSelector);
@@ -2691,7 +2670,6 @@ export async function verifyContentUpdatedInContinueWatchingTray(
       break;
     }
   }
-  // Fallback: use first item if same content not found by name
   if (!sameContentItem && reloadedCount > 0) {
     sameContentItem = reloadedItems.first();
   }
@@ -2700,25 +2678,20 @@ export async function verifyContentUpdatedInContinueWatchingTray(
     await sameContentItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(3000);
-    // Click Resume/Play if shown on details page
     await detailsPage.clickResumeAction().catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(3000);
   }
-  // Step 9: Exit the player (use Back button)
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
   await page.waitForTimeout(500);
   await detailsPage.clickBackButton().catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
-  // Step 10: Navigate to the Home page
   await authPage.clickHomeTab();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
-  // Step 11: Scroll CW tray into view and observe content
   await authPage.ensureContinueWatchingTrayInView();
   const trayVisible = await authPage.isContinueWatchingTrayTitleVisible();
-  // Expect: The content should remain in the Continue Watching tray
   const contentRemainsInTray = selectedContentName
     ? await authPage.isContinueWatchingItemVisible(selectedContentName)
     : trayVisible;
@@ -2726,7 +2699,6 @@ export async function verifyContentUpdatedInContinueWatchingTray(
     `Content "${selectedContentName}" remains in Continue Watching tray`,
     contentRemainsInTray
   );
-  // Expect: The progress bar should reflect the updated playback position
   const progressBarPercentage = await authPage.getContinueWatchingProgressBarPercentage(selectedContentName);
   const progressBarVisible = progressBarPercentage > 0;
   logger.assertion(
@@ -2768,7 +2740,6 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
     };
   }
   await authPage.acceptCookieSettingsIfVisible();
-  // Resolve a show to test from Collection GraphQL (prefer multi-season shows)
   if (!collectionResponse) {
     return {
       isValid: false,
@@ -2795,7 +2766,6 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   await authPage.submitSearchQuery();
   await page.waitForTimeout(5000);
   await detailsPage.clickFirstSearchResult();
-  // Capture the default (initial) episode/season shown on the details page before we explicitly select another episode
   const selectedEpisode = await detailsPage.selectEpisodeBySeasonAndEpisode(input?.season, input?.episodeName);
   logger.info('Selected episode metadata for playback', selectedEpisode);
   await detailsPage.clickPlayButton();
@@ -2836,7 +2806,6 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   await page.waitForTimeout(5000);
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   await authPage.refreshPage();
-  // Wait for the CTA to revert to "Play S1 E1"
   let playS1E1Visible = false;
   try {
     playS1E1Visible = await page

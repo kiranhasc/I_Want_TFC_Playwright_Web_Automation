@@ -105,60 +105,6 @@ export interface ManageWatchlistItemOnDetailsPageOutput {
   removeToastText: string;
 }
 
-export async function manageWatchlistItemOnDetailsPage(
-  page: any,
-  input?: Partial<ManageWatchlistItemOnDetailsPageInput>
-): Promise<ManageWatchlistItemOnDetailsPageOutput> {
-  const authPage = new OTTAuthPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  logger.step('Starting details-page watchlist add/remove flow');
-
-  const loginResult = await loginToOTT(page, { mode: input?.mode });
-  const isLoggedIn = loginResult.isLoggedIn;
-  logger.assertion('User is logged in before watchlist validation', isLoggedIn);
-
-  if (!isLoggedIn) {
-    return {
-      isLoggedIn: false,
-      isDetailsPageVisible: false,
-      isAddedToWatchlist: false,
-      addToastText: '',
-      isRemovedFromWatchlist: false,
-      removeToastText: '',
-    };
-  }
-
-  await authPage.acceptCookieSettingsIfVisible();
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-  await page.goto('https://iwanttfc.com/my_watchlist', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-  await page.waitForTimeout(4000);
-
-  const watchlistContentAvailable = await detailsPage.getFirstContentTitle().catch(() => '');
-  const isDetailsPageVisible = Boolean(watchlistContentAvailable);
-  logger.assertion('My Watchlist page visible before selecting content', isDetailsPageVisible);
-
-  await detailsPage.clickFirstContentInWatchlist();
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
-  const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
-  const currentUrl = page.url();
-  const isRemovedFromWatchlist = currentUrl.includes('/details/') || /removed/i.test(removeToastText);
-  logger.assertion('Remove from Watchlist action completed', isRemovedFromWatchlist);
-
-  return {
-    isLoggedIn,
-    isDetailsPageVisible,
-    isAddedToWatchlist: isRemovedFromWatchlist,
-    addToastText: removeToastText,
-    isRemovedFromWatchlist,
-    removeToastText,
-  };
-}
-
 export interface RemovePremiumContentFromWatchlistInput {
   mode?: string;
   email?: string;
@@ -241,82 +187,6 @@ export interface VerifyWatchlistTaggedContentOutput {
   }>;
 }
 
-export async function verifyWatchlistTaggedContentFlow(
-  page: any,
-  input?: Partial<VerifyWatchlistTaggedContentInput>
-): Promise<VerifyWatchlistTaggedContentOutput> {
-  const authPage = new OTTAuthPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  const gql = GraphQLHelper.getInstance(page);
-  logger.step('Starting IW3-T2054 watchlist tag verification flow');
-  const loginResult = await loginToOTT(page, {
-    mode: input?.mode,
-  });
-  const isLoggedIn = loginResult.isLoggedIn;
-  logger.assertion('User is logged in before watchlist tag verification', isLoggedIn);
-  if (!isLoggedIn) {
-    return {
-      loggedIn: false,
-      labelsProcessed: 0,
-      validationResults: [],
-    };
-  }
-  logger.step('Waiting for Collection GraphQL operation');
-  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
-  const parser = new CollectionParser(collectionResponse as any);
-  const labels = input?.labels ?? [];
-  const validationResults = [];
-  for (const label of labels) {
-    const found = parser.findAssetByLabel(label);
-    if (!found) {
-      logger.warn(`No asset found for watchlist label: ${label}`);
-      validationResults.push({
-        label,
-        contentTitle: '',
-        searchTagged: false,
-        addedToWatchlist: false,
-        visibleInWatchlist: false,
-        watchlistTagged: false,
-      });
-      continue;
-    }
-    const contentTitle = String(found.asset.title || found.asset.name || '').trim();
-    logger.info(`Found ${label} content for watchlist: ${contentTitle}`);
-    await authPage.clickSearchBar();
-    //await authPage.clearSearchInput().catch(() => undefined);
-    await authPage.enterSearchQuery(contentTitle);
-    await authPage.submitSearchQuery();
-    await page.waitForTimeout(2000);
-    const searchTagged = await detailsPage.isSearchResultTaggedWithLabel(label, contentTitle);
-    await detailsPage.clickFirstSearchResult();
-    await detailsPage.ensureWatchlistIsAddable();
-    const toastText = await detailsPage.addToWatchlistAndGetToast().catch(() => '');
-    await page.waitForTimeout(2000);
-    const addedToWatchlist = toastText.toLowerCase().includes('added');
-    await authPage.clickMyWatchlistTab();
-    await page.waitForLoadState('networkidle').catch(() => undefined);
-    const watchlistPageVisible = await authPage.isMyWatchlistPageVisible();
-    logger.assertion('My Watchlist page visible after navigation', watchlistPageVisible);
-    await page.waitForTimeout(2000);
-    const visibleInWatchlist = await detailsPage.isContentThumbnailVisibleInWatchlist(contentTitle).catch(() => false);
-    const watchlistTagged = await detailsPage.isWatchlistItemTaggedWithLabel(contentTitle, label).catch(() => false);
-    validationResults.push({
-      label,
-      contentTitle,
-      searchTagged,
-      addedToWatchlist,
-      visibleInWatchlist,
-      watchlistTagged,
-    });
-  }
-  return {
-    loggedIn: true,
-    labelsProcessed: validationResults.length,
-    validationResults,
-  };
-}
-
-
 export interface RemoveFreeContentFromWatchlistInput {
   mode?: string;
   graphqlQueryName?: string;
@@ -360,6 +230,140 @@ export interface PlayContentFromWatchlistOutput {
   playerTitleMatches: boolean;
 }
 
+export interface AddContentToWatchlistFromSearchPageStepInput {
+  query?: string;
+  graphqlQueryName?: string;
+}
+
+export interface AddContentToWatchlistFromSearchPageStepOutput {
+  isLoggedIn: boolean;
+  addedToWatchlist: boolean;
+  toastText: string;
+}
+
+export async function manageWatchlistItemOnDetailsPage(
+  page: any,
+  input?: Partial<ManageWatchlistItemOnDetailsPageInput>
+): Promise<ManageWatchlistItemOnDetailsPageOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting details-page watchlist add/remove flow');
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before watchlist validation', isLoggedIn);
+
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      isDetailsPageVisible: false,
+      isAddedToWatchlist: false,
+      addToastText: '',
+      isRemovedFromWatchlist: false,
+      removeToastText: '',
+    };
+  }
+  await authPage.acceptCookieSettingsIfVisible();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+  await page.goto('https://iwanttfc.com/my_watchlist', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForTimeout(4000);
+  const watchlistContentAvailable = await detailsPage.getFirstContentTitle().catch(() => '');
+  const isDetailsPageVisible = Boolean(watchlistContentAvailable);
+  logger.assertion('My Watchlist page visible before selecting content', isDetailsPageVisible);
+  await detailsPage.clickFirstContentInWatchlist();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+  const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
+  const currentUrl = page.url();
+  const isRemovedFromWatchlist = currentUrl.includes('/details/') || /removed/i.test(removeToastText);
+  logger.assertion('Remove from Watchlist action completed', isRemovedFromWatchlist);
+
+  return {
+    isLoggedIn,
+    isDetailsPageVisible,
+    isAddedToWatchlist: isRemovedFromWatchlist,
+    addToastText: removeToastText,
+    isRemovedFromWatchlist,
+    removeToastText,
+  };
+}
+
+export async function verifyWatchlistTaggedContentFlow(
+  page: any,
+  input?: Partial<VerifyWatchlistTaggedContentInput>
+): Promise<VerifyWatchlistTaggedContentOutput> {
+  const authPage = new OTTAuthPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const gql = GraphQLHelper.getInstance(page);
+  logger.step('Starting IW3-T2054 watchlist tag verification flow');
+  const loginResult = await loginToOTT(page, {
+    mode: input?.mode,
+  });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before watchlist tag verification', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      loggedIn: false,
+      labelsProcessed: 0,
+      validationResults: [],
+    };
+  }
+  logger.step('Waiting for Collection GraphQL operation');
+  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+  const parser = new CollectionParser(collectionResponse as any);
+  const labels = input?.labels ?? [];
+  const validationResults = [];
+  for (const label of labels) {
+    const found = parser.findAssetByLabel(label);
+    if (!found) {
+      logger.warn(`No asset found for watchlist label: ${label}`);
+      validationResults.push({
+        label,
+        contentTitle: '',
+        searchTagged: false,
+        addedToWatchlist: false,
+        visibleInWatchlist: false,
+        watchlistTagged: false,
+      });
+      continue;
+    }
+    const contentTitle = String(found.asset.title || found.asset.name || '').trim();
+    logger.info(`Found ${label} content for watchlist: ${contentTitle}`);
+    await authPage.clickSearchBar();
+    await authPage.enterSearchQuery(contentTitle);
+    await authPage.submitSearchQuery();
+    await page.waitForTimeout(2000);
+    const searchTagged = await detailsPage.isSearchResultTaggedWithLabel(label, contentTitle);
+    await detailsPage.clickFirstSearchResult();
+    await detailsPage.ensureWatchlistIsAddable();
+    const toastText = await detailsPage.addToWatchlistAndGetToast().catch(() => '');
+    await page.waitForTimeout(2000);
+    const addedToWatchlist = toastText.toLowerCase().includes('added');
+    await authPage.clickMyWatchlistTab();
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    const watchlistPageVisible = await authPage.isMyWatchlistPageVisible();
+    logger.assertion('My Watchlist page visible after navigation', watchlistPageVisible);
+    await page.waitForTimeout(2000);
+    const visibleInWatchlist = await detailsPage.isContentThumbnailVisibleInWatchlist(contentTitle).catch(() => false);
+    const watchlistTagged = await detailsPage.isWatchlistItemTaggedWithLabel(contentTitle, label).catch(() => false);
+    validationResults.push({
+      label,
+      contentTitle,
+      searchTagged,
+      addedToWatchlist,
+      visibleInWatchlist,
+      watchlistTagged,
+    });
+  }
+  return {
+    loggedIn: true,
+    labelsProcessed: validationResults.length,
+    validationResults,
+  };
+}
+
 export async function playContentFromWatchlist(
   page: any,
   input?: Partial<PlayContentFromWatchlistInput>
@@ -389,19 +393,16 @@ export async function playContentFromWatchlist(
   const watchlistContentTitle = await detailsPage.assertContentTitleFromTitleImageLocator();
   await detailsPage.ensureWatchlistIsAddable();
   await detailsPage.clickWatchlistIcon();
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(4000);
   await detailsPage.clickFirstSearchResult();
   const contentOpened = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page opened from watchlist', contentOpened);
-
   await detailsPage.clickPlayButton();
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible after playing content from watchlist', playerVisible);
   await page.waitForTimeout(120000);
   await detailsPage.hoverPlaybackControls();
-
   let playerTitleVisible = false;
   let playerTitleMatches = false;
   try {
@@ -415,7 +416,6 @@ export async function playContentFromWatchlist(
   }
 
   await page.waitForTimeout(5000);
-
   return {
     isLoggedIn: true,
     contentOpened,
@@ -455,18 +455,14 @@ export async function verifyGuestWatchlistHoverNavigationFromFreeAsset(
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const gql = GraphQLHelper.getInstance(page);
-
   logger.step('Starting guest watchlist hover navigation validation flow');
-
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   await authPage.navigate();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-
   const collectionResponse = await collectionWait;
   const parser = new CollectionParser(collectionResponse as any);
   const rails = parser.getRails();
-
   const freeAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
@@ -478,22 +474,17 @@ export async function verifyGuestWatchlistHoverNavigationFromFreeAsset(
 
   const freeContentTitle = (freeAsset?.title ?? query).trim();
   logger.assertion('Free content title resolved from Collection GraphQL', Boolean(freeContentTitle));
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
   await authPage.submitSearchQuery();
   const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
   logger.assertion('Search results visible for free content from collection API', resultsVisible);
-
   const freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeContentTitle).catch(() => false);
   logger.assertion('Search result is tagged as Free content', freeLabelVisible);
-
   await detailsPage.waitForPlayback(2);
   await detailsPage.hoverOverFirstContent();
   await detailsPage.clickWatchlistIcon();
-
   logger.info(`Clicked Add to Watchlist icon for free content: ${freeContentTitle}`);
-
   const isLoginScreenVisible = await authPage.isWelcomeHeadingVisible();
   const headingText = isLoginScreenVisible ? await authPage.getWelcomeHeadingText() : '';
   const isEmailFieldVisible = await authPage.isEmailFieldVisible();
@@ -575,7 +566,6 @@ export async function resolveFreeLiveContentFromCollectionGraphQL(
 
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-
     const isMonetizationFree = (asset: any) => {
       const monetType = asset.monetization?.type
         ?? asset.monetizationType
@@ -670,7 +660,6 @@ function resolveFreeSearchQueryFromCollection(collectionResponse: any): string |
   if (!collectionResponse?.response?.data?.collection?.rails) {
     return undefined;
   }
-
   const parser = new CollectionParser(collectionResponse as any);
   const rails = parser.getRails();
   for (const rail of rails) {
@@ -762,17 +751,6 @@ export async function addContentToWatchlistFromSearchPage(
   };
 }
 
-export interface AddContentToWatchlistFromSearchPageStepInput {
-  query?: string;
-  graphqlQueryName?: string;
-}
-
-export interface AddContentToWatchlistFromSearchPageStepOutput {
-  isLoggedIn: boolean;
-  addedToWatchlist: boolean;
-  toastText: string;
-}
-
 export async function addContentToWatchlistFromSearchPageStep(
   page: any,
   input?: Partial<AddContentToWatchlistFromSearchPageStepInput>
@@ -788,7 +766,7 @@ export async function addContentToWatchlistFromSearchPageStep(
   await page.waitForTimeout(2000);
   await detailsPage.clickFirstSearchResult();
   await page.waitForTimeout(2000);
-  await detailsPage.ensureWatchlistIsAddable(); // Wait for 2 seconds to ensure the page is fully loaded before interacting with the watchlist icon
+  await detailsPage.ensureWatchlistIsAddable();
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Added to Watchlist toast displayed', addedToWatchlist);
@@ -833,10 +811,10 @@ export async function addFreeContentToWatchlist(
       const parser = new CollectionParser(collectionResp as any);
       const rails = parser.getRails();
       const freePredicate = (asset: any) => {
-      const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
-      if (String(assetTypeVal).toLowerCase() === 'clip') {
-        return false;
-      }
+        const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
+        if (String(assetTypeVal).toLowerCase() === 'clip') {
+          return false;
+        }
         const labels = asset.labels ?? [];
         if (labels.some((label: any) => /free/i.test(label?.text ?? ''))) return true;
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
@@ -865,15 +843,14 @@ export async function addFreeContentToWatchlist(
     await authPage.submitSearchQuery();
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
-  } 
-  await page.waitForTimeout(2000); // Wait for 2 seconds to ensure the page is fully loaded before interacting with the watchlist icon
+  }
+  await page.waitForTimeout(2000); 
   await detailsPage.ensureWatchlistIsAddable();
   const titleBeforeAddToWatchlist = await detailsPage.assertContentTitleFromTitleImageLocator();
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   await detailsPage.ensureWatchlistHasCapacity();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Free content added to watchlist', addedToWatchlist);
-
   const titleBeforeWatchlistIcon = await detailsPage.assertContentTitleFromTitleImageLocator();
   const normalizedTitleBeforeAdd = titleBeforeAddToWatchlist.trim().toLowerCase();
   const normalizedTitleBeforeWatchlistIcon = titleBeforeWatchlistIcon.trim().toLowerCase();
@@ -903,7 +880,6 @@ export async function verifyFreeTagInWatchlist(
   const gql = GraphQLHelper.getInstance(page);
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting IW3-T2049 free tag watchlist flow');
-
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
 
@@ -921,7 +897,6 @@ export async function verifyFreeTagInWatchlist(
       toastText: '',
     };
   }
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -936,21 +911,19 @@ export async function verifyFreeTagInWatchlist(
       logger.debug('Collection GraphQL did not provide a free title for repeated pause-ad flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
     await authPage.submitSearchQuery();
     await page.waitForTimeout(5000);
     await detailsPage.clickFirstSearchResult();
-    
-  }{
+
+  } {
     await searchAndOpenFreeContent(page);
-    }  await detailsPage.ensureWatchlistIsAddable();
+  } await detailsPage.ensureWatchlistIsAddable();
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Free content added to watchlist', addedToWatchlist);
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(4000);
   const isVisibleInMyWatchlist = await detailsPage.isWatchlistItemVisible('free');
@@ -961,8 +934,6 @@ export async function verifyFreeTagInWatchlist(
   await page.waitForTimeout(2000);
   await detailsPage.removeFromWatchlist();
   await page.waitForTimeout(2000);
-
-
   return {
     isLoggedIn: true,
     addedToWatchlist,
@@ -1014,9 +985,7 @@ export async function removeContentFromWatchlistFromSearchPageStep(
     mode: input?.mode,
   });
   const isLoggedIn = loginResult.isLoggedIn;
-
   logger.assertion('User is logged in before removing watchlist item from search results', isLoggedIn);
-
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const collectionResponse = await collectionWait;
@@ -1035,7 +1004,6 @@ export async function removeContentFromWatchlistFromSearchPageStep(
   }
   const parser = new CollectionParser(collectionResponse as any);
   const rails = parser.getRails();
-
   const freeAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
@@ -1047,7 +1015,6 @@ export async function removeContentFromWatchlistFromSearchPageStep(
 
   const freeContentTitle = (freeAsset?.title ?? query).trim();
   logger.assertion('Free content title resolved from Collection GraphQL', Boolean(freeContentTitle));
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1058,12 +1025,10 @@ export async function removeContentFromWatchlistFromSearchPageStep(
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Added to Watchlist toast displayed', addedToWatchlist);
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(3000);
   await detailsPage.clickFirstContentInWatchlist();
   await page.waitForTimeout(2000);
-
   const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
   const removedFromWatchlist = removeToastText.toLowerCase().includes('removed');
   logger.assertion('Removed from Watchlist toast displayed', removedFromWatchlist);
@@ -1084,7 +1049,6 @@ export async function addPremiumContentToWatchlist(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting IW3-T2052 premium watchlist add flow');
-
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
 
@@ -1181,12 +1145,10 @@ export async function removePremiumContentFromWatchlist(
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Premium content added to watchlist', addedToWatchlist);
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(3000);
   await detailsPage.clickFirstContentInWatchlist();
   await page.waitForTimeout(2000);
-
   const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
   const removedFromWatchlist = removeToastText.toLowerCase().includes('removed');
   logger.assertion('Premium content removed from watchlist', removedFromWatchlist);
@@ -1256,10 +1218,10 @@ export async function removeFreeContentFromWatchlist(
       const parser = new CollectionParser(collectionResp as any);
       const rails = parser.getRails();
       const freePredicate = (asset: any) => {
-      const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
-      if (String(assetTypeVal).toLowerCase() === 'clip') {
-        return false;
-      }
+        const assetTypeVal = asset?.asset?.type ?? asset?.type ?? asset?.assetType ?? asset?.kind ?? '';
+        if (String(assetTypeVal).toLowerCase() === 'clip') {
+          return false;
+        }
         const labels = asset.labels ?? [];
         if (labels.some((label: any) => /free/i.test(label?.text ?? ''))) return true;
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
@@ -1291,17 +1253,14 @@ export async function removeFreeContentFromWatchlist(
   } else {
     await searchAndOpenFreeContent(page);
   }
-
   await detailsPage.ensureWatchlistIsAddable();
   const addToastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = addToastText.toLowerCase().includes('added');
   logger.assertion('Free content added to watchlist', addedToWatchlist);
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(3000);
   await detailsPage.clickFirstContentInWatchlist();
   await page.waitForTimeout(2000);
-
   const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
   const removedFromWatchlist = removeToastText.toLowerCase().includes('removed');
   logger.assertion('Free content removed from watchlist', removedFromWatchlist);
@@ -1323,7 +1282,6 @@ export async function verifyWatchlistContentMetadataAndThumbnails(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting IW3-T2048 watchlist thumbnail and metadata validation flow');
-
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
   });
@@ -1345,7 +1303,6 @@ export async function verifyWatchlistContentMetadataAndThumbnails(
   await page.waitForTimeout(4000);
   await detailsPage.clickFirstContentInRail();
   await page.waitForTimeout(4000);
-
   const titleFromDetails = await detailsPage.getContentTitleFromTitleImageLocator();
   logger.assertion('Content title captured before adding to watchlist', Boolean(titleFromDetails));
   await detailsPage.assertContentTitle();
@@ -1353,7 +1310,6 @@ export async function verifyWatchlistContentMetadataAndThumbnails(
   const toastText = await detailsPage.addToWatchlistAndGetToast();
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   logger.assertion('Movie or show content added to watchlist', addedToWatchlist);
-
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(4000);
 

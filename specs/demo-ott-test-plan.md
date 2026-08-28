@@ -10,7 +10,7 @@ This test plan covers validation of application launch behavior for the OTT plat
 **Seed:** `tests/seed.spec.ts`
 
 #### 10.1. IW3-T1859: Verify the message displayed on entering invalid credentials during login.
-**File:** `tests/home/home-page-launch.spec.ts`
+**File:** `tests/home/login-page-launch.spec.ts`
 **Steps:**
    1. Open the browser.
    2. Enter the URL(https://iwanttfc.com/)
@@ -42,18 +42,6 @@ This test plan covers validation of application launch behavior for the OTT plat
    5. Enter the "Email Address" in Email Address field.
    6. Tap on "Proceed" CTA and observe.
    7. User should be navigated to "Verify OTP" screen.
-
-#### 10.4. IW3-T1864 Verify the message displayed on entering the mobile number on "Forgot Password?" screen.
-**File:** ``tests/home/home-page-launch.spec.ts`
-**Steps:**
-   1. Open the browser.
-   2. Enter the URL(https://iwanttfc.com/)
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   4. Tap on "Forgot Password?"
-   5. In Email field enter mobile number as 9876543210
-   6. Tap on "Proceed" CTA.
-   7. User should be able to see "Please enter a valid email continue." error message
-
 
 #### 10.4. IW3-T1869 Verify the UI/UX of the "Welcome to iWant" screen for PH region.
 **File:** ``tests/home/home-page-launch.spec.ts`
@@ -129,22 +117,6 @@ This test plan covers validation of application launch behavior for the OTT plat
       * except : The “Top 10” tag should be displayed clearly on the top-right corner of the
       content thumbnail.
 
-
-### 1.8. IW3-T1895 Verify the user navigates to content details page post tapping on any Movie/Show contents from Home, Shows, Movies, search, My Space pages.
-**File:** ``tests/details/details-page-validation.spec.ts`
-**Steps:**
-   1. Open the browser.
-   2. Enter the URL(https://iwanttfc.com/)
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   3. Click on Email field
-   4. Enter valid email as "abhilash584@gmail.com" in email field.
-   5. Click on Password field
-   6. Enter valid password as "Test1234" in password field
-   7. Tap on "Continue" button.
-   8. Tap on "Shows" option from home page.
-   9. Click on the first content from first rail
-      *expect User should navigate to the respective content Details Page
-      *expect validate the details page
  
 ### 10.7. IW3-T1865 Verify the mobile number login functionality.
 **File:** `tests/home/home-page-launch.spec.ts`
@@ -420,22 +392,6 @@ This test plan covers validation of application launch behavior for the OTT plat
 9. Scroll the **Continue Watching** tray from **left to right**.
 10. Observe the tray behavior.
     - **Expect:** The **Continue Watching** tray should scroll smoothly in both directions, and all available content cards should be accessible without any UI or functionality issues.
-
-### 1.20. IW3-T1936 Verify the functionality of "Remove From Continue Watching" CTA displayed on the CW tray bottom bar popup from Home screen.
-
-**File:** `tests/home/continue-watching.spec.ts`
-
-**Steps**
-
-1. **Precondition:** The user should have content available in the **Continue Watching** tray.
-2. Open the browser.
-3. Enter the URL (https://iwanttfc.com/).
-4. Log in with valid user credentials.
-5. Navigate to the **Home** page.
-6. Locate and hover on a content card in the **Continue Watching** tray.
-7. Click the **X** icon on the content card.
-8. Observe the **Continue Watching** tray.
-   - **Expect:** The selected content should be removed from the **Continue Watching** tray.
 
 ### 1.21. IW3-T1937- Verify that "Resume" CTA turns to "Play" button and retains to default season number and episode number on removing the content from CW tray.
 
@@ -2563,42 +2519,6 @@ This test plan covers validation of application launch behavior for the OTT plat
 5. Verify "crown" icon is displayed on the first content thumbnail  after search
 
 
-<!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
-
-**File:** `tests/home/create-account-navigation.spec.ts`
-
-### 10.14. IW3-T3663 Verify Synacor user is able to logout from the application
-**File:** `tests/home/synacor-page-launch.spec.ts`
-**Steps:**
-   1. Open the browser.
-   2. Enter the URL
-   3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-   4. Click on "Login with TV Provider" option
-   5. Select the Frontier from available options and Click on Continue
-   6. Input the TV Provider credentials (Ex: ftrfios1@frontier.com/Frontier1)
-   6. Click on "Continue" CTA.
-      **expect** User should be successfully landed on the "Home" screen.
-   7. Click on "Account" icon in the home page
-      **expect** Sign out popup should be displayed
-   8. Click on Sign out
-      **expect** "Welcome to iWant" page header should be displayed
-
-1. Launch application successfully
-   * expect: Home page is displayed
-   * Tap on Account icon
-   * expect: Profile menu/screen is displayed
-2. Tap on Sign In option
-   * expect: Sign In screen is displayed
-   * If cookie pop up appeared accept the cookies with "Confirm" button
-   * after accepting the cookie validate welcome test as "Welcome to iWant"
-   * Tap on "Create Account" link
-   * expect: Navigation to Create Account flow is initiated 
-3. Verify Create an Account screen is displayed
-   * expect: "Create an Account" screen is displayed successfully
-   * expect: User can view account creation fields/options
-   * expect: No navigation errors occur -->
-
-
 #### 1.1. IW3-T1846 Verify that user NFvigates to "Welcome to iwant" screen on entering the URL "https://iwanttfc.com/" from Non-PH region.
 
 **File:** `tests/home/login-page-launch.spec.ts`
@@ -2720,20 +2640,6 @@ This test plan covers validation of application launch behavior for the OTT plat
    * expect the entered password should be visible.
 
 
-#### 1.8. IW3-T1859 Verify the message displayed on entering invalid credentials during login.
-
-**File:** `tests/home/login-page-launch.spec.ts`
-
-**Steps:**
-1. Open the browser.
-2. Enter the URL (`https://uat.iwanttfc.com/`).
-3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-4. Enter an invalid email address and password.(e.g: b11, abcd)
-5. Select checkbox.
-6. Tap on the "Continue" CTA.
-   * expect a valid error message should be displayed.
-
-
 #### 1.9. IW3-T1864 Verify the message displayed on entering the mobile number on "Forgot Password?" screen.
 
 **File:** `tests/home/login-page-launch.spec.ts`
@@ -2746,21 +2652,6 @@ This test plan covers validation of application launch behavior for the OTT plat
 5. Enter the "Mobile number".
 6. Tap on the "Continue" CTA.
    * expect the user should get "Invalid email".
-
-
-#### 1.10. IW3-T1865 Verify the mobile number login functioNFlity.
-
-**File:** `tests/home/login-page-launch.spec.ts`
-
-**Steps:**
-1. Open the browser.
-2. Enter the URL (`https://iwanttfc.com/`).
-3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
-4. Tap on the "Click here to use mobile number" link.
-5. Select the country code as "63".
-6. Enter the mobile number and password (e.g., `9178039002` / `Password123!`).
-7. Tap on the "Continue" CTA.
-   * expect the user should be successfully logged in and navigated to the "Home" screen.
 
 
 #### 2. IW3-T1921 Verify that respective episode playback starts post tapping on episode cards in detail page
@@ -3253,13 +3144,6 @@ screen.
 - assert both conetnt matches.
 - expect: The added Watchlist items are displayed with the correct titlename and metadata.
 
-<!-- #### 7.10 IW3-T2046 Verify content can be played directly from my watchlist
-
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Login with **free user** credential.
-4. Click on the Continue CTA.
-5.  -->
 
 ### 5.5 IW3-T1951	Verify the Continue Watching tray upon logout and login with same account.
 
@@ -4308,19 +4192,6 @@ screen.
 
 
 
-<!-- #### Landing_page IW3-T4704 Verify that "Top 10" tag displayed on the content thumbnail at the top right corner.
-
-**File:** `tests/home/landing_page.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter valid email and password credentials.
-4. Click on the Continue CTA.
-5. Scroll till **"Top 10 Shows"**.
-- expect: The **"Top 10"** tag should be displayed clearly on the top-right corner of the content thumbnail. -->
-
-
 #### Landing_page IW3-T4705 Vertify that "Top 10" tag displayed on the content thumbnail on searching the top 10 rail content.
 
 **File:** `tests/home/landing_page.spec.ts`
@@ -4416,30 +4287,6 @@ screen.
 - assert the meta data.
 - compare both meta data contains display movies that belong to the same genre as the watched movie.
 
-<!-- #### Landing_page IW3-T4660 Verify that the “Because You Watched {Movie Title/Show title}” rail updates dyNFmically when the user watches a movie from a different genre.
-
-**File:** `tests/home/landing_page.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter valid email and password credentials.
-4. Click on the Continue CTA.
-5. Scroll till **Because you watched** tray.
-6. Click on first content.
-- assert the genre.
-7. Navigate to **Movie**
-8. Click first content.
-- assert the genre.
-9.  Clcik on play button.
-10. Drag progress bar till 95%.
-11. Clcik on back button.
-12. Clcik on home tab
-13. Scroll till **Because you watched** tray.
-14. clcik on first content.
-- assert the genre.
-- assert that the tray contents are updated based on the genre of the watched content. -->
-
 
 #### Landing_page IW3-T4660 Verify that the “Because You Watched {Movie Title/Show title}” rail updates dyNFmically when the user watches a movie from a different genre.
 
@@ -4522,23 +4369,6 @@ screen.
 - Asset if the ad is visible.
 8. Navigate to **Shows** tab.
 - Asset if the ad is visible.
-
-#### Landing_page IW3-T3670 Verify the popup displayed when free/basic plan users taps on "Early Access" content.
-
-**File:** `tests/home/landing_page.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter free user email and password credentials.
-4. Click on the Continue CTA.
-5. Find and click on first "Early access" content in the home page.
-- assert the meta data.
-6. Scroll down till you get the "Early access" episode thumbnail.
-7. Clcik on eary access episode.
-- expect: "Upgrade to Watch Now" CTA.
-
-
 
 #### Ad IW3-T3980 Verfiy that billboard ad banner displays for only Guest users, Free users and Basic Plan users.
 
@@ -4674,26 +4504,6 @@ screen.
 5. Click on first "Free" tag content.
 6. Wait till the ad completes.
 - expect: the pause ad should not be visible.
-
-#### Ad IW3-T3981 Verfiy that pause ad is clickable by user intercations.
-
-**File:** `tests/home/ads.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter free user email and password credentials.
-4. Click on the Continue CTA.
-5. Return a free content content from collection graphQL API
-6. Click on search icon
-7. Search/Type free content returned
-- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
-8. Click on first content of the search list.
-8. Wait till the ad completes.
-9. Tap on playback screen.
-- expect: the ad banner should be visible.
-10. Click on the Ad displayed.
-- expect: Navigates
 
 #### Ad IW3-T3992 Verify user should not be able to seek the content when the pause ad is displayed.
 
@@ -4994,25 +4804,6 @@ pause ads screen.
 - expect: The ad banner should not be overlap the "Press any button to return to content".
 
 
-
-<!-- #### Ad  Verify that Pause Ads are not getting overlapped with the seek bar on player screen
-
-**File:** `tests/home/ads.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter free user email and password credentials.
-4. Click on the Continue CTA.
-5. Return a free content content from collection graphQL API
-6. Click on search icon
-7. Search/Type free content returned
-- except Thumbnails should show correct 'Free' tags on search page (Use search  graphql api response to validate field name : type, should be equal to Free)
-8. Click on first content of the search list.
-8. Wait till the ad completes.
-9. Tap on playback screen.
-- expect: The ad banner should not be overlap the seek bar. -->
-
 #### Ad IW3-T4015 Verify pause ads are not overlapped on the "Up Next" binge marker.
 
 **File:** `tests/home/ads.spec.ts`
@@ -5064,23 +4855,6 @@ pause ads screen.
 - expect: "Go live" button should be visible.
 - expect: "Pause ad" should not overlap the "Go live" button.
 
-
-#### Landing_page IW3-T2129 Verify Mid rail banner ads are from GAM.
-
-**File:** `tests/home/landing_page.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate to https://www.iwanttfc.com/
-2. Click on the Confirm button in the cookies popup window.
-3. Enter free user email and password credentials.
-4. Click on the Continue CTA.
-5. Navigate to **Home** tab.
-6. Scroll till mid rail ad banner.
-- Asset ads are from google ads.
-7. Navigate to **Movies** tab.
-- Asset ads are from google ads.
-8. Navigate to **Shows** tab.
-- Asset ads are from google ads.
 
 #### Ads IW3-T3986 Verify that pause ad displays for the differnet region, users 
 
@@ -5139,17 +4913,6 @@ pause ads screen.
 3. Select "Home" tab.
 4. Scroll till "Sponsed Rail"
 - expect:Advertisement logo should be visible in sponserd rail.
-
-<!-- #### Ads IW3-T2144 Verfiy the spacing between the contents and other rails post configuring the sponsered rail. mWeb 
-
-**File:** `tests/home/ads.spec.ts`
-
-**Steps:**
-1. Open the browser and navigate .
-2. Click on "Menu".
-3. Select "Home" tab.
-4. Scroll till "Sponsed Rail".
-- expect:spacing between the contents card should be there and should not overlap. -->
 
 
 #### Ads IW3-T2149 Verify user redirects to respective detail page post tapping content cards in sponsered rail. mWeb 

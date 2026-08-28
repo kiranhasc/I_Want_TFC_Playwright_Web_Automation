@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
-import { loginWithTVProvider, verifyMidRailAds, verifyTop10TagOnContentThumbnail, verifyMidRailAdAutoRefresh,verifyWelcomeIntroductionPagePagination } from '../../src/businessFunction/ott-auth-bfs';
+import { loginWithTVProvider, verifyMidRailAds, verifyTop10TagOnContentThumbnail, verifyMidRailAdAutoRefresh,verifyWelcomeIntroductionPagePagination, navigateAndVerifyTabs } from '../../src/businessFunction/ott-auth-bfs';
 import { verifyMidRailAdSpacingAcrossTabs } from '../../src/businessFunction/ott-playback-bfs';
 import { navigateToMovieDetailsFromLandingPage, verifyDetailsPageFromCarouselInfoIcon, verifyLandingPageUI, verifySubscriptionPageFromCarouselSubscribeCta } from '../../src/businessFunction/ott-landing-bfs';
 import { verifyBecauseYouWatchedRail, verifyBecauseYouWatchedRailGenreUpdate, verifyLandingPageRelatedContentTraysOutsidePH, verifyMidRailBannerAdlRefresh, verifyMidRailBannerAdlVisibility, verifyTop10TagOnSearchResults, verifyTop10TagOnWatchlist } from '../../src/businessFunction/ott-landing-bfs';
@@ -7,21 +7,11 @@ import { verifyMidRailBannerGoogleAds } from '../../src/businessFunction/ott-lan
 import { OTTAuthPage } from '../../src/pom/OTTAuthPage';
 import { OTTDetailsPage } from '../../src/pom/OTTDetailsPage';
 import testCaseData from '../../src/data/ott-test-cases.json';
-import { verifyEarlyAccessPlaybackFlow } from '../../src/businessFunction/ott-early-access-bfs';
+import { verifyEarlyAccessPlaybackFlowFromGraphQL } from '../../src/businessFunction/ott-early-access-bfs';
 import {verifyBackNavigationFromDetailsPage} from '../../src/businessFunction/ott-details-bfs';
 
 test.describe('Home Page Landing', () => {
-
-    test('@High - IW3-T1867: Verify the "Login with TV Provider" functionality', async ({ page }) => {
-        const data = testCaseData['tc-auth-005-tv-provider-login'];
-        const result = await loginWithTVProvider(page, {
-            providerName: data.providerName,
-            mode: data.mode
-        });
-        expect(result.isLoggedIn).toBe(true);
-    });
-
-    test('@Medium @D IW3-T1879: Verify the UI of all the landing pages', async ({ page }) => {
+    test('@Medium IW3-T1879: Verify the UI of all the landing pages', async ({ page }) => {
         const data = testCaseData['tc-auth-040-landing-page-ui'];
         const result = await verifyLandingPageUI(page, {
             mode: data.mode,
@@ -35,6 +25,22 @@ test.describe('Home Page Landing', () => {
         expect(result.watchlistTabSelected).toBe(true);
         expect(result.gmaTabSelected).toBe(true);
         expect(result.allLandingPagesValid).toBe(true);
+    });
+    test('@Medium IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
+        const data = testCaseData['tc-auth-007-navigate-tabs'];
+        const result = await navigateAndVerifyTabs(page, {
+            mode: data.mode,
+            expectedSearchPlaceholder: data.expectedSearchPlaceholder,
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.homeRailVisible).toBe(true);
+        expect(result.moviesRailVisible).toBe(true);
+        expect(result.showsRailVisible).toBe(true);
+        expect(result.watchlistRailVisible).toBe(true);
+        expect(result.gmaRailVisible).toBe(true);
+        expect(result.searchBarPlaceholderMatches).toBe(true);
+        expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
+        expect(result.signOutOptionVisible).toBe(true);
     });
 
     test('@High IW3-T2129: Verify mid rail banner ads are from GAM', async ({ page }) => {
@@ -100,7 +106,7 @@ test.describe('Home Page Landing', () => {
         expect(result.showsSpacingValid).toBe(true);
     });
 
-    test('@Medium @D IW3-T1890: Verify that the details page is displayed upon clicking the info icon in the carousel', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1890: Verify that the details page is displayed upon clicking the info icon in the carousel', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-026-info-icon-carousel'];
         const result = await verifyDetailsPageFromCarouselInfoIcon(page, {
@@ -111,7 +117,7 @@ test.describe('Home Page Landing', () => {
         expect(result.isContentMetadataVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T1894: Verify that the subscription page is displayed when a logged-in free user taps the "Subscribe to Watch" CTA from the carousel', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1894: Verify that the subscription page is displayed when a logged-in free user taps the "Subscribe to Watch" CTA from the carousel', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-027-carousel-subscribe-cta'];
         const result = await verifySubscriptionPageFromCarouselSubscribeCta(page, {
@@ -123,7 +129,7 @@ test.describe('Home Page Landing', () => {
         expect(result.isSubscriptionBlockerVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T1887: Verify that the user is navigated to the content details page when selecting any content from the Movies tab', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1887: Verify that the user is navigated to the content details page when selecting any content from the Movies tab', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-028-movie-details-from-movies-rail'];
         const result = await navigateToMovieDetailsFromLandingPage(page, {
@@ -133,10 +139,10 @@ test.describe('Home Page Landing', () => {
         expect(result.isContentMetadataVisible).toBe(true);
     });
 
-    test('@High IW3-T3669: Verify that subscribed users with Premium Monthly plans can watch Early Access episodes', async ({ page }) => {
+    test('@High @mWeb IW3-T3669: Verify that subscribed users with Premium Monthly plans can watch Early Access episodes', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-discovery-002-early-access-premium-monthly'];
-        const result = await verifyEarlyAccessPlaybackFlow(page, {
+        const result = await verifyEarlyAccessPlaybackFlowFromGraphQL(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
             labelText: data.labelText, 
@@ -147,7 +153,7 @@ test.describe('Home Page Landing', () => {
         expect(result.playerTitleVisible).toBe(true);
     });
 
-    test('@Medium @DM IW3-T1888: Verify that the user navigates back to the previous page on tapping the back button from the details page', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1888: Verify that the user navigates back to the previous page on tapping the back button from the details page', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-auth-034-details-page-back-navigation'];
         const result = await verifyBackNavigationFromDetailsPage(page, {
@@ -160,7 +166,7 @@ test.describe('Home Page Landing', () => {
         expect(result.previousPageVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T4340: Verify Next and Previous page will be displayed when user click on Previous/Next link in Welcome / Introduction page', async ({ page }) => {
+    test('@Medium IW3-T4340: Verify Next and Previous page will be displayed when user click on Previous/Next link in Welcome / Introduction page', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-035-welcome-introduction-pagination'];
         const result = await verifyWelcomeIntroductionPagePagination(page, {
@@ -171,7 +177,7 @@ test.describe('Home Page Landing', () => {
         expect(result.nextPageVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T4705: Verify that "Top 10" tag is displayed on the content thumbnail when searching the Top 10 rail content', async ({ page }) => {
+    test('@Medium @mWeb IW3-T4705: Verify that "Top 10" tag is displayed on the content thumbnail when searching the Top 10 rail content', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-031-top-10-tag-on-search'];
         const result = await verifyTop10TagOnSearchResults(page, {
@@ -183,7 +189,7 @@ test.describe('Home Page Landing', () => {
         expect(result.tagPositionedOnTopRight).toBe(true);
     });
 
-    test('@Medium @D IW3-T4706: Verify that "Top 10" tag is displayed on the content thumbnail when Top 10 rail content is added to Watchlist', async ({ page }) => {
+    test('@Medium  IW3-T4706: Verify that "Top 10" tag is displayed on the content thumbnail when Top 10 rail content is added to Watchlist', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-032-top-10-tag-on-watchlist'];
         const result = await verifyTop10TagOnWatchlist(page, {
@@ -196,7 +202,7 @@ test.describe('Home Page Landing', () => {
         expect(result.top10TagVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T1886: Verify that related content and trays are displayed under Shows, Movies, and GMA (only outside the Philippines)', async ({ page }) => {
+    test('@Medium @mWeb IW3-T1886: Verify that related content and trays are displayed under Shows, Movies, and GMA (only outside the Philippines)', async ({ page }) => {
         const data = testCaseData['tc-auth-033-related-content-trays-outside-ph'];
         const result = await verifyLandingPageRelatedContentTraysOutsidePH(page, {
             mode: data.mode,
@@ -208,18 +214,7 @@ test.describe('Home Page Landing', () => {
         expect(result.isValid).toBe(true);
     });
 
-    test('@Medium @D IW3-T4659: Verify that the "Because You Watched {Movie Title/Show Title}" rail displays movies/shows belonging to the same genre as the watched content', async ({ page }) => {
-        test.setTimeout(90000);
-        const data = testCaseData['tc-auth-036-because-you-watched-rail'];
-        const result = await verifyBecauseYouWatchedRail(page, {
-            mode: data.mode,
-        });
-        expect(result.isLoggedIn).toBe(true);
-        expect(result.railVisible).toBe(true);
-        expect(result.metadataMatches).toBe(true);
-    });
-
-    test('@Medium @DM IW3-T4660: Verify that the "Because You Watched {Movie Title/Show Title}" rail updates dynamically when the user watches a movie from a different genre', async ({ page }) => {
+    test('@Medium IW3-T4658: Verify that “Because You Watched {Movie Title/Show Title}” rail created on the Home page post watching the content with >95% completion.', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-039-because-you-watched-genre-update'];
         const result = await verifyBecauseYouWatchedRailGenreUpdate(page, {
@@ -235,7 +230,33 @@ test.describe('Home Page Landing', () => {
         expect(result.genreUpdated).toBe(true);
     });
 
-    test('@High @D IW3-T2127: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
+    test('@Medium IW3-T4659: Verify that the "Because You Watched {Movie Title/Show Title}" rail displays movies/shows belonging to the same genre as the watched content', async ({ page }) => {
+        test.setTimeout(90000);
+        const data = testCaseData['tc-auth-036-because-you-watched-rail'];
+        const result = await verifyBecauseYouWatchedRail(page, {
+            mode: data.mode,
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.railVisible).toBe(true);
+        expect(result.metadataMatches).toBe(true);
+    });
+
+    test('@Medium IW3-T4660: Verify that the "Because You Watched {Movie Title/Show Title}" rail updates dynamically when the user watches a movie from a different genre', async ({ page }) => {
+        test.setTimeout(90000);
+        const data = testCaseData['tc-auth-039-because-you-watched-genre-update'];
+        const result = await verifyBecauseYouWatchedRailGenreUpdate(page, {
+            mode: data.mode,
+            graphqlQueryName: data.graphqlQueryName,
+        });
+        expect(result.isLoggedIn).toBe(true);
+        expect(result.headingVisible).toBe(true);
+        expect(result.railVisible).toBe(true);
+        expect(result.secondGenre).toBeTruthy();
+        expect(result.railFirstItemGenre).toBeTruthy();
+        expect(result.railFirstItemGenre.trim().toLowerCase()).toBe(result.secondGenre.trim().toLowerCase());
+        expect(result.genreUpdated).toBe(true);
+    });
+    test('@High IW3-T2127: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-037-mid-rail-banner-adl'];
         const result = await verifyMidRailBannerAdlVisibility(page, {
@@ -245,7 +266,7 @@ test.describe('Home Page Landing', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.allPagesVisible).toBe(true);
     });
-    test('@Medium @D IW3-T2130: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
+    test('@Medium IW3-T2130: Verify Mid rail banner Adl is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-037-mid-rail-banner-adl'];
         const result = await verifyMidRailBannerAdlVisibility(page, {
@@ -255,7 +276,7 @@ test.describe('Home Page Landing', () => {
         expect(result.allPagesVisible).toBe(true);
     });
 
-    test('@Medium @D IW3-T2128: Verify Mid rail banner ad loads without any issues on page refresh', async ({ page }) => {
+    test('@Medium IW3-T2128: Verify Mid rail banner ad loads without any issues on page refresh', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-038-mid-rail-banner-adl-refresh'];
         const result = await verifyMidRailBannerAdlRefresh(page, {

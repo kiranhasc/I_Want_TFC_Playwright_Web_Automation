@@ -743,7 +743,7 @@ export async function verifySharedDeeplinkRedirectToDetailsPage(
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   logger.step('Waiting for collection GraphQL data to identify a shared asset');
-  const collectionResponse = await collectionPromise; // ✅ resolve the promise
+  const collectionResponse = await collectionPromise;
   const parser = new CollectionParser(collectionResponse as any);
   // First rail (index 0), first item (index 0) - per collection.rails[0].assets.items[0]
   const firstAsset = parser.getCard(0, 0);
@@ -927,7 +927,6 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     await detailsPage.scrollToEpisodeList();
   } catch {
     logger.info('Episode list not found; skipping episode selection and playback validation');
-    // ignore and continue; the test will still report the failed expectation below
   }
   const selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
   const metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
@@ -1486,7 +1485,6 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
       await page.waitForTimeout(5000);
       timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       await page.waitForTimeout(5000);
-      // await detailsPage.hoverPlaybackScreen();
       skipIntroClicked = await detailsPage.clickSkipIntroMarker();
       timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       logger.info(`Skip Intro clicked: ${skipIntroClicked}, initial time: ${timeBeforeSkipIntro}, updated time: ${timeAfterSkipIntro}`);

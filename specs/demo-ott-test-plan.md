@@ -2562,6 +2562,153 @@ This test plan covers validation of application launch behavior for the OTT plat
    * except Thumbnails should show correct 'Premium' Crown on search page (Use search graphql api response to validate field name : type, should be equal to Premium).
 5. Verify "crown" icon is displayed on the first content thumbnail  after search
 
+### 2.68. IW3-T1862 Verify the Navigation on entering OTP for the forgot password.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address  (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen
+
+### 2.69. IW3-T1863 Verify the UI/UX and "Forgot Password" functionality popup.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen 
+24. Click on the **Password** field.
+25. Enter a valid password (e.g., `iWant_tfc_004`).
+26. Click on the **Confirm Password** field.
+27. Enter the same password (e.g., `iWant_tfc_004`) in the **Confirm Password** field.
+28. Tap on "Proceed" CTA.
+    *expect:* User should see the popup message "New Password Set Successfully"
+29. Click on "Done" button
+   *expect:* user should be Navigated to "Login screen".
+
+### 2.70. IW3-T1866 Verify that user can able to login with new password credentials.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen 
+24. Click on the **Password** field.
+25. Enter a valid password (e.g., `iWant_tfc_004`).
+26. Click on the **Confirm Password** field.
+27. Enter the same password (e.g., `iWant_tfc_004`) in the **Confirm Password** field.
+28. Tap on "Proceed" CTA.
+    *expect:* User should see the popup message "New Password Set Successfully"
+29. Click on "Done" button
+   *expect:* user should be Navigated to "Login screen".
+30. Enter a valid email address (email generated from randomYopmailAddress ).
+31. Enter a valid password (e.g., `iWant_tfc_004`).
+32. Click on Continue button
+    *expect:* User should be navigated to "Home" screen
+33. Click on Account icon profile 
+34. Tap on "Account and Setting" option 
+    *expect*: User should navigate to "Account" page and the email(email generated from randomYopmailAddress ) used to create an account is displayed on the "Account" page
+
+#### 2.71. IW3-T2011 Verify that the 'Go Live' tag is displayed on the player screen when the user pause the content.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the "TFC Asia" live channel content in the home screen
+9. Click on pause button and wait for 5sec
+   *expect*: User should see the "Go Live" button displayed on the player screen  
+
+
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 
@@ -3471,11 +3618,17 @@ screen.
 3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
-6. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
-6. Select the show from the **Continue Watching** tray.
-7. Scroll and Select the last episode of **Season 1**.
-8. Drag the seekbar until it reaches the end.
-9. Observe the playback after the episode ends.
+6. Using graphQL API response for continue watching collect only **shows** which has **2 seasons**.
+7. Search and select the content name.
+8. Play episode 5 of season 1.
+9. Drag the seekbar until 50%.
+10. Exit the player and return to the **Home** page.
+11. Select the same content that was played from **continue watching** tray.
+12. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
+13. Select the show from the **Continue Watching** tray.
+14. Scroll and Select the last episode of **Season 1**.
+15. Drag the seekbar until it reaches the end.
+16. Observe the playback after the episode ends.
    - **Expect:** The first episode of **Season 2** should automatically start playing after the last episode of **Season 1** is completed.
 
 ### 5.17 IW3-T1942 Verify that Ad gets played for the free user on resuming the content.
@@ -5097,3 +5250,64 @@ pause ads screen.
 12. Click on Account and select sigh out.
 13. Login with "tvUser" credentials.
 14. Repeat step5 to step11.
+
+
+#### Ads IW3-T2135 Verify Sponsored Rail is Displayed on Home, Shows, Movies, GMA pages. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:sponsed rail should be visible.
+
+
+#### Ads IW3-T2146 Verfiy that Sponsered rail is non clickable/tappable except the content cards. mWeb  
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:sponsed rail should be visible.
+5. Click on rail except contnet cards.
+- expect:Clcik action should not redirect to any page.
+
+ #### Ads IW3-T2137 Verify Advertiser logo is displayed on Sponsored Rails which is configured by CMS. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:Advertisement logo should be visible in sponserd rail.
+
+<!-- #### Ads IW3-T2144 Verfiy the spacing between the contents and other rails post configuring the sponsered rail. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail".
+- expect:spacing between the contents card should be there and should not overlap. -->
+
+
+#### Ads IW3-T2149 Verify user redirects to respective detail page post tapping content cards in sponsered rail. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail".
+5. Click on any content.
+6. Assert the Title of the content card.
+- expect:By clciking it should redirect to same details page.

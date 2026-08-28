@@ -9,7 +9,7 @@ const browserConfig = {
   chrome: {
     ...devices['Desktop Chrome'],
     channel: 'chrome',
-    launchOptions: {
+          launchOptions: {
       ignoreDefaultArgs: ['--disable-component-update'],
     },
   },
@@ -30,6 +30,11 @@ const browserConfig = {
     ...devices['iPhone 12'],
   },
 };
+// When a run is triggered from the dashboard, DASHBOARD_RUN_ID is set by
+// dashboard/lib/processRunner.js so the json reporter's output lands in a
+// per-run file that dashboard/reporter/dashboard-reporter.js's sibling
+// backend code can associate back to that run.
+const dashboardRunId = process.env.DASHBOARD_RUN_ID;
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -38,18 +43,28 @@ export default defineConfig({
   testDir: './tests',
 
   timeout: 50 * 1000,
-  
+
   /* Run tests in files in parallel */
   fullyParallel: true,
 
   forbidOnly: !!process.env.CI,
 
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
 
   workers: process.env.CI ? 1 : undefined,
-
-  reporter: 'html',
-
+  /* 'html' is kept for CI artifact upload compatibility; 'json' is a secondary
+   * structured artifact; the dashboard reporter streams live events to the
+   * dashboard backend and is a no-op unless DASHBOARD_SERVER_URL is set. */
+  reporter: [
+    ['html'],
+    ['json', {
+      outputFile: dashboardRunId
+        ? `dashboard/data/reports/${dashboardRunId}.json`
+        : 'test-results/results.json',
+    }],
+    ['./dashboard/reporter/dashboard-reporter.js'],
+  ],
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     ...browserConfig[browser as keyof typeof browserConfig],
     trace: 'on-first-retry',
@@ -80,7 +95,6 @@ export default defineConfig({
 
     {
       name: 'playback',
-      timeout: 180 * 1000,
       testDir: 'tests/home',
       testMatch: [
         '**/playback.spec.ts',
@@ -111,7 +125,7 @@ export default defineConfig({
     {
       name: 'search',
       testDir: 'tests/home',
-      testMatch: '**/search.spec.ts', 
+      testMatch: '**/search.spec.ts',
     },
 
 
@@ -133,6 +147,10 @@ export default defineConfig({
       testDir: 'tests/home',
       testMatch: '**/ph_region.spec.ts',
     },
-
+    {
+      name: 'Ads',
+      testDir: 'tests/home',
+      testMatch: '**/ads.spec.ts',
+    },
   ],
 });

@@ -19,13 +19,12 @@ export class EndToEndPage {
     this.ratingText = { selector: '//div[contains(@class,"age-rating")]//p' };
     this.playerQualityText = { selector: '//div[contains(@class,"video-quality")]//p' };
     this.contentDescriptionText = { selector: '//div[contains(@class,"desc")]' };
-    // this.playButton = { selector: '#play, #play div, button' };
-    this.playButton = { selector: '#play div' };
+    // this.playButton = { selector: '//div[@id="play"]' };
+    this.playButton = { selector: '//*[@id="player-container-main-playPauseButton"]' };
+    // this.playButton = { selector: '#play div' };
     this.logoIcon = { selector: '.logo' }
-    // this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
     this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
     this.shareIcon = { selector: '//*[@id="share"]' };
-    // this.shareIcon = { selector: 'button[aria-label*=share], button:has-text("Share"), [data-testid*=share]' };
     this.pausePlayButton = { selector: 'button[aria-label*=pause], button[aria-label*=play], [data-testid*=pause], [data-testid*=play]' };
   }
 
@@ -71,8 +70,7 @@ export class EndToEndPage {
 
   async isPlayButtonVisible(): Promise<boolean> {
     try {
-      //const locator = this.page.locator(this.playButton.selector).filter({ hasText: /play/i }).first();
-      const locator = this.page.locator(`//div[@id="play"]`);
+      const locator = this.page.locator(this.playButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 10000 });
       return await locator.isVisible();
     } catch {
@@ -82,8 +80,7 @@ export class EndToEndPage {
 
   async isResumeButtonVisible(): Promise<boolean> {
     try {
-      // const locator = this.page.locator(this.resumeButton.selector).first();
-      const locator = this.page.locator(`//div[@id="play"]`);
+      const locator = this.page.locator(this.playButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 10000 });
       return await locator.isVisible();
     } catch {

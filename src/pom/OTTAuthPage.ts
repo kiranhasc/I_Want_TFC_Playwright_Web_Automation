@@ -7,6 +7,7 @@ import { title } from 'process';
 import { GraphQLResult } from '../utils/graphql/graphql-helper';
 import { ContinueWatchingResponse, ContinueWatchingItem } from '../utils/graphql/graphql-types';
 import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
+import { getOtpFromYopmail } from '../utils/yopmail-helper';
 
 export class OTTAuthPage {
     private static readonly searchResultContainerSelector = '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]';
@@ -47,6 +48,7 @@ export class OTTAuthPage {
     private readonly homeTabSelectors: PageElement[];
     private readonly loadingIndicator: PageElement;
     private readonly moviesTab: PageElement;
+    private readonly mobileMainMenu: PageElement;
     private readonly showsTab: PageElement;
     private readonly myWatchlistTab: PageElement;
     private readonly gmaTab: PageElement;
@@ -55,6 +57,7 @@ export class OTTAuthPage {
     private readonly clearSearchButton: PageElement;
     private readonly accountIcon: PageElement;
     private readonly signOutOption: PageElement;
+    private readonly signInOption: PageElement;
     private readonly accountAndSettingsOption: PageElement;
     private readonly editProfileButton: PageElement;
     private readonly continueWatchingRail: PageElement;
@@ -84,7 +87,10 @@ export class OTTAuthPage {
     private readonly topStreamedRail: PageElement;
     private readonly railAncestorSelector: PageElement;
     private readonly iWantOriginalsRailName: string;
+    private readonly iWantOriginalsRailNameMobile: string;
+    private readonly iwantScrollLocatorMobile: string;
     private readonly iWantOriginalsArrowSelectorTemplate: PageElement;
+    private readonly iWantOriginalsArrowCandidateSelector: PageElement;
     private readonly iWantOriginalsCardSelector: PageElement;
     private readonly iWantOriginalsClickableCardSelector: PageElement;
     private readonly iWantOriginalsTitleContainerSelector: PageElement;
@@ -150,14 +156,20 @@ export class OTTAuthPage {
     private readonly searchResultContainerSelector: PageElement;
     private readonly searchResultCandidateSelector: PageElement;
     private readonly continueWatchingContent: PageElement;
+    private readonly iWantLogo: PageElement;
     private continueWatchingGraphQL?: GraphQLResult<ContinueWatchingResponse>;
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
-    private readonly mobileMainMenu: PageElement;
     private readonly verifyOTPIdentity: PageElement;
     private readonly countryCode: PageElement;
     private readonly synacorLogOutButton: PageElement;
+    private readonly otpInput: PageElement;
+    private readonly setNewPasswordHeading: PageElement;
+    private readonly passwordResetSuccessMessage: PageElement;
+    private readonly doneButton: PageElement;
+    private readonly NewPassword: PageElement;
+    private readonly ConfirmNewPassword: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -169,13 +181,13 @@ export class OTTAuthPage {
         this.passwordVisibilityEyeIcon = { selector: '.absolute.top-\\[8px\\] > svg > path:nth-child(2)' };
         this.passwordTextVisibleField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
-        this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
+        this.proceedButton = { role: 'button', text: 'Proceed', selector: '(//button[@type="submit" and normalize-space()="Proceed"])[1]' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
         this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: '//h1[normalize-space()="Verify OTP"]' };
         this.verifyOTPIdentity = { role: 'heading', text: 'Verify your identity', selector: '//h1[text()="Verify your identity"]' };
         this.errorMessage = { selector: '//p[text()="Your login credentials are incorrect"]' };
-        this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")'};
+        this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")' };
         this.emailErrorMessage = { selector: '//p[text()="Please enter a valid email to continue."]' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
@@ -192,7 +204,7 @@ export class OTTAuthPage {
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
         this.moviesTab = { selector: '//div[@id ="movies"]' };
         this.showsTab = { text: 'Shows', selector: '//div[@id ="shows"]' };
-        this.myWatchlistTab = {  selector: '//div[@id="my_watchlist"]' };
+        this.myWatchlistTab = { selector: '//div[@id="my_watchlist"]' };
         this.gmaTab = { selector: '//div[@id ="gma"]' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
@@ -200,6 +212,7 @@ export class OTTAuthPage {
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.synacorLogOutButton = { selector: '//span[text()="Logout"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
+        this.signInOption = { selector: '//p[normalize-space()="Sign In"]' };
         this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
         this.editProfileButton = { selector: 'text=Edit Profile, button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
         this.continueWatchingRail = { selector: '//p[text()="Continue Watching"]' };
@@ -225,6 +238,7 @@ export class OTTAuthPage {
         this.seekBar = { selector: '.player-progress-indicator, .progress-bar, [data-testid*=seek], [class*=progress]' };
         this.trendingMoviesRail = { text: 'Trending Movies Worldwide', selector: 'text=Trending Movies Worldwide' };
         this.trendingShowsRail = { text: 'Trending Shows Worldwide', selector: 'text=Trending Shows Worldwide' };
+        this.signInOption = { selector: '//p[normalize-space()="Sign In"]' };
         this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.myWatchlistRail = { text: 'My Watchlist', selector: 'text=/^My Watchlist$/' };
         this.myWatchListPage = { selector: '.min-h-screen' };
@@ -252,6 +266,7 @@ export class OTTAuthPage {
         this.verifyOTPInstructionText = { selector: '//span[contains(normalize-space(.),"Input the code below to proceed.")]' };
         this.verifyButton = { role: 'button', text: 'Verify', selector: '//button[text()="Verify"]' };
         this.backToLoginLink = { role: 'link', text: 'Back to Login', selector: '//a[normalize-space()="Back to Login"]' };
+        this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
@@ -259,13 +274,16 @@ export class OTTAuthPage {
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
         this.railAncestorSelector = { selector: '//div[contains(@class,"scrollable-list") and contains(@class,"horizontal-scroll")]' };
         this.iWantOriginalsRailName = 'iWant Originals';
+        this.iWantOriginalsRailNameMobile = 'FREE Lang DITO: iWant Originals';
+        this.iwantScrollLocatorMobile = 'text=iWant Originals >> xpath=ancestor::*[contains(@class, "rail")][1]';
         this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
+        this.iWantOriginalsArrowCandidateSelector = { selector: 'img[alt*="arrow" i], img[alt*="chevron" i], [data-testid*="arrow" i], button[aria-label*="arrow" i], svg, .arrow, .chevron' };
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.iWantOriginalsClickableCardSelector = { selector: 'a, button, [role="button"], li, article, figure' };
         this.iWantOriginalsTitleContainerSelector = { selector: 'xpath=ancestor::div[contains(@class, "relative") and contains(@class, "w-auto") and .//img[contains(@class, "title")]][1]' };
         this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]' };
-        this.countryCode = {selector: '//input[@type="text" and contains(@class,"w-full")]'};
+        this.countryCode = { selector: '//input[@type="text" and contains(@class,"w-full")]' };
         this.countryCodeDropdown = { selector: '//img[@alt="IN" and contains(@src, "/countries/in.svg")]' };
         this.countryCodeOption = { selector: '//li[.//img[@alt="PH"] and contains(normalize-space(.), "Philippines")]' };
         this.mobileNumberField = { selector: '#userMobile, input[type="tel"], input[name*="phone"], input[name*="mobile"]' };
@@ -286,6 +304,8 @@ export class OTTAuthPage {
         this.profileSaveButton = { role: 'button', text: 'Save', selector: 'button:has-text("Save")' };
         this.firstNameValidationError = { selector: '//*[@id="first name-helper-text"]' };
         this.lastNameValidationError = { selector: '//*[@id="last name-helper-text"]' };
+        this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
+        this.googleAdsIframeSelector = { selector: 'iframe[id^="google_ads_iframe_"], iframe[name^="google_ads_iframe_"]' };
         this.pageBody = { selector: 'body' };
         this.bodyTextPattern = { selector: 'text=/alphabetic|letters|only/i' };
         this.midRailAdBanner = { selector: '#gpt-banner-ad-10-home, div[id^="gpt-banner-ad-10"]' };
@@ -303,6 +323,16 @@ export class OTTAuthPage {
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
         this.mobileMainMenu = { selector: '//p[text()="Menu"]' };
+        this.iWantLogo = { selector: 'img[alt*="iWant"], [aria-label*="iWant"], [data-testid*="logo"], img[alt*="logo"], svg[aria-label*="iWant"]' };
+        this.searchButton = { selector: "img[alt='search-icon']" };
+        this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
+        this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
+        this.otpInput = { selector: "input[inputmode='numeric'][maxlength='1']" };
+        this.setNewPasswordHeading = { selector: '//h1[normalize-space()="Set a New Password"]' };
+        this.passwordResetSuccessMessage = { selector: 'text=/New Password Set Successfully/i' };
+        this.doneButton = { role: 'button', text: 'Done', selector: 'button:has-text("Done"), a:has-text("Done")' };
+        this.NewPassword = { selector: '//input[@name="userPassword"]' };
+        this.ConfirmNewPassword = { selector: '//input[@name="confirmPassword"]' };
     }
 
     async navigate(): Promise<void> {
@@ -346,6 +376,20 @@ export class OTTAuthPage {
         logger.elementInteraction('type', 'password field');
         await this.page.locator(this.passwordField.selector).first().waitFor({ state: 'visible', timeout: 30000 });
         await this.pageUtils.safeType(this.passwordField, password);
+    }
+
+    async enterNewPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'new password field');
+        const passwordLocator = this.page.locator(this.NewPassword.selector).first();
+        await passwordLocator.waitFor({ state: 'visible', timeout: 30000 });
+        await passwordLocator.fill(password);
+    }
+
+    async enterConfirmNewPassword(password: string): Promise<void> {
+        logger.elementInteraction('type', 'confirm new password field');
+        const confirmPasswordLocator = this.page.locator(this.ConfirmNewPassword.selector).first();
+        await confirmPasswordLocator.waitFor({ state: 'visible', timeout: 30000 });
+        await confirmPasswordLocator.fill(password);
     }
 
     async clickContinue(): Promise<void> {
@@ -423,7 +467,7 @@ export class OTTAuthPage {
     async getVerifyOTPHeadingText(): Promise<string> {
         return await this.pageUtils.getTextContent(this.verifyOTPHeading, 10000);
     }
-     async getVerifyOTPIdentityText(): Promise<string> {
+    async getVerifyOTPIdentityText(): Promise<string> {
         return await this.pageUtils.getTextContent(this.verifyOTPIdentity, 10000);
     }
 
@@ -464,12 +508,6 @@ export class OTTAuthPage {
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.getAttribute('type')) || '';
     }
-
-    // async isPasswordTextVisible(): Promise<boolean> {
-    //     const locator = this.page.locator(this.passwordTextVisibleField.selector).first();
-    //     await locator.waitFor({ state: 'attached', timeout: 10000 }).catch(() => undefined);
-    //     return (await locator.count()) > 0;
-    // }
 
     async getEmptyCredentialsErrorMessage(): Promise<string> {
         return await this.pageUtils.getTextContent(this.emptyCredentialsErrorMessage, 10000);
@@ -585,19 +623,16 @@ export class OTTAuthPage {
         try {
             const bannerSelector = this.midRailAdBanner.selector;
             const iframeSelector = this.googleAdsIframeSelector.selector;
-
             const bannerVisible = await this.scrollUntilVisible(bannerSelector);
             if (bannerVisible) {
                 return true;
             }
-
             const iframe = this.page.locator(iframeSelector).first();
             if (await iframe.count() > 0) {
                 await iframe.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
                 await this.page.waitForTimeout(1200);
                 return await iframe.isVisible().catch(() => false);
             }
-
             return false;
         } catch (error) {
             logger.debug('Mid rail ad banner scroll failed', error);
@@ -609,23 +644,19 @@ export class OTTAuthPage {
         const locator = this.page.locator(selector).first();
         const scrollFactor = 0.75;
         const pauseMs = 900;
-
         for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
             if (await locator.isVisible().catch(() => false)) {
                 await locator.scrollIntoViewIfNeeded().catch(() => undefined);
                 return true;
             }
-
             await this.page.evaluate((factor) => {
                 window.scrollBy(0, window.innerHeight * factor);
             }, scrollFactor).catch(() => undefined);
             await this.page.waitForTimeout(pauseMs);
-
             if (await locator.isVisible().catch(() => false)) {
                 await locator.scrollIntoViewIfNeeded().catch(() => undefined);
                 return true;
             }
-
             const atBottom = await this.page.evaluate(() => {
                 return window.innerHeight + window.scrollY >= document.body.scrollHeight - 5;
             }).catch(() => false);
@@ -633,7 +664,6 @@ export class OTTAuthPage {
                 break;
             }
         }
-
         return false;
     }
 
@@ -650,18 +680,17 @@ export class OTTAuthPage {
                     return true;
                 }
             }
-
             const iframe = this.page.locator(this.googleAdsIframeSelector.selector).first();
             if (await iframe.count()) {
                 await iframe.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
                 return await iframe.isVisible().catch(() => false);
             }
-
             return false;
         } catch (error) {
             logger.debug('Mid rail ad visibility check failed', error);
             return false;
         }
+        return false;
     }
 
     async getApplicationVersionText(): Promise<string> {
@@ -679,6 +708,17 @@ export class OTTAuthPage {
     }
 
     async isHomeTabVisible(): Promise<boolean> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+            const isVisible = await this.pageUtils.isVisible(this.homeTab, 10000);
+            await this.clickMobileMainMenu();
+            await this.page.waitForTimeout(1000);
+            return isVisible;
+        }
+        return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
 
@@ -690,7 +730,9 @@ export class OTTAuthPage {
         }
 
         logger.info('click', 'Home tab');
-
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
         let clicked = false;
         for (const selector of this.homeTabSelectors) {
             try {
@@ -711,7 +753,6 @@ export class OTTAuthPage {
                 logger.debug('Home tab fallback selector failed', error);
             }
         }
-
         if (!clicked) {
             logger.debug('Home tab was not reachable through the normal selectors; falling back to a full home navigation');
             await this.page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' })).catch(() => undefined);
@@ -742,6 +783,41 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.emailErrorMessage, 10000);
     }
 
+    async clickMobileMainMenu(): Promise<void> {
+        logger.elementInteraction('click', 'mobile main menu');
+        const locator = this.page.locator(this.mobileMainMenu.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.click({ timeout: 20000, force: true });
+    }
+
+    async clickMoviesTab(): Promise<void> {
+        logger.elementInteraction('click', 'Movies tab');
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+
+        // Try clicking the Movies tab and ensure the navigation/route change happens.
+        const maxAttempts = 3;
+        let lastErr: any = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                await this.pageUtils.safeClick(this.moviesTab);
+                // wait briefly for client-side navigation
+                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
+                await this.pageUtils.waitForNetworkIdle(10000).catch(() => undefined);
+                const ready = await this.isMoviesPageReady();
+                if (ready) return;
+                // if not ready, try a forced click
+                lastErr = `Movies page not ready after click attempt ${attempt}`;
+            } catch (err) {
+                lastErr = err;
+            }
+            // short pause before retry
+            await this.page.waitForTimeout(1000);
+        }
+        logger.warn(`clickMoviesTab: could not confirm navigation to Movies page: ${String(lastErr)}`);
+    }
+
     async isMoviesPageReady(): Promise<boolean> {
         // Prefer a reliable movie-page indicator: trendingMoviesRail or URL contains '/movies'
         try {
@@ -764,6 +840,11 @@ export class OTTAuthPage {
         return false;
     }
 
+    async isShowsTabVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.showsTab, 10000);
+    }
+
+
     async clickCreateAccountLink(): Promise<void> {
         logger.elementInteraction('click', 'Create Account link');
         await this.pageUtils.safeClick(this.createAccountLink);
@@ -780,10 +861,8 @@ export class OTTAuthPage {
         await arrow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
         await arrow.scrollIntoViewIfNeeded().catch(() => undefined);
         await arrow.click({ force: true, timeout: 10000 }).catch(() => undefined);
-
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await this.page.waitForTimeout(1500);
-
         const titleText = await this.page.locator(this.pageTitle.selector).first().textContent().catch(() => '');
         return (titleText || '').trim().toLowerCase() === expectedText.trim().toLowerCase();
     }
@@ -815,14 +894,12 @@ export class OTTAuthPage {
             logger.warn('Pagination arrow not found');
             return false;
         }
-
         const beforeUrl = this.page.url();
         const beforeBodyText = await this.page.locator('body').textContent().catch(() => '');
         await targetLink.scrollIntoViewIfNeeded().catch(() => undefined);
         await targetLink.click({ force: true, timeout: 10000 }).catch(() => undefined);
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await this.page.waitForTimeout(1500);
-
         const afterUrl = this.page.url();
         const afterBodyText = await this.page.locator('body').textContent().catch(() => '');
         return afterUrl !== beforeUrl || afterBodyText !== beforeBodyText;
@@ -830,22 +907,21 @@ export class OTTAuthPage {
 
     async openTermsPageAndNavigateToSection(sectionLinkText: string, submoduleName: string, expectedHeading?: string, expectedUrlPart?: string): Promise<boolean> {
         logger.step(`Opening Terms page and navigating to section: ${sectionLinkText}`);
-
         try {
             logger.debug(`mweb mode check: ${process.env.BROWSER === 'mchrome'}`);
-            
+
             // For BOTH mweb and web, try to handle popup first
             let targetPage = this.page;
             let popupDetected = false;
-            
+
             // Set up popup listener (works for both web and mweb if popup opens)
             const popupPromise = this.page.context().waitForEvent('page', { timeout: 5000 }).catch(() => undefined);
-            
+
             logger.debug('Attempting to click Terms and Conditions link');
             await this.pageUtils.safeClick(this.termsAndConditionsLink);
             await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
             await this.page.waitForTimeout(2000);
-            
+
             // Check if popup opened
             if (await popupPromise && (await popupPromise).url() !== 'about:blank') {
                 logger.debug('Popup detected - Terms opened in new tab');
@@ -856,36 +932,36 @@ export class OTTAuthPage {
                 logger.debug('No popup detected - Terms may have navigated in same page (mweb)');
                 targetPage = this.page;
             }
-            
+
             // Now we have targetPage - navigate to section if URL part provided
             if (expectedUrlPart) {
                 try {
                     logger.debug(`Navigating to section: ${expectedUrlPart}, submodule: ${submoduleName}`);
-                    
+
                     // Extract the protocol and domain from target page URL
                     const targetUrl = new URL(targetPage.url());
                     const baseUrl = `${targetUrl.protocol}//${targetUrl.host}`;
                     const sectionUrl = `${baseUrl}/legal/${submoduleName}/${expectedUrlPart}/`;
                     logger.debug(`Constructed section URL: ${sectionUrl}`);
-                    
+
                     // Navigate to the section
                     await targetPage.goto(sectionUrl, { waitUntil: 'domcontentloaded' }).catch((error) => {
                         logger.debug(`Direct navigation error: ${error}`);
                     });
-                    
+
                     await targetPage.waitForTimeout(1500);
-                    
+
                     // Verify we're on the right page
                     const finalUrl = targetPage.url().toLowerCase();
                     const urlMatches = finalUrl.includes(expectedUrlPart.toLowerCase());
                     logger.debug(`Final URL: ${finalUrl}`);
                     logger.debug(`URL matches expected part "${expectedUrlPart}": ${urlMatches}`);
-                    
+
                     // Update page reference if it was a popup
                     if (popupDetected) {
                         this.page = targetPage;
                     }
-                    
+
                     if (urlMatches) {
                         logger.step(`Terms section navigation successful`);
                         return true;
@@ -898,17 +974,16 @@ export class OTTAuthPage {
                     return false;
                 }
             }
-            
+
             return false;
             await this.pageUtils.safeClick(this.termsAndConditionsLink);
-
             const popup = await popupPromise.catch(() => undefined);
             if (!await popupPromise || (await popupPromise).url() === 'about:blank') {
                 logger.warn('No popup detected');
                 return false;
             }
             await (await popupPromise).waitForLoadState('domcontentloaded').catch(() => undefined);
-            
+
             // Navigate directly to the section URL
             if (expectedUrlPart) {
                 try {
@@ -917,28 +992,28 @@ export class OTTAuthPage {
                     const baseUrl = `${popupUrl.protocol}//${popupUrl.host}`;
                     const sectionUrl = `${baseUrl}/legal/${submoduleName}/${expectedUrlPart}/`;
                     logger.debug(`Navigating to section URL: ${sectionUrl}`);
-                    
+
                     // Navigate to the section URL
                     await (await popupPromise).goto(sectionUrl, { waitUntil: 'domcontentloaded' }).catch((error) => {
                         logger.debug(`Direct navigation failed: ${error}`);
                     });
-                    
+
                     await (await popupPromise).waitForTimeout(1000);
-                    
+
                     // Check if navigation was successful
                     const currentUrl = (await popupPromise).url().toLowerCase();
                     const urlMatches = currentUrl.includes(expectedUrlPart.toLowerCase());
                     logger.debug(`URL check - Current: ${(await popupPromise).url()}, Expected part: ${expectedUrlPart}, Matches: ${urlMatches}`);
-                    
+
                     // Check heading visibility
                     let headingVisible = false;
                     if (expectedHeading) {
                         headingVisible = await this.isPageHeadingVisibleOnPage((await popupPromise), expectedHeading);
                         logger.debug(`Heading check - Expected: "${expectedHeading}", Visible: ${headingVisible}`);
                     }
-                    
+
                     this.page = await popupPromise;
-                    
+
                     const success = headingVisible && urlMatches;
                     logger.step(`Web section navigation: Heading=${headingVisible}, URL match=${urlMatches}, returning ${success}`);
                     return success;
@@ -1073,33 +1148,33 @@ export class OTTAuthPage {
                 }
                 return false;
             }
-            
+
             // For web horizontal layout, try visibility checks first
             let visibleHeading = await targetPage
                 .getByText(expectedHeading, { exact: true })
                 .first()
                 .isVisible()
                 .catch(() => false);
-            
+
             if (visibleHeading) {
                 logger.debug(`Found exact visible heading match (web): "${expectedHeading}"`);
                 return true;
             }
-            
+
             // Fallback to body text search for web as well
             const bodyText = await targetPage.locator(this.pageBody.selector || 'body').textContent().catch(() => '');
             if (bodyText?.toLowerCase().includes(normalizedHeading)) {
                 logger.debug(`Found heading in body text (web): "${expectedHeading}"`);
                 return true;
             }
-            
+
             // Check page title
             const pageTitle = await targetPage.title().catch(() => '');
             if (pageTitle.toLowerCase().includes(normalizedHeading)) {
                 logger.debug(`Found heading in page title: "${expectedHeading}"`);
                 return true;
             }
-            
+
             logger.debug(`Heading not found on page: "${expectedHeading}"`);
             return false;
         } catch (error) {
@@ -1115,6 +1190,11 @@ export class OTTAuthPage {
         } catch {
             await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         }
+    }
+
+    async clickSignIn(): Promise<void> {
+        logger.elementInteraction('click', 'Sign In option');
+        await this.pageUtils.safeClick(this.signInOption);
     }
 
     async closeCurrentTabAndReturnToMain(): Promise<void> {
@@ -1134,34 +1214,90 @@ export class OTTAuthPage {
         await this.page.waitForLoadState('domcontentloaded');
     }
 
-    // async clickShowsTab(): Promise<void> {
-    //     logger.elementInteraction('click', 'Shows tab');
-    //     await this.page.waitForTimeout(1500);
-    //     await this.pageUtils.safeClick(this.showsTab);
-    // }
+    async isMobileMainMenuVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.mobileMainMenu, 10000);
+    }
 
-    // async clickMyWatchlistTab(): Promise<void> {
-    //     logger.elementInteraction('click', 'My Watchlist tab');
-    //     const locator = this.page.locator(this.myWatchlistTab.selector);
-    //     await locator.waitFor({ state: 'attached', timeout: 15000 });
-    //     await locator.waitFor({ state: 'visible', timeout: 15000 });
-    //     await locator.scrollIntoViewIfNeeded();
-    //     await this.page.waitForTimeout(1500);
-    //     await this.pageUtils.safeClick(this.myWatchlistTab);
-    // }
+    async clickShowsTab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'Shows tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.showsTab);
+    }
 
-    // async clickGMATab(): Promise<void> {
-    //     logger.elementInteraction('click', 'GMA tab');
-    //     await this.page.waitForTimeout(1500);
-    //     await this.pageUtils.safeClick(this.gmaTab);
-    // }
+    async clickGMATab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.gmaTab);
+    }
+
+    async clickMyWatchlistTab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'My Watchlist tab');
+        const locator = this.page.locator(this.myWatchlistTab.selector);
+        await locator.waitFor({ state: 'attached', timeout: 15000 });
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.myWatchlistTab);
+    }
 
     async isSearchIconVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.searchBarIcon, 10000);
     }
 
-    async launchMWeb(url: string): Promise<void> {
-        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+    async isIWantLogoVisible(): Promise<boolean> {
+        const logo = this.page.locator(this.iWantLogo.selector).first();
+        if (!(await logo.count())) {
+            return false;
+        }
+        await logo.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+        return await logo.isVisible().catch(() => false);
+    }
+
+    async isTabSelected(tabName: 'home' | 'movies' | 'shows' | 'watchlist' | 'gma'): Promise<boolean> {
+        const selectors: Record<string, PageElement> = {
+            home: this.homeTab,
+            movies: this.moviesTab,
+            shows: this.showsTab,
+            watchlist: this.myWatchlistTab,
+            gma: this.gmaTab,
+        };
+        const target = this.page.locator(selectors[tabName].selector).first();
+        if (!(await target.count())) {
+            return false;
+        }
+        const classValue = (await target.getAttribute('class').catch(() => '') || '').toLowerCase();
+        const ariaCurrent = (await target.getAttribute('aria-current').catch(() => '') || '').toLowerCase();
+        const ariaSelected = (await target.getAttribute('aria-selected').catch(() => '') || '').toLowerCase();
+        const combinedState = `${classValue} ${ariaCurrent} ${ariaSelected}`;
+        if (/(active|selected|current|is-active|router-link-active)/.test(combinedState)) {
+            return true;
+        }
+        const url = this.page.url().toLowerCase();
+        if (tabName === 'home' && (url.endsWith('/') || /\/home/.test(url))) {
+            return true;
+        }
+        if (tabName === 'movies' && /\/movies/.test(url)) {
+            return true;
+        }
+        if (tabName === 'shows' && /\/shows/.test(url)) {
+            return true;
+        }
+        if (tabName === 'watchlist' && /\/watchlist|\/my-watchlist|my_watchlist/.test(url)) {
+            return true;
+        }
+        if (tabName === 'gma' && /\/gma/.test(url)) {
+            return true;
+        }
+        return false;
     }
 
     async isContinueWatchingRailVisible(): Promise<boolean> {
@@ -1171,13 +1307,13 @@ export class OTTAuthPage {
                 const menuVisible = await this.page.locator('//p[text()="Menu"]').first().isVisible().catch(() => false);
                 return menuVisible;
             }
-            
+
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
-            
+
             // For desktop, use the normal scrolling check
             const maxAttempts = 8;
             const scrollWaitMs = 1000;
-            
+
             for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
                 if (await locator.isVisible().catch(() => false)) {
                     return true;
@@ -1186,7 +1322,7 @@ export class OTTAuthPage {
                 await this.page.mouse.wheel(0, 600).catch(() => undefined);
                 await this.page.waitForTimeout(scrollWaitMs);
             }
-            
+
             // Final check
             await locator.waitFor({ state: 'visible', timeout: 15000 });
             return true;
@@ -1350,7 +1486,7 @@ export class OTTAuthPage {
             }
         }
         const candidate = section.locator(`img[alt*="${title}"]`).first();
-        console.log("Candidate, ", candidate)
+        logger.info("Candidate, ", candidate)
         return await candidate.isVisible().catch(() => false);
     }
 
@@ -1359,11 +1495,9 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return { visible: false, hasTag: false };
         }
-
         const normalizedTitle = title.toLowerCase();
         const items = section.locator('img[alt]:not([alt="arrow-right"])');
         const count = await items.count().catch(() => 0);
-
         for (let index = 0; index < count; index += 1) {
             const item = items.nth(index);
             const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
@@ -1372,13 +1506,11 @@ export class OTTAuthPage {
             if (!matchesTitle) {
                 continue;
             }
-
             const visible = await item.isVisible().catch(() => false);
             const tagLocator = item.locator(`xpath=ancestor::*[self::div or self::li or self::a][1]//img[@alt="${tagAlt}"]`).first();
             const hasTag = await tagLocator.isVisible().catch(() => false);
             return { visible, hasTag };
         }
-
         return { visible: false, hasTag: false };
     }
 
@@ -1494,7 +1626,7 @@ export class OTTAuthPage {
                 const section = document.querySelector('...');
                 const values = new Set<string>();
 
-            section?.querySelectorAll(selector).forEach((element) => {
+                section?.querySelectorAll(selector).forEach((element) => {
                     const value = (
                         element.getAttribute('alt') ||
                         element.getAttribute('aria-label') ||
@@ -1503,7 +1635,7 @@ export class OTTAuthPage {
                     ).replace(/\s+/g, ' ').trim();
 
                     if (value) values.add(value);
-            });
+                });
 
                 return [...values];
             }, this.continueWatchingContent.selector); // or the string directly
@@ -1642,34 +1774,64 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.topStreamedRail, 10000);
     }
 
+    getIwantScrollLocatorMobile(): string {
+        return this.iwantScrollLocatorMobile;
+    }
+
     async isIWantOriginalsRailVisible(): Promise<boolean> {
         try {
-            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-            await locator.waitFor({ state: 'visible', timeout: 15000 });
-            await locator.scrollIntoViewIfNeeded();
-            return true;
+            if (process.env.BROWSER === 'mchrome') {
+                const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+                await locator.waitFor({ state: 'visible', timeout: 15000 });
+                await locator.scrollIntoViewIfNeeded();
+                return true;
+            } else {
+                const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+                await locator.waitFor({ state: 'visible', timeout: 15000 });
+                await locator.scrollIntoViewIfNeeded();
+                return true;
+            }
         } catch {
             return false;
         }
     }
 
     async getIWantOriginalsRailTitle(): Promise<string> {
-        const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        await locator.waitFor({ state: 'visible', timeout: 15000 });
-        await locator.scrollIntoViewIfNeeded();
-        return (await locator.textContent()) || '';
+        if (process.env.BROWSER === 'mchrome') {
+            const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return (await locator.textContent()) || '';
+        } else {
+            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return (await locator.textContent()) || '';
+        }
     }
 
     async getIWantOriginalsRailCardCount(): Promise<number> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        await heading.waitFor({ state: 'visible', timeout: 15000 });
-        await heading.scrollIntoViewIfNeeded();
-        const rail = this.getRailContainerFromHeading(heading);
-        if (!await rail.count()) {
-            return 0;
+        if (process.env.BROWSER === 'mchrome') {
+            const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
+            await heading.waitFor({ state: 'visible', timeout: 15000 });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) {
+                return 0;
+            }
+            await rail.scrollIntoViewIfNeeded();
+            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
+        } else {
+            const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+            await heading.waitFor({ state: 'visible', timeout: 15000 });
+            await heading.scrollIntoViewIfNeeded();
+            const rail = this.getRailContainerFromHeading(heading);
+            if (!await rail.count()) {
+                return 0;
+            }
+            await rail.scrollIntoViewIfNeeded();
+            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
         }
-        await rail.scrollIntoViewIfNeeded();
-        return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
     }
 
     async ensureIWantOriginalsRailInView(timeout: number = 30000): Promise<boolean> {
@@ -1720,11 +1882,9 @@ export class OTTAuthPage {
     async hoverIWantOriginalsFirstCardCentered(): Promise<{ visible: boolean; hovered: boolean }> {
         const card = await this.getFirstVisibleIWantOriginalsCard();
         if (!card) return { visible: false, hovered: false };
-
         await card.scrollIntoViewIfNeeded();
         const target = await this.getIWantOriginalsCardInteractionTarget(card);
         if (!target) return { visible: false, hovered: false };
-
         await this.page.mouse.move(target.x, target.y);
         await this.page.waitForTimeout(800);
         return { visible: true, hovered: true };
@@ -1741,32 +1901,56 @@ export class OTTAuthPage {
     async clickFirstIWantOriginalsCard(): Promise<boolean> {
         const card = await this.getFirstVisibleIWantOriginalsCard();
         if (!card) return false;
-
         await card.scrollIntoViewIfNeeded();
         const target = await this.getIWantOriginalsCardInteractionTarget(card);
         if (!target) return false;
-
         await this.page.mouse.move(target.x, target.y);
         await this.page.waitForTimeout(400);
-
         logger.elementInteraction('click', 'first iWant Originals content card');
         try {
             await this.page.mouse.dblclick(target.x, target.y, { delay: 100 });
         } catch {
             await card.dblclick({ force: true, timeout: 20000 }).catch(() => undefined);
         }
-
         await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
         return true;
     }
 
     private getIWantOriginalsArrowLocator(direction: 'left' | 'right') {
-        const positionClass = direction === 'right' ? 'right-0' : 'left-0';
-        const selector = this.iWantOriginalsArrowSelectorTemplate.selector.replace('{positionClass}', positionClass);
         const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
         const rail = heading.locator(this.railAncestorSelector.selector).first();
-        return rail.locator(selector).first();
+        // Generic arrow candidates: images/icons/buttons commonly used for rails (configurable)
+        const candidateSelector = this.iWantOriginalsArrowCandidateSelector.selector;
+        const candidates = rail.locator(candidateSelector);
+        return (async () => {
+            const count = await candidates.count().catch(() => 0);
+            if (!count) return candidates.first();
+            let chosenIndex = 0;
+            let chosenX = Infinity;
+            for (let i = 0; i < count; i++) {
+                try {
+                    const el = candidates.nth(i);
+                    const box = await el.boundingBox().catch(() => null);
+                    if (!box) continue;
+                    const centerX = box.x + box.width / 2;
+                    if (direction === 'right') {
+                        if (centerX > (chosenX === Infinity ? -Infinity : chosenX)) {
+                            chosenIndex = i;
+                            chosenX = centerX;
+                        }
+                    } else {
+                        if (chosenX === Infinity || centerX < chosenX) {
+                            chosenIndex = i;
+                            chosenX = centerX;
+                        }
+                    }
+                } catch {
+                    continue;
+                }
+            }
+            return candidates.nth(chosenIndex);
+        })();
     }
 
     async getIWantOriginalsRailScrollLeft(): Promise<number> {
@@ -1795,20 +1979,62 @@ export class OTTAuthPage {
         if (!await rail.count()) {
             return false;
         }
-
         await rail.scrollIntoViewIfNeeded();
-        const arrowLocator = this.getIWantOriginalsArrowLocator(direction);
-        const arrowVisible = await arrowLocator.isVisible().catch(() => false);
-        if (!arrowVisible) {
+        // Attempt multiple strategies to cause the rail to scroll. Verify by checking
+        // `scrollLeft` before/after the interaction. Retry a few times before falling
+        // back to a direct `scrollLeft` assignment.
+        const beforeScroll = await rail.evaluate((el: HTMLElement) => el.scrollLeft).catch(() => 0);
+        // Resolve locator (may be a Promise because getIWantOriginalsArrowLocator is async)
+        const arrowLocatorAny: any = await this.getIWantOriginalsArrowLocator(direction).catch(() => null);
+        const attempts = 3;
+        for (let attempt = 1; attempt <= attempts; attempt += 1) {
+            try {
+                if (!arrowLocatorAny) throw new Error('arrow not found');
+                const visible = await arrowLocatorAny.isVisible().catch(() => false);
+                if (!visible) {
+                    // try hovering the rail center to reveal controls
+                    const railBox = await rail.boundingBox().catch(() => null);
+                    if (railBox) {
+                        await this.page.mouse.move(railBox.x + railBox.width / 2, railBox.y + railBox.height / 2);
+                        await this.page.waitForTimeout(300);
+                    }
+                }
+                // Prefer a real mouse click at the element's center (works with transforms/overlays)
+                const box = await arrowLocatorAny.boundingBox().catch(() => null);
+                if (box) {
+                    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+                    await this.page.waitForTimeout(150);
+                    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2, { delay: 50 });
+                } else {
+                    // Fallback to playright click
+                    await arrowLocatorAny.click({ force: true, timeout: 5000 }).catch(() => undefined);
+                }
+                await this.page.waitForTimeout(600);
+                const afterScroll = await rail.evaluate((el: HTMLElement) => el.scrollLeft).catch(() => 0);
+                if (afterScroll !== beforeScroll) {
+                    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
+                    return true;
+                }
+            } catch (err) {
+                logger.debug(`clickIWantOriginalsRailArrow attempt ${attempt} failed`, err);
+            }
+            // small backoff before retry
+            await this.page.waitForTimeout(400);
+        }
+        // Final fallback: perform a programmatic scroll of the rail element
+        try {
+            await rail.evaluate((el: HTMLElement, dir: string) => {
+                const amount = el.clientWidth * 0.6 * (dir === 'right' ? 1 : -1);
+                el.scrollBy({ left: amount, behavior: 'auto' });
+            }, direction).catch(() => undefined);
+            await this.page.waitForTimeout(400);
+            return true;
+        } catch (err) {
+            logger.debug('Final scrollLeft fallback failed', err);
             return false;
         }
-
-        await arrowLocator.hover({ timeout: 5000 }).catch(() => undefined);
-        await arrowLocator.click({ timeout: 10000 }).catch(() => undefined);
-        await this.page.waitForTimeout(1500);
-        await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => undefined);
-        return true;
     }
+
     async isGmaPinoyBundleMetadataVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.gmaPinoyBundleMetadata, 10000);
     }
@@ -1999,20 +2225,17 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
+        await this.page.waitForTimeout(2500);
+        const locator = this.page.locator(this.searchResultImages.selector).first();
+        const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();
-        const deadline = Date.now() + 15000;
-        while (Date.now() < deadline) {
-            const images = this.page.locator('img[alt]');
-            const count = await images.count().catch(() => 0);
-            for (let index = 0; index < count; index += 1) {
-                const altText = (await images.nth(index).getAttribute('alt').catch(() => '')) || '';
-                if (!normalizedQuery || altText.toLowerCase().includes(normalizedQuery)) {
-                    return true;
-                }
-            }
-            await this.page.waitForTimeout(500).catch(() => undefined);
+        logger.info(`Normalized query: ${normalizedQuery}`);
+        const normalizedAltText = (altText || '').toLowerCase();
+        logger.info(`Normalized alt text: ${normalizedAltText}`);
+        if (normalizedQuery) {
+            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
         }
-        return false;
+        return /(search|result|thumbnail|poster|image)/i.test(altText || '');
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
@@ -2151,11 +2374,9 @@ export class OTTAuthPage {
         logger.elementInteraction('retrieve', 'home page rail matches for Top 10 titles');
         try {
             const railMatches: Array<{ railName: string; contentTitle: string; hasTop10Tag: boolean }> = [];
-            console.log(railMatches);
             const rails = this.page.locator('div, section, article').filter({ has: this.page.locator('text=/Top|Trending|Continue|Watchlist|Streamed|Shows|Movies/i') }).filter({ hasNot: this.page.locator('text=/Sign Out|Account & Settings/i') });
-            console.log(rails);
             const railCount = await rails.count();
-            console.log(`Found ${railCount} rails on the home page`);
+            logger.info(`Found ${railCount} rails on the home page`);
             for (let railIndex = 0; railIndex < railCount; railIndex += 1) {
                 const rail = rails.nth(railIndex);
                 const railName = (await rail.locator('[class*="title"]').first().textContent()).trim();
@@ -2175,7 +2396,7 @@ export class OTTAuthPage {
                     }
                 }
             }
-            console.log(`Found ${railMatches.length} matching rails on the home page`);
+            logger.info(`Found ${railMatches.length} matching rails on the home page`);
             return railMatches;
         } catch (error) {
             logger.debug('Failed to retrieve home page rail matches for Top 10 titles', error);
@@ -2253,7 +2474,7 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.accountIcon);
     }
 
-    async  clicksynacorLogOutButton(): Promise<void>{
+    async clicksynacorLogOutButton(): Promise<void> {
         logger.elementInteraction('click', 'Logout icon');
         await this.pageUtils.safeClick(this.synacorLogOutButton);
     }
@@ -2269,6 +2490,16 @@ export class OTTAuthPage {
 
     async isAccountAndSettingsVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.accountAndSettingsOption, 10000);
+    }
+
+    async isEmailVisibleOnAccountPage(email: string): Promise<boolean> {
+        try {
+            const locator = this.page.getByText(email, { exact: false }).first();
+            await locator.waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     async clickAccountAndSettings(): Promise<void> {
@@ -2381,6 +2612,25 @@ export class OTTAuthPage {
         return await this.pageUtils.getTextContent(this.createAccountMarketingText, 10000);
     }
 
+    async fetchAndFillOtp(mailUsername: string, subjectContains: string = 'Verification Code'): Promise<string> {
+        logger.step('Fetching OTP from Yopmail');
+        const resolvedMailUsername = mailUsername.includes('@')
+            ? mailUsername.split('@')[0]
+            : mailUsername;
+        const otp = await getOtpFromYopmail((resolvedMailUsername), { subjectContains, });
+        logger.info(`Fetched OTP: ${otp}`);
+        const otpInputs = this.page.locator(this.otpInput.selector);
+        await otpInputs.first().waitFor({
+            state: 'visible',
+            timeout: 30000,
+        });
+        // Fill each OTP digit
+        for (const [index, digit] of [...otp].entries()) {
+            await otpInputs.nth(index).fill(digit);
+        }
+        return otp;
+    }
+
     async isVerifyOTPMessageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.verifyOTPMessage, 10000);
     }
@@ -2430,8 +2680,34 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.verifyButton, 10000);
     }
 
+    async clickVerifyButton(): Promise<void> {
+        logger.elementInteraction('click', 'Verify button');
+        await this.pageUtils.safeClick(this.verifyButton);
+    }
+
     async isBackToLoginLinkVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.backToLoginLink, 10000);
+    }
+
+    async isSetNewPasswordScreenVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.setNewPasswordHeading, 10000);
+    }
+
+    async getSetNewPasswordHeadingText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.setNewPasswordHeading, 10000);
+    }
+
+    async isPasswordResetSuccessMessageVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.passwordResetSuccessMessage, 10000);
+    }
+
+    async getPasswordResetSuccessMessageText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.passwordResetSuccessMessage, 10000);
+    }
+
+    async clickDoneButton(): Promise<void> {
+        logger.elementInteraction('click', 'Done button');
+        await this.pageUtils.safeClick(this.doneButton);
     }
 
     async selectCreateAccountMarketingCheckbox(): Promise<void> {
@@ -2541,7 +2817,6 @@ export class OTTAuthPage {
         if (firstNameErrorVisible || lastNameErrorVisible) {
             return true;
         }
-
         const helperText = await this.page.locator(this.profileValidationTextPattern.selector).first().count().catch(() => 0);
         return helperText > 0;
     }
@@ -2552,14 +2827,11 @@ export class OTTAuthPage {
         if (firstNameErrorText || lastNameErrorText) {
             return [firstNameErrorText, lastNameErrorText].filter(Boolean).join(' | ');
         }
-
         const fallbackText = await this.page.locator(this.profileValidationTextPattern.selector).first().textContent().catch(() => '');
         return fallbackText || '';
     }
 
-    async verifyTopContentsInRails(
-        top10Titles: string[]
-    ): Promise<
+    async verifyTopContentsInRails(top10Titles: string[]): Promise<
         Array<{
             railName: string;
             contentTitle: string;
@@ -2696,14 +2968,12 @@ export class OTTAuthPage {
         if (!this.continueWatchingListenerRegistered) {
             this.registerContinueWatchingListener();
         }
-
         if (!this.continueWatchingGraphQL) {
             const end = Date.now() + timeoutMs;
             while (!this.continueWatchingGraphQL && Date.now() < end) {
                 await this.page.waitForTimeout(500);
             }
         }
-
         if (!this.continueWatchingGraphQL) {
             logger.info("Continue Watching GraphQL was never captured.");
             return false;
@@ -2740,15 +3010,12 @@ export class OTTAuthPage {
         const cards = section.locator(this.continueWatchingCard.selector);
         const cardIndex = await this.findContinueWatchingCardIndex(found.item);
         const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
-
         if (await cards.count() <= selectedIndex) {
             logger.info("GraphQL index exceeds available UI cards.");
             return false;
         }
-
         const card = cards.nth(selectedIndex);
         await card.scrollIntoViewIfNeeded();
-
         const cardElement = await card.elementHandle().catch(() => null);
         const targetElement = cardElement
             ? await cardElement.evaluateHandle((element) => {
@@ -2773,7 +3040,6 @@ export class OTTAuthPage {
         } else {
             await card.click({ force: true, timeout: 30000 });
         }
-
         await this.page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForTimeout(3000);
         logger.info("Continue Watching content opened successfully.");
@@ -2812,7 +3078,6 @@ export class OTTAuthPage {
         const cards = section.locator(this.continueWatchingCard.selector);
         const cardIndex = await this.findContinueWatchingCardIndex(found.item);
         const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
-
         const count = await cards.count().catch(() => 0);
         if (selectedIndex >= count) {
             logger.info('GraphQL index exceeds available UI cards for hover.');
@@ -2855,11 +3120,9 @@ export class OTTAuthPage {
             item.showInfo?.title,
             item.title
         ].filter(Boolean).join(' '));
-
         const section = this.getContinueWatchingRailLocator();
         const cards = section.locator(this.continueWatchingCard.selector);
         const count = await cards.count().catch(() => 0);
-
         for (let index = 0; index < count; index += 1) {
             const card = cards.nth(index);
             const altText = (await card.getAttribute('alt')) || '';
@@ -2870,11 +3133,9 @@ export class OTTAuthPage {
                 ariaText,
                 textContent
             ].filter(Boolean).join(' '));
-
             if (!cardText) {
                 continue;
             }
-
             if (
                 (normalizedCombined && cardText.includes(normalizedCombined)) ||
                 (normalizedItemTitle && cardText.includes(normalizedItemTitle)) ||
@@ -2882,7 +3143,6 @@ export class OTTAuthPage {
             ) {
                 return index;
             }
-
             const searchTokens = normalizedCombined.split(' ').filter(Boolean);
             if (searchTokens.length > 1 && searchTokens.every(token => cardText.includes(token))) {
                 return index;
@@ -2890,70 +3150,4 @@ export class OTTAuthPage {
         }
         return undefined;
     }
-    async clickShowsTab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
-            await this.clickMobileMainMenu().catch(() => undefined);
-        }
-        logger.elementInteraction('click', 'Shows tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.showsTab);
-    }
-    async clickMobileMainMenu(): Promise<void> {
-    logger.elementInteraction('click', 'mobile main menu');
-    const locator = this.page.locator(this.mobileMainMenu.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 20000 });
-    await locator.click({ timeout: 20000, force: true });
-  }
-  async clickMyWatchlistTab(): Promise<void> {
-        // Watchlist tab doesn't exist in mweb
-        if (process.env.BROWSER === 'mchrome') {
-            logger.elementInteraction('skip', 'My Watchlist tab (not available in mweb)');
-            return;
-        }
-        logger.elementInteraction('click', 'My Watchlist tab');
-        const locator = this.page.locator(this.myWatchlistTab.selector);
-        await locator.waitFor({ state: 'attached', timeout: 15000 });
-        await locator.waitFor({ state: 'visible', timeout: 15000 });
-        await locator.scrollIntoViewIfNeeded();
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.myWatchlistTab);
-    }
- 
-    async clickGMATab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
-            await this.clickMobileMainMenu().catch(() => undefined);
-        }
-        logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.gmaTab);
-    }
- 
-    async clickMoviesTab(): Promise<void> {
-        logger.elementInteraction('click', 'Movies tab');
-        if (process.env.BROWSER === 'mchrome') {
-            await this.clickMobileMainMenu().catch(() => undefined);
-        }
-
-        // Try clicking the Movies tab and ensure the navigation/route change happens.
-        const maxAttempts = 3;
-        let lastErr: any = null;
-        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-            try {
-                await this.pageUtils.safeClick(this.moviesTab);
-                // wait briefly for client-side navigation
-                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
-                await this.pageUtils.waitForNetworkIdle(10000).catch(() => undefined);
-                const ready = await this.isMoviesPageReady();
-                if (ready) return;
-                // if not ready, try a forced click
-                lastErr = `Movies page not ready after click attempt ${attempt}`;
-            } catch (err) {
-                lastErr = err;
-            }
-            // short pause before retry
-            await this.page.waitForTimeout(1000);
-        }
-        logger.warn(`clickMoviesTab: could not confirm navigation to Movies page: ${String(lastErr)}`);
-    }
-
 }

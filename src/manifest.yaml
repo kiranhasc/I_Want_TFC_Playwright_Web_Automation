@@ -216,6 +216,62 @@
   dependsOn:
     - "login-to-ott"
 
+- id: "verify-sponsored-rail-visibility"
+  name: "Verify Sponsored Rail is Displayed on Home, Shows, Movies, GMA pages"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailVisibility"
+  tags:
+    - landing
+    - ads
+    - ui
+  testCases:
+    - "IW3-T2135"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-non-clickability"
+  name: "Verify Sponsored Rail is non-clickable except content cards"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailNonClickability"
+  tags:
+    - landing
+    - ads
+    - ui
+  testCases:
+    - "IW3-T2146"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-advertiser-logo"
+  name: "Verify advertiser logo is displayed on the CMS-configured Sponsored Rail"
+  path: "src/businessFunction/ott-landing-bfs.ts"
+  export: "verifySponsoredRailAdvertiserLogo"
+  tags:
+    - landing
+    - ads
+    - ui
+    - mweb
+  testCases:
+    - "IW3-T2137"
+  dependsOn:
+    - "login-to-ott"
+
+- id: "verify-sponsored-rail-content-details-navigation"
+  name: "Verify Sponsored Rail content navigates to the respective details page"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifySponsoredRailContentDetailsNavigation"
+  tags:
+    - playback
+    - landing
+    - ads
+    - navigation
+    - ui
+    - mweb
+  testCases:
+    - "IW3-T2149"
+  dependsOn:
+    - "login-to-ott"
+
 - id: "login-with-mobile-number"
   name: "Login with mobile number"
   path: "src/businessFunction/ott-auth-bfs.ts"
@@ -991,7 +1047,7 @@
     - navigation
     - ui
   testCases:
-    - "IW3-T2005"
+    - "end-to-end launch"
   dependsOn: []
 
 - id: "verify-parental-pin-invalid-password-error"
@@ -1957,6 +2013,7 @@
     - positive
   testCases:
     - "IW3-T1907"
+    - "IW3-T1975"
   dependsOn:
     - "login-to-ott"
 
@@ -2089,7 +2146,7 @@
     - playback
     - positive
   testCases:
-    - "IW3-T2116" 
+    - "IW3-T2117" 
 
 - id: "verify-next-episode-fullscreen-playback"
   name: "Verify next episode playback remains in fullscreen mode after selecting Up Next"
@@ -2099,7 +2156,7 @@
     - playback
     - positive
   testCases:
-    - "IW3-T2117"
+    - "IW3-T4013"
   dependsOn:
     - "login-to-ott"
 
@@ -2789,6 +2846,20 @@
     - "IW3-T2012"
   dependsOn:
     - "login-to-ott"
+
+- id: "verify-go-live-tag-after-pause"
+  name: "Verify Go Live tag after pausing live playback"
+  path: "src/businessFunction/ott-playback-bfs.ts"
+  export: "verifyGoLiveTagAfterPause"
+  tags:
+    - playback
+    - live-stream
+    - positive
+  testCases:
+    - "IW3-T2011"
+  dependsOn:
+    - "login-to-ott"
+  specFile: "tests/home/playback.spec.ts"
 
 - id: "verify-live-stream-seek-restriction"
   name: "Verify user cannot seek in a true live stream"

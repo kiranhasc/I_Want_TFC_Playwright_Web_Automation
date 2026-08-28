@@ -740,6 +740,7 @@ export class OTTAuthPage {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
+ 
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;
@@ -1037,14 +1038,27 @@ export class OTTAuthPage {
         await this.page.bringToFront();
         await this.page.waitForLoadState('domcontentloaded');
     }
-
+    
+        async isMobileMainMenuVisible(): Promise<boolean> {
+                return await this.pageUtils.isVisible(this.mobileMainMenu, 10000);
+        }
+ 
     async clickShowsTab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
+        if( process.env.BROWSER === 'mchrome' ){
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'Shows tab');
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.showsTab);
+    }
+ 
+    async clickGMATab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.gmaTab);
     }
 
     async clickMyWatchlistTab(): Promise<void> {
@@ -1058,15 +1072,6 @@ export class OTTAuthPage {
         await locator.scrollIntoViewIfNeeded();
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.myWatchlistTab);
-    }
-
-    async clickGMATab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
-            await this.clickMobileMainMenu();
-        }
-        logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.gmaTab);
     }
 
     async isSearchIconVisible(): Promise<boolean> {
@@ -2043,7 +2048,7 @@ export class OTTAuthPage {
         const normalizedAltText = (altText || '').toLowerCase();
         logger.info(`Normalized alt text: ${normalizedAltText}`);
         if (normalizedQuery) {
-            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+            return normalizedAltText.includes(normalizedQuery);
         }
         return /(search|result|thumbnail|poster|image)/i.test(altText || '');
     }

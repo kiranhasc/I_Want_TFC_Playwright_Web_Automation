@@ -2194,12 +2194,9 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
-  console.log('Clicked first episode card');
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
-  console.log('Waited for playback to start');
   await detailsPage.hoverPlaybackScreen();
-  console.log('Hovered over playback screen');
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
@@ -2316,12 +2313,10 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
   let nextEpisodePlaybackStarted = false;
   if (upNextMarkerVisible) {
     timeBeforeMarkerClick = await detailsPage.getTrimmedPlaybackTime();
-    console.log('Time before clicking Up Next marker:', timeBeforeMarkerClick);
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickUpNextMarker();
     await detailsPage.waitForPlayback(5);
     timeAfterMarkerClick = await detailsPage.getTrimmedPlaybackTime();
-    console.log('Time after clicking Up Next marker:', timeAfterMarkerClick);
     nextEpisodePlaybackStarted = timeBeforeMarkerClick !== timeAfterMarkerClick;
   }
   logger.assertion('Time before clicking Up Next marker is recorded', !!timeBeforeMarkerClick);
@@ -2879,7 +2874,6 @@ export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarP
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(7);
   await detailsPage.tapPlaybackScreen();
-  console.log('Tap on play back screen')
   const previewVisible = await detailsPage.hoverSeekBarAndWaitForPreview();
   logger.assertion('Seekbar preview becomes visible while scrubbing', previewVisible);
   return {
@@ -5314,15 +5308,11 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(20);
   await detailsPage.hoverPlaybackScreen();
-  console.log('Verifying playback pause functionality...');
   const playerVisible = await detailsPage.isPlayerScreenVisible();
-  console.log('Player screen visibility:', playerVisible);
   const initialPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Initial playback time:', initialPlaybackTime);
   await detailsPage.tapPlaybackScreen();
   await detailsPage.waitForPlayback(5);
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  console.log('Paused playback time:', pausedPlaybackTime);
   const playbackPaused = initialPlaybackTime === pausedPlaybackTime;
   logger.assertion('Player screen visible for pause verification flow', playerVisible);
   logger.assertion('Playback time remains unchanged after pause', playbackPaused);

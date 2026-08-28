@@ -713,7 +713,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
     const authPage = new OTTAuthPage(page);
     if (process.env.BROWSER === 'mchrome') {
         await authPage.navigate();
-        console.log('Skipping login for mchrome');
         logger.step('Skipping login for Mobile Web (mchrome)');
         const homeTabVisible = await authPage.isHomeTabVisible();
         return {
@@ -4035,7 +4034,6 @@ export async function verifyRegistrationNavigationToHomePage(page: any, input: V
         isMarketingCheckboxVisible,
         marketingText,
         isContinueButtonVisible,
-        
         isAccountHeadingVisible,
         isGeneratedEmailVisibleOnAccountPage
     };
@@ -4107,11 +4105,9 @@ export async function verifyRegistrationOTPScreen(
 ): Promise<VerifyRegistrationOTPScreenOutput> {
     const authPage = new OTTAuthPage(page);
     logger.step('Starting registration OTP screen validation flow');
-
     await authPage.navigate();
     await authPage.acceptCookieSettingsIfVisible();
     await authPage.openCreateAccountFlow();
-
     await authPage.enterCreateAccountEmail(input.email);
     await authPage.enterCreateAccountPassword(input.password);
     await authPage.enterCreateAccountConfirmPassword(input.confirmPassword ?? input.password);

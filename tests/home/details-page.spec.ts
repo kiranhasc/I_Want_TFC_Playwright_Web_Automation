@@ -121,7 +121,7 @@ test.describe('Content details navigation', () => {
     expect(result.subscriptionInstructionText.toLowerCase()).toContain('subscribe to watch');
   });
 
-  test('@High @mweb IW3-T1907: playback starts post tapping Play/Resume CTA', async ({ page }) => {
+  test('@High @mWeb IW3-T1907: playback starts post tapping Play/Resume CTA', async ({ page }) => {
     const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
     const result = await verifyPlaybackResumeFlow(page, {
       mode: data.mode,

@@ -734,7 +734,7 @@ export class OTTAuthPage {
         await locator.waitFor({ state: 'visible', timeout: 15000 });
         await locator.click({ timeout: 20000, force: true });
     }
-    
+
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
         if (process.env.BROWSER === 'mchrome') {
@@ -1293,7 +1293,7 @@ export class OTTAuthPage {
             }
         }
         const candidate = section.locator(`img[alt*="${title}"]`).first();
-        console.log("Candidate, ", candidate)
+        logger.info("Candidate, ", candidate)
         return await candidate.isVisible().catch(() => false);
     }
 
@@ -2039,9 +2039,9 @@ export class OTTAuthPage {
         const locator = this.page.locator(this.searchResultImages.selector).first();
         const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();
-        console.log(`Normalized query: ${normalizedQuery}`);
+        logger.info(`Normalized query: ${normalizedQuery}`);
         const normalizedAltText = (altText || '').toLowerCase();
-        console.log(`Normalized alt text: ${normalizedAltText}`);
+        logger.info(`Normalized alt text: ${normalizedAltText}`);
         if (normalizedQuery) {
             return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
         }
@@ -2184,11 +2184,9 @@ export class OTTAuthPage {
         logger.elementInteraction('retrieve', 'home page rail matches for Top 10 titles');
         try {
             const railMatches: Array<{ railName: string; contentTitle: string; hasTop10Tag: boolean }> = [];
-            console.log(railMatches);
             const rails = this.page.locator('div, section, article').filter({ has: this.page.locator('text=/Top|Trending|Continue|Watchlist|Streamed|Shows|Movies/i') }).filter({ hasNot: this.page.locator('text=/Sign Out|Account & Settings/i') });
-            console.log(rails);
             const railCount = await rails.count();
-            console.log(`Found ${railCount} rails on the home page`);
+            logger.info(`Found ${railCount} rails on the home page`);
             for (let railIndex = 0; railIndex < railCount; railIndex += 1) {
                 const rail = rails.nth(railIndex);
                 const railName = (await rail.locator('[class*="title"]').first().textContent()).trim();
@@ -2208,7 +2206,7 @@ export class OTTAuthPage {
                     }
                 }
             }
-            console.log(`Found ${railMatches.length} matching rails on the home page`);
+            logger.info(`Found ${railMatches.length} matching rails on the home page`);
             return railMatches;
         } catch (error) {
             logger.debug('Failed to retrieve home page rail matches for Top 10 titles', error);

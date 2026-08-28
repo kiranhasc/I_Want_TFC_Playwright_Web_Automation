@@ -140,7 +140,7 @@ test.describe('Home Page Launch', () => {
         expect(result.searchResultsDisplayed).toBe(data.expectedResultsPresent);
     });
 
-    test('@High @mweb IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
+    test('@High @mWeb IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
         test.setTimeout(90000)
         const data = testCaseData['tc-auth-016-application-version'];
         const result = await verifyApplicationVersion(page, {
@@ -151,7 +151,7 @@ test.describe('Home Page Launch', () => {
         expect(result.versionDisplayed).toBe(true);
     });
 
-    test('@High @mweb IW3-T4338: Verify search result will be displayed based on the search input text', async ({ page }) => {
+    test('@High @mWeb IW3-T4338: Verify search result will be displayed based on the search input text', async ({ page }) => {
         const data = testCaseData['tc-auth-013-terms-search-results'];
         const result = await searchFromTermsPage(page, {
             mode: data.mode,

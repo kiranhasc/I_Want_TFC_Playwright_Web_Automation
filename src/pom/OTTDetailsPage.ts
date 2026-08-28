@@ -847,7 +847,6 @@ export class OTTDetailsPage {
           nextElement = nextElement.nextElementSibling as HTMLElement | null;
         }
         const totalStyleSpacing = marginTop + marginBottom;
-        console.log({ marginTop, marginBottom, gapAbove, gapBelow, totalStyleSpacing });
         return (
           totalStyleSpacing > 12 ||
           gapAbove > 24 ||
@@ -1707,7 +1706,7 @@ export class OTTDetailsPage {
       await item.waitFor({ state: 'visible', timeout: 20000 });
       return true;
     } catch {
-      console.log(`Item not visible: ${contentTitle}`);
+      logger.info(`Item not visible: ${contentTitle}`);
       return false;
     }
   }
@@ -2947,7 +2946,7 @@ export class OTTDetailsPage {
         ?? firstAsset.pricing?.pricingType
         ?? '';
       logger.debug(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType='${monetType}'`);
-      console.log(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
+      logger.info(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
       const isFree = /complimentary|free|free_to_watch|freetowatch/i.test(String(monetType));
       return isFree;
     } catch (err) {
@@ -2967,7 +2966,7 @@ export class OTTDetailsPage {
         ?? firstAsset.pricing?.pricingType
         ?? '';
       logger.debug(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType='${monetType}'`);
-      console.log(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
+      logger.info(`[SEARCH DEBUG] First search result title: "${firstTitle}"; monetizationType: "${monetType}"`);
       const isPremium = /premium|paid|subscription|paywall|purchase/i.test(String(monetType));
       return isPremium;
     } catch (err) {
@@ -3019,10 +3018,10 @@ export class OTTDetailsPage {
   async isSearchResultTaggedWithLabel(labelText: string, contentTitle: string): Promise<boolean> {
     try {
       const normalizedLabel = String(labelText ?? '').trim().toLowerCase();
-      console.log('Checking if search result is tagged with label:', normalizedLabel);
+      logger.info('Checking if search result is tagged with label:', normalizedLabel);
       if (!normalizedLabel) return false;
       const tagImages = this.page.locator(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
-      console.log(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
+      logger.info(`//img[@alt='${contentTitle}']/parent::div/following-sibling::div/child::img`);
       await tagImages.first().waitFor({ state: 'visible', timeout: 20000 });
       const count = await tagImages.count();
       for (let index = 0; index < count; index += 1) {
@@ -3063,7 +3062,7 @@ export class OTTDetailsPage {
         ?? firstAsset.monetization?.monetizationType
         ?? '';
       logger.debug(`First search result monetization type: ${monetType}`);
-      console.log(`[SEARCH DEBUG] First search result monetization type: "${monetType}"`);
+      logger.info(`[SEARCH DEBUG] First search result monetization type: "${monetType}"`);
       return String(monetType ?? '');
     } catch (err) {
       logger.debug('getFirstSearchResultMonetizationType failed', err);
@@ -3190,8 +3189,7 @@ export class OTTDetailsPage {
       const imageTagLocator = await this.page.locator('//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]/img').first();
       const imageCount = await imageTagLocator.count();
       const altText = await this.normalizeText(await imageTagLocator.getAttribute('alt')).replace(/[^a-zA-Z0-9\s]/g, ' ');
-      console.log(altText);
-      console.log(normalizedLabel, 'normalizedLabel');
+      logger.info(normalizedLabel, 'normalizedLabel');
       if (altText.includes(normalizedLabel)) {
         if (await imageTagLocator.isVisible().catch(() => false)) {
           return true;
@@ -5158,13 +5156,13 @@ export class OTTDetailsPage {
     const adOverlay = this.page.locator('#ad-ui-overlay');
     while (true) {
       const adVisible = await adOverlay.isVisible().catch(() => false);
-      console.log(`Ad present: ${adVisible}`);
+      logger.info(`Ad present: ${adVisible}`);
       if (!adVisible) {
         break;
       }
       await adOverlay.waitFor({ state: 'hidden' });
     }
-    console.log('Ad has ended. Proceeding to next step.');
+    logger.info('Ad has ended. Proceeding to next step.');
   }
 
 }

@@ -1506,7 +1506,6 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
     await detailsPage.clickNextEpisodeButton();
     await page.waitForTimeout(1000);
     await detailsPage.clickSkipRecapMarker();
-    console.log('Clicked Skip Recap Marker');
     await page.waitForTimeout(5000);
     isSkipIntroMarkerVisible = await detailsPage.isSkipIntroMarkerVisible();
     if (isSkipIntroMarkerVisible) {

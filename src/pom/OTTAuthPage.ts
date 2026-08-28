@@ -637,6 +637,7 @@ export class OTTAuthPage {
             logger.debug('Mid rail ad visibility check failed', error);
             return false;
         }
+        return false;
     }
 
     async getApplicationVersionText(): Promise<string> {

@@ -2562,6 +2562,153 @@ This test plan covers validation of application launch behavior for the OTT plat
    * except Thumbnails should show correct 'Premium' Crown on search page (Use search graphql api response to validate field name : type, should be equal to Premium).
 5. Verify "crown" icon is displayed on the first content thumbnail  after search
 
+### 2.68. IW3-T1862 Verify the Navigation on entering OTP for the forgot password.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address  (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen
+
+### 2.69. IW3-T1863 Verify the UI/UX and "Forgot Password" functionality popup.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen 
+24. Click on the **Password** field.
+25. Enter a valid password (e.g., `iWant_tfc_004`).
+26. Click on the **Confirm Password** field.
+27. Enter the same password (e.g., `iWant_tfc_004`) in the **Confirm Password** field.
+28. Tap on "Proceed" CTA.
+    *expect:* User should see the popup message "New Password Set Successfully"
+29. Click on "Done" button
+   *expect:* user should be Navigated to "Login screen".
+
+### 2.70. IW3-T1866 Verify that user can able to login with new password credentials.
+
+**File:** `tests/home/registration-launch.spec.ts`
+
+**Steps:**
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+4. Click on the **Create Account** option.
+   *expect:* User should be navigated to the **Create an Account** screen.
+5. Click on the **Email Address** field.
+6. Enter a valid email address (email generated from randomYopmailAddress ).
+7. Click on the **Password** field.
+8. Enter a valid password (e.g., `Abcd@1234`).
+9. Click on the **Confirm Password** field.
+10. Enter the same password (e.g., `Abcd@1234`) in the **Confirm Password** field.
+11. Select the **"I agree to the Terms and Conditions and Privacy Policy."** checkbox.
+12. Select the **"I agree to receive marketing communications."** checkbox.
+13. Click the **Continue** button.
+    *expect:* User should be navigated to the **Verify OTP** screen.
+14. Fetch the OTP from the given email only and enter the OTP
+15. Click on Verify button
+    *expect:* User should be navigated to "Home" screen
+16. Click on Account Icon Button
+17. Tap on "Sign Out"
+   *expect:* user should be Navigated to "Login screen".
+18. Tap on "Forgot Password?"
+19. User should be navigated to "Forgot Password?" screen.
+      * expect "Confirm Email Address" page should be displayed
+20. Enter a valid email address (email generated from randomYopmailAddress ).
+21. Tap on "Proceed" CTA.
+22. Fetch the OTP from the given email only and enter the OTP
+23. Click on Verify button
+    *expect:* User should be navigated to "Set a New Password" screen 
+24. Click on the **Password** field.
+25. Enter a valid password (e.g., `iWant_tfc_004`).
+26. Click on the **Confirm Password** field.
+27. Enter the same password (e.g., `iWant_tfc_004`) in the **Confirm Password** field.
+28. Tap on "Proceed" CTA.
+    *expect:* User should see the popup message "New Password Set Successfully"
+29. Click on "Done" button
+   *expect:* user should be Navigated to "Login screen".
+30. Enter a valid email address (email generated from randomYopmailAddress ).
+31. Enter a valid password (e.g., `iWant_tfc_004`).
+32. Click on Continue button
+    *expect:* User should be navigated to "Home" screen
+33. Click on Account icon profile 
+34. Tap on "Account and Setting" option 
+    *expect*: User should navigate to "Account" page and the email(email generated from randomYopmailAddress ) used to create an account is displayed on the "Account" page
+
+#### 2.71. IW3-T2011 Verify that the 'Go Live' tag is displayed on the player screen when the user pause the content.
+
+**File:** `tests/home/playback.spec.ts`
+
+**Steps:**
+
+1. Open the browser.
+2. Enter the URL(https://iwanttfc.com/)
+3. Accept the cookie popup "Cookie & Notification    Settings" with "Confirm" button
+3. Click on Email field
+4. Enter valid email as "abhilash584@gmail.com" in email field.
+5. Click on Password field
+6. Enter valid password as "Test1234" in password field
+7. Tap on "Continue" button.
+8. Click on the "TFC Asia" live channel content in the home screen
+9. Click on pause button and wait for 5sec
+   *expect*: User should see the "Go Live" button displayed on the player screen  
+
+
 
 <!--### 3.2. NAV-002: Verify navigation to "Create an Account" screen on tapping "Create Account"
 

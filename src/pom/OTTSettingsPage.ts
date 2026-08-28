@@ -20,8 +20,6 @@ export class OTTSettingsPage {
     private readonly parentalPinSuccessHeader: PageElement;
     private readonly parentalPinSuccessDetails: PageElement;
     private readonly parentalPinSuccessContinueButton: PageElement;
-    
-
 
     constructor(page: Page) {
         this.page = page;
@@ -29,17 +27,15 @@ export class OTTSettingsPage {
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.accountAndSettingsLink = { selector: 'text=Account & Settings' };
         this.parentalControlsSection = { selector: '#parentalControls' };
-        // The parental control section contains both the toggle and an Edit button.
-        // Use a more specific selector to target only the round toggle button.
         this.parentalPinToggle = { selector: '#parentalControls >> button.relative.rounded-full.w-12.h-6' };
-        this.parentalPinPasswordField = { selector: '//input[@id="login-password-input"]'};
+        this.parentalPinPasswordField = { selector: 'role=textbox[name="Password"]'};
         this.passwordSubmitButton = { selector: 'role=button[name="Submit"]' };
         this.parentalPinSetupMessage = { selector: 'role=heading[name="Set an account owner PIN"]' };
         this.passwordVisibilityToggle = { selector: 'role=button[name="Toggle Password Visibility"]' };
         this.parentalPinErrorMessage = { selector: 'text=Invalid credentials. Please try again.' };
         this.parentalPinInputs = { selector: '.flex.flex-wrap.gap-2 input' };
         this.parentalPinSaveButton = { selector: 'role=button[name="Save"]' };
-        this.parentalPinSuccessHeader = { selector: '//h1[text()="Parental Controls Updated"]' };
+        this.parentalPinSuccessHeader = { selector: 'text=Parental Controls Updated' };
         this.parentalPinSuccessDetails = { selector: 'text=Your changes to the parental controls have been saved successfully.' };
         this.parentalPinSuccessContinueButton = { selector: 'role=button[name="Continue Button"]' };
     }
@@ -240,21 +236,17 @@ export class OTTSettingsPage {
             if (count < 4) {
                 return false;
             }
-
             for (let i = 0; i < 4; i++) {
                 const input = inputs.nth(i);
                 await input.click();
                 await input.fill('');
-
                 // Letter input should not be accepted
                 await input.type('a');
                 const letterValue = await input.inputValue().catch(() => '');
                 if (letterValue !== '') {
                     return false;
                 }
-
                 await input.fill('');
-
                 // Numeric input should be accepted
                 await input.type('1');
                 const numericValue = await input.getAttribute('pattern').catch(() => '');
@@ -263,7 +255,6 @@ export class OTTSettingsPage {
                 }
                 await input.fill('');
             }
-
             return true;
         } catch {
             return false;

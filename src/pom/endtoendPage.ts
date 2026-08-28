@@ -23,10 +23,8 @@ export class EndToEndPage {
     this.playButton = { selector: '//*[@id="player-container-main-playPauseButton"]' };
     // this.playButton = { selector: '#play div' };
     this.logoIcon = { selector: '.logo' }
-    // this.resumeButton = { selector: 'button:has-text("Resume"), a:has-text("Resume")' };
     this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
     this.shareIcon = { selector: '//*[@id="share"]' };
-    // this.shareIcon = { selector: 'button[aria-label*=share], button:has-text("Share"), [data-testid*=share]' };
     this.pausePlayButton = { selector: 'button[aria-label*=pause], button[aria-label*=play], [data-testid*=pause], [data-testid*=play]' };
   }
 

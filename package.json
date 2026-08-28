@@ -5,6 +5,7 @@
   "scripts": {
     "test:dev": "cross-env TEST_ENV=dev npx playwright test",
     "test:qa": "cross-env TEST_ENV=qa npx playwright test",
+    "test:mchrome": "cross-env BROWSER=mchrome playwright test --workers=1 --headed",
     "test:prod": "cross-env TEST_ENV=prod npx playwright test --headed --workers=1",
     "test:mweb": "cross-env TEST_ENV=prod BROWSER=mchrome npx playwright test --headed --workers=1 --grep @mWeb",
     "test:file:prod": "cross-env TEST_ENV=prod npx playwright test",

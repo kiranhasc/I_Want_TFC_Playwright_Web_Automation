@@ -31,6 +31,28 @@
         "providerName": "Frontier, a Verizon Company",
         "mode": "provider"
     },
+    "tc-auth-020-forgot-password-otp": {
+        "password": "Abcd@1234",
+        "expectedMarketingText": "I agree to receive marketing communications",
+        "expectedOTPHeading": "Verify your identity",
+        "expectedNewPasswordHeading": "Set a New Password"
+    },
+        "tc-auth-021-forgot-password-reset-popup": {
+        "password": "Abcd@1234",
+        "newPassword": "iWant_tfc_004",
+        "expectedMarketingText": "I agree to receive marketing communications",
+        "expectedOTPHeading": "Verify your identity",
+        "expectedNewPasswordHeading": "Set a New Password",
+        "expectedSuccessMessage": "New Password Set Successfully"
+    },
+    "tc-auth-022-reset-password-login": {
+        "password": "Abcd@1234",
+        "newPassword": "iWant_tfc_004",
+        "expectedMarketingText": "I agree to receive marketing communications",
+        "expectedOTPHeading": "Verify your identity",
+        "expectedNewPasswordHeading": "Set a New Password",
+        "expectedSuccessMessage": "New Password Set Successfully"
+    },
     "tc-ad-001-mid-rail-spacing": {
         "mode": "freeUser"
     },
@@ -263,7 +285,7 @@
     },
     "tc-disc-004-skip-intro": {
         "mode": "valid",
-        "searchTerm": "Incognito"
+        "searchTerm": "Lavender Fields"
     },
     "tc-disc-004-player-close-return": {
         "mode": "valid"
@@ -574,6 +596,10 @@
         "graphqlQueryName": "Collection"
     },
     "tc-sub-010-go-live-playback": {
+        "mode": "valid",
+        "channelName": "TFC Asia"
+    },
+    "tc-sub-043-go-live-tag-pause": {
         "mode": "valid",
         "channelName": "TFC Asia"
     },
@@ -923,7 +949,7 @@
     },
     "tc-nav-017-search-invalid-suggestions": {
         "mode": "valid",
-        "query": "dcwh 123",
+        "query": "dcwhch 1234",
         "validationType": "Partial"
     },
     "tc-nav-018-search-live-content-exclusion": {

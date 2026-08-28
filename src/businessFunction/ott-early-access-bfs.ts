@@ -24,6 +24,7 @@ export interface VerifyEarlyAccessOutput {
 }
 
 export interface VerifyEarlyAccessUpgradePromptInput extends VerifyEarlyAccessInput {
+    recentlyAddedAttributeValue?: string;
     expectedUpgradeTitle: string;
     expectedUpgradeDescription: string;
     expectedMaybeLaterText: string;
@@ -35,6 +36,7 @@ export interface VerifyEarlyAccessUpgradePromptOutput {
     foundInGraphQL: boolean;
     upgradeIconVisible: boolean;
     titleVisible: boolean;
+    titleText: string;
     descriptionVisible: boolean;
     maybeLaterVisible: boolean;
     upgradeCtaVisible: boolean;
@@ -83,15 +85,22 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
     const loggedIn = login.isLoggedIn;
     let foundInGraphQL = false;
     let upgradeIconVisible = false;
-    let titleVisible: boolean;
-    let descriptionVisible: boolean;
-    let maybeLaterVisible: boolean;
-    let upgradeCtaVisible: boolean;
+    let titleVisible = false;
+    let titleText = '';
+    let descriptionVisible = false;
+    let maybeLaterVisible = false;
+    let upgradeCtaVisible = false;
     if (loggedIn) {
         logger.step('Waiting for Collection GraphQL operation');
         const collectionResponse = await gql.waitForOperation(input.graphqlQueryName);
         const parser = new CollectionParser(collectionResponse as any);
-        const found = parser.findAssetByLabel(input.labelText);
+        const collectionFound = parser.findAssetByLabel(input.labelText);
+        const domFound = collectionFound
+            ? null
+            : await earlyAccessPage.findAssetByBadge(input.earlyAccessAttributeValue);
+        const found = collectionFound ?? (domFound
+            ? { rail: { title: domFound.railTitle }, asset: { title: domFound.assetTitle } }
+            : null);
         if (found) {
             foundInGraphQL = true;
             const railName = found.rail.title;
@@ -99,17 +108,36 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
             logger.info(`Early Access candidate found in rail: ${railName}`);
             logger.info(`Early Access asset title: ${assetTitle}`);
             await earlyAccessPage.scrollToRail(railName);
-            const assetLocator = await earlyAccessPage.findAssetLocatorByTitle(assetTitle);
+            const assetLocator = await earlyAccessPage.findAssetLocatorByTitle(
+                assetTitle,
+                input.earlyAccessAttributeValue,
+                input.recentlyAddedAttributeValue
+            );
             const labelVisible = await earlyAccessPage.isLabelVisibleForAsset(assetLocator, input.earlyAccessAttributeValue);
             if (labelVisible) {
                 await page.waitForTimeout(5000)
-                await earlyAccessPage.openAssetDetails(assetTitle);
+                await earlyAccessPage.openAssetDetails(assetTitle, input.earlyAccessAttributeValue);
                 await page.waitForTimeout(5000)
+                const detailsPageVisible = await new OTTDetailsPage(page).isShowDetailsPageVisible();
+                logger.assertion('Early Access content details page visible', detailsPageVisible);
+                if (!detailsPageVisible) {
+                    return {
+                        loggedIn: true,
+                        foundInGraphQL: true,
+                        upgradeIconVisible: false,
+                        titleVisible: false,
+                        titleText: '',
+                        descriptionVisible: false,
+                        maybeLaterVisible: false,
+                        upgradeCtaVisible: false,
+                    };
+                }
                 const playClicked = await earlyAccessPage.openLatestEarlyAccessEpisode(input.earlyAccessAttributeValue);
                 if (playClicked) {
                     const promptResult = await earlyAccessPage.verifyUpgradePromptMessage();
                     upgradeIconVisible = promptResult.upgradeIconVisible;
                     titleVisible = promptResult.titleVisible;
+                    titleText = promptResult.titleText;
                     descriptionVisible = promptResult.descriptionVisible;
                     maybeLaterVisible = promptResult.maybeLaterVisible;
                     upgradeCtaVisible = promptResult.upgradeCtaVisible;
@@ -132,6 +160,7 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
         foundInGraphQL,
         upgradeIconVisible,
         titleVisible,
+        titleText,
         descriptionVisible,
         maybeLaterVisible,
         upgradeCtaVisible,
@@ -186,6 +215,7 @@ export interface VerifyEarlyAccessContinueWatchingOutput {
 export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: any, input: VerifyEarlyAccessInput): Promise<VerifyEarlyAccessContinueWatchingOutput> {
     const earlyAccessPage = new OTTEarlyAccessPage(page);
     const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
     const playbackPage = new OTTPlaybackPage(page);
     const gql = GraphQLHelper.getInstance(page);
     logger.step('Logging in before verifying the Early Access Continue Watching scenario');
@@ -215,17 +245,36 @@ export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: 
         return { loggedIn: true, foundInGraphQL: true, assetVisibleInContinueWatching: false };
     }
     await earlyAccessPage.openAssetDetails(assetTitle);
-    await earlyAccessPage.isEpisodeLabelVisible(input.earlyAccessAttributeValue);
     const playClicked = await earlyAccessPage.openLatestEarlyAccessEpisode(input.earlyAccessAttributeValue);
     if (!playClicked) {
         logger.assertion('Could not open the latest Early Access episode', false);
         return { loggedIn: true, foundInGraphQL: true, assetVisibleInContinueWatching: false };
     }
-    await playbackPage.clickFirstAvailablePlayButton().catch(() => undefined);
-    await page.waitForTimeout(30000);
-    await page.reload()
-    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-    await authPage.waitForContinueWatchingTrayToBeReady(60000);
+    await playbackPage.clickFirstAvailablePlayButton(15000).catch(() => undefined);
+    const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
+    logger.assertion('Early Access episode player visible', playerVisible);
+    if (!playerVisible) {
+        return { loggedIn: true, foundInGraphQL: true, assetVisibleInContinueWatching: false };
+    }
+
+    await detailsPage.hoverPlaybackControls();
+    await detailsPage.dragSeekBarToPosition(0.7);
+    logger.step('Allowing Early Access playback to continue for 15 seconds after seeking');
+    await page.waitForTimeout(15000);
+
+    await detailsPage.hoverPlaybackControls();
+    await detailsPage.clickBackButton();
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+    const detailsVisibleAfterExit = await detailsPage.isShowDetailsPageVisible().catch(() => false);
+    logger.assertion('Returned to content details page after playback', detailsVisibleAfterExit);
+
+    await authPage.navigateHome();
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+    const trayReady = await authPage.ensureContinueWatchingTrayInView(15000);
+    if (!trayReady) {
+        logger.info('Continue Watching tray is not present after playback; Early Access asset is therefore absent');
+        return { loggedIn: true, foundInGraphQL: true, assetVisibleInContinueWatching: false };
+    }
     const itemStatus = await authPage.isContinueWatchingItemVisibleWithTag(assetTitle, input.earlyAccessAttributeValue);
     const visibleInContinueWatching = itemStatus.visible && itemStatus.hasTag;
     logger.assertion('The played asset should not be shown with the Early Access badge in Continue Watching tray', !visibleInContinueWatching);

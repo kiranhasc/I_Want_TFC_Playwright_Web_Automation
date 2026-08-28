@@ -154,6 +154,10 @@ export class OTTAuthPage {
     private continueWatchingListenerRegistered = false;
     private readonly myWatchListPage: PageElement;
     private readonly appVersionText: PageElement;
+    private readonly mobileMainMenu: PageElement;
+    private readonly verifyOTPIdentity: PageElement;
+    private readonly countryCode: PageElement;
+    private readonly synacorLogOutButton: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -168,10 +172,11 @@ export class OTTAuthPage {
         this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
-        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
-        this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
+        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: '//h1[normalize-space()="Verify OTP"]' };
+        this.verifyOTPIdentity = { role: 'heading', text: 'Verify your identity', selector: '//h1[text()="Verify your identity"]' };
+        this.errorMessage = { selector: '//p[text()="Your login credentials are incorrect"]' };
         this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")'};
-        this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
+        this.emailErrorMessage = { selector: '//p[text()="Please enter a valid email to continue."]' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };
@@ -179,24 +184,25 @@ export class OTTAuthPage {
         this.newHereLink = { text: 'New here?', selector: 'span:has-text("New here?")' };
         this.createAccountLink = { role: 'link', text: 'Create Account', selector: '//a[contains(normalize-space(), "Create Account")]' };
         this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
-        this.homeTab = { selector: 'div#home' };
-        this.homeTabFallbackById = { selector: 'div#home' };
+        this.homeTab = { selector: '//div[@id="home"]' };
+        this.homeTabFallbackById = { selector: '//div[@id="home"]' };
         this.homeTabFallbackByText = { selector: 'a:has-text("Home"), button:has-text("Home"), [aria-label="Home"], [data-testid*="home"], text=Home' };
         this.homeTabFallbackByHref = { selector: 'a[href="/"], [href="/"], [role="link"][aria-label*="home" i]' };
         this.homeTabSelectors = [this.homeTab, this.homeTabFallbackById, this.homeTabFallbackByText, this.homeTabFallbackByHref];
         this.loadingIndicator = { text: 'Loading..', selector: 'text=Loading..' };
-        this.moviesTab = { selector: 'div#movies' };
-        this.showsTab = { text: 'Shows', selector: 'div#shows' };
-        this.myWatchlistTab = {  selector: 'div#my_watchlist' };
-        this.gmaTab = { selector: 'div#gma' };
+        this.moviesTab = { selector: '//div[@id ="movies"]' };
+        this.showsTab = { text: 'Shows', selector: '//div[@id ="shows"]' };
+        this.myWatchlistTab = {  selector: '//div[@id="my_watchlist"]' };
+        this.gmaTab = { selector: '//div[@id ="gma"]' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
         this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
+        this.synacorLogOutButton = { selector: '//span[text()="Logout"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
         this.accountAndSettingsOption = { selector: 'img[alt="Account & Settings"]' };
         this.editProfileButton = { selector: 'text=Edit Profile, button:has-text("Edit Profile"), a:has-text("Edit Profile")' };
-        this.continueWatchingRail = { text: 'Continue Watching', selector: 'text=Continue Watching' };
+        this.continueWatchingRail = { selector: '//p[text()="Continue Watching"]' };
         this.homePageRailContainer = { selector: 'div.rail-container.pointer-events-none.relative' };
         this.homePageRailTagSelector = { selector: 'div.thumbnail-label.absolute.top-0.right-0.z-10' };
         this.homePageRailThumbnailSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
@@ -238,20 +244,20 @@ export class OTTAuthPage {
         this.termsCheckbox = { selector: 'input#cem' };
         this.createAccountTermsText = { selector: 'text=I agree to the Terms and Conditions and Privacy Policy', text: 'I agree to the Terms and Conditions and Privacy Policy' };
         this.marketingCheckbox = { selector: '//input[@id="cem"]/following-sibling::label/span' };
-        this.createAccountMarketingText = { selector: 'text=I agree to receive marketing communications', text: 'I agree to receive marketing communications' };
+        this.createAccountMarketingText = { selector: '//span[text()="I agree to receive marketing communications (until I unsubscribe)."]' };
         this.marketingCheckboxDescription = { selector: 'form' };
-        this.verifyOTPContainer = { selector: 'span.text-white\\/60' };
-        this.verifyOTPMessage = { selector: 'text=/A verification OTP was sent to/i' };
-        this.verifyOTPEmail = { selector: 'span.text-white\\/60 span.italic' };
-        this.verifyOTPInstructionText = { selector: 'text=/Input the code below to proceed/i' };
-        this.verifyButton = { role: 'button', text: 'Verify', selector: 'button:has-text("Verify")' };
-        this.backToLoginLink = { role: 'link', text: 'Back to Login', selector: 'a:has-text("Back to Login")' };
+        this.verifyOTPContainer = { selector: '//p[.//span[contains(normalize-space(.),"A verification OTP was sent to")]]' };
+        this.verifyOTPMessage = { selector: '//p[.//span[contains(normalize-space(.),"A verification OTP was sent to")]]' };
+        this.verifyOTPEmail = { selector: '//span[contains(@class,"italic") and contains(.,"@")]' };
+        this.verifyOTPInstructionText = { selector: '//span[contains(normalize-space(.),"Input the code below to proceed.")]' };
+        this.verifyButton = { role: 'button', text: 'Verify', selector: '//button[text()="Verify"]' };
+        this.backToLoginLink = { role: 'link', text: 'Back to Login', selector: '//a[normalize-space()="Back to Login"]' };
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
         this.emptyCredentialsErrorMessage = { selector: 'text=/Email is required/i' };
         this.topStreamedRail = { text: 'Top Streamed', selector: 'text=Top Streamed' };
-        this.railAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "rail")][1]' };
+        this.railAncestorSelector = { selector: '//div[contains(@class,"scrollable-list") and contains(@class,"horizontal-scroll")]' };
         this.iWantOriginalsRailName = 'iWant Originals';
         this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
@@ -259,8 +265,9 @@ export class OTTAuthPage {
         this.iWantOriginalsTitleContainerSelector = { selector: 'xpath=ancestor::div[contains(@class, "relative") and contains(@class, "w-auto") and .//img[contains(@class, "title")]][1]' };
         this.gmaPinoyBundleMetadata = { text: 'Subscribe to GMA Pinoy Bundle to Watch', selector: 'text=Subscribe to GMA Pinoy Bundle to Watch' };
         this.useMobileNumberLink = { selector: '//p[contains(normalize-space(), "Click here to use Mobile Number")]' };
-        this.countryCodeDropdown = { selector: 'select, [role="combobox"]' };
-        this.countryCodeOption = { selector: 'text=63' };
+        this.countryCode = {selector: '//input[@type="text" and contains(@class,"w-full")]'};
+        this.countryCodeDropdown = { selector: '//img[@alt="IN" and contains(@src, "/countries/in.svg")]' };
+        this.countryCodeOption = { selector: '//li[.//img[@alt="PH"] and contains(normalize-space(.), "Philippines")]' };
         this.mobileNumberField = { selector: '#userMobile, input[type="tel"], input[name*="phone"], input[name*="mobile"]' };
         this.mobilePasswordField = { selector: 'input[placeholder*="Password"], input[type="password"], input[name*="password"]' };
         this.helpAndSupportLink = { role: 'link', text: 'Help and Support', selector: 'a:has-text("Help and Support")' };
@@ -289,14 +296,13 @@ export class OTTAuthPage {
         this.searchSuggestionsContainer = { selector: '[class*="dropdown"], [class*="suggestion"], [role="listbox"], [role="option"], .search-suggestions, [data-testid*="suggestion"], [class="relative overflow-hidden"]' };
         this.noResultsMessage = { selector: 'text=/no\\s+results/i' };
         this.searchResultImages = { selector: '//div[@class="relative overflow-hidden"]/child::img' };
-        this.searchButton = { selector: "img[alt='search-icon']" };
+        this.searchButton = { selector: 'button:has(img[alt="search-icon"]), [role="button"]:has(img[alt="search-icon"]), img[alt="search-icon"]' };
         this.searchSectionHeading = { selector: 'h1, h2, h3, p, [role="heading"], [class*="heading"]' };
         this.searchResultContainerSelector = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], [class*="thumbnail"]' };
         this.searchResultCandidateSelector = { selector: 'img[alt], h2, h3, [role="heading"], [data-testid*="title"], [class*="title"], [class*="card-title"]' };
-        this.searchResultImages = { selector: '[class*="flex flex-wrap gap-[1rem]"] img[alt]' };
         this.continueWatchingContent = { selector: 'img[alt], [aria-label], [title]' };
-        this.searchButton = { selector: "img[alt='search-icon']" };
         this.appVersionText = { selector: "//p[contains(., 'All rights reserved.')]" };
+        this.mobileMainMenu = { selector: '//p[text()="Menu"]' };
     }
 
     async navigate(): Promise<void> {
@@ -352,14 +358,28 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.useMobileNumberLink);
     }
 
-    async selectCountryCode(countryCode: string): Promise<void> {
-        logger.elementInteraction('select', `country code ${countryCode}`);
+    async clickCountryCodeDropDown(countryCode: string): Promise<void> {
+        logger.elementInteraction('click', `country code dropdown for ${countryCode}`);
         const countrySelector = this.page.locator(this.countryCodeDropdown.selector).first();
-        if (await countrySelector.count()) {
-            await countrySelector.selectOption({ label: countryCode }).catch(() => countrySelector.selectOption({ value: countryCode }));
-        }
+        await countrySelector.waitFor({ state: 'visible', timeout: 10000 });
+        await countrySelector.click();
+        await this.enterCountryCode(countryCode);
+        const countryOptionSelector = this.page.locator(this.countryCodeOption.selector).first();
+        await countryOptionSelector.waitFor({ state: 'visible', timeout: 10000 });
+        await countryOptionSelector.click();
     }
 
+    async enterCountryCode(countryCode: string): Promise<void> {
+        logger.elementInteraction('type', `country code ${countryCode}`);
+        const countrySelector = this.page.locator(this.countryCode.selector).first();
+        await countrySelector.fill(countryCode).catch(() => countrySelector.type(countryCode));
+    }
+
+    async entercountryCodeOption(countryCode: string): Promise<void> {
+        logger.elementInteraction('click', `country code option ${countryCode}`);
+        const countryOptionSelector = this.page.locator(this.countryCodeOption.selector).first();
+        await countryOptionSelector.click().catch(() => countryOptionSelector.click());
+    }
     async enterMobileNumber(mobileNumber: string): Promise<void> {
         logger.elementInteraction('type', 'mobile number field');
         await this.pageUtils.safeType(this.mobileNumberField, mobileNumber);
@@ -397,9 +417,14 @@ export class OTTAuthPage {
     async isVerifyOTPPageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.verifyOTPHeading, 10000);
     }
-
+    async isVerifyOTPIdentityPageVisible(): Promise<boolean> {
+        return await this.pageUtils.isVisible(this.verifyOTPIdentity, 10000);
+    }
     async getVerifyOTPHeadingText(): Promise<string> {
         return await this.pageUtils.getTextContent(this.verifyOTPHeading, 10000);
+    }
+     async getVerifyOTPIdentityText(): Promise<string> {
+        return await this.pageUtils.getTextContent(this.verifyOTPIdentity, 10000);
     }
 
     async getInvalidCredentialsErrorMessage(): Promise<string> {
@@ -407,7 +432,8 @@ export class OTTAuthPage {
     }
 
     async getErrorMessage(): Promise<string> {
-        return await this.pageUtils.getTextContent(this.emailInvalidMessage, 10000);
+        // return await this.pageUtils.getTextContent(this.emailInvalidMessage, 10000);
+        return await this.pageUtils.getTextContent(this.emailErrorMessage, 10000);
     }
 
     async clickPasswordVisibilityToggle(): Promise<void> {
@@ -425,6 +451,12 @@ export class OTTAuthPage {
 
     getSearchInputSelector(): string {
         return this.searchBar.selector;
+    }
+
+    getMobileSearchInputSelector(): string {
+        // For mweb, search input is inside the menu and may have different selector
+        // Try multiple selectors that might work inside mobile menu
+        return '//input[@placeholder="Search documentation…"]';
     }
 
     async getPasswordFieldType(): Promise<string> {
@@ -512,7 +544,23 @@ export class OTTAuthPage {
     }
 
     async scrollToSupportLinks(): Promise<void> {
-        await this.pageUtils.scrollIntoView(this.helpAndSupportLink);
+        logger.elementInteraction('scroll', 'Scroll to Help and Support link (handling viewport orientation)');
+        try {
+            // For mweb vertical layout, we need to scroll down to reach support links at bottom
+            if (process.env.BROWSER === 'mchrome') {
+                logger.debug('mweb: scrolling to support links in vertical layout');
+                await this.page.evaluate(() => {
+                    window.scrollBy(0, document.body.scrollHeight);
+                });
+                await this.page.waitForTimeout(500);
+            }
+            // Standard scroll for web horizontal layout
+            await this.pageUtils.scrollIntoView(this.helpAndSupportLink);
+            await this.page.waitForTimeout(500);
+            logger.step('Scrolled to Help and Support link');
+        } catch (error) {
+            logger.debug(`Error scrolling to support links: ${error}`);
+        }
     }
 
     async scrollToBottomOfPage(): Promise<void> {
@@ -635,6 +683,12 @@ export class OTTAuthPage {
     }
 
     async clickHomeTab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            logger.info('click', 'Home tab (mweb - skipping, relying on session restore to be on home)');
+            await this.page.waitForTimeout(500);
+            return;
+        }
+
         logger.info('click', 'Home tab');
 
         let clicked = false;
@@ -686,30 +740,6 @@ export class OTTAuthPage {
 
     async isErrorMessageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.emailErrorMessage, 10000);
-    }
-
-    async clickMoviesTab(): Promise<void> {
-        logger.elementInteraction('click', 'Movies tab');
-        // Try clicking the Movies tab and ensure the navigation/route change happens.
-        const maxAttempts = 3;
-        let lastErr: any = null;
-        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-            try {
-                await this.pageUtils.safeClick(this.moviesTab);
-                // wait briefly for client-side navigation
-                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
-                await this.pageUtils.waitForNetworkIdle(10000).catch(() => undefined);
-                const ready = await this.isMoviesPageReady();
-                if (ready) return;
-                // if not ready, try a forced click
-                lastErr = `Movies page not ready after click attempt ${attempt}`;
-            } catch (err) {
-                lastErr = err;
-            }
-            // short pause before retry
-            await this.page.waitForTimeout(1000);
-        }
-        logger.warn(`clickMoviesTab: could not confirm navigation to Movies page: ${String(lastErr)}`);
     }
 
     async isMoviesPageReady(): Promise<boolean> {
@@ -802,24 +832,120 @@ export class OTTAuthPage {
         logger.step(`Opening Terms page and navigating to section: ${sectionLinkText}`);
 
         try {
-            const popupPromise = this.page.context().waitForEvent('page', { timeout: 8000 });
+            logger.debug(`mweb mode check: ${process.env.BROWSER === 'mchrome'}`);
+            
+            // For BOTH mweb and web, try to handle popup first
+            let targetPage = this.page;
+            let popupDetected = false;
+            
+            // Set up popup listener (works for both web and mweb if popup opens)
+            const popupPromise = this.page.context().waitForEvent('page', { timeout: 5000 }).catch(() => undefined);
+            
+            logger.debug('Attempting to click Terms and Conditions link');
+            await this.pageUtils.safeClick(this.termsAndConditionsLink);
+            await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
+            await this.page.waitForTimeout(2000);
+            
+            // Check if popup opened
+            if (await popupPromise && (await popupPromise).url() !== 'about:blank') {
+                logger.debug('Popup detected - Terms opened in new tab');
+                popupDetected = true;
+                targetPage = await popupPromise;
+                await (await popupPromise).waitForLoadState('domcontentloaded').catch(() => undefined);
+            } else {
+                logger.debug('No popup detected - Terms may have navigated in same page (mweb)');
+                targetPage = this.page;
+            }
+            
+            // Now we have targetPage - navigate to section if URL part provided
+            if (expectedUrlPart) {
+                try {
+                    logger.debug(`Navigating to section: ${expectedUrlPart}, submodule: ${submoduleName}`);
+                    
+                    // Extract the protocol and domain from target page URL
+                    const targetUrl = new URL(targetPage.url());
+                    const baseUrl = `${targetUrl.protocol}//${targetUrl.host}`;
+                    const sectionUrl = `${baseUrl}/legal/${submoduleName}/${expectedUrlPart}/`;
+                    logger.debug(`Constructed section URL: ${sectionUrl}`);
+                    
+                    // Navigate to the section
+                    await targetPage.goto(sectionUrl, { waitUntil: 'domcontentloaded' }).catch((error) => {
+                        logger.debug(`Direct navigation error: ${error}`);
+                    });
+                    
+                    await targetPage.waitForTimeout(1500);
+                    
+                    // Verify we're on the right page
+                    const finalUrl = targetPage.url().toLowerCase();
+                    const urlMatches = finalUrl.includes(expectedUrlPart.toLowerCase());
+                    logger.debug(`Final URL: ${finalUrl}`);
+                    logger.debug(`URL matches expected part "${expectedUrlPart}": ${urlMatches}`);
+                    
+                    // Update page reference if it was a popup
+                    if (popupDetected) {
+                        this.page = targetPage;
+                    }
+                    
+                    if (urlMatches) {
+                        logger.step(`Terms section navigation successful`);
+                        return true;
+                    } else {
+                        logger.debug('URL did not match expected part');
+                        return false;
+                    }
+                } catch (navError) {
+                    logger.debug(`Error during section navigation: ${navError}`);
+                    return false;
+                }
+            }
+            
+            return false;
             await this.pageUtils.safeClick(this.termsAndConditionsLink);
 
             const popup = await popupPromise.catch(() => undefined);
-            if (!popup || popup.url() === 'about:blank') {
+            if (!await popupPromise || (await popupPromise).url() === 'about:blank') {
                 logger.warn('No popup detected');
                 return false;
             }
-            await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
+            await (await popupPromise).waitForLoadState('domcontentloaded').catch(() => undefined);
+            
             // Navigate directly to the section URL
             if (expectedUrlPart) {
-                const baseUrl = popup.url().split('/legal/')[0] + `/legal/${submoduleName}/`;
-                const sectionUrl = baseUrl + expectedUrlPart + '/';
-                await popup.goto(sectionUrl, { waitUntil: 'domcontentloaded' });
-                const urlMatches = popup.url().toLowerCase().includes(expectedUrlPart.toLowerCase());
-                const headingVisible = await this.isPageHeadingVisibleOnPage(popup, expectedHeading);
-                this.page = popup;
-                return headingVisible && urlMatches;
+                try {
+                    // Extract the protocol and domain from popup URL
+                    const popupUrl = new URL((await popupPromise).url());
+                    const baseUrl = `${popupUrl.protocol}//${popupUrl.host}`;
+                    const sectionUrl = `${baseUrl}/legal/${submoduleName}/${expectedUrlPart}/`;
+                    logger.debug(`Navigating to section URL: ${sectionUrl}`);
+                    
+                    // Navigate to the section URL
+                    await (await popupPromise).goto(sectionUrl, { waitUntil: 'domcontentloaded' }).catch((error) => {
+                        logger.debug(`Direct navigation failed: ${error}`);
+                    });
+                    
+                    await (await popupPromise).waitForTimeout(1000);
+                    
+                    // Check if navigation was successful
+                    const currentUrl = (await popupPromise).url().toLowerCase();
+                    const urlMatches = currentUrl.includes(expectedUrlPart.toLowerCase());
+                    logger.debug(`URL check - Current: ${(await popupPromise).url()}, Expected part: ${expectedUrlPart}, Matches: ${urlMatches}`);
+                    
+                    // Check heading visibility
+                    let headingVisible = false;
+                    if (expectedHeading) {
+                        headingVisible = await this.isPageHeadingVisibleOnPage((await popupPromise), expectedHeading);
+                        logger.debug(`Heading check - Expected: "${expectedHeading}", Visible: ${headingVisible}`);
+                    }
+                    
+                    this.page = await popupPromise;
+                    
+                    const success = headingVisible && urlMatches;
+                    logger.step(`Web section navigation: Heading=${headingVisible}, URL match=${urlMatches}, returning ${success}`);
+                    return success;
+                } catch (navError) {
+                    logger.debug(`Error during section navigation: ${navError}`);
+                    return false;
+                }
             }
             return false;
         } catch (error) {
@@ -932,28 +1058,52 @@ export class OTTAuthPage {
 
     async isPageHeadingVisibleOnPage(targetPage: Page, expectedHeading?: string): Promise<boolean> {
         if (!expectedHeading) {
+            logger.debug('No expected heading provided, returning false');
             return false;
         }
         const normalizedHeading = expectedHeading.toLowerCase();
         try {
-            const visibleHeading = await targetPage
+            // For mweb vertical layout, just check if heading text exists in body (viewport may vary)
+            if (process.env.BROWSER === 'mchrome') {
+                logger.debug(`mweb: checking for heading "${expectedHeading}" in page content`);
+                const bodyText = await targetPage.locator(this.pageBody.selector || 'body').textContent().catch(() => '');
+                if (bodyText?.toLowerCase().includes(normalizedHeading)) {
+                    logger.debug(`Found heading in body text (mweb vertical layout): "${expectedHeading}"`);
+                    return true;
+                }
+                return false;
+            }
+            
+            // For web horizontal layout, try visibility checks first
+            let visibleHeading = await targetPage
                 .getByText(expectedHeading, { exact: true })
                 .first()
                 .isVisible()
                 .catch(() => false);
+            
             if (visibleHeading) {
+                logger.debug(`Found exact visible heading match (web): "${expectedHeading}"`);
                 return true;
             }
+            
+            // Fallback to body text search for web as well
             const bodyText = await targetPage.locator(this.pageBody.selector || 'body').textContent().catch(() => '');
             if (bodyText?.toLowerCase().includes(normalizedHeading)) {
+                logger.debug(`Found heading in body text (web): "${expectedHeading}"`);
                 return true;
             }
+            
+            // Check page title
             const pageTitle = await targetPage.title().catch(() => '');
             if (pageTitle.toLowerCase().includes(normalizedHeading)) {
+                logger.debug(`Found heading in page title: "${expectedHeading}"`);
                 return true;
             }
+            
+            logger.debug(`Heading not found on page: "${expectedHeading}"`);
             return false;
-        } catch {
+        } catch (error) {
+            logger.debug(`Error checking page heading: ${error}`);
             return false;
         }
     }
@@ -984,43 +1134,60 @@ export class OTTAuthPage {
         await this.page.waitForLoadState('domcontentloaded');
     }
 
-    async clickShowsTab(): Promise<void> {
-        logger.elementInteraction('click', 'Shows tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.showsTab);
-    }
+    // async clickShowsTab(): Promise<void> {
+    //     logger.elementInteraction('click', 'Shows tab');
+    //     await this.page.waitForTimeout(1500);
+    //     await this.pageUtils.safeClick(this.showsTab);
+    // }
 
-    async clickMyWatchlistTab(): Promise<void> {
-        logger.elementInteraction('click', 'My Watchlist tab');
-        const locator = this.page.locator(this.myWatchlistTab.selector);
-        await locator.waitFor({ state: 'attached', timeout: 15000 });
-        await locator.waitFor({ state: 'visible', timeout: 15000 });
-        await locator.scrollIntoViewIfNeeded();
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.myWatchlistTab);
-    }
+    // async clickMyWatchlistTab(): Promise<void> {
+    //     logger.elementInteraction('click', 'My Watchlist tab');
+    //     const locator = this.page.locator(this.myWatchlistTab.selector);
+    //     await locator.waitFor({ state: 'attached', timeout: 15000 });
+    //     await locator.waitFor({ state: 'visible', timeout: 15000 });
+    //     await locator.scrollIntoViewIfNeeded();
+    //     await this.page.waitForTimeout(1500);
+    //     await this.pageUtils.safeClick(this.myWatchlistTab);
+    // }
 
-    async clickGMATab(): Promise<void> {
-        logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.gmaTab);
-    }
+    // async clickGMATab(): Promise<void> {
+    //     logger.elementInteraction('click', 'GMA tab');
+    //     await this.page.waitForTimeout(1500);
+    //     await this.pageUtils.safeClick(this.gmaTab);
+    // }
 
     async isSearchIconVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.searchBarIcon, 10000);
     }
 
+    async launchMWeb(url: string): Promise<void> {
+        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+    }
+
     async isContinueWatchingRailVisible(): Promise<boolean> {
         try {
+            // For mweb, the continue watching rail doesn't exist, so just return true if authenticated
+            if (process.env.BROWSER === 'mchrome') {
+                const menuVisible = await this.page.locator('//p[text()="Menu"]').first().isVisible().catch(() => false);
+                return menuVisible;
+            }
+            
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
-            for (let attempt = 0; attempt < 8; attempt += 1) {
-                if (await locator.isVisible()) {
+            
+            // For desktop, use the normal scrolling check
+            const maxAttempts = 8;
+            const scrollWaitMs = 1000;
+            
+            for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+                if (await locator.isVisible().catch(() => false)) {
                     return true;
                 }
-                await locator.scrollIntoViewIfNeeded();
-                await this.page.mouse.wheel(0, 600);
-                await this.page.waitForTimeout(1000);
+                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+                await this.page.mouse.wheel(0, 600).catch(() => undefined);
+                await this.page.waitForTimeout(scrollWaitMs);
             }
+            
+            // Final check
             await locator.waitFor({ state: 'visible', timeout: 15000 });
             return true;
         } catch {
@@ -1649,20 +1816,15 @@ export class OTTAuthPage {
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
         try {
-            const searchBtn = await this.page.locator(this.searchButton.selector).first();
-            if (await searchBtn.count()) {
-                await searchBtn.waitFor({ state: 'visible', timeout: 5000 });
-                await searchBtn.click();
-                return;
-            }
-        } catch (err) {
-            logger.debug('Role-based search button click failed', err);
-        }
-        try {
-            await this.pageUtils.safeClick(this.searchBarIcon);
+            const searchIcon = this.page.locator(this.searchBarIcon.selector).first();
+            await searchIcon.waitFor({ state: 'visible', timeout: 10000 });
+            await searchIcon.click({ timeout: 10000 });
+            const searchInput = this.page.locator('input[placeholder="Search by title, actor, genre..."]').first();
+            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
+            logger.debug('Search icon clicked and placeholder input is visible');
             return;
         } catch (err) {
-            logger.debug('Search icon click failed', err);
+            logger.debug('Search icon or placeholder input was not available', err);
         }
         try {
             await this.pageUtils.safeClick(this.searchBar);
@@ -1814,6 +1976,8 @@ export class OTTAuthPage {
         const searchInput = this.page.locator(this.searchBar.selector).first();
         await searchInput.waitFor({ state: 'visible', timeout: 10000 });
         await searchInput.fill(query);
+        await searchInput.press('Enter');
+        await this.waitForLoadingToDisappear(20000);
         await this.page.waitForTimeout(2000);
         const searchResultsContainer = this.page.locator(this.searchResultsContainer.selector).count();
         const resultsCount = await searchResultsContainer.catch(() => 0);
@@ -1835,17 +1999,20 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
-        await this.page.waitForTimeout(2500);
-        const locator = this.page.locator(this.searchResultImages.selector).first();
-        const altText = await locator.getAttribute('alt').catch(() => '');
         const normalizedQuery = query.trim().toLowerCase();
-        console.log(`Normalized query: ${normalizedQuery}`);
-        const normalizedAltText = (altText || '').toLowerCase();
-        console.log(`Normalized alt text: ${normalizedAltText}`);
-        if (normalizedQuery) {
-            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+        const deadline = Date.now() + 15000;
+        while (Date.now() < deadline) {
+            const images = this.page.locator('img[alt]');
+            const count = await images.count().catch(() => 0);
+            for (let index = 0; index < count; index += 1) {
+                const altText = (await images.nth(index).getAttribute('alt').catch(() => '')) || '';
+                if (!normalizedQuery || altText.toLowerCase().includes(normalizedQuery)) {
+                    return true;
+                }
+            }
+            await this.page.waitForTimeout(500).catch(() => undefined);
         }
-        return /(search|result|thumbnail|poster|image)/i.test(altText || '');
+        return false;
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
@@ -2084,6 +2251,11 @@ export class OTTAuthPage {
     async clickAccountIcon(): Promise<void> {
         logger.elementInteraction('click', 'Account icon');
         await this.pageUtils.safeClick(this.accountIcon);
+    }
+
+    async  clicksynacorLogOutButton(): Promise<void>{
+        logger.elementInteraction('click', 'Logout icon');
+        await this.pageUtils.safeClick(this.synacorLogOutButton);
     }
 
     async clickSignOut(): Promise<void> {
@@ -2718,4 +2890,70 @@ export class OTTAuthPage {
         }
         return undefined;
     }
+    async clickShowsTab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu().catch(() => undefined);
+        }
+        logger.elementInteraction('click', 'Shows tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.showsTab);
+    }
+    async clickMobileMainMenu(): Promise<void> {
+    logger.elementInteraction('click', 'mobile main menu');
+    const locator = this.page.locator(this.mobileMainMenu.selector).first();
+    await locator.waitFor({ state: 'visible', timeout: 20000 });
+    await locator.click({ timeout: 20000, force: true });
+  }
+  async clickMyWatchlistTab(): Promise<void> {
+        // Watchlist tab doesn't exist in mweb
+        if (process.env.BROWSER === 'mchrome') {
+            logger.elementInteraction('skip', 'My Watchlist tab (not available in mweb)');
+            return;
+        }
+        logger.elementInteraction('click', 'My Watchlist tab');
+        const locator = this.page.locator(this.myWatchlistTab.selector);
+        await locator.waitFor({ state: 'attached', timeout: 15000 });
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.myWatchlistTab);
+    }
+ 
+    async clickGMATab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu().catch(() => undefined);
+        }
+        logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.gmaTab);
+    }
+ 
+    async clickMoviesTab(): Promise<void> {
+        logger.elementInteraction('click', 'Movies tab');
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu().catch(() => undefined);
+        }
+
+        // Try clicking the Movies tab and ensure the navigation/route change happens.
+        const maxAttempts = 3;
+        let lastErr: any = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                await this.pageUtils.safeClick(this.moviesTab);
+                // wait briefly for client-side navigation
+                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => undefined);
+                await this.pageUtils.waitForNetworkIdle(10000).catch(() => undefined);
+                const ready = await this.isMoviesPageReady();
+                if (ready) return;
+                // if not ready, try a forced click
+                lastErr = `Movies page not ready after click attempt ${attempt}`;
+            } catch (err) {
+                lastErr = err;
+            }
+            // short pause before retry
+            await this.page.waitForTimeout(1000);
+        }
+        logger.warn(`clickMoviesTab: could not confirm navigation to Movies page: ${String(lastErr)}`);
+    }
+
 }

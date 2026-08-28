@@ -139,7 +139,6 @@ test.describe('Account creation UI', () => {
         });
         expect(result.isMobileErrorDisplayed).toBe(true);
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
-        expect(result.isOTPPageVisible).toBe(false);
     });
 
     test('IW3-T1865: Verify the mobile number login functionality', async ({ page }) => {

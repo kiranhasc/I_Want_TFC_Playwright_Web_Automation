@@ -4,7 +4,7 @@ import testCaseData from '../../src/data/ott-test-cases.json';
 import { getOtpFromYopmail, getRandomYopmailAddress } from '../../src/utils/yopmail-helper.js';
 
 test.describe('Registration navigation', () => {
-    test('@High IW3-T1852: Verify the navigation on entering a valid email and password on the "Let\'s Get Started" screen', async ({ page }) => {
+    test ('@High IW3-T1852: Verify the navigation on entering a valid email and password on the "Let\'s Get Started" screen', async ({ page }) => {
         const data = testCaseData['tc-auth-026-registration-navigation'];
         const result = await verifyRegistrationNavigation(page, {
             email: data.email,
@@ -55,7 +55,7 @@ test.describe('Registration navigation', () => {
         expect(result.isVerifyOTPPageVisible).toBe(true);
     });
 
-    test('@High IW3-T1853: Verify the UI/UX of the "Verify Your Email" screen', async ({ page }) => {
+    test ('@High IW3-T1853: Verify the UI/UX of the "Verify Your Email" screen', async ({ page }) => {
         const data = testCaseData['tc-auth-026-registration-navigation'];
         const result = await verifyRegistrationOTPScreen(page, {
             email: data.email,

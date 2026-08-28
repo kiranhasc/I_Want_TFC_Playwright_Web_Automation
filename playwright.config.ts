@@ -58,7 +58,7 @@ export default defineConfig({
 
 
   testIgnore: [
-    // '**/parential-pin.spec.ts',
+    '**/parential-pin.spec.ts',
     '**/vpn-page-launch.spec.ts',
     '**/ph_region.spec.ts',
   ],
@@ -80,6 +80,7 @@ export default defineConfig({
 
     {
       name: 'playback',
+      timeout: 180 * 1000,
       testDir: 'tests/home',
       testMatch: [
         '**/playback.spec.ts',

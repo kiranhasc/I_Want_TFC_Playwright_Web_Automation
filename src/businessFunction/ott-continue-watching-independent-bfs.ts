@@ -1,4 +1,4 @@
-import { OTTAuthPage } from '../pom/OTTAuthPage';
+import { OTTAuthPage } from '../pom/OTTAuthPage';363
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { Page } from '@playwright/test';
@@ -225,20 +225,24 @@ export async function verifyContinueWatchingPlaybackIndependent(
         await detailsPage.waitForPlayback(60);
         await detailsPage.hoverPlaybackControls()
         await detailsPage.dragSeekBarToPosition(0.8)
+        await page.waitForTimeout(18000);
         const currentPlaybackTime = await detailsPage.getPlaybackTimeText().catch(() => '');
         result.forwardedTime = currentPlaybackTime;
         result.progressObserved = !!currentPlaybackTime && currentPlaybackTime !== '0:00';
+        logger.step('Returning to Home and scrolling to the Continue Watching tray');
         await authPage.navigateHome();
-        await page.reload({ waitUntil: 'networkidle' }).catch(() => undefined);
         await page.waitForTimeout(4000);
-        await authPage.waitForContinueWatchingTrayToBeReady();
-        const continueWatchingVisible = await authPage.isContinueWatchingRailVisible();
-        if (!continueWatchingVisible) {
-            result.reason = 'Continue Watching tray not visible after returning home';
+        const trayReady = await authPage.ensureContinueWatchingTrayInView(30000);
+        if (!trayReady) {
+            result.reason = 'Continue Watching tray could not be brought into view after returning home';
             return result;
         }
         const itemVisible = await authPage.isContinueWatchingItemVisible(result.selectedContentName);
-        result.progressObserved = result.progressObserved && itemVisible;
+        const trayItems = await authPage.getContinueWatchingTrayItemDetails();
+        const normalizedSelectedTitle = normalizeTitle(result.selectedContentName);
+        const selectedTrayItem = trayItems.find((item) => normalizeTitle(item.title).includes(normalizedSelectedTitle));
+        const trayProgressVisible = selectedTrayItem?.hasProgress ?? false;
+        result.progressObserved = result.progressObserved && itemVisible && trayProgressVisible;
         result.isValid = result.itemFound && result.playerVisible && itemVisible && result.progressObserved;
         if (!result.isValid && !result.reason) {
             result.reason = 'Continue Watching validation failed for selected movie';

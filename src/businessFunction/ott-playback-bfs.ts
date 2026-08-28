@@ -329,6 +329,7 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const isMweb = process.env.BROWSER === 'mchrome';
 
   logger.step('Starting subtitle display verification flow');
 
@@ -1714,6 +1715,7 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const isMweb = process.env.BROWSER === 'mchrome';
 
   logger.step('Starting Up Next marker navigation verification flow');
 
@@ -1733,6 +1735,13 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
 
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(3);
+  if (isMweb) {
+    logger.debug('mweb: Waiting for the pre-roll ad after Play to complete');
+    const adDuration = await detailsPage.waitForAdPlaybackToComplete(180, 8);
+    if (adDuration > 0) {
+      logger.debug(`mweb: Pre-roll ad completed after ${adDuration}s`);
+    }
+  }
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForPlayback(2);
@@ -1743,8 +1752,19 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
 
   if (markerVisible) {
     await detailsPage.clickNextEpisodeButton();
+    if (isMweb) {
+      logger.debug('mweb: Checking for an ad after Up Next navigation');
+      const adDuration = await detailsPage.waitForAdPlaybackToComplete(15, 5);
+      if (adDuration > 0) {
+        logger.debug(`mweb: Next episode ad observed for ${adDuration}s; continuing navigation validation`);
+      } else {
+        logger.debug('mweb: No next-episode ad detected');
+      }
+    }
     await detailsPage.waitForPlayback(2);
-    await detailsPage.tapPlaybackScreen();
+    if (!isMweb) {
+      await detailsPage.tapPlaybackScreen();
+    }
   }
 
   const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible().catch(() => false));
@@ -1823,15 +1843,17 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const isMweb = process.env.BROWSER === 'mchrome';
 
   logger.step('Starting Up Next close button verification flow');
 
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
+  await page.waitForTimeout(2000); 
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
+   await page.waitForTimeout(2000); 
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
@@ -1839,9 +1861,21 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
+  if (isMweb) {
+    await detailsPage.scrollToEpisodeList();
+  }
 
   await detailsPage.clickFirstEpisodeCard();
   await detailsPage.waitForPlayback(3);
+  // Guest mweb playback can start with a pre-roll ad.
+  if (isMweb) {
+    logger.debug('mweb: Waiting for the pre-roll ad after Play to complete');
+    const adDuration = await detailsPage.waitForAdPlaybackToComplete(90, 8);
+    if (adDuration > 0) {
+      logger.debug(`mweb: Pre-roll ad completed after ${adDuration}s`);
+    }
+  }
+  logger.debug('Ad completion check finished');
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForPlayback(2);
@@ -1849,7 +1883,7 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   const upNextMarkerVisible = await detailsPage.waitForUpNextMarker(15000);
   logger.assertion('Up Next marker visible at the end of playback', upNextMarkerVisible);
 
-  const closeButtonVisible = upNextMarkerVisible ? await detailsPage.isUpNextCloseButtonVisible() : false;
+  const closeButtonVisible = upNextMarkerVisible ? await detailsPage.isUpNextCloseButtonVisible(30000) : false;
   logger.assertion('Close button visible on the Up Next marker', closeButtonVisible);
 
   let upNextMarkerClosed = false;
@@ -1857,8 +1891,8 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   if (closeButtonVisible) {
     await detailsPage.clickUpNextCloseButton();
     await detailsPage.waitForPlayback(2);
-    upNextMarkerClosed = !(await detailsPage.isUpNextMarkerVisible().catch(() => false));
-    playbackContinued = upNextMarkerClosed ? await detailsPage.isPlayerScreenVisible().catch(() => false) : false;
+    upNextMarkerClosed = !(await detailsPage.isUpNextWidgetVisible());
+    playbackContinued = upNextMarkerClosed && await detailsPage.isPlaybackStarted(10000);
   }
 
   logger.assertion('Up Next marker closes after tapping the close button', upNextMarkerClosed);
@@ -1879,12 +1913,25 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const isMweb = process.env.BROWSER === 'mchrome';
 
   logger.step('Starting Up Next marker click navigation verification flow');
 
-  const loginResult = await loginToOTT(page, { mode });
-  const isLoggedIn = loginResult.isLoggedIn;
+  // For mweb: guest user (no login required)
+  let isLoggedIn = true;
+  if (isMweb) {
+    logger.debug('mweb: Guest user access - navigating directly to home');
+    await page.goto(process.env.PROD_OTT_BASE_URL || '', { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+    await page.waitForTimeout(2000);
+  } else {
+    // For web: login required
+    const loginResult = await loginToOTT(page, { mode });
+    isLoggedIn = loginResult.isLoggedIn;
+  }
 
+  logger.assertion('User is accessible', isLoggedIn);
+
+  // Search for content
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1895,28 +1942,52 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
+  // Click first episode to play
   await detailsPage.clickFirstEpisodeCard();
   await detailsPage.waitForPlayback(3);
+
+  // Guest mweb playback can start with a pre-roll ad.
+  if (isMweb) {
+    logger.debug('mweb: Waiting for the pre-roll ad after Play to complete');
+    const adDuration = await detailsPage.waitForAdPlaybackToComplete(90, 8);
+    if (adDuration > 0) {
+      logger.debug(`mweb: Pre-roll ad completed after ${adDuration}s`);
+    }
+  }
+  logger.debug('Ad completion check finished');
+
+  // Scroll to controls and drag seek bar
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForPlayback(2);
 
-  const markerVisible = await detailsPage.waitForUpNextMarker(15000);
+  // Wait for Up Next marker to appear
+  const markerVisible = await detailsPage.waitForUpNextMarker(20000);
   logger.assertion('Up Next marker is visible', markerVisible);
 
   let markerClicked = false;
   let nextEpisodePlaybackStarted = false;
+
   if (markerVisible) {
+    logger.step('Clicking Up Next marker');
     markerClicked = await detailsPage.clickUpNextMarker();
-    await detailsPage.waitForPlayback(2);
-    await detailsPage.tapPlaybackScreen();
+    await detailsPage.waitForPlayback(3);
+
+    // Guest mweb playback may show an ad before the next episode starts.
+    if (isMweb) {
+      logger.debug('mweb: Next episode navigation started; ad playback may continue independently');
+    }
+
+    if (!isMweb) {
+      await detailsPage.tapPlaybackScreen();
+    }
     nextEpisodePlaybackStarted = markerClicked && (await detailsPage.isPlayerScreenVisible().catch(() => false));
   }
 
   logger.assertion('Up Next marker clicked successfully', markerClicked);
   logger.assertion('Next episode playback started after clicking the Up Next marker', nextEpisodePlaybackStarted);
-return {
+
+  return {
     isLoggedIn,
     detailsVisible,
     markerVisible,

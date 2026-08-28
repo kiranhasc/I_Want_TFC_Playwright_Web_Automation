@@ -12,7 +12,7 @@ test.describe('Early Access Tag', () => {
         expect(result.labelVisible).toBe(true);
     });
 
-    test('@High IW3-T3672: Verify the Early Access upgrade prompt message for free or basic users', async ({ page }) => {
+    test ('@High IW3-T3672: Verify the Early Access upgrade prompt message for free or basic users', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-discovery-002-early-access-upgrade-prompt'];
         const result = await verifyEarlyAccessUpgradePromptMessage(page, {
@@ -27,14 +27,21 @@ test.describe('Early Access Tag', () => {
         });
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
-        expect(result.upgradeIconVisible).toBe(true);
-        expect(result.titleVisible).toBe(data.expectedUpgradeTitle);
-        expect(result.descriptionVisible).toBe(data.expectedUpgradeDescription);
-        expect(result.maybeLaterVisible).toBe(data.expectedMaybeLaterText);
-        expect(result.upgradeCtaVisible).toBe(data.expectedUpgradeCtaText);
+        if (process.env.BROWSER === 'mchrome') {
+            expect(result.titleVisible).toBe(true);
+            expect(result.titleText).toContain(data.mwebExpectedUpgradeMessage);
+            expect(result.descriptionVisible).toBe(true);
+            expect(result.upgradeCtaVisible).toBe(true);
+        } else {
+            expect(result.upgradeIconVisible).toBe(true);
+            expect(result.titleVisible).toBe(true);
+            expect(result.descriptionVisible).toBe(true);
+            expect(result.upgradeCtaVisible).toBe(true);
+        }
+        expect(result.maybeLaterVisible).toBe(true);
     });
 
-    test('@High IW3-T3670: Verify the popup displayed when free or basic users tap on Early Access content', async ({ page }) => {
+    test ('@High IW3-T3670: Verify the popup displayed when free or basic users tap on Early Access content', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-discovery-003-early-access-popup'];
         const result = await verifyEarlyAccessUpgradePromptMessage(page, {
@@ -50,10 +57,10 @@ test.describe('Early Access Tag', () => {
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
         expect(result.upgradeIconVisible).toBe(true);
-        expect(result.titleVisible).toBe(data.expectedUpgradeTitle);
-        expect(result.descriptionVisible).toBe(data.expectedUpgradeDescription);
-        expect(result.maybeLaterVisible).toBe(data.expectedMaybeLaterText);
-        expect(result.upgradeCtaVisible).toBe(data.expectedUpgradeCtaText);
+        expect(result.titleVisible).toBe(true);
+        expect(result.descriptionVisible).toBe(true);
+        expect(result.maybeLaterVisible).toBe(true);
+        expect(result.upgradeCtaVisible).toBe(true);
     });
 
     test('@High IW3-T3675: Verify Early Access tag is shown on the episode thumbnail inside the content details screen', async ({ page }) => {

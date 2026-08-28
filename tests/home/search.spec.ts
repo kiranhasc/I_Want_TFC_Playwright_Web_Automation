@@ -153,10 +153,12 @@ test.describe('Search navigation', () => {
   test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }) => {
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-010-search-placeholder'];
-    const result = await navigateAndVerifyTabs(page, {
-      mode: data.mode,
-      expectedSearchPlaceholder: data.expectedSearchPlaceholder,
-    });
+    const result = await navigateAndVerifyTabs({
+            page, input: {
+                mode: data.mode,
+                expectedSearchPlaceholder: data.expectedSearchPlaceholder,
+            }
+        });
     expect(result.searchBarPlaceholderMatches).toBe(true);
     expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
   });

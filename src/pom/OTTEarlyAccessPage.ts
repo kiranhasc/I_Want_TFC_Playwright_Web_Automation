@@ -19,16 +19,25 @@ export class OTTEarlyAccessPage {
         this.page = page;
         this.pageUtils = new PageUtils(page);
         this.defaultLabelText = 'Early Access';
-        this.upgradeIconSelector = { selector: '//img[@alt="early-access"]' };
-        this.upgradeTitleSelector = { selector: 'text=/Unlock Early Access/i' };
-        this.upgradeDescriptionSelector = { selector: 'text=/Upgrade to Premium for exclusive early viewing/i' };
-        this.maybeLaterSelector = { selector: 'text=/Maybe later/i' };
-        this.upgradeCtaSelector = { selector: 'text=/Upgrade to watch now/i' };
+        this.upgradeIconSelector = { selector: '//img[@alt="early_access" or @alt="early-access"]' };
+        this.upgradeTitleSelector = process.env.BROWSER === 'mchrome'
+          ? { selector: 'text=/A valid subscription is required to view this content/i' }
+          : { selector: 'text=/Unlock Early Access/i' };
+        this.upgradeDescriptionSelector = process.env.BROWSER === 'mchrome'
+          ? { selector: 'text=/EPS-401-24/i' }
+          : { selector: 'text=/Upgrade to Premium for exclusive early viewing and be the first to watch new content\./i' };
+        this.maybeLaterSelector = { selector: '//p[text()="Maybe Later"]' };
+        this.upgradeCtaSelector = process.env.BROWSER === 'mchrome'
+          ? { selector: 'text=/Login/i' }
+          : { selector: 'text=/Upgrade to Watch Now/i' };
         this.earlyAccessLabelSelector = { selector: `(//img[@alt="{assetTitle}"]/parent::div/following-sibling::div//img[@alt="early_access"])[1]` };
     }
 
     async scrollToRail(railTitle: string): Promise<void> {
         logger.step(`Processing rail: ${railTitle}`);
+      if (!railTitle.trim()) {
+        return;
+      }
         if (railTitle.includes('Hero Banner - ROW')) {
             logger.info(`Skipping scroll for rail: ${railTitle}`);
             return;
@@ -37,16 +46,59 @@ export class OTTEarlyAccessPage {
         await rail.scrollIntoViewIfNeeded();
     }
 
-    async findAssetLocatorByTitle(assetTitle: string) {
-        const locator = this.page.locator(`[alt="${assetTitle}"]`).first();
-        await locator.waitFor({ state: 'visible', timeout: 10000 });
-        return locator;
+      async findAssetByBadge(badgeAlt: string): Promise<{ assetTitle: string; railTitle: string } | null> {
+        const badge = this.page.locator(`img[alt="${badgeAlt}"]`).first();
+        if (!await badge.count()) {
+          return null;
+        }
+        await badge.scrollIntoViewIfNeeded().catch(() => undefined);
+        const card = badge.locator(
+          'xpath=ancestor::*[self::a or self::button or @role="button" or contains(@class, "cursor-pointer")][1]'
+        ).first();
+        const scope = await card.count() ? card : badge.locator('xpath=..');
+        const titleImage = scope.locator('img[alt]').first();
+        const assetTitle = (await titleImage.getAttribute('alt').catch(() => ''))?.trim() ?? '';
+        return assetTitle ? { assetTitle, railTitle: '' } : null;
+      }
+
+    async findAssetLocatorByTitle(
+        assetTitle: string,
+        labelText: string = this.defaultLabelText,
+        additionalLabelText?: string
+    ) {
+      const assets = this.page.locator(`img[alt="${assetTitle}"]`);
+      await assets.first().waitFor({ state: 'visible', timeout: 10000 });
+
+      const count = await assets.count();
+      for (let index = 0; index < count; index += 1) {
+        const asset = assets.nth(index);
+        await asset.scrollIntoViewIfNeeded().catch(() => undefined);
+        const badgeContainer = asset.locator(
+          `xpath=../following-sibling::div//img[@alt="${labelText}"]`
+        );
+        const hasEarlyAccessBadge = await badgeContainer.count().catch(() => 0);
+        const hasAdditionalBadge = additionalLabelText
+            ? await asset.locator(
+                `xpath=../following-sibling::div//img[@alt="${additionalLabelText}"]`
+              ).count().catch(() => 0)
+            : 1;
+        if (hasEarlyAccessBadge > 0 && hasAdditionalBadge > 0) {
+            return asset;
+        }
+      }
+
+      return assets.first();
     }
 
     async isLabelVisibleForAsset(assetLocator: any, labelText?: string): Promise<boolean> {
         const label = labelText ?? this.defaultLabelText;
         try {
+        if (process.env.BROWSER === 'mchrome') {
+          await assetLocator.scrollIntoViewIfNeeded();
+          return await assetLocator.isVisible();
+        }
             const tagLocator = assetLocator.locator(`xpath=../following-sibling::div//img[@alt="${label}"]`).first();
+        await this.scrollToEarlyAccessThumbnail(tagLocator);
             await tagLocator.waitFor({ state: 'visible', timeout: 15000 });
             return true;
         }
@@ -55,68 +107,155 @@ export class OTTEarlyAccessPage {
         }
     }
 
-    async openAssetDetails(assetTitle: string): Promise<void> {
-        const selector = await this.pageUtils.parameterizeSelector(this.earlyAccessLabelSelector, { assetTitle });
-        await selector.click()
+    async scrollToEarlyAccessThumbnail(tagLocator: any): Promise<void> {
+      await tagLocator.waitFor({ state: 'attached', timeout: 15000 });
+      await tagLocator.scrollIntoViewIfNeeded();
+      await this.page.waitForTimeout(750);
+    }
+
+    async openAssetDetails(assetTitle: string, labelText: string = this.defaultLabelText): Promise<void> {
+      const asset = await this.findAssetLocatorByTitle(assetTitle, labelText);
+        const clickableCard = asset.locator(
+            'xpath=ancestor::*[self::a or self::button or @role="button" or contains(@class, "cursor-pointer")][1]'
+        ).first();
+        if (await clickableCard.count()) {
+          await clickableCard.dblclick({ force: true });
+            return;
+        }
+        await asset.dblclick({ force: true });
     }
 
     async isEpisodeLabelVisible(labelText?: string): Promise<boolean> {
         const label = labelText ?? this.defaultLabelText;
         try {
-            const episodeLabel = this.page.locator(`//div[@class="episodes-list"]//img[@alt="${label}"]`).first();
-            await episodeLabel.waitFor({ state: 'visible', timeout: 15000 });
-            return true;
+        const episodeList = this.page.locator('[class*="episodes-list"]').first();
+        await episodeList.waitFor({ state: 'visible', timeout: 15000 });
+        await episodeList.scrollIntoViewIfNeeded();
+
+        let episodeLabel = episodeList.locator(`img[alt="${label}"]`).last();
+        for (let attempt = 0; attempt < 12 && !await episodeLabel.count(); attempt += 1) {
+          const episodeCards = episodeList.locator('div').filter({ has: episodeList.locator('img[alt]') });
+          const cardCount = await episodeCards.count().catch(() => 0);
+          if (cardCount > 0) {
+            await episodeCards.last().scrollIntoViewIfNeeded().catch(() => undefined);
+          }
+          await episodeList.evaluate((element: HTMLElement) => {
+            element.scrollTop = element.scrollHeight;
+          }).catch(() => undefined);
+          await this.page.mouse.wheel(0, 700).catch(() => undefined);
+          await this.page.waitForTimeout(500);
+          episodeLabel = episodeList.locator(`img[alt="${label}"]`).last();
+        }
+
+        if (!await episodeLabel.count()) {
+          return false;
+        }
+
+        await this.scrollToEarlyAccessThumbnail(episodeLabel);
+        return await episodeLabel.isVisible();
         } catch {
             return false;
         }
     }
 
     async openLatestEarlyAccessEpisode(labelText: string): Promise<boolean> {
-        const episodes = this.page.locator(`//div[@class="episodes-list"]/div/div/div/following-sibling::div/div/p[@class="font-semibold"]`);
-        let previousCount = 0;
-        while (true) {
-            const currentCount = await episodes.count();
-            if (currentCount === previousCount) {
-                break;
-            }
-            previousCount = currentCount;
-            await episodes.nth(currentCount - 1).scrollIntoViewIfNeeded();
-            await this.page.waitForTimeout(1500);
+      if (process.env.BROWSER !== 'mchrome') {
+      const episodeList = this.page.locator('[class*="episodes-list"]').first();
+      await episodeList.waitFor({ state: 'visible', timeout: 10000 });
+      await episodeList.scrollIntoViewIfNeeded();
+
+      let badge = episodeList.locator(`img[alt="${labelText}"]`).last();
+      for (let attempt = 0; attempt < 12 && !await badge.count(); attempt += 1) {
+        const episodeCards = episodeList.locator('div').filter({ has: episodeList.locator('img[alt]') });
+        const cardCount = await episodeCards.count().catch(() => 0);
+        if (cardCount > 0) {
+          await episodeCards.last().scrollIntoViewIfNeeded().catch(() => undefined);
         }
-        const totalEpisodes = await episodes.count();
-        if (totalEpisodes === 0) {
+        await episodeList.evaluate((element: HTMLElement) => {
+          element.scrollTop = element.scrollHeight;
+        }).catch(() => undefined);
+        await this.page.mouse.wheel(0, 700).catch(() => undefined);
+        await this.page.waitForTimeout(500);
+        badge = episodeList.locator(`img[alt="${labelText}"]`).last();
+      }
+
+      if (!await badge.count()) {
+        logger.warn(`No episode found with the '${labelText}' badge`);
             return false;
         }
-        const latestEpisode = episodes.nth(totalEpisodes - 1);
-        const latestEpisodeName = (await latestEpisode.textContent())?.trim() ?? "";
-        logger.info(`Latest Episode name is : ${latestEpisodeName}`);
-        try {
-            const badge = this.page.locator(`//div[@class="episodes-list"]//p[normalize-space()='${latestEpisodeName}']/parent::div/parent::div/preceding-sibling::div//img`).last();
-            const altValue = await badge.getAttribute("alt");
-            logger.info(`Badge Alt Value: ${altValue} found for episode ${latestEpisodeName}`);
-            if (altValue === labelText) {
-                await latestEpisode.scrollIntoViewIfNeeded();
-                await latestEpisode.click();
-                logger.info(`Clicked latest Early Access episode: ${latestEpisodeName}`);
-                return true;
-            }
-            logger.assertion(`Latest episode does not have '${labelText}' badge.`, false);
-            return false;
-        } catch (error) {
-            logger.error("Early Access badge not found.", error);
-            return false;
+
+      await badge.scrollIntoViewIfNeeded();
+      const episodeCard = badge.locator(
+        'xpath=ancestor::div[contains(@class, "cursor-pointer")][1]'
+      ).first();
+      const target = await episodeCard.count() ? episodeCard : badge;
+      const episodeName = (await target.textContent().catch(() => ''))?.trim() ?? '';
+      logger.info(`Clicking Early Access episode: ${episodeName}`);
+      await target.click({ force: true });
+      await this.page.waitForTimeout(1500);
+        return true;
+      }
+
+      const episodeList = this.page.locator(
+        '.episodes-list, .season-episodes, .episode-list, [data-testid*="episode-list"], [class*="season-episodes"]'
+      ).first();
+      await episodeList.waitFor({ state: 'visible', timeout: 15000 });
+      await episodeList.scrollIntoViewIfNeeded();
+
+      const badgeSelector = [
+        `img[alt="${labelText}"]`,
+        'img[alt="Early Access"]',
+        '[aria-label="Early Access"]',
+        '[data-testid*="early-access" i]'
+      ].join(', ');
+      const textBadge = this.page.getByText('Early Access', { exact: true }).last();
+      let badge = episodeList.locator(badgeSelector).last();
+      for (let attempt = 0; attempt < 12 && !await badge.count() && !await textBadge.count(); attempt += 1) {
+        const episodeCards = episodeList.locator(
+          '.episode-info, .episode-card, .episode-item, [data-testid*="episode"]'
+        ).last();
+        if (await episodeCards.count().catch(() => 0)) {
+          await episodeCards.scrollIntoViewIfNeeded().catch(() => undefined);
         }
+        await episodeList.evaluate((element: HTMLElement) => {
+          element.scrollTop = element.scrollHeight;
+        }).catch(() => undefined);
+        await this.page.mouse.wheel(0, 700).catch(() => undefined);
+        await this.page.waitForTimeout(500);
+        badge = episodeList.locator(badgeSelector).last();
+      }
+
+      if (!await badge.count() && !await textBadge.count()) {
+        logger.warn(`No episode found with the '${labelText}' badge`);
+        return false;
+      }
+
+      const targetBadge = await badge.count() ? badge : textBadge;
+      await targetBadge.scrollIntoViewIfNeeded().catch(() => undefined);
+      const episodeCard = targetBadge.locator(
+        'xpath=ancestor::*[contains(@class, "cursor-pointer") or contains(@class, "episode-info") or contains(@class, "episode-card")][1]'
+      ).first();
+      const target = await episodeCard.count() ? episodeCard : targetBadge;
+      const episodeName = (await target.textContent().catch(() => ''))?.trim() ?? '';
+      logger.info(`Clicking Early Access episode: ${episodeName}`);
+      await target.click({ force: true });
+      await this.page.waitForTimeout(1500);
+      return true;
     }
 
     async verifyUpgradePromptMessage() {
         const upgradeIconVisible = await this.pageUtils.isVisible(this.upgradeIconSelector)
         const titleVisible = await this.pageUtils.isVisible(this.upgradeTitleSelector);
+      const titleText = titleVisible
+        ? await this.pageUtils.getTextContent(this.upgradeTitleSelector).catch(() => '')
+        : '';
         const descriptionVisible = await this.pageUtils.isVisible(this.upgradeDescriptionSelector);
         const maybeLaterVisible = await this.pageUtils.isVisible(this.maybeLaterSelector);
         const upgradeCtaVisible = await this.pageUtils.isVisible(this.upgradeCtaSelector);
         return {
             upgradeIconVisible,
             titleVisible,
+            titleText,
             descriptionVisible,
             maybeLaterVisible,
             upgradeCtaVisible

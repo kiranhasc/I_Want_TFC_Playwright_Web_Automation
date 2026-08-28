@@ -403,7 +403,7 @@ test.describe('Play Back', () => {
     expect(result.rewindChanged).toBeTruthy();
   });
 
-  test('@Medium IW3-T1983 - selected subtitle carries to another content when available', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1983 - selected subtitle carries to another content when available', async ({ page }) => {
     const data = testData['tc-sub-021-subtitle-carry-over'] as Record<string, any>;
     const result = await verifySubtitleCarryOverFlow(page, {
       mode: data.mode,
@@ -453,7 +453,7 @@ test.describe('Play Back', () => {
     expect(result.subtitleVisibleAfterSeek).toBeTruthy();
   });
 
-  test('@Medium IW3-T1987 - tapping the full screen icon activates fullscreen and continues playback', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1987 - tapping the full screen icon activates fullscreen and continues playback', async ({ page }) => {
     const data = testData['tc-sub-025-fullscreen-functionality'] as Record<string, any>;
     const result = await verifyFullscreenFunctionalityFlow(page, {
       mode: data.mode,

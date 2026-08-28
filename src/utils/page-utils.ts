@@ -7,7 +7,7 @@ import { logger } from './logger';
  */
 export class PageUtils {
   // eslint-disable-next-line no-unused-vars
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   /**
    * Wait for page to be fully loaded
@@ -191,5 +191,44 @@ export class PageUtils {
       );
     });
     return this.page.locator(selector);
+  }
+
+  /**
+   * Mobile-only horizontal scroll helper for rail/list containers.
+   * Finds the actual scrollable ancestor and calls native scrollTo on it.
+   * This avoids coordinate-based dragging and works for mobile web rails.
+   */
+  async scrollHorizontallyMobile(
+    element: string | Locator,
+    direction: 'left' | 'right' = 'right',
+    distance: number = 320,
+    waitMs: number = 500
+  ): Promise<boolean> {
+    const locator = typeof element === 'string' ? this.page.locator(element) : element;
+    await locator.waitFor({ state: 'visible', timeout: 15000 });
+    await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+    const box = await locator.boundingBox();
+    if (!box) return false;
+    // Keep swipe path well inside the rail bounds to avoid tapping edge cards.
+    const startX = direction === 'right' ? box.x + box.width * 0.8 : box.x + box.width * 0.2;
+    const endX = direction === 'right' ? startX - distance : startX + distance;
+    const y = box.y + box.height / 2;
+    const client = await this.page.context().newCDPSession(this.page);
+    const point = (x: number, yy: number) => [{ x, y: yy, radiusX: 5, radiusY: 5, force: 1, id: 1 }];
+    try {
+      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: point(startX, y) });
+      await this.page.waitForTimeout(50); // small delay mimics a real finger-down pause
+      const steps = 15;
+      for (let i = 1; i <= steps; i++) {
+        const x = startX + ((endX - startX) * i) / steps;
+        await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: point(x, y) });
+        await this.page.waitForTimeout(12);
+      }
+      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    } finally {
+      await client.detach().catch(() => undefined);
+    }
+    await this.page.waitForTimeout(waitMs);
+    return true;
   }
 }

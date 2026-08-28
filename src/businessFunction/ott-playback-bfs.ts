@@ -1572,9 +1572,14 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible before playback', detailsVisible);
   await detailsPage.clickPlayButton();
+  const adsVisible = await detailsPage.isAdTagVisible();
+  if (adsVisible) {
+    await page.waitForTimeout(150000);
+  }
   await detailsPage.waitForPlayback(3);
   const playbackStarted = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Playback started for the selected movie', playbackStarted);
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(1.0);
   const playbackCompleted = await authPage.finishPlaybackFromCurrentItem().catch(() => false);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -2614,6 +2619,9 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  if(process.env.BROWSER === 'mchrome'){
+    page.waitForTimeout(90000);
+  }
   await detailsPage.waitForPlayback(2);
   const playerVisibleBeforeClose = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible before closing', playerVisibleBeforeClose);

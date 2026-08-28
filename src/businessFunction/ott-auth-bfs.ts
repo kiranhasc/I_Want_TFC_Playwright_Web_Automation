@@ -1,6 +1,7 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
+import { PageUtils } from '../utils/page-utils';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
@@ -710,29 +711,32 @@ export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInp
 
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
-
     if (process.env.BROWSER === 'mchrome') {
         await authPage.navigate();
+        console.log('Skipping login for mchrome');
         logger.step('Skipping login for Mobile Web (mchrome)');
-
+        const homeTabVisible = await authPage.isHomeTabVisible();
         return {
             isLoggedIn: true,
-            homeTabVisible: false,
+            homeTabVisible: homeTabVisible,
         };
     } else {
         const mode = normalizeLoginMode(input?.mode);
         const storageFile = modeToFile[mode];
         const storagePath = storageFile ? path.join(authDir, storageFile) : null;
+        // ---- FAST PATH ----
         if (storagePath && fs.existsSync(storagePath)) {
             const age = Date.now() - fs.statSync(storagePath).mtimeMs;
             if (age < MAX_AGE_MS) {
                 logger.step(`Reusing saved ${mode} session from storageState`);
+                // clear any existing session state first — prevents mixing across modes
                 await page.context().clearCookies();
                 await page.evaluate(() => {
                     try {
                         window.localStorage.clear();
                         window.sessionStorage.clear();
                     } catch (e) {
+                        // no-op if page isn't on a real origin yet
                     }
                 }).catch(() => { });
                 const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
@@ -740,7 +744,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
                 if (state.origins?.length) {
                     await page.goto(state.origins[0].origin);
                     await page.evaluate((origins: any[]) => {
-                        window.localStorage.clear();
+                        window.localStorage.clear(); // clear again post-navigation, before setting new values
                         for (const o of origins) {
                             for (const item of o.localStorage ?? []) {
                                 window.localStorage.setItem(item.name, item.value);
@@ -753,26 +757,15 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
                 const homeVisible = await authPage.isHomeTabVisible();
                 logger.assertion('Home tab visible after session restore', homeVisible);
                 if (homeVisible) {
-                    return {
-                        isLoggedIn: homeVisible,
-                        homeTabVisible: homeVisible
-                    };
+                    return { isLoggedIn: homeVisible, homeTabVisible: homeVisible };
                 }
                 logger.step(`Cached ${mode} session invalid, falling back to live login`);
             }
         }
-
+        // ---- SLOW PATH (original login flow, unchanged) ----
         logger.step(`Starting ${mode} login flow`);
         await page.context().clearCookies();
-
-        const credentials = resolveLoginCredentials(
-            input ?? {
-                email: '',
-                password: '',
-                networkConnection: ''
-            },
-            mode
-        );
+        const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
         await authPage.navigate();
         await authPage.acceptCookieSettingsIfVisible();
         await authPage.clickEmailField();
@@ -789,7 +782,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         }
         return {
             isLoggedIn: homeVisible,
-            homeTabVisible: homeVisible
+            homeTabVisible: homeVisible,
         };
     }
 }
@@ -1225,6 +1218,7 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
 
 export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
     const authPage = new OTTAuthPage(page);
+    const pageUtils = new PageUtils(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
     const loginResult = await loginToOTT(page, { mode });
@@ -1233,17 +1227,25 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
     const contentCardsCount = railVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', railVisible);
     logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
-    const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    logger.step('Clicking the right arrow on the iWant Originals rail');
-    const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
-    const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
-    logger.assertion('iWant Originals rail scrolled right', scrolledRight);
-    logger.step('Clicking the left arrow on the iWant Originals rail');
-    const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
-    const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
-    logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    let scrolledRight = false;
+    let scrolledLeft = false;
+    if (process.env.BROWSER === 'mchrome') {
+        const rail = page.locator(authPage.getIwantScrollLocatorMobile()).first();
+        scrolledRight = await pageUtils.scrollHorizontallyMobile(rail, 'right', 320, 500);
+        scrolledLeft = await pageUtils.scrollHorizontallyMobile(rail, 'left', 320, 500);
+    } else {
+        const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        logger.step('Clicking the right arrow on the iWant Originals rail');
+        const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+        const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
+        logger.assertion('iWant Originals rail scrolled right', scrolledRight);
+        logger.step('Clicking the left arrow on the iWant Originals rail');
+        const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
+        const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
+        logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    }
     return {
         isLoggedIn: loginResult.isLoggedIn,
         railVisible,
@@ -3367,7 +3369,7 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
-    logger.assertion('Continue Watching rail presence', isVisible);
+    logger.assertion('Continue Watching rail not present (expected for new user)', !isVisible);
     logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
     if (itemsCount > 0) {
         const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;

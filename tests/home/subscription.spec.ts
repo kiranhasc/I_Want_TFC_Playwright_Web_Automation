@@ -28,7 +28,7 @@ test.describe('Premium content subscription', () => {
     expect(result.isPlansPageVisible).toBe(true);
   });
 
-  test('High IW3-T2025: Verify the message displayed when user tries to play premium content', async ({ page }) => {
+  test('@High IW3-T2025: Verify the message displayed when user tries to play premium content', async ({ page }) => {
     test.setTimeout(180000);
     const data = testCaseData['tc-play-002-premium-content-gate'];
     const result = await verifyPremiumContentGate(page, {
@@ -44,7 +44,7 @@ test.describe('Premium content subscription', () => {
     expect(result.subscribeToWatchVisible).toBeTruthy();
   });
 
-  test('High IW3-T2032: Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user', async ({ page }) => {
+  test('@High @mWeb IW3-T2032: Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user', async ({ page }) => {
     test.setTimeout(180000);
     const data = testCaseData['tc-sub-002-premium-carousel-subscribe-cta'];
     const result = await verifySubscribeToWatchCarouselMessage(page, {

@@ -949,7 +949,7 @@
     },
     "tc-nav-017-search-invalid-suggestions": {
         "mode": "valid",
-        "query": "dcwh 123",
+        "query": "dcwhch 1234",
         "validationType": "Partial"
     },
     "tc-nav-018-search-live-content-exclusion": {

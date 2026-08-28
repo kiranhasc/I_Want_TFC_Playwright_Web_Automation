@@ -19,7 +19,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test('@Medium IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-020-ph-region-guest-share'];
     const result = await verifyGuestShareFunctionalityFromFreeAsset(page, {
       expectedShareMessage: data.expectedShareMessage,
@@ -87,7 +87,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.firstSearchResultMonetizationType.toLowerCase()).toContain('paid');
   });
 
-  test('@Medium IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
     test.setTimeout(90000);
     const data = testCaseData['tc-auth-022-ph-region-guest-carousel-tab-tray'];
     const result = await verifyGuestPHCarouselTabTrayLoad(page, { mode: data?.mode });

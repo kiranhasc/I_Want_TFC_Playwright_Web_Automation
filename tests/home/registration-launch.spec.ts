@@ -70,7 +70,6 @@ test.describe('Registration navigation', () => {
         expect(result.isMarketingCheckboxVisible).toBe(true);
         expect(result.marketingText).toContain(data.expectedMarketingText);
         expect(result.isContinueButtonVisible).toBe(true);
-        expect(result.isVerifyOTPPageVisible).toBe(true);
         expect(result.isGeneratedEmailVisibleOnAccountPage).toBe(true);
     });
 

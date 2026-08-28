@@ -443,78 +443,6 @@ export interface VerifySponsoredRailContentDetailsNavigationOutput {
   titlesMatch: boolean;
 }
 
-export async function verifySponsoredRailContentDetailsNavigation(
-  page: any,
-  input?: VerifySponsoredRailContentDetailsNavigationInput
-): Promise<VerifySponsoredRailContentDetailsNavigationOutput> {
-  const authPage = new OTTAuthPage(page);
-  const landingPage = new OTTLandingPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  logger.step('Starting Sponsored Rail content details navigation validation');
-
-  const loginResult = await loginToOTT(page, { mode: input?.mode });
-  const isLoggedIn = loginResult.isLoggedIn;
-  logger.assertion('User is logged in before validating Sponsored Rail content navigation', isLoggedIn);
-
-  if (!isLoggedIn) {
-    return {
-      isLoggedIn: false,
-      sponsoredRailVisible: false,
-      contentCardClicked: false,
-      detailsPageVisible: false,
-      cardTitle: '',
-      detailPageTitle: '',
-      detailPageMetadata: '',
-      titlesMatch: false,
-    };
-  }
-
-  await authPage.clickHomeTab();
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await landingPage.scrollTillSponsoredRail(15);
-
-  const sponsoredRailVisible = await landingPage.isSponsoredRailVisible();
-  const cardNavigation = sponsoredRailVisible
-    ? await detailsPage.clickSecondSponsoredRailContent()
-    : { clicked: false, cardTitle: '' };
-  const contentCardClicked = cardNavigation.clicked;
-  const cardTitle = cardNavigation.cardTitle;
-  const detailsPageVisible = contentCardClicked
-    ? await detailsPage.isShowDetailsPageVisible()
-    : false;
-  const detailPageTitle = detailsPageVisible
-    ? await detailsPage.getShowDetailsHeadingText()
-    : '';
-  const detailPageMetadata = detailsPageVisible
-    ? await detailsPage.getContentMetadataText()
-    : '';
-  const normalizedCardTitle = cardTitle.replace(/\s+/g, ' ').trim().toLowerCase();
-  const normalizedDetailPageTitle = detailPageTitle.replace(/\s+/g, ' ').trim().toLowerCase();
-  const titlesMatch = Boolean(normalizedCardTitle && normalizedDetailPageTitle)
-    && normalizedCardTitle === normalizedDetailPageTitle;
-
-  logger.info(`Sponsored Rail card title: ${cardTitle}`);
-  logger.info(`Details page title: ${detailPageTitle}`);
-  logger.info(`Details page metadata: ${detailPageMetadata}`);
-
-  logger.assertion('Sponsored Rail is visible on Home', sponsoredRailVisible);
-  logger.assertion('Sponsored Rail content card was clicked', contentCardClicked);
-  logger.assertion('Sponsored Rail content navigated to the details page', detailsPageVisible);
-  logger.assertion('Sponsored Rail card title matches details page title', titlesMatch);
-
-  return {
-    isLoggedIn,
-    sponsoredRailVisible,
-    contentCardClicked,
-    detailsPageVisible,
-    cardTitle,
-    detailPageTitle,
-    detailPageMetadata,
-    titlesMatch,
-  };
-}
-
 export interface VerifyMidRailAdSpacingAcrossTabsInput {
   mode?: string;
 }
@@ -960,6 +888,18 @@ export interface VerifyLivePlaybackGoLiveOutput {
   goLiveVisible: boolean;
 }
 
+export interface VerifyGoLiveTagAfterPauseInput {
+  mode?: string;
+  channelName?: string;
+}
+
+export interface VerifyGoLiveTagAfterPauseOutput {
+  isLoggedIn: boolean;
+  liveChannelOpened: boolean;
+  paused: boolean;
+  goLiveVisible: boolean;
+}
+
 export interface VerifyPauseAdPlaybackOutput {
   isLoggedIn: boolean;
   pauseAdVisible: boolean;
@@ -1037,6 +977,59 @@ export interface PlayContentFromWatchlistOutput {
   contentPlayed: boolean;
   currentTime: number;
   duration: number;
+}
+
+export async function verifySponsoredRailContentDetailsNavigation(page: any, input?: VerifySponsoredRailContentDetailsNavigationInput): Promise<VerifySponsoredRailContentDetailsNavigationOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Sponsored Rail content details navigation validation');
+  const loginResult = await loginToOTT(page, { mode: input?.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before validating Sponsored Rail content navigation', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      sponsoredRailVisible: false,
+      contentCardClicked: false,
+      detailsPageVisible: false,
+      cardTitle: '',
+      detailPageTitle: '',
+      detailPageMetadata: '',
+      titlesMatch: false,
+    };
+  }
+  await authPage.clickHomeTab();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await landingPage.scrollTillSponsoredRail(15);
+  const sponsoredRailVisible = await landingPage.isSponsoredRailVisible();
+  const cardNavigation = sponsoredRailVisible ? await detailsPage.clickSecondSponsoredRailContent() : { clicked: false, cardTitle: '' };
+  const contentCardClicked = cardNavigation.clicked;
+  const cardTitle = cardNavigation.cardTitle;
+  const detailsPageVisible = contentCardClicked ? await detailsPage.isShowDetailsPageVisible() : false;
+  const detailPageTitle = detailsPageVisible ? await detailsPage.getShowDetailsHeadingText() : '';
+  const detailPageMetadata = detailsPageVisible ? await detailsPage.getContentMetadataText() : '';
+  const normalizedCardTitle = cardTitle.replace(/\s+/g, ' ').trim().toLowerCase();
+  const normalizedDetailPageTitle = detailPageTitle.replace(/\s+/g, ' ').trim().toLowerCase();
+  const titlesMatch = Boolean(normalizedCardTitle && normalizedDetailPageTitle) && normalizedCardTitle === normalizedDetailPageTitle;
+  logger.info(`Sponsored Rail card title: ${cardTitle}`);
+  logger.info(`Details page title: ${detailPageTitle}`);
+  logger.info(`Details page metadata: ${detailPageMetadata}`);
+  logger.assertion('Sponsored Rail is visible on Home', sponsoredRailVisible);
+  logger.assertion('Sponsored Rail content card was clicked', contentCardClicked);
+  logger.assertion('Sponsored Rail content navigated to the details page', detailsPageVisible);
+  logger.assertion('Sponsored Rail card title matches details page title', titlesMatch);
+  return {
+    isLoggedIn,
+    sponsoredRailVisible,
+    contentCardClicked,
+    detailsPageVisible,
+    cardTitle,
+    detailPageTitle,
+    detailPageMetadata,
+    titlesMatch,
+  };
 }
 
 export async function verifyEarlyAccessMaybeLaterFlow(page: any, input?: VerifyEarlyAccessMaybeLaterInput): Promise<VerifyEarlyAccessMaybeLaterOutput> {
@@ -1194,6 +1187,7 @@ export async function verifySubscribedEarlyAccessUpNextFlow(page: any, input?: V
   await detailsPage.waitForPlayback(2);
   const earlyAccessTagVisible = await detailsPage.scrollUntilEarlyAccessTagVisible();
   logger.assertion('Early Access tag visible on episode thumbnail', earlyAccessTagVisible);
+  await page.waitForTimeout(2000);
   const episodeClicked = earlyAccessTagVisible ? await detailsPage.clickPreviousEpisodeOfEarlyAccessTag() : false;
   logger.assertion('Previous episode before Early Access episode clicked', episodeClicked);
   await detailsPage.waitForPlayback(5);
@@ -1239,61 +1233,39 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
     const parser = new CollectionParser(collectionResponse as any);
     const isMChrome = process.env.BROWSER === 'mchrome';
     const assetWithSubtitles = parser.findAsset((asset: any) => {
-      const hasSubtitles =
-        Array.isArray(asset.subtitleLanguages) &&
-        asset.subtitleLanguages.length >= 1;
+      const hasSubtitles = Array.isArray(asset.subtitleLanguages) && asset.subtitleLanguages.length >= 1;
       if (!isMChrome) {
         return hasSubtitles;
       }
       const labels = asset.labels ?? [];
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? '')
       );
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       const isFree = hasFreeLabel || isFreeMonetization;
       return hasSubtitles && isFree;
     });
     query = (assetWithSubtitles?.asset?.title ?? '').trim();
-    logger.assertion(
-      isMChrome
-        ? 'Free asset with subtitle languages found in Collection GraphQL'
-        : 'Asset with subtitle languages found in Collection GraphQL',
-      Boolean(query)
-    );
-    logger.info(
-      `Fetched asset from Collection GraphQL -> ` +
-      `Title: ${query}, ` +
-      `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'
-      }`
-    );
+    logger.assertion(isMChrome ? 'Free asset with subtitle languages found in Collection GraphQL' : 'Asset with subtitle languages found in Collection GraphQL',
+      Boolean(query));
+    logger.info(`Fetched asset from Collection GraphQL -> ` + `Title: ${query}, ` + `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
-  const resultsVisible = query
-    ? await authPage.isSearchResultsVisible(query)
-    : false;
-  logger.info(
-    `Search results visible for query "${query}": ${resultsVisible}`
-  );
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.info(`Search results visible for query "${query}": ${resultsVisible}`);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   await detailsPage.clickSubtitleButton();
@@ -1301,6 +1273,7 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   await detailsPage.waitForPlayback(1);
   await detailsPage.dragProgressBarToPosition(0.4);
+  await detailsPage.waitForMobileAdPlayback();
   const subtitleDisplayedOnPlayer = await detailsPage.isSubtitleDisplayedOnPlayer();
   logger.assertion('Subtitle language selected successfully', subtitleSelectionSuccessful);
   logger.assertion('Subtitle is displayed on the player screen', subtitleDisplayedOnPlayer);
@@ -1333,6 +1306,8 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
   await detailsPage.waitForMobileAdPlayback();
+  await detailsPage.waitForPlayback(7);
+  await detailsPage.hoverPlaybackScreen();
   const fullscreenVisible = await detailsPage.isFullscreenButtonVisible();
   await detailsPage.clickFullscreenButton();
   await detailsPage.waitForPlayback(2);
@@ -1356,19 +1331,25 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
 
 async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: string = 'Collection'): Promise<string | undefined> {
   try {
-    logger.info('Waiting 2 seconds for Collection GraphQL response to be available');
+    logger.info(`Waiting for ${graphqlQueryName} GraphQL response`);
     const gql = GraphQLHelper.getInstance(page);
     const collectionResponse = await gql.waitForOperation(graphqlQueryName);
     const parser = new CollectionParser(collectionResponse as any);
-    const foundAsset = parser.findAsset((asset: any) => Boolean(asset?.title));
-    if (!foundAsset?.asset?.title) {
-      logger.warn('No collection asset title available from GraphQL response');
+    const foundAsset = parser.findAsset((asset: any) => {
+      const title = asset?.title?.trim();
+      const isComingSoon = Array.isArray(asset?.labels) &&
+        asset.labels.some((label: any) => label?.id === 'coming_soon');
+      return Boolean(title) && !isComingSoon;
+    });
+    const title = foundAsset?.asset?.title?.trim();
+    if (!title) {
+      logger.warn(`No collection asset title available from ${graphqlQueryName} GraphQL response`);
       return undefined;
     }
-    logger.info(`Resolved collection search query from GraphQL asset: ${foundAsset.asset.title}`);
-    return foundAsset.asset.title;
+    logger.info(`Resolved collection search query from GraphQL asset: ${title}`);
+    return title;
   } catch (error) {
-    logger.warn('Unable to resolve query from Collection GraphQL response', error);
+    logger.warn(`Unable to resolve query from Collection GraphQL response`, error);
     return undefined;
   }
 }
@@ -1507,15 +1488,27 @@ export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: 
     const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-    const multiSeasonAsset = rails
-      .flatMap((rail) => rail.assets?.items ?? [])
-      .find((asset: any) => {
-        const totalSeasons = Number((asset.tvShowDetails as any)?.totalSeasons ?? 0);
-        return totalSeasons > 1;
-      });
+    const isMChrome = process.env.BROWSER === 'mchrome';
+    const multiSeasonAsset = rails.flatMap((rail) => rail.assets?.items ?? []).find((asset: any) => {
+      const totalSeasons = Number((asset.tvShowDetails as any)?.totalSeasons ?? 0);
+      const hasMultipleSeasons = totalSeasons > 1;
+      if (!isMChrome) {
+        return hasMultipleSeasons;
+      }
+      const monetType = String(
+        asset.monetization?.type ??
+        asset.monetizationType ??
+        asset.pricing?.type ??
+        asset.pricing?.pricingType ??
+        ''
+      ).toLowerCase();
+      const isFree = /free|free_to_watch|freetowatch|complimentary/.test(monetType);
+      return hasMultipleSeasons && isFree;
+    });
     query = (multiSeasonAsset?.title ?? '').trim();
-    logger.assertion('Asset with more than one season found in Collection GraphQL', Boolean(query));
-    logger.info(`Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
+    logger.assertion(isMChrome ? 'Free multi-season asset found in Collection GraphQL for mchrome' : 'Asset with more than one season found in Collection GraphQL',
+      Boolean(query));
+    logger.info(`${isMChrome ? 'Fetched free multi-season asset' : 'Fetched multi-season asset'} -> ` + `Title: ${query}, ` + `Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -1530,13 +1523,13 @@ export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: 
   logger.assertion('Clicked last season when available', clickedSeason);
   const clickedEpisode = await detailsPage.clickLastEpisode();
   logger.assertion('Clicked last episode', clickedEpisode);
+  await detailsPage.waitForMobileAdPlayback();
+  await detailsPage.waitForPlayback(10);
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(1.0);
+  await detailsPage.waitForMobileAdPlayback();
   const playbackCompleted = await authPage.finishPlaybackFromCurrentItem();
   const postDetailsVisible = await detailsPage.isShowDetailsPageVisible();
-  logger.assertion('User logged in successfully', isLoggedIn);
-  logger.assertion('Content details page visible', detailsVisible);
-  logger.assertion('Clicked last season when available', clickedSeason);
-  logger.assertion('Clicked last episode', clickedEpisode);
   logger.assertion('Playback completed for last episode', playbackCompleted);
   logger.assertion('Content details visible after playback completion', postDetailsVisible);
   return {
@@ -1621,6 +1614,7 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
     const gql = GraphQLHelper.getInstance(page);
     const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
+    const isMChrome = process.env.BROWSER === 'mchrome';
     const movieAsset = parser.findAsset((asset: any) => {
       const assetType = String(
         asset.assetType ??
@@ -1629,19 +1623,25 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
         asset.mediaType ??
         ''
       ).toLowerCase();
-
-      return assetType === 'movie';
+      const isMovie = assetType === 'movie';
+      if (!isMChrome) {
+        return isMovie;
+      }
+      const monetType = String(
+        asset.monetization?.type ??
+        asset.monetizationType ??
+        asset.pricing?.type ??
+        asset.pricing?.pricingType ??
+        ''
+      ).toLowerCase();
+      const isFree = /free|free_to_watch|freetowatch|complimentary/.test(monetType);
+      return isMovie && isFree;
     });
-
     query = (movieAsset?.asset?.title ?? '').trim();
-
-    logger.assertion(
-      'Movie asset found in Collection GraphQL',
-      Boolean(query)
-    );
+    logger.assertion(isMChrome ? 'Free movie asset found in Collection GraphQL for mchrome' : 'Movie asset found in Collection GraphQL',
+      Boolean(query));
   }
   logger.info(`Fetched movie title from Collection GraphQL: ${query}`);
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1652,21 +1652,17 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForMobileAdPlayback();
   const playbackStarted = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Movie playback started', playbackStarted);
-
   await detailsPage.dragSeekBarToPosition(1.0);
   await detailsPage.waitForMobileAdPlayback();
   const authPageForFinish = new OTTAuthPage(page);
-  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem().catch(() => false);
-  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
-
+  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem();
+  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Playback completed', playbackCompleted);
   logger.assertion('Content details page visible after playback completion', postDetailsVisible);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -1822,7 +1818,6 @@ export async function verifyBrowserSeekBarFlow(page: any, input?: OpenContentAnd
   const seekBarVisible = await detailsPage.isSeekBarVisible();
   const playbackTimeVisible = await detailsPage.isPlaybackTimeVisible();
   await detailsPage.hoverPlaybackScreen();
-  console.log('hovered on the player screen');
   const initialPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
   await detailsPage.dragSeekBarToPosition(targetPercent);
   await detailsPage.hoverPlaybackScreen();
@@ -1926,17 +1921,13 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting player controls hover-visible verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in', isLoggedIn);
-
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (queryFromCollection).trim();
   const expectedTitle = input?.expectedTitle ?? query;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -1944,11 +1935,9 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   logger.info(`Search results visible for query "${query}": ${resultsVisible}`);
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
@@ -1996,7 +1985,6 @@ export async function verifyVolumeControlFlow(page: any, input?: OpenContentAndP
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   const initialUnMuted = await detailsPage.isPlayerUnMuted();
@@ -2055,54 +2043,35 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting landscape player UI verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
-
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-
     const multiSeasonAsset = rails
       .flatMap((rail) => rail.assets?.items ?? [])
       .find((asset: any) => {
         const totalSeasons = Number(
           (asset.tvShowDetails as any)?.totalSeasons ?? 0
         );
-
         return totalSeasons > 1;
       });
-
     query = (multiSeasonAsset?.title ?? '').trim();
-
-    logger.assertion(
-      'Asset with more than one season found in Collection GraphQL',
-      Boolean(query)
-    );
-
-    logger.info(
-      `Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0
-      }`
-    );
+    logger.assertion('Asset with more than one season found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
   }
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickEpisodeOne();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
@@ -2126,7 +2095,6 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   logger.assertion('Forward and rewind controls visible in fullscreen mode', forwardRewindVisible);
   logger.assertion('Subtitle control visible in fullscreen mode (if available)', subtitleVisible);
   logger.assertion('Next episode control visible in fullscreen mode (if available)', nextEpisodeVisible);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2140,47 +2108,30 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   };
 }
 
-
 export async function verifyNextEpisodeCtaVisibilityFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyNextEpisodeCtaVisibilityOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting next episode CTA visibility verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
-
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-
     const multiSeasonAsset = rails
       .flatMap((rail) => rail.assets?.items ?? [])
       .find((asset: any) => {
         const totalSeasons = Number(
           (asset.tvShowDetails as any)?.totalSeasons ?? 0
         );
-
         return totalSeasons > 1;
       });
-
     query = (multiSeasonAsset?.title ?? '').trim();
-
-    logger.assertion(
-      'Asset with more than one season found in Collection GraphQL',
-      Boolean(query)
-    );
-
-    logger.info(
-      `Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0
-      }`
-    );
+    logger.assertion('Asset with more than one season found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -2188,24 +2139,19 @@ export async function verifyNextEpisodeCtaVisibilityFlow(page: any, input?: Open
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickEpisodeOne();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
-
   const seekBarVisible = await detailsPage.isSeekBarVisible();
   const nextEpisodeVisible = await detailsPage.isNextEpisodeButtonVisible();
   const nextEpisodeBelowSeekBar = await detailsPage.isNextEpisodeButtonBelowSeekBar();
-
   logger.assertion('Seek bar visible on player screen', seekBarVisible);
   logger.assertion('Next episode CTA visibility checked', true);
   logger.assertion('Next episode CTA positioned below the seek bar', nextEpisodeBelowSeekBar);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2248,12 +2194,9 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
-  console.log('Clicked first episode card');
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
-  console.log('Waited for playback to start');
   await detailsPage.hoverPlaybackScreen();
-  console.log('Hovered over playback screen');
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
@@ -2271,41 +2214,25 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting Up Next marker navigation verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
-
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
-
     const multiSeasonAsset = rails
       .flatMap((rail) => rail.assets?.items ?? [])
       .find((asset: any) => {
         const totalSeasons = Number(
           (asset.tvShowDetails as any)?.totalSeasons ?? 0
         );
-
         return totalSeasons > 1;
       });
-
     query = (multiSeasonAsset?.title ?? '').trim();
-
-    logger.assertion(
-      'Asset with more than one season found in Collection GraphQL',
-      Boolean(query)
-    );
-
-    logger.info(
-      `Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0
-      }`
-    );
+    logger.assertion('Asset with more than one season found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -2313,30 +2240,27 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-
   await detailsPage.clickEpisodeOne();
-  await detailsPage.waitForPlayback(3);
+  await detailsPage.waitForMobileAdPlayback();
+  await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickResumeButton();
-
   const markerVisible = await detailsPage.waitForUpNextMarker();
   logger.assertion('Up Next marker is visible', markerVisible);
-
   if (markerVisible) {
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.waitForMobileAdPlayback();
     await detailsPage.waitForPlayback(2);
     await detailsPage.tapPlaybackScreen();
   }
-
   const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible().catch(() => false));
   logger.assertion('Next episode playback started after tapping marker', nextEpisodePlaybackStarted);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2389,12 +2313,10 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
   let nextEpisodePlaybackStarted = false;
   if (upNextMarkerVisible) {
     timeBeforeMarkerClick = await detailsPage.getTrimmedPlaybackTime();
-    console.log('Time before clicking Up Next marker:', timeBeforeMarkerClick);
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickUpNextMarker();
     await detailsPage.waitForPlayback(5);
     timeAfterMarkerClick = await detailsPage.getTrimmedPlaybackTime();
-    console.log('Time after clicking Up Next marker:', timeAfterMarkerClick);
     nextEpisodePlaybackStarted = timeBeforeMarkerClick !== timeAfterMarkerClick;
   }
   logger.assertion('Time before clicking Up Next marker is recorded', !!timeBeforeMarkerClick);
@@ -2558,10 +2480,8 @@ export async function verifyNextEpisodePlaybackInFullscreenFlow(page: any, input
   }
   const fullScreenActiveAfterUpNext = await detailsPage.isFullscreenModeActive();
   const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible());
-
   logger.assertion('Fullscreen remains active after selecting next episode', fullScreenActiveAfterUpNext);
   logger.assertion('Next episode playback started in fullscreen mode', nextEpisodePlaybackStarted);
-
   return {
     isLoggedIn,
     detailsVisible,
@@ -2580,9 +2500,7 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
     const multiSeasonAsset = rails
@@ -2594,14 +2512,8 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
         return totalSeasons > 1;
       });
     query = (multiSeasonAsset?.title ?? '').trim();
-    logger.assertion(
-      'Asset with more than one season found in Collection GraphQL',
-      Boolean(query)
-    );
-    logger.info(
-      `Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0
-      }`
-    );
+    logger.assertion('Asset with more than one season found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched multi-season asset -> Title: ${query}, Total Seasons: ${(multiSeasonAsset?.tvShowDetails as any)?.totalSeasons ?? 0}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -2613,9 +2525,11 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
   const markerVisible = await detailsPage.waitForUpNextMarker(15000);
   logger.assertion('Up Next marker is visible', markerVisible);
@@ -2642,6 +2556,7 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (queryFromCollection).trim();
+  const expectedTitle = input?.expectedTitle ?? query;
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
@@ -2745,10 +2660,20 @@ export async function verifyPlaybackTimestampFormatFlow(page: any, input?: OpenC
         asset.mediaType ??
         ''
       ).toLowerCase();
+      const monetType = String(
+        asset.monetType ??
+        asset.monetizationType ??
+        asset.monetization ??
+        asset.subscriptionType ??
+        ''
+      ).toLowerCase();
+      if (process.env.BROWSER === 'mchrome') {
+        return assetType === 'movie' && monetType === 'free';
+      }
       return assetType === 'movie';
     });
     query = (movieAsset?.asset?.title ?? '').trim();
-    logger.assertion('Movie asset found in Collection GraphQL', Boolean(query));
+    logger.assertion(process.env.BROWSER === 'mchrome' ? 'Free movie asset found in Collection GraphQL' : 'Movie asset found in Collection GraphQL', Boolean(query));
   }
   logger.info(`Fetched movie title from Collection GraphQL: ${query}`);
   await authPage.clickSearchBar();
@@ -2762,9 +2687,11 @@ export async function verifyPlaybackTimestampFormatFlow(page: any, input?: OpenC
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.8);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(1);
@@ -2794,6 +2721,7 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
     const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
+    const isMChrome = process.env.BROWSER === 'mchrome';
     const tvShowAsset = rails
       .flatMap((rail) => rail.assets?.items ?? [])
       .find((asset: any) => {
@@ -2804,11 +2732,23 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
           asset.mediaType ??
           ''
         ).toLowerCase();
-        return assetType === 'tvshow';
+        const isTvShow = assetType === 'tvshow';
+        if (!isMChrome) {
+          return isTvShow;
+        }
+        const monetType = String(
+          asset.monetization?.type ??
+          asset.monetizationType ??
+          asset.pricing?.type ??
+          asset.pricing?.pricingType ??
+          ''
+        ).toLowerCase();
+        const isFree = /free|free_to_watch|freetowatch|complimentary/.test(monetType);
+        return isTvShow && isFree;
       });
     query = (tvShowAsset?.title ?? '').trim();
-    logger.assertion('TV Show asset found in Collection GraphQL', Boolean(query));
-    logger.info(`Fetched TV Show Title: ${query}`);
+    logger.assertion(isMChrome ? 'Free TV Show asset found in Collection GraphQL for mchrome' : 'TV Show asset found in Collection GraphQL', Boolean(query));
+    logger.info(`${isMChrome ? 'Fetched Free TV Show' : 'Fetched TV Show'} Title: ${query}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -2819,10 +2759,12 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
-  await detailsPage.clickEpisodeOne();
+  await detailsPage.clickPlayButton();
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.dragSeekBarToPosition(0.3);
+  await detailsPage.dragSeekBarToPosition(0.5);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(5);
@@ -2851,9 +2793,7 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const isMChrome = process.env.BROWSER === 'mchrome';
     const assetWithSubtitles = parser.findAsset((asset: any) => {
@@ -2880,31 +2820,15 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
       return hasSubtitles;
     });
     query = (assetWithSubtitles?.asset?.title ?? '').trim();
-    logger.assertion(
-      isMChrome
-        ? 'Free asset with subtitle languages found in Collection GraphQL'
-        : 'Asset with subtitle languages found in Collection GraphQL',
-      Boolean(query)
-    );
-    logger.info(
-      `Fetched asset from Collection GraphQL -> Title: ${query}, ` +
-      `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'
-      }`
-    );
+    logger.assertion(isMChrome ? 'Free asset with subtitle languages found in Collection GraphQL' : 'Asset with subtitle languages found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched asset from Collection GraphQL -> Title: ${query}, ` + `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
-  const resultsVisible = query
-    ? await authPage.isSearchResultsVisible(query)
-    : false;
-  logger.info(
-    `Search results visible for query "${query}": ${resultsVisible}`
-  );
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.info(`Search results visible for query "${query}": ${resultsVisible}`);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
@@ -2950,7 +2874,6 @@ export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarP
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(7);
   await detailsPage.tapPlaybackScreen();
-  console.log('Tap on play back screen')
   const previewVisible = await detailsPage.hoverSeekBarAndWaitForPreview();
   logger.assertion('Seekbar preview becomes visible while scrubbing', previewVisible);
   return {
@@ -3041,115 +2964,54 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   let query = (input?.query ?? '').trim();
   let secondQuery = (input?.secondQuery ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting subtitle carry-over verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   const gql = GraphQLHelper.getInstance(page);
-
-  const collectionResponse = await gql.waitForOperation(
-    input?.graphqlQueryName ?? 'Collection'
-  );
-
+  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
   const parser = new CollectionParser(collectionResponse as any);
   const rails = parser.getRails();
-
   const isMChrome = process.env.BROWSER === 'mchrome';
-
   const subtitleAssets = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .filter((asset) => {
       const assetData = asset as any;
-
       const subtitleLanguages = assetData.subtitleLanguages ?? [];
-
-      const hasSubtitles =
-        Array.isArray(subtitleLanguages) &&
-        subtitleLanguages.length > 0;
-
+      const hasSubtitles = Array.isArray(subtitleLanguages) && subtitleLanguages.length > 0;
       // Keep existing functionality for web
       if (!isMChrome) {
         return hasSubtitles;
       }
-
       // mchrome: subtitle asset must also be Free
       const labels = assetData.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       const monetType =
         assetData.monetization?.type ??
         assetData.monetizationType ??
         assetData.pricing?.type ??
         assetData.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       const isFree = hasFreeLabel || isFreeMonetization;
-
       return hasSubtitles && isFree;
     })
     .slice(0, 2);
-
-  logger.assertion(
-    isMChrome
-      ? 'At least two free assets with subtitle languages found in Collection GraphQL'
-      : 'At least two assets with subtitle languages found in Collection GraphQL',
-    subtitleAssets.length >= 2
-  );
-
+  logger.assertion(isMChrome ? 'At least two free assets with subtitle languages found in Collection GraphQL' : 'At least two assets with subtitle languages found in Collection GraphQL', subtitleAssets.length >= 2);
   if (subtitleAssets.length < 2) {
-    throw new Error(
-      isMChrome
-        ? 'Less than two free assets with subtitleLanguages found in Collection GraphQL'
-        : 'Less than two assets with subtitleLanguages found in Collection GraphQL'
-    );
+    throw new Error(isMChrome ? 'Less than two free assets with subtitleLanguages found in Collection GraphQL' : 'Less than two assets with subtitleLanguages found in Collection GraphQL');
   }
-
   const firstTitle = ((subtitleAssets[0] as any)?.title ?? '').trim();
   const secondTitle = ((subtitleAssets[1] as any)?.title ?? '').trim();
-
   query = query || firstTitle;
   secondQuery = secondQuery || secondTitle;
-
-  logger.info(
-    `Fetched Subtitle Asset 1: ${firstTitle}`
-  );
-
-  logger.info(
-    `Fetched Subtitle Asset 2: ${secondTitle}`
-  );
-
-  logger.info(
-    `Using first search title: ${query}`
-  );
-
-  logger.info(
-    `Using second search title: ${secondQuery}`
-  );
-
+  logger.info(`Fetched Subtitle Asset 1: ${firstTitle}`);
+  logger.info(`Fetched Subtitle Asset 2: ${secondTitle}`);
+  logger.info(`Using first search title: ${query}`);
+  logger.info(`Using second search title: ${secondQuery}`);
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(query);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible = query
-    ? await authPage.isSearchResultsVisible(query)
-    : false;
-
-  logger.assertion(
-    `Search results visible for first title: ${query}`,
-    resultsVisible
-  );
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.assertion(`Search results visible for first title: ${query}`, resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
@@ -3196,19 +3058,29 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
+    const isMChrome = process.env.BROWSER === 'mchrome';
     const assetWithSubtitles = parser.findAsset((asset: any) => {
-      return (
-        Array.isArray(asset.subtitleLanguages) &&
-        asset.subtitleLanguages.length >= 1
-      );
+      const hasSubtitles = Array.isArray(asset.subtitleLanguages) && asset.subtitleLanguages.length >= 1;
+      if (!isMChrome) {
+        // Existing web functionality
+        return hasSubtitles;
+      }
+      // mchrome: require subtitles + free content
+      const labels = asset.labels ?? [];
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
+      const monetType =
+        asset.monetization?.type ??
+        asset.monetizationType ??
+        asset.pricing?.type ??
+        asset.pricing?.pricingType;
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
+      return hasSubtitles && (hasFreeLabel || isFreeMonetization);
     });
     query = (assetWithSubtitles?.asset?.title ?? '').trim();
-    logger.assertion('Asset with subtitle languages found in Collection GraphQL', Boolean(query));
-    logger.info(`Fetched asset from Collection GraphQL -> Title: ${query}, Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'}`);
+    logger.assertion(isMChrome ? 'Free asset with subtitle languages found in Collection GraphQL' : 'Asset with subtitle languages found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched asset from Collection GraphQL -> ` + `Title: ${query}, ` + `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'}`);
   }
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -3221,14 +3093,17 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.waitForMobileAdPlayback()
   await detailsPage.waitForPlayback(2);
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSubtitleButton();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSubtitleButton();
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.dragSeekBarToPosition(0.1);
+  await detailsPage.dragSeekBarToPosition(0.3);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.isSubtitleDisplayedOnPlayer();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickForwardButton();
@@ -3240,6 +3115,7 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   const subtitleVisibleAfterRewind = await detailsPage.isSubtitleDisplayedOnPlayer();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.6);
+  await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(1);
   const subtitleVisibleAfterSeek = await detailsPage.isSubtitleDisplayedOnPlayer();
   logger.assertion('Subtitle language selected successfully', subtitleSelectionSuccessful);
@@ -3339,49 +3215,23 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
       }
       // Check Free label
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       // Check Free monetization
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-
-  const freeContentTitle = (
-    freeTvShowAsset?.title ?? query
-  ).trim();
-
-  logger.assertion(
-    'Free TV show content title resolved from Collection GraphQL',
-    Boolean(freeContentTitle)
-  );
-
+  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(freeContentTitle);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible =
-    await authPage.isSearchResultsVisible(freeContentTitle);
-
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
@@ -3407,85 +3257,38 @@ export async function verifySubtitleDefaultOffFlow(page: any, input?: OpenConten
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const gql = GraphQLHelper.getInstance(page);
-
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
-
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
-
     const isMChrome = process.env.BROWSER === 'mchrome';
-
     const assetWithSubtitles = parser.findAsset((asset: any) => {
-      const hasSubtitles =
-        Array.isArray(asset.subtitleLanguages) &&
-        asset.subtitleLanguages.length >= 1;
-
+      const hasSubtitles = Array.isArray(asset.subtitleLanguages) && asset.subtitleLanguages.length >= 1;
       if (!isMChrome) {
         // Existing web functionality
         return hasSubtitles;
       }
-
       // mchrome: subtitle languages + Free
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       const isFree = hasFreeLabel || isFreeMonetization;
-
       return hasSubtitles && isFree;
     });
-
     query = (assetWithSubtitles?.asset?.title ?? '').trim();
-
-    logger.assertion(
-      isMChrome
-        ? 'Free asset with subtitle languages found in Collection GraphQL'
-        : 'Asset with subtitle languages found in Collection GraphQL',
-      Boolean(query)
-    );
-
-    logger.info(
-      `Fetched asset from Collection GraphQL -> ` +
-      `Title: ${query}, ` +
-      `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'
-      }`
-    );
+    logger.assertion(isMChrome ? 'Free asset with subtitle languages found in Collection GraphQL' : 'Asset with subtitle languages found in Collection GraphQL', Boolean(query));
+    logger.info(`Fetched asset from Collection GraphQL -> ` + `Title: ${query}, ` + `Subtitle Languages: ${assetWithSubtitles?.asset?.subtitleLanguages?.join(', ') ?? 'None'}`);
   }
-
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(query);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible = query
-    ? await authPage.isSearchResultsVisible(query)
-    : false;
-
-  logger.info(
-    `Search results visible for query "${query}": ${resultsVisible}`
-  );
-
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
+  logger.info(`Search results visible for query "${query}": ${resultsVisible}`);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
@@ -3513,22 +3316,17 @@ export async function verifyPauseAdPlaybackFlow(page: any, input?: OpenContentAn
   const detailsPage = new OTTDetailsPage(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
-
   logger.step('Starting pause ad playback verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
-
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
   await detailsPage.waitForPlayback(100);
@@ -3538,12 +3336,10 @@ export async function verifyPauseAdPlaybackFlow(page: any, input?: OpenContentAn
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickResumeButton();
   const pauseAdVisible = await detailsPage.isPauseAdVisible();
-
   logger.assertion('Player screen visible for pause ad flow', playerVisible);
   logger.assertion('Ad visible before main content starts', adVisible);
   logger.assertion('Main content playback visible after ad completes', mainContentVisible);
   logger.assertion('Pause ad visible after pausing playback', pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -3620,23 +3416,18 @@ export async function verifyPauseAdDisplaysForDifferentUsersFlow(page: any, inpu
     await authPage.isWelcomeHeadingVisible();
     return isPauseAdVisible;
   };
-
   const firstLoginResult = await loginWithTVProvider(page, { mode: 'provider', providerName });
   const firstUserLoggedIn = firstLoginResult.isLoggedIn;
   logger.assertion('TV provider user login successful', firstUserLoggedIn);
-
   const searchTitle = await findFreeSearchTitle();
   logger.assertion('Free content title resolved from GraphQL', Boolean(searchTitle));
   const tvUserPauseAdVisible = await playAndPauseContent(searchTitle);
   logger.assertion('Pause ad visible for the TV provider user', tvUserPauseAdVisible);
-
   const secondLoginResult = await loginToFreeUser(page, { mode: 'freeUser' });
   const secondUserLoggedIn = secondLoginResult.isLoggedIn;
   logger.assertion('Free user login successful', secondUserLoggedIn);
-
   const freeUserPauseAdVisible = await playAndPauseContent(searchTitle);
   logger.assertion('Pause ad visible for the TV provider user', tvUserPauseAdVisible);
-
   return {
     firstUserLoggedIn,
     secondUserLoggedIn,
@@ -3652,13 +3443,10 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
   const mode = input?.mode;
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad clickability verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -3675,7 +3463,6 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -3691,7 +3478,6 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
       logger.debug('Collection GraphQL did not provide a free title for pause-ad clickability flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -3705,14 +3491,12 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
   }
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   await detailsPage.waitForPlayback(5);
-
   const pauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   const initialUrl = page.url();
   await detailsPage.clickPauseAdBanner();
@@ -3720,7 +3504,6 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
   const finalUrl = page.url();
   logger.info(`Pause ad clickability check: initial URL=${initialUrl}, final URL=${finalUrl}`);
   logger.assertion('Pause ad banner is visible before click interaction', pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -3734,15 +3517,10 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
   const mode = input?.mode;
   const query = (input?.query ?? 'Quick Feels').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting micro drama pause ad verification flow for Basic user');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
-  const loginResult = mode === 'BasicUser'
-    ? await loginWithBasicUser(page)
-    : await loginToOTT(page, { mode });
+  const loginResult = mode === 'BasicUser' ? await loginWithBasicUser(page) : await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let microDramaTitle = '';
   try {
     const collectionResp = await collectionWait;
@@ -3758,7 +3536,6 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
       const monetizationType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
       return monetizationType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetizationType)) : false;
     };
-
     const quickFeelsRail = rails.find(rail => /quick feels/i.test(String(rail.title ?? '')));
     if (quickFeelsRail) {
       const freeAsset = (quickFeelsRail.assets?.items ?? []).find(freePredicate);
@@ -3766,14 +3543,12 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
         microDramaTitle = String(freeAsset.title ?? '').trim();
       }
     }
-
     if (!microDramaTitle) {
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           const labels = asset.labels ?? [];
           const title = String(asset.title ?? '').trim();
           const hasMicroDramaLabel = labels.some((label: any) => /micro drama/i.test(label?.text ?? ''));
-
           if (hasMicroDramaLabel || /micro drama/i.test(title)) {
             microDramaTitle = title || query;
             break;
@@ -3787,17 +3562,14 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
   } catch (error) {
     logger.debug('Collection GraphQL did not provide a Quick Feels title for the new pause-ad flow', error);
   }
-
   if (!microDramaTitle) {
     microDramaTitle = query;
   }
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(microDramaTitle);
   await authPage.submitSearchQuery();
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
@@ -3809,11 +3581,8 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(7);
-
   const pauseAdVisible = await detailsPage.isPauseAdBannerVisible();
-
   logger.assertion('Pause ad visible after pausing Micro Drama content', pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -3828,13 +3597,10 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
   const mode = input?.mode;
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad fullscreen verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -3851,7 +3617,6 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -3867,7 +3632,6 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
       logger.debug('Collection GraphQL did not provide a free title for pause-ad fullscreen flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -3881,7 +3645,6 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
   }
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
@@ -3908,7 +3671,6 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
   logger.assertion('Pause ad is visible in the minimized player state', minimizedPauseAdVisible);
   logger.assertion('Pause ad is visible in the maximized player state', maximizedPauseAdVisible);
   logger.assertion('Pause ad is visible in either minimized or maximized player state', pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -3922,13 +3684,10 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
   const mode = input?.mode;
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting mid-roll ad fullscreen verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -3945,7 +3704,6 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         const railTitle = String(rail.title ?? '').trim();
         if (/quick\s*feels/i.test(railTitle)) {
@@ -3965,7 +3723,6 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
       logger.debug('Collection GraphQL did not provide a free title for mid-roll ad fullscreen flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -3979,7 +3736,6 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
   }
-
   await detailsPage.clickPlayButton();
   await page.waitForTimeout(5000);
   await detailsPage.waitTillAdsEnd();
@@ -3992,7 +3748,6 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
   const fullscreenActive = await detailsPage.isFullscreenModeMidRollAd();
   const midRollAdVisible = await detailsPage.isMidRollAdOverlayVisible();
   const midRollAdInFullScreen = fullscreenActive && midRollAdVisible;
-
   logger.assertion('Fullscreen mode active', fullscreenActive);
   logger.assertion('Mid-roll ad is visible in fullscreen mode', midRollAdVisible);
   logger.assertion('Mid-roll ad is visible in fullscreen mode `', midRollAdInFullScreen);
@@ -4010,13 +3765,10 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad repeated-pauses verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -4033,7 +3785,6 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -4049,7 +3800,6 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
       logger.debug('Collection GraphQL did not provide a free title for repeated pause-ad flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -4070,12 +3820,10 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
   let returnToContentVisible = false;
   let playbackTitleVisible = false;
   let seekBarVisible = false;
-
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickPauseButton();
     await page.waitForTimeout(7000);
-
     pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
     await page.waitForTimeout(5000);
     returnToContentVisible = await detailsPage.isReturnToContentTextVisible();
@@ -4084,22 +3832,16 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
     await page.waitForTimeout(5000);
     logger.assertion(`Pause ad visible during repeated pause attempt ${attempt}`, pauseAdVisible);
     logger.assertion(`Return-to-content overlay visible during repeated pause attempt ${attempt}`, returnToContentVisible);
-
     if (!pauseAdVisible) {
       allPauseAdAttemptsVisible = false;
     }
-
     if (returnToContentVisible) {
       await detailsPage.clickReturnToContentText();
       await page.waitForTimeout(5000);
     }
-
     playbackTitleVisible = await detailsPage.isPlayerContentTitleVisible().catch(() => false);
-
   }
-
   logger.assertion('Playback title is visible after repeated pause interactions', playbackTitleVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4115,13 +3857,10 @@ export async function verifyPauseAdNoOverlapWithDismissAndTitleFlow(page: any, i
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad overlap verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -4138,7 +3877,6 @@ export async function verifyPauseAdNoOverlapWithDismissAndTitleFlow(page: any, i
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -4172,27 +3910,17 @@ export async function verifyPauseAdNoOverlapWithDismissAndTitleFlow(page: any, i
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(7000);
-
   const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   const returnToContentVisible = await detailsPage.isReturnToContentTextVisible();
-  //const contentTitleVisible = await detailsPage.isPlayerContentTitleVisible();
-  const overlapMetrics = pauseAdVisible
-    ? await detailsPage.isPauseAdOverlappingReturnToContentOrTitle().catch(() => ({ overlapWithReturnToContent: false }))
-    : { overlapWithReturnToContent: false, overlapWithTitle: false };
+  const overlapMetrics = pauseAdVisible ? await detailsPage.isPauseAdOverlappingReturnToContentOrTitle().catch(() => ({ overlapWithReturnToContent: false })) : { overlapWithReturnToContent: false, overlapWithTitle: false };
   const overlapDetected = overlapMetrics.overlapWithReturnToContent;
-
-  //logger.assertion('Pause ad is visible before seek bar overlap validation', pauseAdVisible);
   logger.assertion('Return-to-content CTA is visible on the pause ad screen', returnToContentVisible);
-  //logger.assertion('Content title is visible on the pause ad screen', contentTitleVisible);
   logger.assertion('Pause ad does not overlap the dismiss CTA or title', !overlapDetected);
-
   return {
     isLoggedIn,
     pauseAdVisible,
     returnToContentVisible,
-    //contentTitleVisible,
     overlapWithReturnToContent: overlapMetrics.overlapWithReturnToContent,
-    //overlapWithTitle: overlapMetrics.overlapWithTitle,
     overlapDetected,
   };
 }
@@ -4203,13 +3931,10 @@ export async function verifyPauseAdSeekBarOverlapFlow(page: any, input?: VerifyP
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad seek bar overlap verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -4222,7 +3947,6 @@ export async function verifyPauseAdSeekBarOverlapFlow(page: any, input?: VerifyP
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -4238,7 +3962,6 @@ export async function verifyPauseAdSeekBarOverlapFlow(page: any, input?: VerifyP
       logger.debug('Collection GraphQL did not provide a free title for the pause-ad seek bar overlap flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -4251,18 +3974,13 @@ export async function verifyPauseAdSeekBarOverlapFlow(page: any, input?: VerifyP
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(7000);
-
   const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   const seekBarVisible = await detailsPage.isSeekBarVisible();
-  const overlapWithSeekBar = pauseAdVisible
-    ? await detailsPage.isPauseAdOverlappingSeekBar().catch(() => false)
-    : false;
+  const overlapWithSeekBar = pauseAdVisible ? await detailsPage.isPauseAdOverlappingSeekBar().catch(() => false) : false;
   const overlapDetected = overlapWithSeekBar;
-
   logger.assertion('Pause ad is visible before seek bar overlap validation', pauseAdVisible);
   logger.assertion('Seek bar is visible on the pause ad screen', seekBarVisible);
   logger.assertion('Pause ad does not overlap the seek bar', !overlapDetected);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4277,12 +3995,9 @@ export async function verifyPauseAdNoOverlapWithUpNextMarkerFlow(page: any, inpu
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const searchTerm = (input?.searchTerm ?? 'Lavender Fields').trim();
-
   logger.step('Starting pause-ad overlap verification flow for the Up Next binge marker');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchText(searchTerm);
   await authPage.submitSearch();
@@ -4305,17 +4020,14 @@ export async function verifyPauseAdNoOverlapWithUpNextMarkerFlow(page: any, inpu
   const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   await page.waitForTimeout(7000);
   const upNextVisibleAfterPauseAd = await detailsPage.isPauseUpNextMarkerVisible();
-
   logger.assertion('Up Next binge marker is visible on the player screen', upNextVisibleBeforeAd);
   logger.assertion('Pause ad is visible before validating overlap with the Up Next marker', pauseAdVisible);
   logger.assertion('Pause ad does not overlap the Up Next binge marker', !upNextVisibleAfterPauseAd);
-
   return {
     isLoggedIn,
     upNextVisibleBeforeAd,
     pauseAdVisible,
     upNextVisibleAfterPauseAd,
-
   };
 }
 
@@ -4325,13 +4037,10 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad dismiss CTA visibility verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -4348,7 +4057,6 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -4364,7 +4072,6 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
       logger.debug('Collection GraphQL did not provide a free title for pause-ad dismiss CTA flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -4373,7 +4080,6 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
-  // await detailsPage.waitForPlayback(100);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
   try {
@@ -4381,29 +4087,22 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
     await gql.waitForOperation('Asset', 10000).catch(() => null);
   } catch (err) {
   }
-
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(5000);
-
   const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   await page.waitForTimeout(5000);
   const returnToContentVisible = await detailsPage.isReturnToContentTextVisible();
-
   logger.assertion('Pause ad visible before interacting with return-to-content overlay', pauseAdVisible);
   logger.assertion('Return-to-content overlay is visible on the pause ad screen', returnToContentVisible);
-
   if (returnToContentVisible) {
     await detailsPage.clickReturnToContentText();
     await page.waitForTimeout(5000);
   }
-
   const playbackTitleVisible = await detailsPage.isPlayerContentTitleVisible().catch(() => false);
   const seekBarVisible = await detailsPage.isSeekBarVisible();
-
   logger.assertion('Playback title is visible after returning to content', playbackTitleVisible);
   logger.assertion('Seek bar is visible after returning to content', seekBarVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4418,12 +4117,9 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const searchQuery = (input?.query ?? '').trim();
-
   logger.step('Starting pause-ad controls-dismissed verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   if (isLoggedIn) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchQuery);
@@ -4436,7 +4132,6 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickNextEpisodeButton();
-
   }
   await page.waitForTimeout(5000);
   await detailsPage.waitTillAdsEnd();
@@ -4454,8 +4149,6 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickSkipRecapButton();
   await page.waitForTimeout(2000);
-  // await detailsPage.tapPlaybackScreen();
-  // await page.waitForTimeout(5000);
   await detailsPage.hoverPlaybackScreen();
   const skipIntroVisible = await detailsPage.isSkipIntroMarkerVisible();
   await detailsPage.waitForPlayback(3);
@@ -4478,7 +4171,6 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(6000);
   const subtitleMenuHiddenAfterPause = !(await detailsPage.isSubtitleLanguageVisible().catch(() => false));
-
   logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', pauseAdVisible);
   logger.assertion('Skip recap marker is visible before the pause-ad interaction', skipRecapVisible);
   logger.assertion('Skip recap marker is not visible after the pause-ad interaction', !skipRecapNotVisible);
@@ -4488,9 +4180,6 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   logger.assertion('Skip intro marker disappears after the pause-ad interaction', skipIntroHiddenAfterPause);
   logger.assertion('Subtitle menu is visible after the subtitle button action', subtitleMenuVisible);
   logger.assertion('Subtitle menu is dismissed after the pause-ad interaction', subtitleMenuHiddenAfterPause);
-
-
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4502,7 +4191,6 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
     skipRecapNotVisible,
     skipIntroNotVisible,
     recapPauseAdVisible,
-
   };
 }
 
@@ -4512,18 +4200,14 @@ export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: 
   const mode = input?.mode;
   const searchTerm = (input?.searchTerm ?? 'Lavender Fields').trim();
   const liveContentName = input?.liveContentName ?? 'DZMM Teleradyo';
-
   logger.step('Starting pause ad overlap verification flow for skip intro, skip recap, and Go Live CTAs');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchText(searchTerm);
   await authPage.submitSearch();
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
-
   await detailsPage.scrollToSeasonsSection();
   await detailsPage.clickEpisodeTwo();
   await detailsPage.waitForPlayback(5);
@@ -4536,11 +4220,9 @@ export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: 
   const skipRecapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   await page.waitForTimeout(4000);
   const skipRecapVisibleAfterAd = await detailsPage.isSkipRecapMarkerVisible();
-
   logger.assertion('Skip Recap marker is visible before pausing through the ad interaction', skipRecapVisible);
   logger.assertion('Pause ad is visible', skipRecapPauseAdVisible);
   logger.assertion('Pause ad should not overlap the Skip Recap CTA', !skipRecapVisibleAfterAd);
-
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
   await detailsPage.clickSkipRecapButton();
@@ -4552,11 +4234,9 @@ export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: 
   const skipIntroPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   await page.waitForTimeout(4000);
   const skipIntroVisibleAfterAd = await detailsPage.isSkipIntroMarkerVisible();
-
   logger.assertion('Skip Intro appears after skipping recap', skipIntroVisible);
   logger.assertion('Pause ad is visible after skipping recap', skipIntroPauseAdVisible);
   logger.assertion('Pause ad should not overlap the Skip Intro CTA', !skipIntroVisibleAfterAd);
-
   await detailsPage.clickBackButton();
   await authPage.navigateHome();
   await detailsPage.waitForPlayback(2);
@@ -4567,14 +4247,11 @@ export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: 
   await detailsPage.tapPlaybackScreen();
   const goLiveVisible = await detailsPage.isGoLiveMarkerVisible();
   await page.waitForTimeout(7000);
-
   const goLivePauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
   const goLiveVisibleAfterAd = await detailsPage.isGoLiveMarkerVisible();
-
   logger.assertion('Go Live CTA is visible for the selected live content', goLiveVisible);
   logger.assertion('Pause ad is visible after skipping recap', goLivePauseAdVisible);
   logger.assertion('Pause ad should not overlap the Go Live CTA', !goLiveVisibleAfterAd);
-
   return {
     isLoggedIn,
     skipRecapVisible,
@@ -4595,13 +4272,10 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad back-navigation verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -4618,7 +4292,6 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -4634,7 +4307,6 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
       logger.debug('Collection GraphQL did not provide a free title for pause-ad back-navigation flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -4643,7 +4315,6 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
     await detailsPage.clickFirstSearchResult();
     await page.waitForTimeout(2000);
   }
-
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
@@ -4655,19 +4326,15 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(6000);
-
   const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible().catch(() => false);
   logger.assertion('Pause ad is visible before the back button interaction', pauseAdVisible);
-
   if (pauseAdVisible) {
     await detailsPage.clickBackButtonFromPauseAdScreen();
     await page.waitForTimeout(5000);
   }
-
   const detailsPageVisible = await detailsPage.isDetailsPageVisibleAfterPauseAdBackNavigation().catch(() => false);
   const backNavigationSuccessful = detailsPageVisible;
   logger.assertion('Details page is visible after navigating back from the pause ad screen', detailsPageVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4680,12 +4347,9 @@ export async function verifyPauseAdLiveContentPlaybackFlow(page: any, input?: Ve
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const liveContentName = (input?.liveContentName ?? '').trim();
-
   logger.step('Starting live-channel pause ad playback verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await detailsPage.clickFreeContentUnderLiveChannelsTray(liveContentName);
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitForPlayback(10);
@@ -4694,7 +4358,6 @@ export async function verifyPauseAdLiveContentPlaybackFlow(page: any, input?: Ve
   await detailsPage.waitForPlayback(5);
   const pauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible after pausing live-channel playback', pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4705,12 +4368,9 @@ export async function verifyPauseAdAbsenceForPremiumOrGmaFlow(page: any, input?:
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   const mode = input?.mode;
-
   logger.step('Starting premium/GMA pause ad absence verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await authPage.clickMoviesTab();
   await detailsPage.clickPlayButton();
   await page.waitForTimeout(5000);
@@ -4718,7 +4378,6 @@ export async function verifyPauseAdAbsenceForPremiumOrGmaFlow(page: any, input?:
   await page.waitForTimeout(5000);
   const pauseAdVisible = await detailsPage.pauseAdBannerNotVisible();
   logger.assertion('Pause ad should not be visible for premium or GMA users', !pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -4729,12 +4388,9 @@ export async function verifyPauseScreenForPremiumOrGmaFlow(page: any, input?: Ve
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting premium/GMA pause-screen verification flow for movie and show content');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await authPage.clickMoviesTab();
   await detailsPage.clickFirstMovieContent();
   await detailsPage.clickPlayButton();
@@ -4764,7 +4420,6 @@ export async function verifyPauseScreenForPremiumOrGmaFlow(page: any, input?: Ve
   logger.assertion('Show pause screen appears for premium/GMA users', showPauseScreenVisible);
   logger.assertion('Show ad banner is not visible while paused for premium/GMA users', !showAdBannerVisible);
   logger.assertion('Show pause banner is visible for premium/GMA users', pauseShowBannerVisible);
-
   return {
     isLoggedIn,
     moviePauseScreenVisible,
@@ -4781,12 +4436,9 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const liveContentName = (input?.query ?? '').trim();
-
   logger.step('Starting pause ad visibility verification for live, movie, and show content');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await page.waitForTimeout(5000);
   await detailsPage.clickFreeContentUnderLiveChannelsTray(liveContentName);
   await detailsPage.waitForPlayback(5);
@@ -4796,7 +4448,6 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   await page.waitForTimeout(20000);
   const livePauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for live content after clicking Resume', livePauseAdVisible);
-
   await detailsPage.clickBackButton();
   await authPage.clickMoviesTab();
   await page.waitForTimeout(2000);
@@ -4822,7 +4473,6 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   await detailsPage.waitForPlayback(5);
   const moviePauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for movie content after clicking Resume', moviePauseAdVisible);
-
   await detailsPage.clickBackButton();
   await authPage.clickShowsTab();
   await page.waitForTimeout(3000);
@@ -4842,7 +4492,6 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   await detailsPage.waitForPlayback(5);
   const showPauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for show content after clicking Resume', showPauseAdVisible);
-
   return {
     isLoggedIn,
     livePauseAdVisible,
@@ -4856,9 +4505,7 @@ async function resolveFreeContentTitleByType(page: any, contentType: 'movie' | '
     const gql = GraphQLHelper.getInstance(page);
     const collectionResponse = await gql.waitForOperation<any>(graphqlQueryName, 20000);
     const parser = new CollectionParser(collectionResponse as any);
-    const expectedTypes = contentType === 'movie'
-      ? ['movie']
-      : ['show', 'tvshow', 'series'];
+    const expectedTypes = contentType === 'movie' ? ['movie'] : ['show', 'tvshow', 'series'];
     const foundAsset = parser.findAsset((asset: any) => {
       const assetType = String(
         asset?.asset?.type ??
@@ -4869,19 +4516,15 @@ async function resolveFreeContentTitleByType(page: any, contentType: 'movie' | '
         asset?.kind ??
         ''
       ).toLowerCase();
-      const labels = Array.isArray(asset?.labels)
-        ? asset.labels.map((label: any) => String(label?.text ?? '').toLowerCase())
-        : [];
+      const labels = Array.isArray(asset?.labels) ? asset.labels.map((label: any) => String(label?.text ?? '').toLowerCase()) : [];
       const monetizationType = asset?.monetization?.type
         ?? asset?.monetizationType
         ?? asset?.pricing?.type
         ?? asset?.pricing?.pricingType;
       const isFree = labels.some((label: string) => /free/i.test(label))
         || /free|complimentary|free_to_watch|freetowatch/i.test(String(monetizationType ?? ''));
-
       return expectedTypes.includes(assetType) && isFree && Boolean(asset?.title);
     });
-
     const title = String(foundAsset?.asset?.title ?? '').trim();
     logger.info(`Resolved free ${contentType} title from Collection GraphQL: ${title}`);
     return title || undefined;
@@ -4890,7 +4533,6 @@ async function resolveFreeContentTitleByType(page: any, contentType: 'movie' | '
     return undefined;
   }
 }
-
 
 async function resolveFreeQueryFromCollectionGraphQL(page: any, graphqlQueryName: string = 'Collection'): Promise<string | undefined> {
   try {
@@ -4909,22 +4551,17 @@ async function resolveFreeQueryFromCollectionGraphQL(page: any, graphqlQueryName
       if (labels.some((text: string) => /free/i.test(text))) {
         return true;
       }
-
       const monetType = asset?.monetization?.type
         ?? asset?.monetizationType
         ?? asset?.pricing?.type
         ?? asset?.pricing?.pricingType;
-      return monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType).toLowerCase())
-        : false;
+      return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType).toLowerCase()) : false;
     });
-
     const title = String(foundAsset?.asset?.title ?? '').trim();
     if (!title) {
       logger.warn('No free collection asset title available from GraphQL response');
       return undefined;
     }
-
     logger.info(`Resolved free collection search query from GraphQL asset: ${title}`);
     return title;
   } catch (error) {
@@ -4941,17 +4578,14 @@ export async function verifyPauseAdDisappearsOnResumeFlow(page: any, input?: Ver
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveFreeQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (input?.query?.trim() || queryFromCollection || '').trim();
-
   logger.step('Starting pause-ad disappearance after resume verification flow');
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for free content query', resultsVisible);
-
   const freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(query).catch(() => false);
   logger.assertion('Search result is tagged as Free content', freeLabelVisible);
-
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
@@ -4962,7 +4596,6 @@ export async function verifyPauseAdDisappearsOnResumeFlow(page: any, input?: Ver
     await gql.waitForOperation('Asset', 10000).catch(() => null);
   } catch (err) {
   }
-
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(6000);
@@ -4973,7 +4606,6 @@ export async function verifyPauseAdDisappearsOnResumeFlow(page: any, input?: Ver
   await page.waitForTimeout(5000);
   const pauseAdVisibleAfterResume = await detailsPage.pauseAdBannerNotVisible();
   logger.assertion('Pause ad disappears after resuming playback', !pauseAdVisibleAfterResume);
-
   return {
     isLoggedIn,
     pauseAdVisibleDuringPause,
@@ -4987,13 +4619,10 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-
   logger.step('Starting pause-ad no-reappear-within-3s verification flow');
-
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   let searchTitle = '';
   if (isLoggedIn) {
     try {
@@ -5010,7 +4639,6 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
         const monetType = asset.monetization?.type ?? asset.monetizationType ?? asset.monetization?.monetizationType ?? asset.pricing?.type ?? asset.pricing?.pricingType;
         return monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       };
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           if (freePredicate(asset)) {
@@ -5024,7 +4652,6 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
       logger.debug('Collection GraphQL did not provide a free title for no-reappear flow', error);
     }
   }
-
   if (searchTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
@@ -5032,10 +4659,7 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
   }
-
   await detailsPage.clickPlayButton();
-  // await detailsPage.waitForPlayback(100);
-
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitTillAdsEnd();
   try {
@@ -5054,7 +4678,6 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
   await page.waitForTimeout(5000);
   const pauseAdVisibleAfterImmediateRePause = await detailsPage.pauseAdBannerNotVisible();
   logger.assertion('Pause ad not visible after immediate re-pause', !pauseAdVisibleAfterImmediateRePause);
-
   return {
     isLoggedIn,
     pauseAdVisibleDuringPause,
@@ -5071,7 +4694,6 @@ export async function verifyPauseAdNotDisplayedWhilePlayingFlow(page: any, input
   const queryFromCollection = await resolveFreeQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (input?.query?.trim() || queryFromCollection || '').trim();
   logger.step('Starting pause-ad absence while content is playing verification flow');
-
   await page.waitForTimeout(5000);
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
@@ -5093,33 +4715,27 @@ export async function verifyPauseAdNotDisplayedWhilePlayingFlow(page: any, input
   await detailsPage.hoverPlaybackScreen();
   const pauseAdVisible = await detailsPage.pauseAdBannerNotVisible();
   logger.assertion('Pause ad should not be visible while content is playing', !pauseAdVisible);
-
   return {
     isLoggedIn,
     pauseAdVisible,
   };
 }
 
-
 export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: any, input?: VerifyPauseAdSeekRestrictionGraphQLInput): Promise<VerifyPauseAdSeekRestrictionGraphQLOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
-
   logger.step('Starting pause-ad seek restriction verification flow using a free title from Collection GraphQL');
-
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   let freeContentTitle = '';
-
   if (isLoggedIn) {
     try {
       const collectionResp = await collectionWait;
       const parser = new CollectionParser(collectionResp as any);
       const rails = parser.getRails();
-
       for (const rail of rails) {
         for (const asset of rail.assets?.items ?? []) {
           const assetData = asset as any;
@@ -5131,25 +4747,20 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
           const isFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
           const monetizationType = assetData.monetization?.type ?? assetData.monetizationType ?? assetData.monetization?.monetizationType ?? assetData.pricing?.type ?? assetData.pricing?.pricingType;
           const isFreeMonetization = monetizationType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetizationType)) : false;
-
           if (isFreeLabel || isFreeMonetization) {
             freeContentTitle = String(assetData.title ?? '').trim();
             break;
           }
         }
-
         if (freeContentTitle) {
           break;
         }
       }
-
       logger.info(`Derived free content title from Collection GraphQL: ${freeContentTitle}`);
     } catch (err) {
       logger.debug('Collection GraphQL did not provide a free content title for pause-ad seek restriction flow', err);
     }
   }
-
-
   if (freeContentTitle) {
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(freeContentTitle);
@@ -5163,12 +4774,10 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(7);
-
   const pauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   const seekBarVisible = await detailsPage.isSeekBarVisible();
   let playbackScreenDisplayed = false;
   let hoverAttempted = false;
-
   if (pauseAdVisible && seekBarVisible) {
     hoverAttempted = true;
     await detailsPage.hoverSeekBarAndWaitForPreview().catch(() => undefined);
@@ -5177,12 +4786,10 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
     const playbackTimeVisibleAfterInteraction = await detailsPage.isPlaybackTimeVisible().catch(() => false);
     playbackScreenDisplayed = !pauseAdVisibleAfterInteraction && playbackTimeVisibleAfterInteraction;
   }
-
   logger.assertion('Pause ad visible before hovering the seek bar', pauseAdVisible);
   logger.assertion('Seek bar visible before hover attempt', seekBarVisible);
   logger.assertion('Hover action was attempted only while the pause ad was visible', hoverAttempted ? pauseAdVisible && seekBarVisible : !pauseAdVisible);
   logger.assertion('Playback screen is displayed after hovering over the seek bar while the pause ad is visible', playbackScreenDisplayed);
-
   return {
     isLoggedIn,
     pauseAdVisible,
@@ -5196,16 +4803,13 @@ export async function verifyBillboardAdBannerVisibilityFlow(page: any, input?: {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting billboard ad banner visibility verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const freeContentTitle = await resolveFreeQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   if (!freeContentTitle) {
     throw new Error('No free content was returned by Collection GraphQL');
   }
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
   await authPage.submitSearchQuery();
@@ -5219,14 +4823,10 @@ export async function verifyBillboardAdBannerVisibilityFlow(page: any, input?: {
     await gql.waitForOperation('Asset', 10000).catch(() => null);
   } catch (err) {
   }
-
-  //await detailsPage.hoverOnPlaybackScreen();
-  // await detailsPage.clickResumeButton();
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(5000);
   const adBannerVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Billboard ad banner visible in playback for free users', adBannerVisible);
-
   return {
     isLoggedIn,
     adBannerVisible,
@@ -5244,66 +4844,32 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const collectionResponse = await collectionWait;
-
   const parser = new CollectionParser(collectionResponse as any);
-
   const rails = parser.getRails();
-
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
-      // Check asset type
       const assetType = String(asset.assetType ?? '').toLowerCase();
-
       if (assetType !== 'tvshow') {
         return false;
       }
-
-      // Check Free label
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
-      // Check Free monetization
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-
-  const freeContentTitle = (
-    freeTvShowAsset?.title ?? query
-  ).trim();
-
-  logger.assertion(
-    'Free TV show content title resolved from Collection GraphQL',
-    Boolean(freeContentTitle)
-  );
-
+  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(freeContentTitle);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible =
-    await authPage.isSearchResultsVisible(freeContentTitle);
-
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   logger.assertion('Search results visible for free content from collection API', resultsVisible);
   await detailsPage.waitForPlayback(2);
@@ -5332,63 +4898,34 @@ export async function verifyAdLearnMoreRedirectFlow(page: any, input?: OpenConte
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const collectionResponse = await collectionWait;
-
   const parser = new CollectionParser(collectionResponse as any);
   const rails = parser.getRails();
-
-  // Find a FREE TV SHOW asset
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
-      // Check assetType
       const assetType = String(
         asset.assetType ??
         asset.type ??
         asset.contentType ??
         ''
       ).toLowerCase();
-
       const isTvShow = assetType === 'tvshow';
-
       if (!isTvShow) {
         return false;
       }
-
-      // Check Free label
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
-      // Check monetization
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-
-  const freeContentTitle = (
-    freeTvShowAsset?.title ?? query
-  ).trim();
-
-  logger.info(
-    `Free TV show asset resolved from Collection GraphQL: ${freeContentTitle}`
-  );
-
-  logger.assertion(
-    'Free TV show content title resolved from Collection GraphQL',
-    Boolean(freeContentTitle)
-  );
+  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  logger.info(`Free TV show asset resolved from Collection GraphQL: ${freeContentTitle}`);
+  logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
   await authPage.submitSearchQuery();
@@ -5416,8 +4953,6 @@ export async function verifyAdLearnMoreRedirectFlow(page: any, input?: OpenConte
     redirectedPageUrl = await detailsPage.getCurrentPageUrl();
     logger.assertion('Ad-related page title after tap', Boolean(redirectedPageTitle));
     logger.assertion('Ad-related page URL after tap', Boolean(redirectedPageUrl));
-    // logger.info(`Redirected page title: ${redirectedPageTitle}`);
-    // logger.info(`Redirected page URL: ${redirectedPageUrl}`);
   } catch (err) {
     logger.debug('Tap on player screen did not trigger redirect or failed', err);
   }
@@ -5594,9 +5129,9 @@ export async function verifyMidRollAdInterruptionFlow(page: any, input?: OpenCon
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-      const isMovie = /^movie$/i.test(String(assetType ?? ''));
+      const isTvShow = /^tvshow$/i.test(String(assetType ?? ''));
       const isFree = /free|free_to_watch|freetowatch|complimentary/i.test(String(monetType ?? ''));
-      return isMovie && isFree;
+      return isTvShow && isFree;
     });
   const freeContentTitle = (freeAsset?.title ?? query).trim();
   logger.assertion('Free content title resolved from Collection GraphQL', Boolean(freeContentTitle));
@@ -5644,66 +5179,34 @@ export async function verifyAdSeekBarHiddenDuringAdFlow(page: any, input?: OpenC
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const collectionResponse = await collectionWait;
-
   const parser = new CollectionParser(collectionResponse as any);
-
   const rails = parser.getRails();
-
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
-      // Check asset type
       const assetType = String(asset.assetType ?? '').toLowerCase();
-
       if (assetType !== 'tvshow') {
         return false;
       }
-
       // Check Free label
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       // Check Free monetization
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-
-  const freeContentTitle = (
-    freeTvShowAsset?.title ?? query
-  ).trim();
-
-  logger.assertion(
-    'Free TV show content title resolved from Collection GraphQL',
-    Boolean(freeContentTitle)
-  );
-
+  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(freeContentTitle);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible =
-    await authPage.isSearchResultsVisible(freeContentTitle);
-
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
@@ -5735,66 +5238,35 @@ export async function verifyAdDurationFlow(page: any, input?: OpenContentAndPlay
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const collectionResponse = await collectionWait;
-
   const parser = new CollectionParser(collectionResponse as any);
-
   const rails = parser.getRails();
-
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
       // Check asset type
       const assetType = String(asset.assetType ?? '').toLowerCase();
-
       if (assetType !== 'tvshow') {
         return false;
       }
-
       // Check Free label
       const labels = asset.labels ?? [];
-
-      const hasFreeLabel = labels.some((label: any) =>
-        /free/i.test(label?.text ?? '')
-      );
-
+      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       // Check Free monetization
       const monetType =
         asset.monetization?.type ??
         asset.monetizationType ??
         asset.pricing?.type ??
         asset.pricing?.pricingType;
-
-      const isFreeMonetization = monetType
-        ? /free|complimentary|free_to_watch|freetowatch/i.test(
-          String(monetType)
-        )
-        : false;
-
+      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-
-  const freeContentTitle = (
-    freeTvShowAsset?.title ?? query
-  ).trim();
-
-  logger.assertion(
-    'Free TV show content title resolved from Collection GraphQL',
-    Boolean(freeContentTitle)
-  );
-
+  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
-
   await authPage.enterSearchQuery(freeContentTitle);
-
   await authPage.submitSearchQuery();
-
-  const resultsVisible =
-    await authPage.isSearchResultsVisible(freeContentTitle);
-
-  logger.assertion(
-    'Search results visible for query',
-    resultsVisible
-  );
+  const resultsVisible = await authPage.isSearchResultsVisible(freeContentTitle);
+  logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
@@ -5838,10 +5310,8 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
   await detailsPage.hoverPlaybackScreen();
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const initialPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-  // await detailsPage.clickPauseButton();
   await detailsPage.tapPlaybackScreen();
   await detailsPage.waitForPlayback(5);
-  // await detailsPage.hoverPlaybackScreen();
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
   const playbackPaused = initialPlaybackTime === pausedPlaybackTime;
   logger.assertion('Player screen visible for pause verification flow', playerVisible);
@@ -5863,9 +5333,7 @@ export async function verifySkipMarkerVisibilityAfterPauseResume(page: any, inpu
   logger.step('Starting Up Next marker visibility after pause/resume verification flow');
   const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(
-      input?.graphqlQueryName ?? 'Collection'
-    );
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
     const multiSeasonAsset = rails
@@ -5899,7 +5367,6 @@ export async function verifySkipMarkerVisibilityAfterPauseResume(page: any, inpu
   }
   await detailsPage.clickEpisodeOne();
   await detailsPage.clickNextEpisodeButton();
-  // await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(3);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   await detailsPage.hoverPlaybackScreen();
@@ -5927,23 +5394,19 @@ export async function verifySkipMarkerVisibilityAfterPauseResume(page: any, inpu
     markerVisibleAfterResume,
   };
 }
-
 function parsePlaybackTimeToSeconds(value: string): number {
   const normalized = (value || '').trim();
   const match = normalized.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (!match) {
     return 0;
   }
-
   const [, first, second, third] = match;
   const firstNum = Number.parseInt(first, 10);
   const secondNum = Number.parseInt(second, 10);
   const thirdNum = third ? Number.parseInt(third, 10) : 0;
-
   if (third !== undefined) {
     return firstNum * 3600 + secondNum * 60 + thirdNum;
   }
-
   return firstNum * 60 + secondNum;
 }
 
@@ -5990,9 +5453,7 @@ export async function verifySkipMarkersReappearAfterRewind(page: any, input?: Ve
       timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
     }
     await detailsPage.dragSeekBarToPosition(0.99);
-    // await detailsPage.waitForPlayback(3);
     upNextVisible = await detailsPage.isUpNextMarkerVisible();
-
     await detailsPage.dragSeekBarToPosition(0.01);
     await detailsPage.waitForPlayback(3);
     playbackTimeAtStart = await detailsPage.getTrimmedPlaybackTime();
@@ -6006,7 +5467,6 @@ export async function verifySkipMarkersReappearAfterRewind(page: any, input?: Ve
   logger.assertion('Skip Recap clicked successfully', skipRecapClicked);
   logger.assertion('Playback time advanced after Skip Recap click', timeBeforeSkipRecap !== timeAfterSkipRecap);
   logger.assertion('Up Next marker visible after forward seek', upNextVisible);
-  // logger.assertion('Playback time reset to 00:00 after seeking back to start', playbackTimeAtStart === '00:00');
   logger.assertion('Skip Recap marker visible again after seek back to start', isSkipRecapMarkerVisibleAfterSeekToStart);
   return {
     detailsVisible,
@@ -6019,7 +5479,6 @@ export async function verifySkipMarkersReappearAfterRewind(page: any, input?: Ve
     timeBeforeSkipRecap,
     timeAfterSkipRecap,
     upNextVisible,
-    // playbackTimeAtStart,
     isSkipRecapMarkerVisibleAfterSeekToStart,
   };
 }
@@ -6053,7 +5512,6 @@ export async function verifySkipMarkersNotVisibleInContinueWatching(page: any, i
   if (detailsVisible) {
     await detailsPage.clickEpisodeThree();
     await detailsPage.waitForPlayback(3);
-    // await detailsPage.dragSeekBarToPosition(0);
     episodeOpened = true;
     const skipRecapVisibleBefore = await detailsPage.isSkipRecapMarkerVisible().catch(() => false);
     if (skipRecapVisibleBefore) {
@@ -6075,11 +5533,9 @@ export async function verifySkipMarkersNotVisibleInContinueWatching(page: any, i
     logger.info('Seeked to 50% of the episode to ensure playback is in progress before navigating back');
     await detailsPage.clickBackButton();
     logger.info('Navigated back to the Home page after interacting with skip markers');
-    // await page.goto('/', { waitUntil: 'domcontentloaded' });
     await authPage.navigateHome();
     logger.info('Navigated to the Home page to check Continue Watching content');
     await detailsPage.waitForPlayback(2);
-    // await detailsPage.hoverFirstContinueWatchingItem();
     continueWatchingContentOpened = await detailsPage.clickFirstContinueWatchingItem();
     logger.info(`Continue Watching content opened: ${continueWatchingContentOpened}`);
     await detailsPage.waitForPlayback(2);
@@ -6152,22 +5608,18 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-
   logger.step('Starting pause seek buttons verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (input?.query ?? queryFromCollection ?? '').trim();
   const expectedTitle = input?.expectedTitle ?? query;
-
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await detailsPage.waitForPlayback(2);
-
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
   await detailsPage.waitForMobileAdPlayback();
@@ -6175,24 +5627,19 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(2);
-
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const pausedPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
-
   await detailsPage.clickForwardButton();
   await detailsPage.waitForPlayback(2);
   const forwardPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
   const forwardChanged = pausedPlaybackTime !== forwardPlaybackTime;
-
   await detailsPage.clickRewindButton();
   await detailsPage.waitForPlayback(2);
   const rewindPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
   const rewindChanged = forwardPlaybackTime !== rewindPlaybackTime;
-
   logger.assertion('Player screen visible for pause seek buttons flow', playerVisible);
   logger.assertion('Forward button changed playback position while paused', forwardChanged);
   logger.assertion('Rewind button changed playback position while paused', rewindChanged);
-
   return {
     isLoggedIn,
     playerVisible,
@@ -6255,12 +5702,9 @@ export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: s
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const channelName = input?.channelName ?? 'TFC Asia';
-
   logger.step('Starting live playback Go Live verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await detailsPage.clickliveContent(channelName);
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -6268,12 +5712,38 @@ export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: s
   await detailsPage.waitForPlayback(3);
   await detailsPage.clickGoLiveButton();
   const goLiveVisible = await detailsPage.isGoLiveButtonVisible();
-
   logger.assertion('Go Live CTA visible after live playback interaction', goLiveVisible);
-
   return {
     isLoggedIn,
     liveChannelOpened: true,
+    goLiveVisible,
+  };
+}
+
+export async function verifyGoLiveTagAfterPause(
+  page: any,
+  input?: VerifyGoLiveTagAfterPauseInput,
+): Promise<VerifyGoLiveTagAfterPauseOutput> {
+  const detailsPage = new OTTDetailsPage(page);
+  const mode = input?.mode;
+  const channelName = input?.channelName ?? 'TFC Asia';
+  logger.step('Starting Go Live tag verification after pausing live playback');
+  const loginResult = await loginToOTT(page, { mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User loaded the home screen before live playback', isLoggedIn);
+  await detailsPage.clickliveContent(channelName);
+  await detailsPage.waitForPlayback(10);
+  const liveChannelOpened = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.clickPauseButton();
+  const paused = true;
+  const goLiveVisible = await detailsPage.isGoLiveVisible();
+  logger.assertion('Go Live tag is visible after pausing live playback', goLiveVisible);
+
+  return {
+    isLoggedIn,
+    liveChannelOpened,
+    paused,
     goLiveVisible,
   };
 }
@@ -6282,22 +5752,16 @@ export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { m
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const channelName = input?.channelName ?? 'TFC Asia';
-
   logger.step('Starting live stream seek restriction verification flow');
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-
   await detailsPage.clickliveContent(channelName);
   await detailsPage.waitForPlayback(5);
-
   const rewindButtonVisible = await detailsPage.RewindButtonNotVisible();
   const forwardButtonVisible = await detailsPage.ForwardButtonNotVisible();
   const liveChannelOpened = true;
-
   logger.assertion('Rewind button hidden for true live stream', !rewindButtonVisible);
   logger.assertion('Forward button hidden for true live stream', !forwardButtonVisible);
-
   return {
     isLoggedIn,
     liveChannelOpened,
@@ -6314,9 +5778,7 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
   logger.assertion('Free user loaded the home screen', isLoggedIn);
   const isPlayableContentDetected = await playbackPage.hoverFirstPlayableContentCard();
   logger.assertion('Playable free content detected', isPlayableContentDetected);
-  const playAttempted = isPlayableContentDetected
-    ? await playbackPage.clickFirstAvailablePlayButton()
-    : false;
+  const playAttempted = isPlayableContentDetected ? await playbackPage.clickFirstAvailablePlayButton() : false;
   logger.assertion('Play button attempted on detected content', playAttempted);
   const playbackStarted = await playbackPage.isPlaybackStarted();
   logger.assertion('Playback started for free content', playbackStarted);
@@ -6369,7 +5831,6 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
       // Try to find any GraphQL operation that contains collection rails
       const predicate = (res: any) => Boolean(res?.response?.data?.collection?.rails);
       let collectionResponse = await gql.waitForOperationMatching<any>(predicate, 20000).catch(() => null);
-
       // If not found, navigate to home to trigger collection load and retry
       if (!collectionResponse) {
         try {
@@ -6379,12 +5840,10 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
         }
         collectionResponse = await gql.waitForOperationMatching<any>(predicate, 30000).catch(() => null);
       }
-
       if (!collectionResponse) {
         logger.warn('No Collection GraphQL response captured to resolve free live channel');
         return undefined;
       }
-
       const parser = new CollectionParser(collectionResponse as any);
       const rails = parser.getRails();
       for (const rail of rails) {
@@ -6408,7 +5867,6 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
     }
     return undefined;
   }
-
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   // Always attempt to resolve a free live channel via GraphQL; fail if none found

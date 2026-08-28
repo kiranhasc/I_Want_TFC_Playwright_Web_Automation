@@ -1474,8 +1474,6 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   let timeAfterSkipIntro = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeOne();
-    await page.waitForTimeout(50000);
-    await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickNextEpisodeButton();
     await page.waitForTimeout(1000);
     await detailsPage.clickSkipRecapMarker();
@@ -1486,7 +1484,6 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
       await page.waitForTimeout(5000);
       timeBeforeSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       await page.waitForTimeout(5000);
-      // await detailsPage.hoverPlaybackScreen();
       skipIntroClicked = await detailsPage.clickSkipIntroMarker();
       timeAfterSkipIntro = await detailsPage.getTrimmedPlaybackTime();
       logger.info(`Skip Intro clicked: ${skipIntroClicked}, initial time: ${timeBeforeSkipIntro}, updated time: ${timeAfterSkipIntro}`);
@@ -1553,7 +1550,7 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   let timeBeforeSkipRecap = '';
   let timeAfterSkipRecap = '';
   if (isDetailsPageVisible) {
-    await detailsPage.clickEpisodeTwo();
+    await detailsPage.clickEpisodeOne();
     await detailsPage.clickNextEpisodeButton();
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {

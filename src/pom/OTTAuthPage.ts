@@ -176,10 +176,10 @@ export class OTTAuthPage {
         this.passwordVisibilityEyeIcon = { selector: '.absolute.top-\\[8px\\] > svg > path:nth-child(2)' };
         this.passwordTextVisibleField = { selector: 'input[type="text"][name*="password"], input[placeholder*="Password"][type="text"]' };
         this.continueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
-        this.proceedButton = { role: 'button', text: 'Proceed', selector: 'button:has-text("Proceed")' };
+        this.proceedButton = { role: 'button', text: 'Proceed', selector: '(//button[@type="submit" and normalize-space()="Proceed"])[1]' };
         this.forgotPasswordLink = { role: 'link', text: 'Forgot Password?', selector: 'a:has-text("Forgot Password?")' };
         this.forgotPasswordHeading = { role: 'heading', text: 'Confirm Email Address', selector: 'h1:has-text("Confirm Email Address")' };
-        this.verifyOTPHeading = { role: 'heading', text: 'Verify OTP', selector: 'h1:has-text("Verify OTP"), h2:has-text("Verify OTP"), text=Verify OTP' };
+        this.verifyOTPHeading = { role: 'heading', text: 'Verify your identity', selector: '//h1[text()="Verify your identity"]' };
         this.errorMessage = { selector: 'form', text: 'Your login credentials are incorrect' };
         this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")' };
         this.emailErrorMessage = { selector: 'form', text: 'Please enter a valid email to continue.' };
@@ -320,8 +320,8 @@ export class OTTAuthPage {
         this.setNewPasswordHeading = { selector: '//h1[normalize-space()="Set a New Password"]' };
         this.passwordResetSuccessMessage = { selector: 'text=/New Password Set Successfully/i' };
         this.doneButton = { role: 'button', text: 'Done', selector: 'button:has-text("Done"), a:has-text("Done")' };
-        this.NewPassword = { selector: 'input[placeholder="New Password"], input[name*="new"], input[id*="new"], input[aria-label*="new"]' };
-        this.ConfirmNewPassword = { selector: 'input[placeholder="Confirm Password"], input[name*="confirm"], input[id*="confirm"], input[aria-label*="confirm"]' };
+        this.NewPassword = { selector: '//input[@name="userPassword"]' };
+        this.ConfirmNewPassword = { selector: '//input[@name="confirmPassword"]' };
     }
 
     async navigate(): Promise<void> {
@@ -471,12 +471,6 @@ export class OTTAuthPage {
         await locator.waitFor({ state: 'visible', timeout: 10000 });
         return (await locator.getAttribute('type')) || '';
     }
-
-    // async isPasswordTextVisible(): Promise<boolean> {
-    //     const locator = this.page.locator(this.passwordTextVisibleField.selector).first();
-    //     await locator.waitFor({ state: 'attached', timeout: 10000 }).catch(() => undefined);
-    //     return (await locator.count()) > 0;
-    // }
 
     async getEmptyCredentialsErrorMessage(): Promise<string> {
         return await this.pageUtils.getTextContent(this.emptyCredentialsErrorMessage, 10000);
@@ -663,7 +657,6 @@ export class OTTAuthPage {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
 
-
     async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
     }
@@ -724,19 +717,18 @@ export class OTTAuthPage {
     }
 
     async clickMobileMainMenu(): Promise<void> {
-    logger.elementInteraction('click', 'mobile main menu');
-    const locator = this.page.locator(this.mobileMainMenu.selector).first();
-    await locator.waitFor({ state: 'visible', timeout: 15000 });
-    await locator.click({ timeout: 20000, force: true });
-  }
+        logger.elementInteraction('click', 'mobile main menu');
+        const locator = this.page.locator(this.mobileMainMenu.selector).first();
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.click({ timeout: 20000, force: true });
+    }
 
 
     async clickMoviesTab(): Promise<void> {
         logger.elementInteraction('click', 'Movies tab');
-        if (process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
-
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;
@@ -802,10 +794,8 @@ export class OTTAuthPage {
         await arrow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
         await arrow.scrollIntoViewIfNeeded().catch(() => undefined);
         await arrow.click({ force: true, timeout: 10000 }).catch(() => undefined);
-
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await this.page.waitForTimeout(1500);
-
         const titleText = await this.page.locator(this.pageTitle.selector).first().textContent().catch(() => '');
         return (titleText || '').trim().toLowerCase() === expectedText.trim().toLowerCase();
     }
@@ -837,14 +827,12 @@ export class OTTAuthPage {
             logger.warn('Pagination arrow not found');
             return false;
         }
-
         const beforeUrl = this.page.url();
         const beforeBodyText = await this.page.locator('body').textContent().catch(() => '');
         await targetLink.scrollIntoViewIfNeeded().catch(() => undefined);
         await targetLink.click({ force: true, timeout: 10000 }).catch(() => undefined);
         await this.page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await this.page.waitForTimeout(1500);
-
         const afterUrl = this.page.url();
         const afterBodyText = await this.page.locator('body').textContent().catch(() => '');
         return afterUrl !== beforeUrl || afterBodyText !== beforeBodyText;
@@ -852,11 +840,9 @@ export class OTTAuthPage {
 
     async openTermsPageAndNavigateToSection(sectionLinkText: string, submoduleName: string, expectedHeading?: string, expectedUrlPart?: string): Promise<boolean> {
         logger.step(`Opening Terms page and navigating to section: ${sectionLinkText}`);
-
         try {
             const popupPromise = this.page.context().waitForEvent('page', { timeout: 8000 });
             await this.pageUtils.safeClick(this.termsAndConditionsLink);
-
             const popup = await popupPromise.catch(() => undefined);
             if (!popup || popup.url() === 'about:blank') {
                 logger.warn('No popup detected');
@@ -1023,7 +1009,7 @@ export class OTTAuthPage {
         logger.elementInteraction('click', 'Sign In option');
         await this.pageUtils.safeClick(this.signInOption);
     }
- 
+
     async closeCurrentTabAndReturnToMain(): Promise<void> {
         const pages = this.page.context().pages();
         const mainPage = pages.find((candidate) => candidate !== this.page);
@@ -1042,7 +1028,7 @@ export class OTTAuthPage {
     }
 
     async clickShowsTab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome' ){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'Shows tab');
@@ -1051,7 +1037,7 @@ export class OTTAuthPage {
     }
 
     async clickMyWatchlistTab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'My Watchlist tab');
@@ -1064,7 +1050,7 @@ export class OTTAuthPage {
     }
 
     async clickGMATab(): Promise<void> {
-        if( process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'GMA tab');
@@ -1305,11 +1291,9 @@ export class OTTAuthPage {
         if (!await section.count()) {
             return { visible: false, hasTag: false };
         }
-
         const normalizedTitle = title.toLowerCase();
         const items = section.locator('img[alt]:not([alt="arrow-right"])');
         const count = await items.count().catch(() => 0);
-
         for (let index = 0; index < count; index += 1) {
             const item = items.nth(index);
             const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
@@ -1318,13 +1302,11 @@ export class OTTAuthPage {
             if (!matchesTitle) {
                 continue;
             }
-
             const visible = await item.isVisible().catch(() => false);
             const tagLocator = item.locator(`xpath=ancestor::*[self::div or self::li or self::a][1]//img[@alt="${tagAlt}"]`).first();
             const hasTag = await tagLocator.isVisible().catch(() => false);
             return { visible, hasTag };
         }
-
         return { visible: false, hasTag: false };
     }
 
@@ -1666,11 +1648,9 @@ export class OTTAuthPage {
     async hoverIWantOriginalsFirstCardCentered(): Promise<{ visible: boolean; hovered: boolean }> {
         const card = await this.getFirstVisibleIWantOriginalsCard();
         if (!card) return { visible: false, hovered: false };
-
         await card.scrollIntoViewIfNeeded();
         const target = await this.getIWantOriginalsCardInteractionTarget(card);
         if (!target) return { visible: false, hovered: false };
-
         await this.page.mouse.move(target.x, target.y);
         await this.page.waitForTimeout(800);
         return { visible: true, hovered: true };
@@ -1687,21 +1667,17 @@ export class OTTAuthPage {
     async clickFirstIWantOriginalsCard(): Promise<boolean> {
         const card = await this.getFirstVisibleIWantOriginalsCard();
         if (!card) return false;
-
         await card.scrollIntoViewIfNeeded();
         const target = await this.getIWantOriginalsCardInteractionTarget(card);
         if (!target) return false;
-
         await this.page.mouse.move(target.x, target.y);
         await this.page.waitForTimeout(400);
-
         logger.elementInteraction('click', 'first iWant Originals content card');
         try {
             await this.page.mouse.dblclick(target.x, target.y, { delay: 100 });
         } catch {
             await card.dblclick({ force: true, timeout: 20000 }).catch(() => undefined);
         }
-
         await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
         return true;
@@ -2404,32 +2380,22 @@ export class OTTAuthPage {
 
     async fetchAndFillOtp(mailUsername: string, subjectContains: string = 'Verification Code'): Promise<string> {
         logger.step('Fetching OTP from Yopmail');
-
         const resolvedMailUsername = mailUsername.includes('@')
             ? mailUsername.split('@')[0]
             : mailUsername;
-
-        const otp = await getOtpFromYopmail((resolvedMailUsername), {
-            subjectContains,
-        });
-
+        const otp = await getOtpFromYopmail((resolvedMailUsername), { subjectContains, });
         logger.info(`Fetched OTP: ${otp}`);
-
         const otpInputs = this.page.locator(this.otpInput.selector);
-
         await otpInputs.first().waitFor({
             state: 'visible',
             timeout: 30000,
         });
-
         // Fill each OTP digit
         for (const [index, digit] of [...otp].entries()) {
             await otpInputs.nth(index).fill(digit);
         }
-
         return otp;
     }
-
 
     async isVerifyOTPMessageVisible(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.verifyOTPMessage, 10000);
@@ -2617,7 +2583,6 @@ export class OTTAuthPage {
         if (firstNameErrorVisible || lastNameErrorVisible) {
             return true;
         }
-
         const helperText = await this.page.locator(this.profileValidationTextPattern.selector).first().count().catch(() => 0);
         return helperText > 0;
     }
@@ -2628,14 +2593,11 @@ export class OTTAuthPage {
         if (firstNameErrorText || lastNameErrorText) {
             return [firstNameErrorText, lastNameErrorText].filter(Boolean).join(' | ');
         }
-
         const fallbackText = await this.page.locator(this.profileValidationTextPattern.selector).first().textContent().catch(() => '');
         return fallbackText || '';
     }
 
-    async verifyTopContentsInRails(
-        top10Titles: string[]
-    ): Promise<
+    async verifyTopContentsInRails(top10Titles: string[]): Promise<
         Array<{
             railName: string;
             contentTitle: string;
@@ -2772,14 +2734,12 @@ export class OTTAuthPage {
         if (!this.continueWatchingListenerRegistered) {
             this.registerContinueWatchingListener();
         }
-
         if (!this.continueWatchingGraphQL) {
             const end = Date.now() + timeoutMs;
             while (!this.continueWatchingGraphQL && Date.now() < end) {
                 await this.page.waitForTimeout(500);
             }
         }
-
         if (!this.continueWatchingGraphQL) {
             logger.info("Continue Watching GraphQL was never captured.");
             return false;
@@ -2816,15 +2776,12 @@ export class OTTAuthPage {
         const cards = section.locator(this.continueWatchingCard.selector);
         const cardIndex = await this.findContinueWatchingCardIndex(found.item);
         const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
-
         if (await cards.count() <= selectedIndex) {
             logger.info("GraphQL index exceeds available UI cards.");
             return false;
         }
-
         const card = cards.nth(selectedIndex);
         await card.scrollIntoViewIfNeeded();
-
         const cardElement = await card.elementHandle().catch(() => null);
         const targetElement = cardElement
             ? await cardElement.evaluateHandle((element) => {
@@ -2849,7 +2806,6 @@ export class OTTAuthPage {
         } else {
             await card.click({ force: true, timeout: 30000 });
         }
-
         await this.page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForTimeout(3000);
         logger.info("Continue Watching content opened successfully.");
@@ -2888,7 +2844,6 @@ export class OTTAuthPage {
         const cards = section.locator(this.continueWatchingCard.selector);
         const cardIndex = await this.findContinueWatchingCardIndex(found.item);
         const selectedIndex = cardIndex !== undefined ? cardIndex : found.index;
-
         const count = await cards.count().catch(() => 0);
         if (selectedIndex >= count) {
             logger.info('GraphQL index exceeds available UI cards for hover.');
@@ -2931,11 +2886,9 @@ export class OTTAuthPage {
             item.showInfo?.title,
             item.title
         ].filter(Boolean).join(' '));
-
         const section = this.getContinueWatchingRailLocator();
         const cards = section.locator(this.continueWatchingCard.selector);
         const count = await cards.count().catch(() => 0);
-
         for (let index = 0; index < count; index += 1) {
             const card = cards.nth(index);
             const altText = (await card.getAttribute('alt')) || '';
@@ -2946,11 +2899,9 @@ export class OTTAuthPage {
                 ariaText,
                 textContent
             ].filter(Boolean).join(' '));
-
             if (!cardText) {
                 continue;
             }
-
             if (
                 (normalizedCombined && cardText.includes(normalizedCombined)) ||
                 (normalizedItemTitle && cardText.includes(normalizedItemTitle)) ||
@@ -2958,7 +2909,6 @@ export class OTTAuthPage {
             ) {
                 return index;
             }
-
             const searchTokens = normalizedCombined.split(' ').filter(Boolean);
             if (searchTokens.length > 1 && searchTokens.every(token => cardText.includes(token))) {
                 return index;

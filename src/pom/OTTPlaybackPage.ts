@@ -374,14 +374,6 @@ export class OTTPlaybackPage {
         }
     }
 
-    // async isUnlockEarlyAccessVisible(): Promise<boolean> {
-    //     const bodyText = await this.page.locator('body').innerText().catch(() => '');
-    //     if (/unlock early access/i.test(bodyText)) {
-    //         return true;
-    //     }
-    //     return await this.page.locator('//div[text()="Unlock Early Access"]').first().isVisible();
-    // }
-
     async isUnlockEarlyAccessVisible(): Promise<boolean> {
        const bodyText = await this.page.locator('body').innerText().catch(() => '');
         return bodyText.toLowerCase().includes('unlock early access') || await this.pageUtils.isVisible(this.unlockEarlyAccessButton, 10000);
@@ -563,7 +555,6 @@ export class OTTPlaybackPage {
         const seekBar = this.page.locator(this.seekBar.selector).first();
         await seekBar.waitFor({ state: 'visible', timeout: 15000 });
         const box = await seekBar.boundingBox();
-    
         if (!box) {
         return;
         }
@@ -580,7 +571,6 @@ export class OTTPlaybackPage {
     async dragProgressBarToPosition(targetPercent: number): Promise<void> {
         const candidates = [this.progressBarContainer, this.progressBarIndicator, this.seekBar];
         let targetLocator = null as any;
-
         for (const candidate of candidates) {
             const locator = this.page.locator(candidate.selector).first();
             const count = await locator.count().catch(() => 0);
@@ -592,21 +582,17 @@ export class OTTPlaybackPage {
                 }
             }
         }
-
         if (!targetLocator) {
             return;
         }
-
         const box = await targetLocator.boundingBox().catch(() => null);
         if (!box) {
             return;
         }
-
         const safePercent = Math.min(Math.max(targetPercent, 0.05), 0.99);
         const startX = box.x + box.width * 0.05;
         const startY = box.y + box.height / 2;
         const endX = box.x + box.width * safePercent;
-
         await this.page.mouse.move(startX, startY);
         await this.page.mouse.down();
         await this.page.mouse.move(endX, startY, { steps: 30 });

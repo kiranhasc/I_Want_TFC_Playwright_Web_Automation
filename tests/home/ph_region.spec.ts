@@ -18,7 +18,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test('@Medium IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
+  test('@Medium @mweb IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-020-ph-region-guest-share'];
     const result = await verifyGuestShareFunctionalityFromFreeAsset(page, {
       expectedShareMessage: data.expectedShareMessage,

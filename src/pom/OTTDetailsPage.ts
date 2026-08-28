@@ -546,7 +546,8 @@ export class OTTDetailsPage {
     this.storedContentMetadata = fallbackText?.trim() ?? '';
     return this.storedContentMetadata;
   }
-    async clickFirstShowContent(): Promise<void> {
+
+  async clickFirstShowContent(): Promise<void> {
     logger.elementInteraction('click', 'first rail content thumbnail');
     const candidateSelectors = [
       this.firstShowRailThumbnail.selector,

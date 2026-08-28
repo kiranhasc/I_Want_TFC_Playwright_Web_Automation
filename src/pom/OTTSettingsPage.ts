@@ -35,7 +35,7 @@ export class OTTSettingsPage {
         this.parentalPinErrorMessage = { selector: 'text=Invalid credentials. Please try again.' };
         this.parentalPinInputs = { selector: '.flex.flex-wrap.gap-2 input' };
         this.parentalPinSaveButton = { selector: 'role=button[name="Save"]' };
-        this.parentalPinSuccessHeader = { selector: 'text=Parental Controls Updated' };
+        this.parentalPinSuccessHeader = { selector: '//h1[text()="Parental Controls Updated"]' };
         this.parentalPinSuccessDetails = { selector: 'text=Your changes to the parental controls have been saved successfully.' };
         this.parentalPinSuccessContinueButton = { selector: 'role=button[name="Continue Button"]' };
     }

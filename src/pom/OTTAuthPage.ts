@@ -278,7 +278,7 @@ export class OTTAuthPage {
         this.railAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "rail")][1]' };
         this.iWantOriginalsRailName = 'iWant Originals';
         this.iWantOriginalsRailNameMobile = 'FREE Lang DITO: iWant Originals';
-        this.iwantScrollLocatorMobile = 'text=iWant Originals >> xpath=ancestor::*[contains(@class, "rail")][1]' ;
+        this.iwantScrollLocatorMobile = 'text=iWant Originals >> xpath=ancestor::*[contains(@class, "rail")][1]';
         this.iWantOriginalsArrowSelectorTemplate = { selector: 'div[class*="pointer-events-auto"][class*="absolute"][class*="bottom-[15rem]"][class*="{positionClass}"][class*="z-10"] img[alt="arrow-right"]' };
         this.iWantOriginalsArrowCandidateSelector = { selector: 'img[alt*="arrow" i], img[alt*="chevron" i], [data-testid*="arrow" i], button[aria-label*="arrow" i], svg, .arrow, .chevron' };
         this.iWantOriginalsCardSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
@@ -1058,9 +1058,11 @@ export class OTTAuthPage {
         await this.page.bringToFront();
         await this.page.waitForLoadState('domcontentloaded');
     }
+
     async isMobileMainMenuVisible(): Promise<boolean> {
-         return await this.pageUtils.isVisible(this.mobileMainMenu, 10000);
-        }
+        return await this.pageUtils.isVisible(this.mobileMainMenu, 10000);
+    }
+
     async clickShowsTab(): Promise<void> {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
@@ -1641,7 +1643,7 @@ export class OTTAuthPage {
     }
 
     async getIWantOriginalsRailCardCount(): Promise<number> {
-        if (process.env.BROWSER === 'mchrome'){
+        if (process.env.BROWSER === 'mchrome') {
             const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
             await heading.waitFor({ state: 'visible', timeout: 15000 });
             await heading.scrollIntoViewIfNeeded();
@@ -1651,7 +1653,7 @@ export class OTTAuthPage {
             }
             await rail.scrollIntoViewIfNeeded();
             return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
-        }else{
+        } else {
             const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
             await heading.waitFor({ state: 'visible', timeout: 15000 });
             await heading.scrollIntoViewIfNeeded();

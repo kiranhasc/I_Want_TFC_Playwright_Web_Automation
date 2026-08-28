@@ -307,7 +307,7 @@ export class OTTDetailsPage {
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
     this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
-    // this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
+    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
     this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     this.playbackTime = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
@@ -317,7 +317,6 @@ export class OTTDetailsPage {
     this.liveChannelTile = { selector: 'a, button, [role="button"], [data-testid*="content"], [data-testid*="card"]' };
     this.rewindButton = { selector: 'xpath=//*[@id="player-container-main-rewindButton"]/img' };
     this.forwardButton = { selector: 'xpath=//*[@id="player-container-main-forwardButton"]/img' };
-    this.volumeButton = { selector: 'button[aria-label*="volume"], button[title*="volume"], [data-testid*="volume"]' };
     this.subtitleButton = { selector: 'xpath=//*[@id="player-container-main-subtitleButton"]/img' };
     this.subtitleLanguageOption = { selector: 'text=/English\\(Philippines\\)/i' };
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
@@ -547,8 +546,74 @@ export class OTTDetailsPage {
     this.storedContentMetadata = fallbackText?.trim() ?? '';
     return this.storedContentMetadata;
   }
+    async clickFirstShowContent(): Promise<void> {
+    logger.elementInteraction('click', 'first rail content thumbnail');
+    const candidateSelectors = [
+      this.firstShowRailThumbnail.selector,
+      this.firstShowContentCard.selector,
+      this.showRailImageCandidate.selector,
+      this.firstTitleImageCard.selector,
+      this.titleImageWithAlt.selector,
+      this.firstShowContentCandidateSelectors.join(','),
+      this.firstShowContentFallbackSelector,
+    ].filter(Boolean) as string[];
+    for (const selector of candidateSelectors) {
+      try {
+        const candidate = this.page.locator(selector).first();
+        if (!(await candidate.count().catch(() => 0))) continue;
+        await candidate.waitFor({ state: 'visible', timeout: 10000 });
+        await candidate.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+        const clickableAncestor = candidate.locator(this.clickTargetAncestorSelector).first();
+        const clickableDescendant = candidate.locator(this.clickTargetDescendantSelector).first();
+        const target = (await clickableAncestor.count().catch(() => 0))
+          ? clickableAncestor
+          : (await clickableDescendant.count().catch(() => 0))
+            ? clickableDescendant
+            : candidate;
+        await target.hover().catch(() => undefined);
+        let clickSucceeded = false;
+        try {
+          await target.click({ timeout: 15000, force: true });
+          clickSucceeded = true;
+        } catch {
+          const elementHandle = await target.elementHandle();
+          if (elementHandle) {
+            await elementHandle.evaluate((el: HTMLElement) => el.click()).catch(() => undefined);
+            clickSucceeded = true;
+          }
+        }
+        if (!clickSucceeded) {
+          throw new Error(`Failed to click target for selector: ${selector}`);
+        }
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+        await this.page.waitForURL(/\/(details|content|show)\//, { timeout: 15000 });
+        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
+        await this.page.waitForTimeout(2000);
+        if (await this.isShowDetailsPageVisible()) {
+          return;
+        }
+      } catch (err) {
+        logger.debug(`Content candidate click failed for selector: ${selector}`, err);
+      }
+    }
+    try {
+      await this.clickFirstContentInRail();
+    } catch (err) {
+      logger.debug('Fallback clickFirstContentInRail failed', err);
+      try {
+        const fallback = this.page.locator(this.contentCardInteractiveTarget.selector).first();
+        if (await fallback.count().catch(() => 0)) {
+          await fallback.waitFor({ state: 'visible', timeout: 10000 });
+          await fallback.scrollIntoViewIfNeeded({ timeout: 10000 }).catch(() => undefined);
+          await fallback.click({ timeout: 15000, force: true });
+        }
+      } catch (innerErr) {
+        logger.debug('Fallback content click failed', innerErr);
+      }
+    }
+  }
 
-  async clickFirstShowContent(): Promise<void> {
+  async clickShowContentRail(): Promise<void> {
     logger.elementInteraction('click', 'first rail content thumbnail');
     const candidateSelectors = [
       this.firstShowRailThumbnail.selector,
@@ -4317,28 +4382,6 @@ export class OTTDetailsPage {
       return false;
     }
   }
-
-  // async clickUpNextMarker(): Promise<boolean> {
-  //   logger.elementInteraction('click', 'Up Next marker');
-  //   const candidateSelectors = [
-  //     this.upNextMarker.selector,
-  //     this.nextEpisodeButton.selector,
-  //     'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
-  //   ];
-
-  //   for (const selector of candidateSelectors) {
-  //     const marker = this.page.locator(selector).first();
-  //     try {
-  //       await marker.waitFor({ state: 'visible', timeout: 5000 });
-  //       await marker.click({ timeout: 10000 });
-  //       return true;
-  //     } catch {
-  //       // Continue to the next selector.
-  //     }
-  //   }
-
-  //   return false;
-  // }
 
   async isNextEpisodeButtonVisible(): Promise<boolean> {
     const nextEpisodeButton = this.page.locator(this.nextEpisodeButton.selector).first();

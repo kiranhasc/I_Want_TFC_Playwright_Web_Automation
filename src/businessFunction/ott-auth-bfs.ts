@@ -717,6 +717,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
     const authPage = new OTTAuthPage(page);
     if (process.env.BROWSER === 'mchrome') {
         await authPage.navigate();
+        console.log('Skipping login for mchrome');
         logger.step('Skipping login for Mobile Web (mchrome)');
         const homeTabVisible = await authPage.isHomeTabVisible();
         return {
@@ -789,6 +790,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         };
     }
 }
+ 
 
 async function verifyMidRailAdOnCurrentTab(page: any, authPage: OTTAuthPage): Promise<boolean> {
     const scrolled = await authPage.scrollToMidRailAdBanner().catch(() => false);

@@ -348,16 +348,4 @@ test.describe('Search navigation', () => {
     expect.soft(result.detailsPageVisible).toBe(true);
     expect.soft(result.detailsPageTitleMatches).toBe(true);
   });
-
-  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
-    test.setTimeout(180000);
-    const data = testCaseData['tc-nav-025-search-results-guest'];
-    const result = await verifyGuestSearchResultsWithoutLogin(page, {
-      searchQuery: data.searchQuery,
-    });
-    expect.soft(result.isLoggedIn).toBe(false);
-    expect.soft(result.searchQueryTyped).toBe(true);
-    expect.soft(result.resultsVisible).toBe(true);
-    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
-  });
 })

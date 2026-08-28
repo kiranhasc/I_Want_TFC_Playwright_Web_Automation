@@ -1058,7 +1058,9 @@ export class OTTAuthPage {
         await this.page.bringToFront();
         await this.page.waitForLoadState('domcontentloaded');
     }
-
+    async isMobileMainMenuVisible(): Promise<boolean> {
+         return await this.pageUtils.isVisible(this.mobileMainMenu, 10000);
+        }
     async clickShowsTab(): Promise<void> {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();

@@ -28,7 +28,7 @@ export class OTTSettingsPage {
         this.accountAndSettingsLink = { selector: 'text=Account & Settings' };
         this.parentalControlsSection = { selector: '#parentalControls' };
         this.parentalPinToggle = { selector: '#parentalControls >> button.relative.rounded-full.w-12.h-6' };
-        this.parentalPinPasswordField = { selector: 'role=textbox[name="Password"]'};
+        this.parentalPinPasswordField = { selector: '//input[@id="login-password-input"]'};
         this.passwordSubmitButton = { selector: 'role=button[name="Submit"]' };
         this.parentalPinSetupMessage = { selector: 'role=heading[name="Set an account owner PIN"]' };
         this.passwordVisibilityToggle = { selector: 'role=button[name="Toggle Password Visibility"]' };

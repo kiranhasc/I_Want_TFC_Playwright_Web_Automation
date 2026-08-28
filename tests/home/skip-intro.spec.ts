@@ -5,7 +5,12 @@ import { verifySkipMarkerVisibilityAfterPauseResume, verifySkipMarkersReappearAf
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Playback skip intro marker', () => {
+  
   test('@High @D IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
+  const testTimeout = process.env.BROWSER === 'mchrome'
+  ? 240_000
+  : 90_000;
+test.setTimeout(testTimeout);
     const data = testCaseData['tc-disc-004-skip-intro'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipIntroMarkerDuringPlayback(page, {
@@ -30,7 +35,8 @@ test.describe('Playback skip intro marker', () => {
     expect(playbackResult.timeBeforeSkipIntro).not.toBe(playbackResult.timeAfterSkipIntro);
   });
 
-  test('@High IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
+  test('@High @D IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
+    test.setTimeout(180000);
     const data = testCaseData['tc-disc-005-skip-recap'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipRecapMarkerDuringPlayback(page, {
@@ -61,7 +67,7 @@ test.describe('Playback skip intro marker', () => {
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipMarkerVisibilityAfterPauseResume(page, {
       mode: data.mode,
-      searchTerm: data.searchTerm,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(playbackResult.detailsVisible).toBe(true);
@@ -112,9 +118,7 @@ test.describe('Playback skip intro marker', () => {
     const data = testCaseData['tc-sub-028-up-next-marker'] as Record<string, any>;
     const playbackResult = await verifyUpNextBingeMarkerFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(playbackResult.detailsVisible).toBe(true);
@@ -126,9 +130,7 @@ test.describe('Playback skip intro marker', () => {
     const data = testCaseData['tc-sub-037-up-next-marker-functionality'] as Record<string, any>;
     const playbackResult = await verifyUpNextMarkerFunctionalityFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);
@@ -143,9 +145,7 @@ test.describe('Playback skip intro marker', () => {
     const data = testCaseData['tc-sub-038-up-next-close-button'] as Record<string, any>;
     const playbackResult = await verifyUpNextCloseButtonFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);
@@ -161,9 +161,7 @@ test.describe('Playback skip intro marker', () => {
     const data = testCaseData['tc-sub-039-up-next-marker-click-navigation'] as Record<string, any>;
     const playbackResult = await verifyUpNextMarkerClickNavigationFlow(page, {
       mode: data.mode,
-      query: data.query,
-      expectedTitle: data.expectedTitle,
-      expectedEpisode: data.expectedEpisode,
+      graphqlQueryName: data.graphqlQueryName,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);

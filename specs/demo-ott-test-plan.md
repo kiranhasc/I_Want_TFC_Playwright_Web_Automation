@@ -3471,11 +3471,17 @@ screen.
 3. Enter the URL (https://iwanttfc.com/).
 4. Log in with valid user credentials.
 5. Navigate to the **Home** page.
-6. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
-6. Select the show from the **Continue Watching** tray.
-7. Scroll and Select the last episode of **Season 1**.
-8. Drag the seekbar until it reaches the end.
-9. Observe the playback after the episode ends.
+6. Using graphQL API response for continue watching collect only **shows** which has **2 seasons**.
+7. Search and select the content name.
+8. Play episode 5 of season 1.
+9. Drag the seekbar until 50%.
+10. Exit the player and return to the **Home** page.
+11. Select the same content that was played from **continue watching** tray.
+12. Extract the shows which have 2 seasons in the continue watching tray from grapgQL API collection.
+13. Select the show from the **Continue Watching** tray.
+14. Scroll and Select the last episode of **Season 1**.
+15. Drag the seekbar until it reaches the end.
+16. Observe the playback after the episode ends.
    - **Expect:** The first episode of **Season 2** should automatically start playing after the last episode of **Season 1** is completed.
 
 ### 5.17 IW3-T1942 Verify that Ad gets played for the free user on resuming the content.
@@ -5097,3 +5103,64 @@ pause ads screen.
 12. Click on Account and select sigh out.
 13. Login with "tvUser" credentials.
 14. Repeat step5 to step11.
+
+
+#### Ads IW3-T2135 Verify Sponsored Rail is Displayed on Home, Shows, Movies, GMA pages. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:sponsed rail should be visible.
+
+
+#### Ads IW3-T2146 Verfiy that Sponsered rail is non clickable/tappable except the content cards. mWeb  
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:sponsed rail should be visible.
+5. Click on rail except contnet cards.
+- expect:Clcik action should not redirect to any page.
+
+ #### Ads IW3-T2137 Verify Advertiser logo is displayed on Sponsored Rails which is configured by CMS. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail"
+- expect:Advertisement logo should be visible in sponserd rail.
+
+<!-- #### Ads IW3-T2144 Verfiy the spacing between the contents and other rails post configuring the sponsered rail. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail".
+- expect:spacing between the contents card should be there and should not overlap. -->
+
+
+#### Ads IW3-T2149 Verify user redirects to respective detail page post tapping content cards in sponsered rail. mWeb 
+
+**File:** `tests/home/ads.spec.ts`
+
+**Steps:**
+1. Open the browser and navigate .
+2. Click on "Menu".
+3. Select "Home" tab.
+4. Scroll till "Sponsed Rail".
+5. Click on any content.
+6. Assert the Title of the content card.
+- expect:By clciking it should redirect to same details page.

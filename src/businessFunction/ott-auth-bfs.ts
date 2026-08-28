@@ -1,6 +1,7 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
+import { PageUtils } from '../utils/page-utils';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
@@ -10,6 +11,8 @@ import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
 import { SearchParser } from '../utils/graphql/parsers/search-parser';
 import { ContinueWatchingParser } from '../utils/graphql/parsers/continue-watching-parser';
 import { CollectionResponse } from '../utils/graphql/graphql-types';
+import { clearYopmailInbox } from '../utils/yopmail-helper';
+
 const authDir = path.join(__dirname, '../playwright/.auth'); // adjust relative path to your repo root
 const MAX_AGE_MS = 60 * 60 * 1000; // tune to your session/token TTL
 export interface InvalidLoginInput {
@@ -18,7 +21,7 @@ export interface InvalidLoginInput {
     mobileNumberContryCode?: string;
     mobileNumber?: string;
     mode?: string;
-    networkConnection?:string
+    networkConnection?: string
 }
 
 export interface TVProviderLoginInput {
@@ -68,6 +71,57 @@ export interface SubmitForgotPasswordMobileOutput {
     isMobileErrorDisplayed: boolean;
     errorMessage: string;
     isOTPPageVisible: boolean;
+}
+
+export interface VerifyForgotPasswordOtpNavigationInput {
+    email: string;
+    password?: string;
+    expectedMarketingText?: string;
+    expectedOTPHeading?: string;
+    expectedNewPasswordHeading?: string;
+}
+
+export interface VerifyForgotPasswordOtpNavigationOutput {
+    isOTPPageVisible: boolean;
+    otpHeadingText: string;
+    isSetNewPasswordScreenVisible: boolean;
+    setNewPasswordHeadingText: string;
+}
+
+export interface VerifyForgotPasswordResetFlowInput {
+    email: string;
+    password?: string;
+    newPassword?: string;
+    expectedMarketingText?: string;
+    expectedOTPHeading?: string;
+    expectedNewPasswordHeading?: string;
+    expectedSuccessMessage?: string;
+}
+
+export interface VerifyForgotPasswordResetFlowOutput {
+    isOTPPageVisible: boolean;
+    otpHeadingText: string;
+    isSetNewPasswordScreenVisible: boolean;
+    setNewPasswordHeadingText: string;
+    isSuccessPopupVisible: boolean;
+    successMessageText: string;
+    isLoginScreenVisible: boolean;
+}
+
+export interface VerifyLoginWithNewPasswordInput {
+    email: string;
+    password?: string;
+    newPassword?: string;
+    expectedMarketingText?: string;
+    expectedOTPHeading?: string;
+    expectedNewPasswordHeading?: string;
+    expectedSuccessMessage?: string;
+}
+
+export interface VerifyLoginWithNewPasswordOutput {
+    isHomeScreenVisible: boolean;
+    isAccountPageVisible: boolean;
+    displayedEmail: string;
 }
 
 export interface VerifyWelcomeScreenInput {
@@ -179,11 +233,20 @@ export interface VerifyWelcomeIntroductionPagePaginationOutput {
     currentUrl: string;
 }
 
-// function normalizeLoginMode(mode?: string): 'invalid' | 'valid' {
-//     return mode === 'valid' ? 'valid' : 'invalid';
-// }
+export interface VerifyGuestPHCarouselTabTrayLoadInput {
+    mode?: string;
+}
 
-function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' {
+export interface VerifyGuestPHCarouselTabTrayLoadOutput {
+    homeRailVisible: boolean;
+    homePageScrolledToEnd: boolean;
+    moviesRailVisible: boolean;
+    moviesPageScrolledToEnd: boolean;
+    showsRailVisible: boolean;
+    showsPageScrolledToEnd: boolean;
+}
+
+function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' | 'unwatched' {
     if (mode === 'valid') {
         return 'valid';
     }
@@ -195,6 +258,9 @@ function normalizeLoginMode(mode?: string): 'invalid' | 'valid' | 'provider' | '
     }
     if (mode === 'freeUser') {
         return 'freeUser';
+    }
+    if (mode === 'unwatched') {
+        return 'unwatched';
     }
     return 'invalid';
 }
@@ -374,9 +440,67 @@ export interface VerifyMidRailAdAutoRefreshOutput {
     }>;
 }
 
+export interface VerifyRegistrationNavigationInput {
+    email: string;
+    password: string;
+    expectedMarketingText?: string;
+}
+
+export interface VerifyRegistrationNavigationOutput {
+    isHeadingVisible: boolean;
+    headingText: string;
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    isConfirmPasswordFieldVisible: boolean;
+    isTermsCheckboxVisible: boolean;
+    termsText: string;
+    isMarketingCheckboxVisible: boolean;
+    marketingText: string;
+    isContinueButtonVisible: boolean;
+    isVerifyOTPPageVisible: boolean;
+    emailFieldValue: string;
+    passwordFieldValue: string;
+    confirmPasswordFieldValue: string;
+}
+
+export interface VerifyRegistrationNavigationToHomePageOutput {
+    isHeadingVisible: boolean;
+    headingText: string;
+    isEmailFieldVisible: boolean;
+    isPasswordFieldVisible: boolean;
+    isConfirmPasswordFieldVisible: boolean;
+    isTermsCheckboxVisible: boolean;
+    termsText: string;
+    isMarketingCheckboxVisible: boolean;
+    marketingText: string;
+    isContinueButtonVisible: boolean;
+    isVerifyOTPPageVisible: boolean;
+    isAccountHeadingVisible: boolean;
+    isGeneratedEmailVisibleOnAccountPage: boolean;
+}
+
+export interface VerifyRegistrationOTPScreenInput extends VerifyRegistrationNavigationInput {
+    confirmPassword?: string;
+    expectedOTPMessagePrefix?: string;
+    expectedOTPInputText?: string;
+    expectedVerifyButtonText?: string;
+    expectedBackToLoginText?: string;
+}
+
+export interface VerifyRegistrationOTPScreenOutput extends VerifyRegistrationNavigationOutput {
+    isVerifyOTPMessageVisible: boolean;
+    verifyOTPMessageText: string;
+    isVerifyOTPEmailVisible: boolean;
+    verifyOTPEmailText: string;
+    isInputCodeInstructionVisible: boolean;
+    inputCodeInstructionText: string;
+    isVerifyButtonVisible: boolean;
+    isBackToLoginLinkVisible: boolean;
+}
+
 function resolveLoginCredentials(
     input: Partial<InvalidLoginInput>,
-    mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' = 'invalid'
+    mode: 'invalid' | 'valid' | 'provider' | 'mobile' | 'freeUser' | 'unwatched' = 'invalid'
 ) {
     const prefix =
         mode === 'valid'
@@ -387,7 +511,9 @@ function resolveLoginCredentials(
                     ? 'MOBILE_LOGIN_'
                     : mode === 'freeUser'
                         ? 'FREE_USER_'
-                        : 'INVALID_LOGIN_';
+                        : mode === 'unwatched'
+                            ? 'UNWATCHED_USER_'
+                            : 'INVALID_LOGIN_';
 
     const email = (config.get(`${prefix}EMAIL`, input.email ?? '') as string).trim();
     const password = (config.get(`${prefix}PASSWORD`, input.password ?? '') as string).trim();
@@ -486,78 +612,51 @@ export interface VerifyTrendingResultsHiddenWhenSearchingInput {
 }
 
 function getProviderStoragePath(providerName?: string): string {
-  const safeName = (providerName ?? 'default').replace(/[^a-zA-Z0-9]/g, '_');
-  return path.join(authDir, `provider-${safeName}.json`);
+    const safeName = (providerName ?? 'default').replace(/[^a-zA-Z0-9]/g, '_');
+    return path.join(authDir, `provider-${safeName}.json`);
 }
 
 export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
-  const authPage = new OTTAuthPage(page);
-  const mode = normalizeLoginMode(input?.mode);
-  const storagePath = getProviderStoragePath(input.providerName);
-  // ---- FAST PATH ----
-  if (fs.existsSync(storagePath)) {
-    const age = Date.now() - fs.statSync(storagePath).mtimeMs;
-    if (age < MAX_AGE_MS) {
-      logger.step(`Reusing saved TV provider session (${input.providerName}) from storageState`);
-      const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
-      await page.context().addCookies(state.cookies ?? []);
-      if (state.origins?.length) {
-        await page.goto(state.origins[0].origin);
-        await page.evaluate((origins: any[]) => {
-          for (const o of origins) {
-            for (const item of o.localStorage ?? []) {
-              window.localStorage.setItem(item.name, item.value);
-            }
-          }
-        }, state.origins);
-      }
-      await page.reload();
-      await authPage.waitForLoadingToDisappear();
-
-      const isLoggedIn = await authPage.isLoginSuccessful();
-      const homeTabVisible = await authPage.isHomeTabVisible();
-      const moviesTabVisible = await authPage.isMoviesTabVisible();
-
-      logger.assertion('TV Provider session restored', isLoggedIn);
-      logger.assertion('Home tab visible after session restore', homeTabVisible);
-      logger.assertion('Movies tab visible after session restore', moviesTabVisible);
-
-      if (isLoggedIn) {
-        return { isLoggedIn, homeTabVisible, moviesTabVisible };
-      }
-      logger.step(`Cached TV provider session invalid, falling back to live login`);
-      // fall through to slow path
-    }
-  }
-
-  // ---- SLOW PATH (your existing code, unchanged) ----
-  logger.step(`Starting ${mode} login flow`);
-  const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-  logger.step('Starting TV Provider login flow');
-  await authPage.navigate();
-  await authPage.acceptCookieSettingsIfVisible();
-  await authPage.clickLoginWithTVProvider();
-  await authPage.selectTVProvider(input.providerName);
-  await authPage.clickContinue();
-  await authPage.enterProviderEmail(credentials.email);
-  await authPage.enterProviderPassword(credentials.password);
-  await authPage.clickProviderSignIn();
-  const isLoggedIn = await authPage.isLoginSuccessful();
-  const homeTabVisible = await authPage.isHomeTabVisible();
-  const moviesTabVisible = await authPage.isMoviesTabVisible();
-  logger.assertion('TV Provider login successful', isLoggedIn);
-  logger.assertion('Home tab visible after TV provider login', homeTabVisible);
-  logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
-  if (isLoggedIn) {
-    await page.context().storageState({ path: storagePath });
-    logger.step(`Saved TV provider session (${input.providerName}) to storageState`);
-  }
-  return { isLoggedIn, homeTabVisible, moviesTabVisible };
-}
-
-/*export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
+    const storagePath = getProviderStoragePath(input.providerName);
+    // ---- FAST PATH ----
+    if (fs.existsSync(storagePath)) {
+        const age = Date.now() - fs.statSync(storagePath).mtimeMs;
+        if (age < MAX_AGE_MS) {
+            logger.step(`Reusing saved TV provider session (${input.providerName}) from storageState`);
+            const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
+            await page.context().addCookies(state.cookies ?? []);
+            if (state.origins?.length) {
+                await page.goto(state.origins[0].origin);
+                await page.evaluate((origins: any[]) => {
+                    for (const o of origins) {
+                        for (const item of o.localStorage ?? []) {
+                            window.localStorage.setItem(item.name, item.value);
+                        }
+                    }
+                }, state.origins);
+            }
+            await page.reload();
+            await authPage.waitForLoadingToDisappear();
+
+            const isLoggedIn = await authPage.isLoginSuccessful();
+            const homeTabVisible = await authPage.isHomeTabVisible();
+            const moviesTabVisible = await authPage.isMoviesTabVisible();
+
+            logger.assertion('TV Provider session restored', isLoggedIn);
+            logger.assertion('Home tab visible after session restore', homeTabVisible);
+            logger.assertion('Movies tab visible after session restore', moviesTabVisible);
+
+            if (isLoggedIn) {
+                return { isLoggedIn, homeTabVisible, moviesTabVisible };
+            }
+            logger.step(`Cached TV provider session invalid, falling back to live login`);
+            // fall through to slow path
+        }
+    }
+
+    // ---- SLOW PATH (your existing code, unchanged) ----
     logger.step(`Starting ${mode} login flow`);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting TV Provider login flow');
@@ -569,23 +668,25 @@ export async function loginWithTVProvider(page: any, input: TVProviderLoginInput
     await authPage.enterProviderEmail(credentials.email);
     await authPage.enterProviderPassword(credentials.password);
     await authPage.clickProviderSignIn();
-
     const isLoggedIn = await authPage.isLoginSuccessful();
     const homeTabVisible = await authPage.isHomeTabVisible();
     const moviesTabVisible = await authPage.isMoviesTabVisible();
     logger.assertion('TV Provider login successful', isLoggedIn);
     logger.assertion('Home tab visible after TV provider login', homeTabVisible);
     logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
-
+    if (isLoggedIn) {
+        await page.context().storageState({ path: storagePath });
+        logger.step(`Saved TV provider session (${input.providerName}) to storageState`);
+    }
     return { isLoggedIn, homeTabVisible, moviesTabVisible };
-}*/
+}
 
 const modeToFile: Record<string, string | null> = {
-  valid: 'valid.json',
-  provider: 'provider.json',
-  mobile: 'mobile.json',
-  freeUser: 'freeUser.json',
-  invalid: null,
+    valid: 'valid.json',
+    provider: 'provider.json',
+    mobile: 'mobile.json',
+    freeUser: 'freeUser.json',
+    invalid: null,
 };
 
 async function isAuthenticatedEntryVisible(page: any, authPage: OTTAuthPage): Promise<boolean> {
@@ -632,39 +733,57 @@ export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInp
     };
 }
 
-
 export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
     const authPage = new OTTAuthPage(page);
-    const mode = normalizeLoginMode(input?.mode);
-    const storageFile = modeToFile[mode];
-    const storagePath = storageFile ? path.join(authDir, storageFile) : null;
-    // ---- FAST PATH ----
-    if (storagePath && fs.existsSync(storagePath)) {
-        const age = Date.now() - fs.statSync(storagePath).mtimeMs;
-        if (age < MAX_AGE_MS) {
-            logger.step(`Reusing saved ${mode} session from storageState`);
-            // clear any existing session state first — prevents mixing across modes
-            await page.context().clearCookies();
-            await page.evaluate(() => {
-                try {
-                    window.localStorage.clear();
-                    window.sessionStorage.clear();
-                } catch (e) {
-                    // no-op if page isn't on a real origin yet
-                }
-            }).catch(() => {});
-            const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
-            await page.context().addCookies(state.cookies ?? []);
-            if (state.origins?.length) {
-                await page.goto(state.origins[0].origin);
-                await page.evaluate((origins: any[]) => {
-                    window.localStorage.clear(); // clear again post-navigation, before setting new values
-                    for (const o of origins) {
-                        for (const item of o.localStorage ?? []) {
-                            window.localStorage.setItem(item.name, item.value);
-                        }
+    if (process.env.BROWSER === 'mchrome') {
+        await authPage.navigate();
+        console.log('Skipping login for mchrome');
+        logger.step('Skipping login for Mobile Web (mchrome)');
+        const homeTabVisible = await authPage.isHomeTabVisible();
+        return {
+            isLoggedIn: true,
+            homeTabVisible: homeTabVisible,
+        };
+    } else {
+        const mode = normalizeLoginMode(input?.mode);
+        const storageFile = modeToFile[mode];
+        const storagePath = storageFile ? path.join(authDir, storageFile) : null;
+        // ---- FAST PATH ----
+        if (storagePath && fs.existsSync(storagePath)) {
+            const age = Date.now() - fs.statSync(storagePath).mtimeMs;
+            if (age < MAX_AGE_MS) {
+                logger.step(`Reusing saved ${mode} session from storageState`);
+                // clear any existing session state first — prevents mixing across modes
+                await page.context().clearCookies();
+                await page.evaluate(() => {
+                    try {
+                        window.localStorage.clear();
+                        window.sessionStorage.clear();
+                    } catch (e) {
+                        // no-op if page isn't on a real origin yet
                     }
-                }, state.origins);
+                }).catch(() => { });
+                const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
+                await page.context().addCookies(state.cookies ?? []);
+                if (state.origins?.length) {
+                    await page.goto(state.origins[0].origin);
+                    await page.evaluate((origins: any[]) => {
+                        window.localStorage.clear(); // clear again post-navigation, before setting new values
+                        for (const o of origins) {
+                            for (const item of o.localStorage ?? []) {
+                                window.localStorage.setItem(item.name, item.value);
+                            }
+                        }
+                    }, state.origins);
+                }
+                await page.reload();
+                await authPage.waitForLoadingToDisappear();
+                const homeVisible = await authPage.isHomeTabVisible();
+                logger.assertion('Home tab visible after session restore', homeVisible);
+                if (homeVisible) {
+                    return { isLoggedIn: homeVisible, homeTabVisible: homeVisible };
+                }
+                logger.step(`Cached ${mode} session invalid, falling back to live login`);
             }
             await page.reload();
             await authPage.waitForLoadingToDisappear();
@@ -676,20 +795,20 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
             }
             logger.step(`Cached ${mode} session invalid, falling back to live login`);    
         }
-    }
-    // ---- SLOW PATH (original login flow, unchanged) ----
-    logger.step(`Starting ${mode} login flow`);
-    await page.context().clearCookies();
-
-    const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-
-    if (process.env.BROWSER === 'mchrome') {
-        logger.step('mChrome detected: skipping manual email/password login step');
+        // ---- SLOW PATH (original login flow, unchanged) ----
+        logger.step(`Starting ${mode} login flow`);
+        await page.context().clearCookies();
+        const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
+        await authPage.navigate();
+        await authPage.acceptCookieSettingsIfVisible();
+        await authPage.clickEmailField();
+        await authPage.enterEmail(credentials.email);
+        await authPage.clickPasswordField();
+        await authPage.enterPassword(credentials.password);
+        await authPage.clickContinue();
         await authPage.waitForLoadingToDisappear();
-        const homeVisible = await isAuthenticatedEntryVisible(page, authPage);
-        logger.assertion('Mobile menu visible after mChrome navigation', homeVisible);
+        const homeVisible = await authPage.isHomeTabVisible();
+        logger.assertion('Home tab visible after login', homeVisible);
         if (homeVisible && storagePath) {
             await page.context().storageState({ path: storagePath });
             logger.step(`Saved ${mode} session to storageState`);
@@ -699,23 +818,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
             homeTabVisible: homeVisible,
         };
     }
-
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
-    const homeVisible = await authPage.isHomeTabVisible();
-    logger.assertion('Home tab visible after login', homeVisible);
-    if (homeVisible && storagePath) {
-        await page.context().storageState({ path: storagePath });
-        logger.step(`Saved ${mode} session to storageState`);
-    }
-    return {
-        isLoggedIn: homeVisible,
-        homeTabVisible: homeVisible,
-    };
 }
 
 async function verifyMidRailAdOnCurrentTab(page: any, authPage: OTTAuthPage): Promise<boolean> {
@@ -873,28 +975,6 @@ export async function verifyMidRailAdAutoRefresh(page: any, input: VerifyMidRail
     };
 }
 
-/*export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
-    const authPage = new OTTAuthPage(page);
-    const mode = normalizeLoginMode(input?.mode);
-    logger.step(`Starting ${mode} login flow`);
-    const credentials = resolveLoginCredentials(input ?? { email: '', password: '', networkConnection: '' }, mode);
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
-
-    const homeVisible = await authPage.isHomeTabVisible();
-    logger.assertion('Home tab visible after login', homeVisible);
-    return {
-        isLoggedIn: homeVisible,
-        homeTabVisible: homeVisible,
-    };
-}*/
-
 export interface VerifyTrendingResultsHiddenWhenSearchingOutput {
     isLoggedIn: boolean;
     searchInputCleared: boolean;
@@ -958,6 +1038,7 @@ export interface VerifyIWantOriginalsRailOutput {
     railTitle: string;
     contentCardsCount: number;
 }
+
 export interface VerifyGuestPHCarouselTabTrayLoadInput {
     mode?: string;
 }
@@ -965,12 +1046,10 @@ export interface VerifyGuestPHCarouselTabTrayLoadInput {
 export interface VerifyGuestPHCarouselTabTrayLoadOutput {
     homeRailVisible: boolean;
     homePageScrolledToEnd: boolean;
-    homeAdVisible: boolean;
     moviesRailVisible: boolean;
     moviesPageScrolledToEnd: boolean;
-    moviesAdVisible: boolean;
+    showsRailVisible: boolean;
     showsPageScrolledToEnd: boolean;
-    showsAdVisible: boolean;
 }
 
 export interface LogoutFromOTTInput {
@@ -1110,7 +1189,6 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
     }
     const hoverResult = await authPage.hoverIWantOriginalsFirstCardCentered();
     logger.step('Hovered over first iWant Originals card');
-    // Check for preview video playback - look for a visible video element and playback state
     let previewStarted = false;
     let previewEnded = false;
     try {
@@ -1154,7 +1232,6 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
         logger.debug('Error while detecting preview video start', error);
     }
     logger.assertion('Preview playback detected after hover', previewStarted);
-    // Per test requirement: do not wait for preview to finish — only verify preview started
     previewEnded = false;
     logger.debug('Skipping wait-for-preview-end by test instruction; returning previewStarted only');
     return {
@@ -1168,6 +1245,7 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
 
 export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
     const authPage = new OTTAuthPage(page);
+    const pageUtils = new PageUtils(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
     const loginResult = await loginToOTT(page, { mode });
@@ -1176,17 +1254,25 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
     const contentCardsCount = railVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', railVisible);
     logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
-    const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    logger.step('Clicking the right arrow on the iWant Originals rail');
-    const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
-    const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
-    logger.assertion('iWant Originals rail scrolled right', scrolledRight);
-    logger.step('Clicking the left arrow on the iWant Originals rail');
-    const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
-    const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
-    logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    let scrolledRight = false;
+    let scrolledLeft = false;
+    if (process.env.BROWSER === 'mchrome') {
+        const rail = page.locator(authPage.getIwantScrollLocatorMobile()).first();
+        scrolledRight = await pageUtils.scrollHorizontallyMobile(rail, 'right', 320, 500);
+        scrolledLeft = await pageUtils.scrollHorizontallyMobile(rail, 'left', 320, 500);
+    } else {
+        const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        logger.step('Clicking the right arrow on the iWant Originals rail');
+        const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+        const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
+        logger.assertion('iWant Originals rail scrolled right', scrolledRight);
+        logger.step('Clicking the left arrow on the iWant Originals rail');
+        const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
+        const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
+        logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    }
     return {
         isLoggedIn: loginResult.isLoggedIn,
         railVisible,
@@ -1551,7 +1637,6 @@ export async function loginWithMobileNumber(page: any, input?: Partial<MobileLog
     await authPage.enterMobilePassword(input?.password ?? '');
     await authPage.clickContinue();
     await authPage.waitForLoadingToDisappear();
-
     const homeVisible = await authPage.isHomeTabVisible();
     logger.assertion('Home tab visible after mobile login', homeVisible);
 
@@ -1567,7 +1652,7 @@ export async function verifySearchQueryTyping(page: any, input?: Partial<SearchQ
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting search query typing flow');
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -1590,7 +1675,7 @@ export async function verifySearchResults(page: any, input?: Partial<SearchQuery
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting search results verification flow');
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -1682,7 +1767,7 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     const query = input?.query ?? 'Love';
     const validationType = input?.validationType;
     logger.step('Starting search auto-suggestions verification flow');
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -1747,26 +1832,26 @@ export async function verifySearchNoResultsMessage(page: any, input?: Partial<Ve
 }
 
 export async function verifySearchLiveContentExclusion(page: any, input?: Partial<VerifySearchLiveContentExclusionInput>): Promise<VerifySearchLiveContentExclusionOutput> {
-  const authPage = new OTTAuthPage(page);
-  const gql = GraphQLHelper.getInstance(page);
-  const mode = normalizeLoginMode(input?.mode);
-  const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
-  logger.step('Starting live content exclusion verification flow');
-  const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
-  const login = await loginToOTT(page, { mode });
-  if (!login.isLoggedIn) {
-    return {
-      isLoggedIn: false,
-      liveContentTitle: '',
-      searchQueryTyped: false,
-      suggestionsVisible: false,
-      liveContentExcludedFromSuggestions: false,
-      liveContentTitleFoundInSearchResults: false,
-      suggestionsList: [],
-    };
-  }
-  let liveContentTitle = '';
-  try {
+    const authPage = new OTTAuthPage(page);
+    const gql = GraphQLHelper.getInstance(page);
+    const mode = normalizeLoginMode(input?.mode);
+    const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
+    logger.step('Starting live content exclusion verification flow');
+    const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
+    const login = await loginToOTT(page, { mode });
+    if (!login.isLoggedIn) {
+        return {
+            isLoggedIn: false,
+            liveContentTitle: '',
+            searchQueryTyped: false,
+            suggestionsVisible: false,
+            liveContentExcludedFromSuggestions: false,
+            liveContentTitleFoundInSearchResults: false,
+            suggestionsList: [],
+        };
+    }
+    let liveContentTitle = '';
+    try {
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
         const rails = parser.getRails();
@@ -1893,7 +1978,7 @@ export async function clearSearchTextFromSearchField(page: any, input?: Partial<
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     const query = (input?.query ?? '').trim();
     logger.step('Starting clear search input flow');
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -2030,7 +2115,6 @@ export async function verifySearchResultLabelUI(
             .waitForLoadState('networkidle', { timeout: 10000 })
             .catch(() => undefined);
         const labelVisible = await detailsPage.isSearchResultLabelVisible(matchingTitle, label);
-        console.log(`Label "${label}" visibility for "${matchingTitle}": ${labelVisible}`);
         if (labelVisible) {
             matchedLabelCount++;
             logger.assertion(
@@ -2886,15 +2970,12 @@ export async function verifyParentalPinPasswordField(page: any, input?: Partial<
     await settingsPage.clickAccountAndSettings();
     await settingsPage.scrollToParentalControlsSection();
     const parentalControlsVisible = await settingsPage.isParentalControlsSectionVisible();
-    // If the toggle is Off (or disabled), enable it and perform PIN setup flow.
     const toggleOff = parentalControlsVisible ? await settingsPage.isParentalPinToggleDisabled() : false;
     let passwordFieldVisible = false;
     if (toggleOff) {
-        // Turn ON the toggle which should reveal the password field
         await settingsPage.clickParentalPinToggle();
         passwordFieldVisible = await settingsPage.isParentalPinPasswordFieldVisible();
     } else {
-        // Toggle already ON, proceed to next steps
         passwordFieldVisible = await settingsPage.isParentalPinPasswordFieldVisible();
     }
     logger.assertion('Password field appears when parental PIN toggle is clicked', passwordFieldVisible);
@@ -2910,7 +2991,7 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting search icon visibility verification flow');
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -2980,71 +3061,48 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
     };
 }
 
-export async function verifyGuestPHCarouselTabTrayLoad(
-    page: any,
-    input?: Partial<VerifyGuestPHCarouselTabTrayLoadInput>
-): Promise<VerifyGuestPHCarouselTabTrayLoadOutput> {
+export async function verifyGuestPHCarouselTabTrayLoad(page: any, input?: Partial<VerifyGuestPHCarouselTabTrayLoadInput>): Promise<VerifyGuestPHCarouselTabTrayLoadOutput> {
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     logger.step('Starting PH region guest carousel, tab, and tray load validation flow');
-
     await authPage.navigate();
     logger.info('Navigated to OTT home page for guest PH carousel, tab, and tray load validation');
     const homeRailVisible = await authPage.isHomeTabVisible();
     logger.assertion('Home tab continue watching rail visible', homeRailVisible);
-    
     const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
     logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
-
     let homePageScrolledToEnd = true;
     try {
         await authPage.scrollToBottomOfPage();
     } catch {
         homePageScrolledToEnd = false;
     }
-    // const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
-    // logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
-
     await authPage.clickMoviesTab();
-    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
     const moviesRailVisible = await authPage.isMoviesTabVisible();
     logger.assertion('Movies tab trending movies rail visible', moviesRailVisible);
-
+    await page.waitForTimeout(2000);
     let moviesPageScrolledToEnd = true;
     try {
         await authPage.scrollToBottomOfPage();
     } catch {
         moviesPageScrolledToEnd = false;
     }
-    const moviesAdVisible = await detailsPage.isMidRailAdBannerVisible().catch(() => false);
-    logger.assertion('Movies page mid rail ad visible after scroll', moviesAdVisible);
-
     await authPage.clickShowsTab();
-    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-    // const showsRailVisible = await authPage.isShowsTabVisible();
-    // logger.assertion('Shows tab trending shows rail visible', showsRailVisible);
-
+    const showsRailVisible = await authPage.isShowsTabVisible();
+    logger.assertion('Shows tab trending shows rail visible', showsRailVisible);
     let showsPageScrolledToEnd = true;
     try {
         await authPage.scrollToBottomOfPage();
     } catch {
         showsPageScrolledToEnd = false;
     }
-    const showsAdVisible = await detailsPage.isMidRailAdBannerVisible().catch(() => false);
-    logger.assertion('Shows page mid rail ad visible after scroll', showsAdVisible);
-
     return {
         homeRailVisible,
         homePageScrolledToEnd,
-        homeAdVisible,
         moviesRailVisible,
         moviesPageScrolledToEnd,
-        moviesAdVisible,
-        // showsRailVisible,
+        showsRailVisible,
         showsPageScrolledToEnd,
-        showsAdVisible,
     };
 }
 
@@ -3313,14 +3371,13 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step('Starting login flow for Continue Watching absence validation');
-    // Prefer explicit input credentials, then UNWATCHED env vars, then resolveLoginCredentials
     const loginResult = await loginToOTT(page, { mode });
     const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForLoadingToDisappear();
     const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
-    logger.assertion('Continue Watching rail presence', isVisible);
+    logger.assertion('Continue Watching rail not present (expected for new user)', !isVisible);
     logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
     if (itemsCount > 0) {
         const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
@@ -3343,8 +3400,8 @@ export interface ValidateContinueWatchingOutput {
  */
 export async function validateContinueWatchingForNoHistory(page: any, input?: VerifyContinueWatchingInput): Promise<ValidateContinueWatchingOutput> {
     const result = await verifyContinueWatchingAbsent(page, input);
-    const count = result.continueWatchingItemsCount ;
-    const details = result.continueWatchingItemsDetails ;
+    const count = result.continueWatchingItemsCount;
+    const details = result.continueWatchingItemsDetails;
     //add await network stable 
     if (count === 0) {
         logger.assertion('No Continue Watching items present', true);
@@ -3437,6 +3494,169 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     };
 }
 
+export async function verifyForgotPasswordOtpNavigation(page: any, input: VerifyForgotPasswordOtpNavigationInput): Promise<VerifyForgotPasswordOtpNavigationOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    logger.step('Starting forgot password OTP navigation verification flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    await authPage.enterCreateAccountEmail(input.email);
+    logger.info(`Using email for registration: ${input.email}`);
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    await authPage.enterCreateAccountPassword(input.password);
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    await authPage.fetchAndFillOtp(input.email);
+    const firstOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`First OTP fetched and filled: ${firstOTPFetchedAndFilled}`);
+    await authPage.clickVerifyButton();
+    const homeTabVisible = await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickSignOut();
+    await authPage.clickForgotPassword();
+    const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
+    logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickProceed();
+    const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const otpHeadingText = isOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible', isOTPPageVisible);
+    await clearYopmailInbox(input.email);
+    const secondOtp = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`OTP fetched for forgot password flow: ${secondOtp}`);
+    await authPage.clickVerifyButton();
+    await page.waitForTimeout(2000);
+    const isSetNewPasswordScreenVisible = await authPage.isSetNewPasswordScreenVisible();
+    const setNewPasswordHeadingText = isSetNewPasswordScreenVisible ? await authPage.getSetNewPasswordHeadingText() : '';
+    logger.assertion('Set a New Password screen visible', isSetNewPasswordScreenVisible);
+    if (input.expectedOTPHeading) {
+        logger.assertion('Forgot password OTP heading matches expected', otpHeadingText === input.expectedOTPHeading);
+    }
+    if (input.expectedNewPasswordHeading) {
+        logger.assertion('Set a New Password heading matches expected', setNewPasswordHeadingText === input.expectedNewPasswordHeading);
+    }
+    return {
+        isOTPPageVisible,
+        otpHeadingText,
+        isSetNewPasswordScreenVisible,
+        setNewPasswordHeadingText,
+    };
+}
+
+export async function verifyForgotPasswordResetFlow(page: any, input: VerifyForgotPasswordResetFlowInput): Promise<VerifyForgotPasswordResetFlowOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting forgot password reset flow verification');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    await authPage.enterCreateAccountEmail(input.email);
+    await authPage.enterCreateAccountPassword(input.password ?? '');
+    await authPage.enterCreateAccountConfirmPassword(input.password ?? '');
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const otpHeadingText = isVerifyOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible during registration', isVerifyOTPPageVisible);
+    await authPage.fetchAndFillOtp(input.email);
+    const firstOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`First OTP fetched and filled: ${firstOTPFetchedAndFilled}`);
+    await authPage.clickVerifyButton();
+    await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickSignOut();
+    await authPage.clickForgotPassword();
+    const isForgotPasswordPageVisible = await authPage.isForgotPasswordPageVisible();
+    logger.assertion('Forgot Password page visible', isForgotPasswordPageVisible);
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickProceed();
+    const isOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    const secondOtpHeadingText = isOTPPageVisible ? await authPage.getVerifyOTPHeadingText() : '';
+    logger.assertion('Verify OTP page visible for password reset', isOTPPageVisible);
+    await clearYopmailInbox(input.email);
+    const secondOtp = await authPage.fetchAndFillOtp(input.email);
+    logger.info(`OTP fetched for forgot password flow: ${secondOtp}`);
+    await authPage.clickVerifyButton();
+    await page.waitForTimeout(2000);
+    const isSetNewPasswordScreenVisible = await authPage.isSetNewPasswordScreenVisible();
+    const setNewPasswordHeadingText = isSetNewPasswordScreenVisible ? await authPage.getSetNewPasswordHeadingText() : '';
+    logger.assertion('Set a New Password screen visible', isSetNewPasswordScreenVisible);
+    const newPassword = input.newPassword ?? input.password ?? '';
+    await authPage.enterNewPassword(newPassword);
+    await authPage.enterConfirmNewPassword(newPassword);
+    await authPage.clickProceed();
+    const isSuccessPopupVisible = await authPage.isPasswordResetSuccessMessageVisible();
+    const successMessageText = isSuccessPopupVisible ? await authPage.getPasswordResetSuccessMessageText() : '';
+    logger.assertion('Password reset success popup visible', isSuccessPopupVisible);
+    await authPage.clickDoneButton();
+    const isLoginScreenVisible = await authPage.isLoginFormVisible();
+    logger.assertion('Login screen visible after reset completion', isLoginScreenVisible);
+    if (input.expectedOTPHeading) {
+        logger.assertion('Forgot password OTP heading matches expected', secondOtpHeadingText === input.expectedOTPHeading);
+    }
+    if (input.expectedNewPasswordHeading) {
+        logger.assertion('Set a New Password heading matches expected', setNewPasswordHeadingText === input.expectedNewPasswordHeading);
+    }
+    if (input.expectedSuccessMessage) {
+        logger.assertion('Password reset success message matches expected', successMessageText.includes(input.expectedSuccessMessage));
+    }
+    return {
+        isOTPPageVisible,
+        otpHeadingText: secondOtpHeadingText,
+        isSetNewPasswordScreenVisible,
+        setNewPasswordHeadingText,
+        isSuccessPopupVisible,
+        successMessageText,
+        isLoginScreenVisible,
+    };
+}
+
+export async function verifyLoginWithNewPasswordCredentials(page: any, input: VerifyLoginWithNewPasswordInput): Promise<VerifyLoginWithNewPasswordOutput> {
+    const authPage = new OTTAuthPage(page);
+    logger.step('Starting login with new password credentials verification');
+    await verifyForgotPasswordResetFlow(page, {
+        email: input.email,
+        password: input.password,
+        newPassword: input.newPassword,
+        expectedMarketingText: input.expectedMarketingText,
+        expectedOTPHeading: input.expectedOTPHeading,
+        expectedNewPasswordHeading: input.expectedNewPasswordHeading,
+        expectedSuccessMessage: input.expectedSuccessMessage,
+    });
+    await authPage.clickEmailField();
+    await authPage.enterEmail(input.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(input.newPassword ?? input.password ?? '');
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const isHomeScreenVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home screen visible after login with new password', isHomeScreenVisible);
+    await authPage.clickAccountIcon();
+    await authPage.clickAccountAndSettings();
+    const isAccountPageVisible = await authPage.isEmailVisibleOnAccountPage(input.email);
+    logger.assertion('Account page visible with created email', isAccountPageVisible);
+    return {
+        isHomeScreenVisible,
+        isAccountPageVisible,
+        displayedEmail: input.email,
+    };
+}
+
 export async function verifySupportAndPolicyLinks(page: any, input?: Partial<VerifySupportAndPolicyLinksInput>): Promise<VerifySupportAndPolicyLinksOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -3495,14 +3715,12 @@ export async function verifyApplicationVersion(page: any, input?: Partial<Verify
     const currentUrl = authPage.getCurrentUrl();
     const navigatedToTermsPage = termsPageOpened || currentUrl.toLowerCase().includes('legal') || currentUrl.toLowerCase().includes('terms');
     await authPage.scrollToBottomOfPage();
-    // const versionText = await authPage.getApplicationVersionText();
     const versionDisplayed = await authPage.isApplicationVersionDisplayed();
     logger.assertion('Terms and Conditions page opened from footer link', navigatedToTermsPage);
     logger.assertion('Application version displayed at the bottom of the page', versionDisplayed);
     return {
         termsPageVisible: navigatedToTermsPage,
         versionDisplayed,
-        // versionText,
     };
 }
 
@@ -3618,13 +3836,9 @@ export async function verifyCreateAccountScreenUI(page: any, input: VerifyCreate
     const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
     const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
     const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
-    console.log('isTermsCheckboxVisible', isTermsCheckboxVisible);
-    console.log('isMarketingCheckboxVisible', isMarketingCheckboxVisible);
     const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
     const isAlreadyHaveAccountTextVisible = await authPage.isAlreadyHaveAccountTextVisible();
     const isLoginLinkVisible = await authPage.isCreateAccountLoginLinkVisible();
-    console.log('isAlreadyHaveAccountTextVisible', isAlreadyHaveAccountTextVisible);
-    console.log('isLoginLinkVisible', isLoginLinkVisible);
 
     logger.assertion('Create account heading visible', isHeadingVisible);
     logger.assertion('Email field visible on create account screen', isEmailFieldVisible);
@@ -3771,6 +3985,69 @@ export async function verifyRegistrationNavigation(
         emailFieldValue,
         passwordFieldValue,
         confirmPasswordFieldValue,
+    };
+}
+
+export async function verifyRegistrationNavigationToHomePage(page: any, input: VerifyRegistrationNavigationInput): Promise<VerifyRegistrationNavigationToHomePageOutput> {
+    const authPage = new OTTAuthPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    logger.step('Starting registration navigation validation flow');
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.openCreateAccountFlow();
+    const isHeadingVisible = await authPage.isCreateAccountHeadingVisible();
+    const headingText = isHeadingVisible ? await authPage.getCreateAccountHeadingText() : '';
+    const isEmailFieldVisible = await authPage.isCreateAccountEmailFieldVisible();
+    await authPage.enterCreateAccountEmail(input.email);
+    logger.info(`Using email for registration: ${input.email}`);
+    const isPasswordFieldVisible = await authPage.isCreateAccountPasswordFieldVisible();
+    await authPage.enterCreateAccountPassword(input.password);
+    const isConfirmPasswordFieldVisible = await authPage.isCreateAccountConfirmPasswordFieldVisible();
+    await authPage.enterCreateAccountConfirmPassword(input.password);
+    const isTermsCheckboxVisible = await authPage.isTermsCheckboxVisible();
+    const termsText = isTermsCheckboxVisible ? await authPage.getCreateAccountTermsText() : '';
+    const isMarketingCheckboxVisible = await authPage.isMarketingCheckboxVisible(input.expectedMarketingText);
+    const marketingText = isMarketingCheckboxVisible ? await authPage.getCreateAccountMarketingText() : '';
+    await authPage.selectCreateAccountTermsCheckbox();
+    await authPage.selectCreateAccountMarketingCheckbox();
+    const isContinueButtonVisible = await authPage.isCreateAccountContinueButtonVisible();
+    await authPage.clickCreateAccountContinue();
+    const isVerifyOTPPageVisible = await authPage.isVerifyOTPPageVisible();
+    await authPage.fetchAndFillOtp(input.email);
+    const isOTPFetchedAndFilled = await authPage.fetchAndFillOtp(input.email);
+    await authPage.clickVerifyButton();
+    const homeTabVisible = await authPage.isHomeTabVisible();
+    await authPage.clickAccountIcon();
+    await authPage.clickAccountAndSettings();
+    await detailsPage.isAccountHeadingVisible();
+    const isAccountHeadingVisible = await detailsPage.isAccountHeadingVisible();
+    const isGeneratedEmailVisibleOnAccountPage = await authPage.isEmailVisibleOnAccountPage(input.email);
+    logger.assertion('Create account heading visible', isHeadingVisible);
+    logger.assertion('Create account email field visible', isEmailFieldVisible);
+    logger.assertion('Create account password field visible', isPasswordFieldVisible);
+    logger.assertion('Create account confirm password field visible', isConfirmPasswordFieldVisible);
+    logger.assertion('Create account terms checkbox visible', isTermsCheckboxVisible);
+    logger.assertion('Create account marketing checkbox visible', isMarketingCheckboxVisible);
+    logger.assertion('Create account continue button visible', isContinueButtonVisible);
+    logger.assertion('Verify OTP page visible after submitting registration', isVerifyOTPPageVisible);
+    logger.info(`OTP fetched and filled: ${isOTPFetchedAndFilled}`);
+    logger.assertion('Home tab visible after registration and OTP verification', homeTabVisible);
+    logger.assertion('Account heading visible after navigating to account details', isAccountHeadingVisible);
+    logger.assertion('Generated email visible on account page', isGeneratedEmailVisibleOnAccountPage);
+    return {
+        isHeadingVisible,
+        headingText,
+        isEmailFieldVisible,
+        isPasswordFieldVisible,
+        isConfirmPasswordFieldVisible,
+        isTermsCheckboxVisible,
+        termsText,
+        isMarketingCheckboxVisible,
+        marketingText,
+        isContinueButtonVisible,
+        isVerifyOTPPageVisible,
+        isAccountHeadingVisible,
+        isGeneratedEmailVisibleOnAccountPage
     };
 }
 
@@ -3978,7 +4255,6 @@ export interface ValidateEditProfileNameFieldsInput {
 }
 
 export interface ValidateEditProfileNameFieldsOutput {
-    //isEditProfileScreenVisible: boolean;
     isFirstNameFieldVisible: boolean;
     isLastNameFieldVisible: boolean;
     isValidationErrorDisplayed: boolean;
@@ -4152,8 +4428,6 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
     if (passwordFieldVisible && pinPassword) {
         await settingsPage.enterParentalPinPassword(pinPassword);
         await settingsPage.clickParentalPinSubmitButton();
-
-        // Wait for the PIN setup message to become visible
         pinSetupMessageVisible = await settingsPage.waitForParentalPinSetupMessageVisible(5000);
 
         if (pinSetupMessageVisible) {
@@ -4207,11 +4481,8 @@ export async function verifyParentalPinPasswordVisibility(page: any, input?: Par
     if (passwordFieldVisible && pinPassword) {
         await settingsPage.enterParentalPinPassword(pinPassword);
 
-        // Check if eye icon is visible
         eyeIconVisible = await settingsPage.isPasswordVisibilityIconVisible();
         logger.assertion('Password visibility toggle icon is visible', eyeIconVisible);
-
-        // Get initial password type (should be 'password')
         const initialType = await settingsPage.getPasswordInputType();
         logger.debug(`Initial password input type: ${initialType}`);
 
@@ -4294,7 +4565,7 @@ export async function verifyParentalPinInvalidPasswordError(page: any, input?: P
 export async function verifyParentalPinFourDigitInput(page: any, input?: Partial<ParentalPinSubmissionInput>): Promise<ParentalPinFourDigitInputOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -4345,7 +4616,7 @@ export async function verifyParentalPinFourDigitInput(page: any, input?: Partial
 export async function verifyParentalPinSaveSuccess(page: any, input?: Partial<ParentalPinSaveSuccessInput>): Promise<ParentalPinSaveSuccessOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -4432,7 +4703,7 @@ export async function verifyParentalPinPromptOnContentPlayback(page: any, input?
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const detailsPage = new OTTDetailsPage(page);
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -4609,7 +4880,7 @@ export async function verifyParentalPinInvalidPlaybackPrompt(page: any, input?: 
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
     const detailsPage = new OTTDetailsPage(page);
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;
@@ -4818,7 +5089,7 @@ export async function verifyTermsPageDetails(page: any, input: VerifyTermsPageDe
 export async function disableParentalPin(page: any, input?: Partial<DisableParentalPinInput>): Promise<DisableParentalPinOutput> {
     const authPage = new OTTAuthPage(page);
     const settingsPage = new OTTSettingsPage(page);
-     const loginResult = await loginToOTT(page, {
+    const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
     const isLoggedIn = loginResult.isLoggedIn;

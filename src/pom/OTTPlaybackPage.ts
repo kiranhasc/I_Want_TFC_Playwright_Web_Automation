@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { logger } from '../utils/logger';
+import { config } from '../utils/config-manager';
 
 export class OTTPlaybackPage {
     private readonly page: Page;
@@ -83,7 +84,7 @@ export class OTTPlaybackPage {
     }
 
     async navigateToHomePage(): Promise<void> {
-        await this.page.goto('https://www.iwanttfc.com/');
+        await this.page.goto(config.getBaseURL());
         await this.pageUtils.waitForPageLoad();
     }
 
@@ -524,7 +525,7 @@ export class OTTPlaybackPage {
         let resumeClicked = false;
         let playbackCompleted = false;
         const currentTimeBeforePause = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
-        await this.page.waitForTimeout(8000);
+        await this.page.waitForTimeout(5000);
         await this.page.mouse.move(700, 400).catch(() => undefined);
         await this.page.waitForTimeout(2000);
         const pauseButton = this.page.getByRole('button', { name: 'Pause' }).first();
@@ -544,7 +545,7 @@ export class OTTPlaybackPage {
             await playButton.hover({ force: true }).catch(() => undefined);
             await this.page.waitForTimeout(1000);
             await playButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
-            await this.page.waitForTimeout(8000);
+            await this.page.waitForTimeout(5000);
             resumeClicked = true;
         }
         const currentTimeAfterResume = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);

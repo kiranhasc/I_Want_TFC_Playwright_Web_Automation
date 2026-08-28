@@ -8,7 +8,7 @@ import { verifyIWantOriginalsPreviewOnDetailsPage } from '../../src/businessFunc
 import testData from '../../src/data/ott-test-cases.json';
 
 test.describe('iWant Originals Rail', () => {
-    test('IW3-T5810: Verify iWant Originals Rail displayed on the Home page', async ({ page }) => {
+    test('@medium @mWeb IW3-T5810: Verify iWant Originals Rail displayed on the Home page', async ({ page }) => {
         const data = testData['tc-home-001-iwant-originals-rail'];
         const result = await verifyIWantOriginalsRail(page, {
             mode: data.mode,
@@ -19,7 +19,7 @@ test.describe('iWant Originals Rail', () => {
         expect(result.contentCardsCount).toBeGreaterThan(0);
     });
 
-    test('IW3-T5814: Verify that "iWant Originals" tray contents are scrollable on tapping right or left arrow mark', async ({ page }) => {
+    test('@Medium @mWeb IW3-T5814: Verify that "iWant Originals" tray contents are scrollable on tapping right or left arrow mark', async ({ page }) => {
         const data = testData['tc-home-002-iwant-originals-rail-scroll'];
         const result = await verifyIWantOriginalsRailScrollability(page, {
             mode: data.mode,
@@ -31,7 +31,7 @@ test.describe('iWant Originals Rail', () => {
         expect(result.scrolledLeft).toBe(true);
     });
 
-    test('IW3-T5812: Verify preview playback starts on Mouse hover on the content thumbnail under iWant Originals content', async ({ page }) => {
+    test('@Medium IW3-T5812: Verify preview playback starts on Mouse hover on the content thumbnail under iWant Originals content', async ({ page }) => {
         const data = testData['tc-home-003-iwant-originals-hover-preview'];
         const result = await verifyIWantOriginalsHoverPreview(page, {
             mode: data.mode,
@@ -42,7 +42,7 @@ test.describe('iWant Originals Rail', () => {
         expect(result.previewStarted).toBe(true);
     });
 
-    test('IW3-T5813: Verify preview playback on Content Detail Page when user selects the content from the iWant Originals tray', async ({ page }) => {
+    test('@medium IW3-T5813: Verify preview playback on Content Detail Page when user selects the content from the iWant Originals tray', async ({ page }) => {
         test.setTimeout(90000);
         const data = testData['tc-home-004-iwant-originals-preview-details'];
         const result = await verifyIWantOriginalsPreviewOnDetailsPage(page, {

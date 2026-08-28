@@ -170,4 +170,5 @@ export class OTTEarlyAccessPage {
             return false;
         }
 
-  }}
+    }
+}

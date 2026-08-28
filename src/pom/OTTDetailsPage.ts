@@ -3923,12 +3923,6 @@ export class OTTDetailsPage {
 
   async waitForMobileAdPlayback(): Promise<void> {
     if (process.env.BROWSER === 'mchrome') {
-      await this.page.waitForTimeout(120000);
-    }
-  }
-
-  async hoverPlaybackScreen(): Promise<void> {
-    if (process.env.BROWSER === 'mchrome') {
       await this.tapPlaybackScreen();
       await this.tapPlaybackScreen();
       return;
@@ -3943,7 +3937,6 @@ export class OTTDetailsPage {
       force: true
     });
   }
-
 
   async isResumeButtonVisible(): Promise<boolean> {
     try {
@@ -4366,6 +4359,8 @@ export class OTTDetailsPage {
 
       await locator.waitFor({ state: 'attached', timeout });
 
+      await locator.waitFor({ state: 'attached', timeout });
+
       return await locator.isVisible();
     } catch {
       return false;
@@ -4587,7 +4582,7 @@ export class OTTDetailsPage {
     }
   }
 
-  async isGoLiveVisible(): Promise<boolean> {
+    async isGoLiveVisible(): Promise<boolean> {
     try {
       const locator = this.page.locator(this.goLiveButtonElement.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });

@@ -1687,6 +1687,7 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     });
     const isLoggedIn = loginResult.isLoggedIn;
     logger.assertion('User is logged in', isLoggedIn);
+    // await page.waitForTimeout(10000);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
@@ -2077,7 +2078,9 @@ export async function verifySearchResultRedirectsToDetailPage(
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
         const allAssets: any[] = parser.getRails().flatMap(rail => rail.assets?.items ?? []);
-        const candidate = allAssets.find((asset: any) => typeof asset.title === 'string');
+        // Get all assets with string titles and select the 2nd one
+        const assetsWithTitles = allAssets.filter((asset: any) => typeof asset.title === 'string');
+        const candidate = assetsWithTitles.length > 5 ? assetsWithTitles[5] : assetsWithTitles[0];
         if (candidate?.title) {
             collectionTitle = String(candidate.title).trim();
         }

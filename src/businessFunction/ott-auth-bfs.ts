@@ -690,26 +690,7 @@ const modeToFile: Record<string, string | null> = {
 };
 
 async function isAuthenticatedEntryVisible(page: any, authPage: OTTAuthPage): Promise<boolean> {
-    if (process.env.BROWSER === 'mchrome') {
-        const selectors = [
-            'button[aria-label*="Menu" i]',
-            '[aria-label*="Menu" i]',
-            '[data-testid*="menu" i]',
-            'img[alt*="menu" i]',
-            '[class*="menu"]',
-        ];
-
-        for (const selector of selectors) {
-            const menuVisible = await page.locator(selector).first().isVisible().catch(() => false);
-            if (menuVisible) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    return await authPage.isHomeTabVisible().catch(() => false);
+    return await authPage.isAuthenticatedEntryVisible();
 }
 
 export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
@@ -2637,7 +2618,7 @@ export async function verifyTrendingResultsHiddenWhenSearching(
     }
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(collectionTitle);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
     await authPage.clearSearchInput();
     await page.waitForTimeout(1000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;

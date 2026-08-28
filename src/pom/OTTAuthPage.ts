@@ -49,6 +49,7 @@ export class OTTAuthPage {
     private readonly loadingIndicator: PageElement;
     private readonly moviesTab: PageElement;
     private readonly mobileMainMenu: PageElement;
+    private readonly mobileMenuSelectors: PageElement[];
     private readonly showsTab: PageElement;
     private readonly myWatchlistTab: PageElement;
     private readonly gmaTab: PageElement;
@@ -204,7 +205,7 @@ export class OTTAuthPage {
         this.gmaTab = { selector: 'div#gma' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
-        this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"]' };
+        this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"], //img[@alt="clear"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
         this.signInOption = { selector: '//p[normalize-space()="Sign In"]' };
@@ -256,6 +257,13 @@ export class OTTAuthPage {
         this.createAccountMarketingText = { selector: 'text=I agree to receive marketing communications', text: 'I agree to receive marketing communications' };
         this.marketingCheckboxDescription = { selector: 'form' };
         this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
+        this.mobileMenuSelectors = [
+            { selector: 'button[aria-label*="Menu" i]' },
+            { selector: '[aria-label*="Menu" i]' },
+            { selector: '[data-testid*="menu" i]' },
+            { selector: 'img[alt*="menu" i]' },
+            { selector: '[class*="menu"]' },
+        ];
         this.verifyOTPContainer = { selector: 'span.text-white\\/60' };
         this.verifyOTPMessage = { selector: 'text=/A verification OTP was sent to/i' };
         this.verifyOTPEmail = { selector: 'span.text-white\\/60 span.italic' };
@@ -677,6 +685,19 @@ export class OTTAuthPage {
 
     async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async isAuthenticatedEntryVisible(): Promise<boolean> {
+        if (process.env.BROWSER === 'mchrome') {
+            for (const selector of this.mobileMenuSelectors) {
+                const menuVisible = await this.page.locator(selector.selector).first().isVisible().catch(() => false);
+                if (menuVisible) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return await this.isHomeTabVisible().catch(() => false);
     }
 
     async clickHomeTab(): Promise<void> {

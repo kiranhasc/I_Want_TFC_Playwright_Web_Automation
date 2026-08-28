@@ -1,10 +1,9 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifyGuestWatchlistNavigationFromFreeAsset, verifyGuestWatchlistHoverNavigationFromFreeAsset } from '../../src/businessFunction/ott-watchlist-bfs';
-import { verifyGuestPHCarouselTabTrayLoad } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyGuestPHCarouselTabTrayLoad, verifyGuestSearchResultsWithoutLogin } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyGuestSubscribeNavigationFromFreeAsset, verifyPremiumCrownIconOnSearchResults } from '../../src/businessFunction/ott-subscription-bfs';
 import { verifyGuestSearchNavigationFromFreeAsset, verifyGuestShareFunctionalityFromFreeAsset } from '../../src/businessFunction/ott-details-bfs';
-import {verifyGuestSearchResultsWithoutLogin} from '../../src/businessFunction/ott-auth-bfs';
 
 test.describe('PH region guest watchlist navigation', () => {
   test('@High @D IW3-T1872: Verify the navigation on tapping Watchlist icon for the PH region guest user', async ({ page }) => {
@@ -98,8 +97,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.showsRailVisible).toBe(true);
     expect(result.showsPageScrolledToEnd).toBe(true);
   });
-
-    test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
+  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-025-search-results-guest'];
     const result = await verifyGuestSearchResultsWithoutLogin(page, {

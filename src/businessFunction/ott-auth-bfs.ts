@@ -644,86 +644,6 @@ function getProviderStoragePath(providerName?: string): string {
     return path.join(authDir, `provider-${safeName}.json`);
 }
 
-// export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
-//   const resolved = resolvePageAndInput(page, input);
-//   const pageInstance = resolved.page;
-//   const authPage = new OTTAuthPage(pageInstance);
-//   const mode = normalizeLoginMode(resolved.input?.mode);
-//   const providerInput = resolved.input ?? input;
-//   const storagePath = getProviderStoragePath(providerInput.providerName);
-//   // ---- FAST PATH ----
-//   if (fs.existsSync(storagePath)) {
-//     const age = Date.now() - fs.statSync(storagePath).mtimeMs;
-//     if (age < MAX_AGE_MS) {
-//       logger.step(`Reusing saved TV provider session (${providerInput.providerName}) from storageState`);
-//       const state = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
-//       await pageInstance.context().addCookies(state.cookies ?? []);
-//       if (state.origins?.length) {
-//         await pageInstance.goto(state.origins[0].origin);
-//         await pageInstance.evaluate((origins: any[]) => {
-//           for (const o of origins) {
-//             for (const item of o.localStorage ?? []) {
-//               window.localStorage.setItem(item.name, item.value);
-//             }
-//           }
-//         }, state.origins);
-//       }
-//       await pageInstance.reload();
-//       await authPage.waitForLoadingToDisappear();
-
-//       const isLoggedIn = await authPage.isLoginSuccessful();
-//       const homeTabVisible = await authPage.isHomeTabVisible();
-//       const moviesTabVisible = await authPage.isMoviesTabVisible();
-
-//       logger.assertion('TV Provider session restored', isLoggedIn);
-//       logger.assertion('Home tab visible after session restore', homeTabVisible);
-//       logger.assertion('Movies tab visible after session restore', moviesTabVisible);
-
-//       if (isLoggedIn) {
-//         return { isLoggedIn, homeTabVisible, moviesTabVisible };
-//       }
-//       logger.step(`Cached TV provider session invalid, falling back to live login`);
-//       // fall through to slow path
-//     }
-//   }
-
-//   // ---- SLOW PATH (your existing code, unchanged) ----
-//   logger.step(`Starting ${mode} login flow`);
-  
-//   // mweb has no login functionality
-//   if (process.env.BROWSER === 'mchrome') {
-//     logger.step('mChrome detected: mweb has no TV provider login functionality, skipping');
-//     await authPage.navigate();
-//     await authPage.waitForLoadingToDisappear();
-//     const isLoggedIn = await authPage.isLoginSuccessful();
-//     const homeTabVisible = await authPage.isHomeTabVisible();
-//     const moviesTabVisible = await authPage.isMoviesTabVisible();
-//     return { isLoggedIn, homeTabVisible, moviesTabVisible };
-//   }
-  
-//   const credentials = resolveLoginCredentials(providerInput ?? { email: '', password: '' }, mode);
-//   logger.step('Starting TV Provider login flow');
-//   await authPage.navigate();
-//   await authPage.acceptCookieSettingsIfVisible();
-//   await authPage.clickLoginWithTVProvider();
-//   await authPage.selectTVProvider(providerInput.providerName);
-//   await authPage.clickContinue();
-//   await authPage.enterProviderEmail(credentials.email);
-//   await authPage.enterProviderPassword(credentials.password);
-//   await authPage.clickProviderSignIn();
-//   const isLoggedIn = await authPage.isLoginSuccessful();
-//   const homeTabVisible = await authPage.isHomeTabVisible();
-//   const moviesTabVisible = await authPage.isMoviesTabVisible();
-//   logger.assertion('TV Provider login successful', isLoggedIn);
-//   logger.assertion('Home tab visible after TV provider login', homeTabVisible);
-//   logger.assertion('Movies tab visible after TV provider login', moviesTabVisible);
-//   if (isLoggedIn) {
-//     await pageInstance.context().storageState({ path: storagePath });
-//     logger.step(`Saved TV provider session (${providerInput.providerName}) to storageState`);
-//   }
-//   return { isLoggedIn, homeTabVisible, moviesTabVisible };
-// }
-
 export async function loginWithTVProvider(page: any, input: TVProviderLoginInput): Promise<TVProviderLoginOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -796,48 +716,9 @@ const modeToFile: Record<string, string | null> = {
     freeUser: 'freeUser.json',
     invalid: null,
 };
-// async function isAuthenticatedEntryVisible(page: any, authPage: OTTAuthPage): Promise<boolean> {
-//     if (process.env.BROWSER === 'mchrome') {
-//         const selectors = [
-//             'button[aria-label*="Menu" i]',
-//             '[aria-label*="Menu" i]',
-//             '[data-testid*="menu" i]',
-//             'img[alt*="menu" i]',
-//             '[class*="menu"]',
-//         ];
- 
-//         for (const selector of selectors) {
-//             const menuVisible = await page.locator(selector).first().isVisible().catch(() => false);
-//             if (menuVisible) {
-//                 return true;
-//             }
-//         }
- 
-//         return false;
-//     }
-// }
 
 async function isAuthenticatedEntryVisible(page: any, authPage: OTTAuthPage): Promise<boolean> {
-    if (process.env.BROWSER === 'mchrome') {
-        const selectors = [
-            'button[aria-label*="Menu" i]',
-            '[aria-label*="Menu" i]',
-            '[data-testid*="menu" i]',
-            'img[alt*="menu" i]',
-            '[class*="menu"]',
-        ];
-
-        for (const selector of selectors) {
-            const menuVisible = await page.locator(selector).first().isVisible().catch(() => false);
-            if (menuVisible) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    return await authPage.isHomeTabVisible().catch(() => false);
+    return await authPage.isAuthenticatedEntryVisible();
 }
 
 export async function loginToFreeUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
@@ -926,15 +807,6 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
                 }
                 logger.step(`Cached ${mode} session invalid, falling back to live login`);
             }
-            await page.reload();
-            await authPage.waitForLoadingToDisappear();
-            const homeVisible = await isAuthenticatedEntryVisible(page, authPage);
-            const stateLabel = process.env.BROWSER === 'mchrome' ? 'Mobile menu visible after session restore' : 'Home tab visible after session restore';
-            logger.assertion(stateLabel, homeVisible);
-            if (homeVisible) {
-                return { isLoggedIn: homeVisible, homeTabVisible: homeVisible };
-            }
-            logger.step(`Cached ${mode} session invalid, falling back to live login`);    
         }
         // ---- SLOW PATH (original login flow, unchanged) ----
         logger.step(`Starting ${mode} login flow`);
@@ -1945,7 +1817,6 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     });
     const isLoggedIn = loginResult.isLoggedIn;
     logger.assertion('User is logged in', isLoggedIn);
-    // await page.waitForTimeout(10000);
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
@@ -2335,9 +2206,7 @@ export async function verifySearchResultRedirectsToDetailPage(
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
         const allAssets: any[] = parser.getRails().flatMap(rail => rail.assets?.items ?? []);
-        // Get all assets with string titles and select the 2nd one
-        const assetsWithTitles = allAssets.filter((asset: any) => typeof asset.title === 'string');
-        const candidate = assetsWithTitles.length > 5 ? assetsWithTitles[5] : assetsWithTitles[0];
+        const candidate = allAssets.find((asset: any) => typeof asset.title === 'string');
         if (candidate?.title) {
             collectionTitle = String(candidate.title).trim();
         }
@@ -2810,7 +2679,7 @@ export async function verifyTrendingResultsHiddenWhenSearching(
     }
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(collectionTitle);
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
     await authPage.clearSearchInput();
     await page.waitForTimeout(1000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;
@@ -3042,7 +2911,6 @@ export async function verifySearchFreePremiumLabels(
         await authPage.clickSearchBar();
         await authPage.enterSearchQuery(freeTitle);
         await authPage.submitSearchQuery();
-        await page.waitForTimeout(2000);
         freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeTitle).catch(() => false);
         logger.assertion(`Free label visible for "${freeTitle}"`, freeLabelVisible);
     }
@@ -3177,15 +3045,12 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
     await authPage.clickShowsTab();
     const showsPageSearchIconVisible = await authPage.isSearchIconVisible();
     logger.assertion('Search icon visible on Shows page', showsPageSearchIconVisible);
+    await authPage.clickMyWatchlistTab();
+    const watchlistPageSearchIconVisible = await authPage.isSearchIconVisible();
+    logger.assertion('Search icon visible on My Watchlist page', watchlistPageSearchIconVisible);
     await authPage.clickGMATab();
     const gmaPageSearchIconVisible = await authPage.isSearchIconVisible();
     logger.assertion('Search icon visible on GMA page', gmaPageSearchIconVisible);
-    let watchlistPageSearchIconVisible = false;
-    if (process.env.BROWSER !== 'mchrome') {
-        await authPage.clickMyWatchlistTab();
-        watchlistPageSearchIconVisible = await authPage.isSearchIconVisible();
-        logger.assertion('Search icon visible on My Watchlist page', watchlistPageSearchIconVisible);
-    }
     return {
         isLoggedIn: homePageSearchIconVisible,
         homePageSearchIconVisible,
@@ -3241,7 +3106,6 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
     const expectedSearchPlaceholder = (effectiveInput.expectedSearchPlaceholder ?? '').trim();
     logger.step('Starting valid login flow for tab navigation');
     const credentials = resolveLoginCredentials(effectiveInput ?? { email: '', password: '' }, mode);
-
     await authPage.clickHomeTab();
     const homeRailVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
     logger.assertion('Home tab rail active', homeRailVisible);
@@ -3281,75 +3145,6 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
         signOutOptionVisible,
     };
 }
-// export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateTabsInput>): Promise<NavigateTabsOutput> {
-//     if (page && typeof page === 'object' && (page.page || page.input)) {
-//         const wrapper = page as any;
-//         page = wrapper.page ?? page;
-//         input = wrapper.input ?? input;
-//     }
-//     const authPage = new OTTAuthPage(page);
-//     let isLoggedIn = false;
-//     // For mobile-web (mchrome) skip the interactive login and launch the mobile site
-//     if (process.env.BROWSER === 'mchrome') {
-//         logger.step('MWeb detected - launching mobile site and skipping login for this flow');
-//         await authPage.launchMWeb(config.getBaseURL());
-//         await authPage.waitForLoadingToDisappear().catch(() => undefined);
-//         await authPage.clickMobileMainMenu();
-//         isLoggedIn = await authPage.isHomeTabVisible().catch(() => false);
-//         logger.assertion('User is logged in (mweb)', isLoggedIn);
-//     } else {
-//         const loginResult = await loginToOTT(page, { mode: input?.mode });
-//         isLoggedIn = loginResult.isLoggedIn;
-//         logger.assertion('User is logged in', isLoggedIn);
-//     }
-//     const mode = normalizeLoginMode(input?.mode);
-//     const expectedSearchPlaceholder = (input?.expectedSearchPlaceholder ?? '').trim();
-//     logger.step(`Starting valid login flow for tab navigation`);
-//     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-
-//     const homeRailVisible = process.env.BROWSER === 'mchrome'
-//         ? false
-//         : await authPage.isContinueWatchingRailVisible().catch(() => false);
-//     if (process.env.BROWSER !== 'mchrome') {
-//         logger.assertion('Home tab rail active', homeRailVisible);
-//     }
-//     await authPage.clickMoviesTab();
-//     const moviesRailVisible = await authPage.isTrendingMoviesRailVisible();
-//     logger.assertion('Movies tab rail active', moviesRailVisible);
-//     await authPage.clickShowsTab();
-//     const showsRailVisible = await authPage.isTrendingShowsRailVisible();
-//     logger.assertion('Shows tab rail active', showsRailVisible);
-//     await authPage.clickMyWatchlistTab();
-//     const watchlistRailVisible = await authPage.isMyWatchlistRailVisible();
-//     logger.assertion('Watchlist tab rail active', watchlistRailVisible);
-//     await authPage.clickGMATab();
-//     const gmaRailVisible = await authPage.isTopStreamedRailVisible();
-//     logger.assertion('GMA tab rail active', gmaRailVisible);
-//     await authPage.clickHomeTab();
-//     await authPage.clickSearchBar();
-//     const searchBarPlaceholder = await authPage.getSearchBarPlaceholder();
-//     const normalizePlaceholderText = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-//     const normalizedActual = normalizePlaceholderText(searchBarPlaceholder);
-//     const normalizedExpected = normalizePlaceholderText(expectedSearchPlaceholder);
-//     const searchBarPlaceholderMatches = normalizedExpected
-//         ? normalizedActual.includes(normalizedExpected)
-//         : normalizedActual.includes('search');
-//     logger.assertion('Search bar placeholder visible', searchBarPlaceholder.length > 0);
-//     await authPage.clickAccountIcon();
-//     const signOutOptionVisible = await authPage.isSignOutOptionVisible();
-//     logger.assertion('Sign Out option visible', signOutOptionVisible);
-//     return {
-//         isLoggedIn: homeRailVisible,
-//         homeRailVisible,
-//         moviesRailVisible,
-//         showsRailVisible,
-//         watchlistRailVisible,
-//         gmaRailVisible,
-//         searchBarPlaceholder,
-//         searchBarPlaceholderMatches,
-//         signOutOptionVisible,
-//     };
-// }
 
 export async function verifyGuestPHCarouselTabTrayLoad(page: any, input?: Partial<VerifyGuestPHCarouselTabTrayLoadInput>): Promise<VerifyGuestPHCarouselTabTrayLoadOutput> {
     const authPage = new OTTAuthPage(page);
@@ -4722,7 +4517,7 @@ export async function submitParentalPinPassword(page: any, input?: Partial<Paren
     logger.assertion('User is logged in', isLoggedIn);
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
-    const pinPassword = (input?.password ?? '').trim() || credentials.password;
+    const pinPassword = (input?.password ?? '').trim() || '';
     logger.step('Starting parental PIN password submission flow');
     await settingsPage.clickAccountIcon();
     await settingsPage.clickAccountAndSettings();
@@ -5169,7 +4964,6 @@ export async function verifyParentalPinPlaybackAllowedWhenDisabled(page: any, in
     } else {
         await detailsPage.clickFirstShowContent();
     }
-    await page.waitForTimeout(2000);
     await detailsPage.clickResumeButton();
     const parentalPinPromptVisible = await detailsPage.isParentalPinPlaybackPromptVisible();
     const playbackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
@@ -5546,18 +5340,17 @@ export async function verifyTrendingContentDetailNavigation(
     logger.step('Starting verification: Click trending content and navigate to detail page');
     const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
     const login = await loginToOTT(page, { mode });
-    
-    // if (!login.isLoggedIn) {
-    //     logger.assertion('User login failed, aborting trending detail navigation verification', false);
-    //     return {
-    //         isLoggedIn: false,
-    //         topPicksHeadingVisible: false,
-    //         trendingContentFound: false,
-    //         trendingContentTitle: '',
-    //         detailsPageVisible: false,
-    //         detailsPageTitleMatches: false,
-    //     };
-    // }
+    if (!login.isLoggedIn) {
+        logger.assertion('User login failed, aborting trending detail navigation verification', false);
+        return {
+            isLoggedIn: false,
+            topPicksHeadingVisible: false,
+            trendingContentFound: false,
+            trendingContentTitle: '',
+            detailsPageVisible: false,
+            detailsPageTitleMatches: false,
+        };
+    }
     // Wait for collection data to be available
     let collectionTitle = '';
     try {

@@ -49,6 +49,7 @@ export class OTTAuthPage {
     private readonly loadingIndicator: PageElement;
     private readonly moviesTab: PageElement;
     private readonly mobileMainMenu: PageElement;
+    private readonly mobileMenuSelectors: PageElement[];
     private readonly showsTab: PageElement;
     private readonly myWatchlistTab: PageElement;
     private readonly gmaTab: PageElement;
@@ -208,7 +209,7 @@ export class OTTAuthPage {
         this.gmaTab = { selector: '//div[@id ="gma"]' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
-        this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"]' };
+        this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"], //img[@alt="clear"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.synacorLogOutButton = { selector: '//span[text()="Logout"]' };
         this.signOutOption = { text: 'Sign Out', selector: 'text=Sign Out' };
@@ -267,6 +268,13 @@ export class OTTAuthPage {
         this.verifyButton = { role: 'button', text: 'Verify', selector: '//button[text()="Verify"]' };
         this.backToLoginLink = { role: 'link', text: 'Back to Login', selector: '//a[normalize-space()="Back to Login"]' };
         this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
+        this.mobileMenuSelectors = [
+            { selector: 'button[aria-label*="Menu" i]' },
+            { selector: '[aria-label*="Menu" i]' },
+            { selector: '[data-testid*="menu" i]' },
+            { selector: 'img[alt*="menu" i]' },
+            { selector: '[class*="menu"]' },
+        ];
         this.createAccountContinueButton = { role: 'button', text: 'Continue', selector: 'button:has-text("Continue")' };
         this.alreadyHaveAccountText = { selector: 'text=Already Have an Account?' };
         this.createAccountLoginLink = { role: 'link', text: 'Login', selector: 'a:has-text("Login")' };
@@ -720,6 +728,19 @@ export class OTTAuthPage {
 
     async isHomeTabVisibleWeb(): Promise<boolean> {
         return await this.pageUtils.isVisible(this.homeTab, 10000);
+    }
+
+    async isAuthenticatedEntryVisible(): Promise<boolean> {
+        if (process.env.BROWSER === 'mchrome') {
+            for (const selector of this.mobileMenuSelectors) {
+                const menuVisible = await this.page.locator(selector.selector).first().isVisible().catch(() => false);
+                if (menuVisible) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return await this.isHomeTabVisible().catch(() => false);
     }
 
     async clickHomeTab(): Promise<void> {
@@ -1227,15 +1248,6 @@ export class OTTAuthPage {
         await this.pageUtils.safeClick(this.showsTab);
     }
 
-    async clickGMATab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
-            await this.clickMobileMainMenu();
-        }
-        logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
-        await this.pageUtils.safeClick(this.gmaTab);
-    }
-
     async clickMyWatchlistTab(): Promise<void> {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
@@ -1247,6 +1259,15 @@ export class OTTAuthPage {
         await locator.scrollIntoViewIfNeeded();
         await this.page.waitForTimeout(1500);
         await this.pageUtils.safeClick(this.myWatchlistTab);
+    }
+
+    async clickGMATab(): Promise<void> {
+        if (process.env.BROWSER === 'mchrome') {
+            await this.clickMobileMainMenu();
+        }
+        logger.elementInteraction('click', 'GMA tab');
+        await this.page.waitForTimeout(1500);
+        await this.pageUtils.safeClick(this.gmaTab);
     }
 
     async isSearchIconVisible(): Promise<boolean> {

@@ -374,6 +374,14 @@
         "mode": "provider",
         "providerName": "Frontier, a Verizon Company"
     },
+
+    "tc-discovery-002-early-access-premium-monthly": {
+        "mode": "valid",
+        "graphqlQueryName": "Collection",
+        "labelText": "Early Access",
+        "earlyAccessAttributeValue": "early_access"
+    },
+
     "tc-cw-1948-free-and-paid-content": {
         "mode": "valid"
     },

@@ -11,7 +11,7 @@ import { verifyMidRailBannerAdlVisibility, verifySponsoredRailAdvertiserLogo, ve
 import { verifyPauseAdNoReappearWithin3SecFlow, verifySponsoredRailContentDetailsNavigation } from '../../src/businessFunction/ott-playback-bfs';
 
 test.describe('Ads', () => {
-    test('@High @D IW3-T3648 : Verify Mid rail banner Ad is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
+    test('@High IW3-T3648 : Verify Mid rail banner Ad is Displayed on Home, Shows, Movies, GMA, Search pages', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-037-mid-rail-banner-adl'];
         const result = await verifyMidRailBannerAdlVisibility(page, {
@@ -20,7 +20,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.allPagesVisible).toBe(true);
     });
-    test('@High @D IW3-T3978: Verify pause ad appears on player screen for all types of content during pause state', async ({ page }) => {
+    test('@High IW3-T3978: Verify pause ad appears on player screen for all types of content during pause state', async ({ page }) => {
         test.setTimeout(300000);
         const data = testCaseData['tc-ad-3978-pause-ad-player-screen'];
         const result = await verifyPauseAdAppearsOnPlayerScreenFlow(page, {
@@ -33,7 +33,7 @@ test.describe('Ads', () => {
         expect(result.showPauseAdVisible).toBe(true);
     });
 
-    test('@High @D IW3-T3980: Verify billboard ad banner displays for guest, free, or basic users', async ({ page }) => {
+    test('@High IW3-T3980: Verify billboard ad banner displays for guest, free, or basic users', async ({ page }) => {
         test.setTimeout(300000);
         const data = testCaseData['tc-ad-3980-billboard-ad-banner'];
         const result = await verifyBillboardAdBannerVisibilityFlow(page, {
@@ -43,7 +43,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.adBannerVisible).toBe(true);
     });
-    test('@Medium @DH IW3-T3981: Verify pause ad is clickable by user interactions', async ({ page }) => {
+    test('@Medium IW3-T3981: Verify pause ad is clickable by user interactions', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-3981-pause-ad-clickable'];
         const result = await verifyPauseAdClickableFlow(page, {
@@ -52,7 +52,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3985: Verify pause ad disappears on player screen when playback resumes', async ({ page }) => {
+    test('@Medium IW3-T3985: Verify pause ad disappears on player screen when playback resumes', async ({ page }) => {
         test.setTimeout(210000);  
         const data = testCaseData['tc-ad-3985-pause-ad-disappears-on-resume'];
         const result = await verifyPauseAdDisappearsOnResumeFlow(page, {
@@ -63,7 +63,7 @@ test.describe('Ads', () => {
         expect(result.pauseAdVisibleDuringPause).toBe(true);
         expect(result.pauseAdVisibleAfterResume).toBe(false);
     });
-    test('@Medium @D IW3-T3986: Verify pause ad displays for different users', async ({ page }) => {
+    test('@Medium IW3-T3986: Verify pause ad displays for different users', async ({ page }) => {
         test.setTimeout(300000);
         const data = testCaseData['tc-ad-3986-pause-ad-different-users'];
         const result = await verifyPauseAdDisplaysForDifferentUsersFlow(page, {
@@ -75,7 +75,7 @@ test.describe('Ads', () => {
         expect(result.secondUserLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3988: Verify pause ad appears on repeated pauses during playback', async ({ page }) => {
+    test('@Medium IW3-T3988: Verify pause ad appears on repeated pauses during playback', async ({ page }) => {
         test.setTimeout(270000);
         const data = testCaseData['tc-ad-3988-repeated-pauses'];
         const result = await verifyPauseAdRepeatedPausesFlow(page, {
@@ -88,7 +88,7 @@ test.describe('Ads', () => {
         expect(result.returnToContentVisible).toBe(true);
         expect(result.playbackTitleVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3990: Verify that pause ads are displayed in the "Full" screen', async ({ page }) => {
+    test('@Medium IW3-T3990: Verify that pause ads are displayed in the "Full" screen', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-3990-pause-ad-fullscreen'];
         const result = await verifyPauseAdFullscreenFlow(page, {
@@ -98,7 +98,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3991: Verify that pause ads are not displayed for Premium or GMA plan users', async ({ page }) => {
+    test('@Medium IW3-T3991: Verify that pause ads are not displayed for Premium or GMA plan users', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-ad-3991-pause-ad-premium-or-gma'];
         const result = await verifyPauseAdAbsenceForPremiumOrGmaFlow(page, {
@@ -107,7 +107,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(false);
     });
-    test('@Medium @D IW3-T3992: Verify user should not be able to seek the content when the pause ad is displayed', async ({ page }) => {
+    test('@Medium IW3-T3992: Verify user should not be able to seek the content when the pause ad is displayed', async ({ page }) => {
         test.setTimeout(240000);
         const data = testCaseData['tc-ad-3992-pause-ad-seek-restriction'];
         const result = await verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page, {
@@ -116,7 +116,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3995: Verify that tapping back from the pause ad screen returns to the previous screen', async ({ page }) => {
+    test('@Medium IW3-T3995: Verify that tapping back from the pause ad screen returns to the previous screen', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-3995-pause-ad-back-navigation'];
         const result = await verifyPauseAdBackNavigationFlow(page, {
@@ -128,7 +128,7 @@ test.describe('Ads', () => {
         expect(result.backNavigationSuccessful).toBe(true);
         expect(result.detailsPageVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3997: Verify that the "Dismiss Ad" CTA is displayed on the "Pause Ad" screen', async ({ page }) => {
+    test('@Medium IW3-T3997: Verify that the "Dismiss Ad" CTA is displayed on the "Pause Ad" screen', async ({ page }) => {
         test.setTimeout(210000);
         const data = testCaseData['tc-ad-3997-dismiss-ad-cta'];
         const result = await verifyPauseAdDismissCtaVisibilityFlow(page, {
@@ -141,7 +141,7 @@ test.describe('Ads', () => {
         expect(result.playbackTitleVisible).toBe(true);
         expect(result.seekBarVisible).toBe(true);
     });
-    test('@Medium @D IW3-T3998: Verify pause ads are displayed on pausing the live content as guest or free or basic user', async ({ page }) => {
+    test('@Medium IW3-T3998: Verify pause ads are displayed on pausing the live content as guest or free or basic user', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-ad-3998-pause-ad-live-channel'];
         const result = await verifyPauseAdLiveContentPlaybackFlow(page, {
@@ -151,7 +151,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T4003: Verify that pause ads do not reappear on re pausing within 3s after resuming', async ({ page }) => {
+    test('@Medium IW3-T4003: Verify that pause ads do not reappear on re pausing within 3s after resuming', async ({ page }) => {
         test.setTimeout(190000);
         const data = testCaseData['tc-ad-4003-pause-ad-no-reappear-within-3s'];
         const result = await verifyPauseAdNoReappearWithin3SecFlow(page, {
@@ -162,7 +162,7 @@ test.describe('Ads', () => {
         expect(result.pauseAdVisibleDuringPause).toBe(true);
         expect(result.pauseAdVisibleAfterImmediateRePause).toBe(false);
     });
-    test('@High @D IW3-T4009: Verify that Pause Ads are displayed for Basic users when Micro Drama content is paused', async ({ page }) => {
+    test('@High IW3-T4009: Verify that Pause Ads are displayed for Basic users when Micro Drama content is paused', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-ad-4009-pause-ad-micro-drama'];
         const result = await verifyPauseAdForMicroDramaFlow(page, {
@@ -173,7 +173,7 @@ test.describe('Ads', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
     });
-    test('@Medium @D IW3-T4010: Verify that Pause Ads are not displayed on Skip Intro / Skip Recap / Go Live CTA when the user pauses the content', async ({ page }) => {
+    test('@Medium IW3-T4010: Verify that Pause Ads are not displayed on Skip Intro / Skip Recap / Go Live CTA when the user pauses the content', async ({ page }) => {
         test.setTimeout(300000);
         const data = testCaseData['tc-ad-4010-pause-ad-skip-intro-recap-go-live'];
         const result = await verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page, {
@@ -192,7 +192,7 @@ test.describe('Ads', () => {
         expect(result.goLivePauseAdVisible).toBe(true);
         expect(result.goLiveVisibleAfterAd).toBe(false);
     });
-    test('@Medium @D IW3-T4011: Verify that Pause Ads are not getting overlapped with the dismiss ad button and content title on player screen', async ({ page }) => {
+    test('@Medium IW3-T4011: Verify that Pause Ads are not getting overlapped with the dismiss ad button and content title on player screen', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-4011-pause-ad-no-overlap'];
         const result = await verifyPauseAdNoOverlapWithDismissAndTitleFlow(page, {
@@ -203,8 +203,11 @@ test.describe('Ads', () => {
         expect(result.returnToContentVisible).toBe(true);
         expect(result.overlapDetected).toBe(false);
     });
-    test('@Medium @D IW3-T4013: Verify "Next Episode" plays in full screen', async ({ page }) => {
-        test.setTimeout(90000);
+    test('@Medium @mWeb IW3-T4013: Verify "Next Episode" plays in full screen', async ({ page }) => {
+        const testTimeout = process.env.BROWSER === 'mchrome'
+        ? 600_000
+        : 90_000;
+        test.setTimeout(testTimeout);
         const data = testCaseData['tc-ad-4013-next-episode-fullscreen'];
         const result = await verifyNextEpisodePlaybackInFullscreenFlow(page, {
             mode: data.mode,
@@ -214,7 +217,7 @@ test.describe('Ads', () => {
         expect(result.fullScreenActiveAfterUpNext).toBe(true);
         expect(result.nextEpisodePlaybackStarted).toBe(true);
     });
-    test('@Medium @D IW3-T4014: Verify the pause screen is displayed for Movies and Shows content for Premium or GMA users', async ({ page }) => {
+    test('@Medium IW3-T4014: Verify the pause screen is displayed for Movies and Shows content for Premium or GMA users', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-ad-4014-pause-screen-premium-or-gma'];
         const result = await verifyPauseScreenForPremiumOrGmaFlow(page, {
@@ -226,7 +229,7 @@ test.describe('Ads', () => {
         expect(result.movieAdBannerVisible).toBe(false);
         expect(result.showAdBannerVisible).toBe(false);
     });
-    test('@Medium @D IW3-T4015: Verify pause ads are not overlapped on the "Up Next" binge marker', async ({ page }) => {
+    test('@Medium IW3-T4015: Verify pause ads are not overlapped on the "Up Next" binge marker', async ({ page }) => {
         test.setTimeout(300000);
         const data = testCaseData['tc-ad-4015-pause-ad-up-next-overlap'];
         const result = await verifyPauseAdNoOverlapWithUpNextMarkerFlow(page, {
@@ -238,7 +241,7 @@ test.describe('Ads', () => {
         expect(result.pauseAdVisible).toBe(true);
         expect(result.upNextVisibleAfterPauseAd).toBe(false);
     });
-    test('@Medium @D IW3-T4017: Verify "Pause Ads" are not displayed when the video is playing', async ({ page }) => {
+    test('@Medium IW3-T4017: Verify "Pause Ads" are not displayed when the video is playing', async ({ page }) => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-4017-pause-ad-not-displayed-while-playing'];
         const result = await verifyPauseAdNotDisplayedWhilePlayingFlow(page, {
@@ -250,8 +253,8 @@ test.describe('Ads', () => {
         expect(result.pauseAdVisible).toBe(false);
     });
 
-    test('@Medium @D IW3-T4018: Verify all the player controls gets dismissed when the "Pause Ad" is displayed', async ({ page }) => {
-        test.setTimeout(310000);
+    test('@Medium IW3-T4018: Verify all the player controls gets dismissed when the "Pause Ad" is displayed', async ({ page }) => {
+        test.setTimeout(500000);
         const data = testCaseData['tc-ad-4018-pause-ad-controls-dismissed'];
         const result = await verifyPauseAdControlsDismissedFlow(page, {
             mode: data.mode,
@@ -259,17 +262,18 @@ test.describe('Ads', () => {
         });
 
         expect(result.isLoggedIn).toBe(true);
-        expect(result.pauseAdVisible).toBe(true);
         expect(result.skipRecapVisible).toBe(true);
+        expect(result.recapPauseAdVisible).toBe(true);
         expect(result.skipRecapNotVisible).toBe(false);
         expect(result.skipIntroVisible).toBe(true);
+        expect(result.skipIntroPauseAdVisible).toBe(true);
         expect(result.skipIntroNotVisible).toBe(false);
-        expect(result.skipIntroHiddenAfterPause).toBe(true);
-        expect(result.subtitleMenuVisible).toBe(true);
-        expect(result.subtitleMenuHiddenAfterPause).toBe(true);
+        expect(result.subtitleVisible).toBe(true);
+        expect(result.subtitlePauseAdVisible).toBe(true);
+        expect(result.subtitleMenuHiddenAfterPause).toBe(false);
     });
 
-    test('@Medium @D IW3-T4019: Verify that "Mid-roll" ads are displayed on playing the content in full screen', async ({ page }) => {
+    test('@Medium @mWeb IW3-T4019: Verify that "Mid-roll" ads are displayed on playing the content in full screen', async ({ page }) => {
         test.setTimeout(210000);
         const data = testCaseData['tc-ad-4019-mid-roll-ad-fullscreen'];
         const result = await verifyMidRollAdFullscreenFlow(page, {

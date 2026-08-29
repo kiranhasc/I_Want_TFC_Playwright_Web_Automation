@@ -80,7 +80,6 @@ class Logger {
       console.debug(`\x1b[37m${formattedMessage}\x1b[0m`);
       break;
     default:
-      console.log(formattedMessage);
     }
 
     // Write to file
@@ -228,7 +227,7 @@ class Logger {
    */
   private colorLog(message: string, colorCode: string): void {
     const formattedMessage = this.formatMessage('info', message);
-    console.log(`${colorCode}${formattedMessage}\x1b[0m`);
+    logger.info(`${colorCode}${formattedMessage}\x1b[0m`);
     this.writeToFile('info', formattedMessage);
   }
 
@@ -238,7 +237,7 @@ class Logger {
 
   const formattedMessage = this.formatMessage('info', message);
 
-  console.log(
+  logger.info(
     `${BOLD}${GREEN}${formattedMessage}${RESET}`
   );
 
@@ -250,7 +249,7 @@ public success(message: string): void {
 
   const formattedMessage = this.formatMessage('info', message);
 
-  console.log(
+  logger.info(
     `${BOLD}${GREEN}${formattedMessage}${RESET}`
   );
 

@@ -2573,8 +2573,6 @@ export async function verifyNextSeasonFirstEpisodeAutoPlayFlow(page: any, input?
   const isNextSeasonPlayback = Boolean(currentNumbers.seasonNumber && nextNumbers.seasonNumber && nextNumbers.seasonNumber > currentNumbers.seasonNumber);
   const episodeProgressionValid = isNextSeasonPlayback ? nextNumbers.episodeNumber === 1 : false;
   const seasonProgressionValid = isNextSeasonPlayback && nextNumbers.episodeNumber === 1;
-  console.log(`Current season/episode before end: ${currentSeasonNumber || 'N/A'} / ${currentEpisodeNumber || 'N/A'}`);
-  console.log(`Observed season/episode after end: ${nextSeasonNumber || 'N/A'} / ${nextEpisodeNumber || 'N/A'}`);
   logger.assertion('Continue Watching content resumed and ended on a Season 1 episode', Boolean(currentNumbers.seasonNumber));
   logger.assertion('Up Next marker or transition observed', markerVisible || isNextSeasonPlayback);
   logger.assertion('Season 2 first episode playback started automatically', seasonProgressionValid);

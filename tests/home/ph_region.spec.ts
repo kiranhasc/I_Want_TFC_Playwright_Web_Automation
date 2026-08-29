@@ -1,6 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifyGuestWatchlistNavigationFromFreeAsset, verifyGuestWatchlistHoverNavigationFromFreeAsset } from '../../src/businessFunction/ott-watchlist-bfs';
-import { verifyGuestPHCarouselTabTrayLoad } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyGuestPHCarouselTabTrayLoad, verifyGuestSearchResultsWithoutLogin } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyGuestSubscribeNavigationFromFreeAsset, verifyPremiumCrownIconOnSearchResults } from '../../src/businessFunction/ott-subscription-bfs';
 import { verifyGuestSearchNavigationFromFreeAsset, verifyGuestShareFunctionalityFromFreeAsset } from '../../src/businessFunction/ott-details-bfs';
@@ -18,7 +18,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test('@Medium IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-020-ph-region-guest-share'];
     const result = await verifyGuestShareFunctionalityFromFreeAsset(page, {
       expectedShareMessage: data.expectedShareMessage,
@@ -86,7 +86,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.firstSearchResultMonetizationType.toLowerCase()).toContain('paid');
   });
 
-  test('@Medium IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1889: Verify carousel content, sub-navigation tabs, and trays load properly for a guest user from the Philippines', async ({ page }) => {
     test.setTimeout(90000);
     const data = testCaseData['tc-auth-022-ph-region-guest-carousel-tab-tray'];
     const result = await verifyGuestPHCarouselTabTrayLoad(page, { mode: data?.mode });
@@ -96,5 +96,16 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.moviesPageScrolledToEnd).toBe(true);
     expect(result.showsRailVisible).toBe(true);
     expect(result.showsPageScrolledToEnd).toBe(true);
+  });
+  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-025-search-results-guest'];
+    const result = await verifyGuestSearchResultsWithoutLogin(page, {
+      searchQuery: data.searchQuery,
+    });
+    expect.soft(result.isLoggedIn).toBe(false);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.resultsVisible).toBe(true);
+    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 });

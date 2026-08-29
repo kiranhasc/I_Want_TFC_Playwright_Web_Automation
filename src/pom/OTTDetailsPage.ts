@@ -4475,32 +4475,10 @@ export class OTTDetailsPage {
     await closeButton.click({ timeout: 10000 });
   }
 
-  // async isUpNextMarkerVisible(): Promise<boolean> {
-  //   const candidateSelectors = [
-  //     this.upNextMarker.selector,
-  //     this.nextEpisodeButton.selector,
-  //     'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
-  //   ];
-
-  //   for (const selector of candidateSelectors) {
-  //     const marker = this.page.locator(selector).first();
-  //     try {
-  //       await marker.waitFor({ state: 'visible', timeout: 10000 });
-  //       if (await marker.isVisible()) {
-  //         return true;
-  //       }
-  //     } catch {
-  //       logger.debug(`Up Next marker not found with selector: ${selector}`);
-  //     }
-  //   }
-  //   return false;
-  // }
   async isUpNextMarkerVisible(timeout: number = 10000): Promise<boolean> {
     try {
       const locator = this.page.locator(this.upNextMarker.selector);
-
       await locator.waitFor({ state: 'attached', timeout });
-
       return await locator.isVisible();
     } catch {
       return false;

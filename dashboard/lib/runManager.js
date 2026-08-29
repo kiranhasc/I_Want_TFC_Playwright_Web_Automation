@@ -21,12 +21,12 @@ const FAILURE_STATUSES = new Set(['failed', 'timedOut', 'interrupted']);
 // Must exceed the longest single test (this suite tops out at a 180s
 // test.setTimeout), hence a default well clear of that.
 const STALL_THRESHOLD_MS = Number(process.env.DASHBOARD_STALL_TIMEOUT_MS) || 10 * 60 * 1000;
-const STALL_AUTO_STOP = process.env.DASHBOARD_STALL_ACTION === 'stop';
-// 'skip' kills only the wedged job and continues with the next queued
-// project/module — the whole point being a browser dying on one module
-// doesn't have to cost every module after it. 'stop' (above) remains the
-// stronger, kill-everything option for when that's actually what's wanted.
-const STALL_AUTO_SKIP = process.env.DASHBOARD_STALL_ACTION === 'skip';
+const STALL_ACTION = (process.env.DASHBOARD_STALL_ACTION || 'skip').toLowerCase();
+const STALL_AUTO_STOP = STALL_ACTION === 'stop';
+// Default to 'skip' so a single wedged module does not abort the rest of a
+// long-running suite. 'stop' remains available as the explicit kill-everything
+// override when the operator truly wants to abandon the run.
+const STALL_AUTO_SKIP = STALL_ACTION === 'skip';
 
 /**
  * Playwright's reporter API gives test.location.file as an absolute path.
@@ -706,7 +706,10 @@ class RunManager {
       child.on('close', (code) => {
         this.activeJobs.delete(jobId);
         jobMeta.finishedAt = new Date().toISOString();
-        if (jobMeta.status === 'running') jobMeta.status = code === 0 ? 'passed' : 'failed';
+        if (jobMeta.status === 'running') {
+          const hadRunningTests = this._interruptRunningTests(run, { project: spec.project });
+          jobMeta.status = code === 0 && !hadRunningTests ? 'passed' : 'failed';
+        }
         this._saveRun(run);
         this.broadcast({ type: 'job-status', runId: run.runId, jobId, status: jobMeta.status });
         runNext(index + 1);
@@ -872,21 +875,21 @@ class RunManager {
 
       verification = blockers.length
         ? {
-            status: 'inconclusive',
-            rerunRunId: finishedRun.runId,
-            detail:
-              `The test passed on rerun, but that does not confirm this fix: ${blockers
-                .map((b) => b.why)
-                .join('; ')}. The change is still applied — review it, and revert if the test is now passing for the wrong reason.`,
-            unvalidatable: blockers,
-            checkedAt: new Date().toISOString(),
-          }
+          status: 'inconclusive',
+          rerunRunId: finishedRun.runId,
+          detail:
+            `The test passed on rerun, but that does not confirm this fix: ${blockers
+              .map((b) => b.why)
+              .join('; ')}. The change is still applied — review it, and revert if the test is now passing for the wrong reason.`,
+          unvalidatable: blockers,
+          checkedAt: new Date().toISOString(),
+        }
         : {
-            status: 'passed',
-            rerunRunId: finishedRun.runId,
-            detail: 'The test passed on rerun, so this fix was kept.',
-            checkedAt: new Date().toISOString(),
-          };
+          status: 'passed',
+          rerunRunId: finishedRun.runId,
+          detail: 'The test passed on rerun, so this fix was kept.',
+          checkedAt: new Date().toISOString(),
+        };
     } else {
       const outcome = rerunTest ? `still ${rerunTest.status}` : 'did not report a result';
       let detail = `The test ${outcome} on rerun, so the fix was rolled back.`;
@@ -1071,7 +1074,7 @@ class RunManager {
         });
         console.warn(
           `[dashboard] run ${run.runId} has emitted no events for ${Math.round((now - since) / 60000)} min` +
-            (autoStop ? ' — stopping it' : autoSkip ? ' — skipping the stuck module and continuing' : ' — it may be wedged; stop it from the dashboard')
+          (autoStop ? ' — stopping it' : autoSkip ? ' — skipping the stuck module and continuing' : ' — it may be wedged; stop it from the dashboard')
         );
       }
 

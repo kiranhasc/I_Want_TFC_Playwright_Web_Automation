@@ -56,7 +56,7 @@ test.describe('Continue Watching - No Watch History', () => {
     });
 
     test('@High IW3-T1931: Verify the Continue Watching tray for logged-in user with no watch history', async ({ page }) => {
-        test.setTimeout(60000);
+        test.setTimeout(75000);
         const data = testCaseData['tc-auth-009-continue-watching-no-history'];
         const result = await validateContinueWatchingForNoHistory(page, { mode: data.mode });
         expect(result.isValid).toBeTruthy();

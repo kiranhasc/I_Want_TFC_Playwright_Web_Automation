@@ -1163,6 +1163,11 @@ export class OTTAuthPage {
         }
     }
 
+    async isContinueWatchingRailPresent(): Promise<boolean> {
+        const locator = this.page.locator(this.continueWatchingRail.selector).first();
+        return (await locator.count()) > 0;
+    }
+
     private getContinueWatchingTitleLocator() {
         return this.page.locator(this.continueWatchingRail.selector).first();
     }

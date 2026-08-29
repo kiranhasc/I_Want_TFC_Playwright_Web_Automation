@@ -685,6 +685,7 @@ const modeToFile: Record<string, string | null> = {
     provider: 'provider.json',
     mobile: 'mobile.json',
     freeUser: 'freeUser.json',
+    unwatched: 'unwatched.json',
     invalid: null,
 };
 
@@ -3369,7 +3370,7 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const loginResult = await loginToOTT(page, { mode });
     const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForLoadingToDisappear();
-    const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
+    const isVisible = await authPage.isContinueWatchingRailPresent().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
     logger.assertion('Continue Watching rail not present (expected for new user)', !isVisible);

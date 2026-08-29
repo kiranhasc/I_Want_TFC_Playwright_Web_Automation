@@ -13,18 +13,40 @@ class DashboardReporter {
     this.runId = process.env.DASHBOARD_RUN_ID || null;
     this.jobId = process.env.DASHBOARD_JOB_ID || null;
     this.enabled = Boolean(this.serverUrl && this.runId && this.jobId);
+    this._retryQueue = new Map();
   }
 
-  _post(event, payload) {
+  _scheduleRetry(key, event, payload, retriesLeft = 3) {
+    if (!this.enabled || retriesLeft <= 0) return;
+    if (this._retryQueue.has(key)) return;
+
+    const attempt = () => {
+      this._retryQueue.delete(key);
+      this._post(event, payload, { retry: retriesLeft > 1, retriesLeft: retriesLeft - 1 });
+    };
+
+    this._retryQueue.set(key, setTimeout(attempt, 1500));
+  }
+
+  _post(event, payload, { retry = true, retriesLeft = 3 } = {}) {
     if (!this.enabled) return;
     const body = JSON.stringify({ runId: this.runId, jobId: this.jobId, event, ...payload });
-    fetch(`${this.serverUrl}/api/internal/run-events`, {
+    const url = `${this.serverUrl}/api/internal/run-events`;
+
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(5000),
     }).catch(() => {
+      if (retry) {
+        const key = `${this.runId}:${this.jobId}:${event}:${JSON.stringify(payload)}`;
+        this._scheduleRetry(key, event, payload, retriesLeft);
+      }
       // Best-effort only: a dashboard hiccup must never fail a test run.
+      // Retry attempts are deliberately deferred so a final end event is not
+      // silently dropped when the dashboard is briefly busy or the localhost
+      // request races with process shutdown.
     });
   }
 

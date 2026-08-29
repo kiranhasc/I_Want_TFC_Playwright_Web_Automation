@@ -128,46 +128,46 @@ export class OTTEarlyAccessPage {
         };
     }
 
-  async scrollUntilEarlyAccessTagVisible(maxScrolls: number = 20): Promise<boolean> {
-    try {
-      const tagCandidates = this.page.locator('(//img[@alt="early_access"])[1]');
-      this.selectedEarlyAccessTagIndex = null;
+    async scrollUntilEarlyAccessTagVisible(maxScrolls: number = 20): Promise<boolean> {
+        try {
+            const tagCandidates = this.page.locator('(//img[@alt="early_access"])[1]');
+            this.selectedEarlyAccessTagIndex = null;
 
-      for (let scroll = 0; scroll < maxScrolls; scroll += 1) {
-        const count = await tagCandidates.count().catch(() => 0);
-        logger.info(`Checking Early Access tags. Found ${count} candidate(s). Scroll ${scroll + 1}/${maxScrolls}`);
-        for (let index = 0; index < count; index += 1) {
-          const candidate = tagCandidates.nth(index);
-          await candidate.scrollIntoViewIfNeeded().catch(() => undefined);
-          await this.page.waitForTimeout(750);
-          if (await candidate.isVisible().catch(() => false)) {
-            this.selectedEarlyAccessTagIndex = index;
-            logger.info(`Early Access tag found at index ${index}`);
-            return true;
-          }
+            for (let scroll = 0; scroll < maxScrolls; scroll += 1) {
+                const count = await tagCandidates.count().catch(() => 0);
+                logger.info(`Checking Early Access tags. Found ${count} candidate(s). Scroll ${scroll + 1}/${maxScrolls}`);
+                for (let index = 0; index < count; index += 1) {
+                    const candidate = tagCandidates.nth(index);
+                    await candidate.scrollIntoViewIfNeeded().catch(() => undefined);
+                    await this.page.waitForTimeout(750);
+                    if (await candidate.isVisible().catch(() => false)) {
+                        this.selectedEarlyAccessTagIndex = index;
+                        logger.info(`Early Access tag found at index ${index}`);
+                        return true;
+                    }
+                }
+
+                await this.page.mouse.wheel(0, 400);
+                await this.page.waitForTimeout(1000);
+            }
+            return false;
+        } catch (error) {
+            logger.debug('Early Access tag visibility check failed', error);
+            return false;
         }
+    }
 
-        await this.page.mouse.wheel(0, 400);
-        await this.page.waitForTimeout(1000);
-      }
-      return false;
-    } catch (error) {
-      logger.debug('Early Access tag visibility check failed', error);
-      return false;
-    }
-  }
-  
-  async clickEpisodeCardWithEarlyAccessTag(): Promise<boolean> {
-    logger.elementInteraction('click', 'episode card with Early Access tag');
-    try {
-      await this.pageUtils.scrollIntoView(this.earlyAccessEpisodeTagSelector);
-      await this.page.waitForTimeout(4000);
-      await this.pageUtils.safeClick(this.earlyAccessEpisodeTagSelector, 20000);
-      return true;
-    } catch (error) {
-      logger.debug('Clicking episode card with Early Access tag failed', error);
-      return false;
-    }
+    async clickEpisodeCardWithEarlyAccessTag(): Promise<boolean> {
+        logger.elementInteraction('click', 'episode card with Early Access tag');
+        try {
+            await this.pageUtils.scrollIntoView(this.earlyAccessEpisodeTagSelector);
+            await this.page.waitForTimeout(4000);
+            await this.pageUtils.safeClick(this.earlyAccessEpisodeTagSelector, 20000);
+            return true;
+        } catch (error) {
+            logger.debug('Clicking episode card with Early Access tag failed', error);
+            return false;
+        }
     }
 
     async clickFirstEpisodeWithEarlyAccessContent(): Promise<boolean> {
@@ -182,4 +182,4 @@ export class OTTEarlyAccessPage {
         }
     }
 
-    }
+}

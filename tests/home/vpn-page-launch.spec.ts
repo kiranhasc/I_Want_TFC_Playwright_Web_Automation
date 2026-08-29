@@ -4,7 +4,7 @@ import testCaseData from '../../src/data/ott-test-cases.json';
 import { searchFromTermsPage, verifyApplicationVersion } from '../../src/businessFunction/ott-auth-bfs';
 
 test.describe('VPN Playback Restriction', () => {
-    test.skip('@High IW3-T4699: Verify VPN playback restriction error message and prevent playback', async ({ page }) => {
+    test('@High IW3-T4699: Verify VPN playback restriction error message and prevent playback', async ({ page }) => {
         const data = testCaseData['tc-auth-019-vpn-playback-restriction'];
         const result = await verifyVPNPlaybackRestriction(page, {
             mode: data.mode,

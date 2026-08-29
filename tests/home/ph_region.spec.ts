@@ -1,6 +1,6 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
 import { verifyGuestWatchlistNavigationFromFreeAsset, verifyGuestWatchlistHoverNavigationFromFreeAsset } from '../../src/businessFunction/ott-watchlist-bfs';
-import { verifyGuestPHCarouselTabTrayLoad } from '../../src/businessFunction/ott-auth-bfs';
+import { verifyGuestPHCarouselTabTrayLoad, verifyGuestSearchResultsWithoutLogin } from '../../src/businessFunction/ott-auth-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
 import { verifyGuestSubscribeNavigationFromFreeAsset, verifyPremiumCrownIconOnSearchResults } from '../../src/businessFunction/ott-subscription-bfs';
 import { verifyGuestSearchNavigationFromFreeAsset, verifyGuestShareFunctionalityFromFreeAsset } from '../../src/businessFunction/ott-details-bfs';
@@ -19,7 +19,7 @@ test.describe('PH region guest watchlist navigation', () => {
     expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  test('@Medium IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
+  test('@Medium @mWeb IW3-T1873: Verify the details screen share functionality for the PH region guest user', async ({ page }) => {
     const data = testCaseData['tc-auth-020-ph-region-guest-share'];
     const result = await verifyGuestShareFunctionalityFromFreeAsset(page, {
       expectedShareMessage: data.expectedShareMessage,
@@ -85,13 +85,6 @@ test('@Medium IW3-T1891: Verify login page will be displayed when user taps the 
     expect(result.headingText.toLowerCase()).toContain((data.expectedHeading ?? 'Welcome to iWant').toLowerCase());
   });
 
-  
-
-  
-
-  
-
-  
   test('@High IW3-T2034: Verify that crown icon is displayed on the content thumbnail for premium contents', async ({ page }) => {
     test.setTimeout(120000);
     const data = testCaseData['tc-sub-004-premium-crown-icon'];

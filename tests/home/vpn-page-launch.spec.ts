@@ -35,7 +35,7 @@ test.describe('VPN Playback Restriction', () => {
         });
         expect(result.searchResultsDisplayed).toBe(data.expectedResultsPresent);
     });
-    test('@High IW3-T4702 - Verify that contents are played for the VPN whitelisted countries', async ({ page }) => {
+    test('@High @mWeb IW3-T4702 - Verify that contents are played for the VPN whitelisted countries', async ({ page }) => {
         test.setTimeout(90000);
         const data = testCaseData['tc-auth-020-vpn-whitelisted-playback'] as Record<string, any>;
         const result = await verifyVPNWhitelistedPlayback(page, {

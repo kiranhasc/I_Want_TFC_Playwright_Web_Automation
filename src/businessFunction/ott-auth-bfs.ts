@@ -1,6 +1,7 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
+import { PageUtils } from '../utils/page-utils';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
@@ -551,6 +552,48 @@ export interface VerifyTrendingResultsHiddenWhenSearchingInput {
     graphqlQueryName?: string;
     secondarySearchQuery?: string;
     expectedHeading?: string;
+}
+
+
+export interface VerifyTrendingResultsHiddenWhenSearchingOutput {
+    isLoggedIn: boolean;
+    searchInputCleared: boolean;
+    newQueryEntered: boolean;
+    trendingHeadingHidden: boolean;
+    searchResultsVisible: boolean;
+    resultTitles: string[];
+}
+
+export interface SubmitCreateAccountInvalidCredentialsInput {
+    email: string;
+    password: string;
+    expectedErrorMessage?: string;
+}
+
+export interface SubmitCreateAccountInvalidCredentialsOutput {
+    isErrorDisplayed: boolean;
+    errorMessage: string;
+}
+
+export async function loginWithBasicUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
+    const authPage = new OTTAuthPage(page);
+    const mode = 'basic';
+    logger.step('Starting basic user login flow');
+    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' });
+    await authPage.navigate();
+    await authPage.acceptCookieSettingsIfVisible();
+    await authPage.clickEmailField();
+    await authPage.enterEmail(credentials.email);
+    await authPage.clickPasswordField();
+    await authPage.enterPassword(credentials.password);
+    await authPage.clickContinue();
+    await authPage.waitForLoadingToDisappear();
+    const homeVisible = await authPage.isHomeTabVisible();
+    logger.assertion('Home tab visible after basic user login', homeVisible);
+    return {
+        isLoggedIn: homeVisible,
+        homeTabVisible: homeVisible,
+    };
 }
 
 export interface NavigateTabsInput {
@@ -1663,27 +1706,6 @@ export async function verifyMidRailAdAutoRefresh(page: any, input: VerifyMidRail
     };
 }
 
-
-export async function loginWithBasicUser(page: any, input?: Partial<InvalidLoginInput>): Promise<LoginToOTTOutput> {
-    const authPage = new OTTAuthPage(page);
-    const mode = 'basic';
-    logger.step('Starting basic user login flow');
-    const credentials = resolveLoginCredentials(input ?? { email: '', password: '' });
-    await authPage.navigate();
-    await authPage.acceptCookieSettingsIfVisible();
-    await authPage.clickEmailField();
-    await authPage.enterEmail(credentials.email);
-    await authPage.clickPasswordField();
-    await authPage.enterPassword(credentials.password);
-    await authPage.clickContinue();
-    await authPage.waitForLoadingToDisappear();
-    const homeVisible = await authPage.isHomeTabVisible();
-    logger.assertion('Home tab visible after basic user login', homeVisible);
-    return {
-        isLoggedIn: homeVisible,
-        homeTabVisible: homeVisible,
-    };
-}
 export async function verifyIWantOriginalsRail(page: any, input?: Partial<VerifyIWantOriginalsRailInput>): Promise<VerifyIWantOriginalsRailOutput> {
     const authPage = new OTTAuthPage(page);
     const mode = normalizeLoginMode(input?.mode);
@@ -3261,7 +3283,9 @@ export async function verifyGuestPHCarouselTabTrayLoad(page: any, input?: Partia
     await authPage.navigate();
     logger.info('Navigated to OTT home page for guest PH carousel, tab, and tray load validation');
     const homeRailVisible = await authPage.isHomeTabVisible();
-    logger.assertion('Home tab visible', homeRailVisible);
+    logger.assertion('Home tab continue watching rail visible', homeRailVisible);
+    const homeAdVisible = await detailsPage.isMidRailAdBannerVisible();
+    logger.assertion('Home page mid rail ad visible after scroll', homeAdVisible);
     let homePageScrolledToEnd = true;
     try {
         await authPage.scrollToBottomOfPage();
@@ -3568,7 +3592,7 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
-    logger.assertion('Continue Watching rail presence', isVisible);
+    logger.assertion('Continue Watching rail not present (expected for new user)', !isVisible);
     logger.assertion('Continue Watching items count obtained', typeof itemsCount === 'number');
     if (itemsCount > 0) {
         const allHaveProgress = itemsDetails.length > 0 ? itemsDetails.every(d => d.hasProgress) : false;
@@ -4122,7 +4146,7 @@ export async function verifyRegistrationNavigation(
     };
 }
 
-export async function verifyRegistrationNavigationToHomePage(page: any,input: VerifyRegistrationNavigationInput): Promise<VerifyRegistrationNavigationToHomePageOutput> {
+export async function verifyRegistrationNavigationToHomePage(page: any, input: VerifyRegistrationNavigationInput): Promise<VerifyRegistrationNavigationToHomePageOutput> {
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     logger.step('Starting registration navigation validation flow');

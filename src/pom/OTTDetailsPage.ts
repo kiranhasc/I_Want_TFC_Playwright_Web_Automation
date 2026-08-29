@@ -218,6 +218,7 @@ export class OTTDetailsPage {
   private readonly railThumbnailSelector: PageElement;
   private readonly dbfirstTitleImageCard: PageElement;
   private readonly sponsoredRailContentCard: PageElement;
+  private readonly seasonTitleContainer: string;
 
   constructor(page: Page) {
     this.page = page;
@@ -307,9 +308,9 @@ export class OTTDetailsPage {
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
-      this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
+    this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
-    // this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
+    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
     this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     this.playbackTime = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
@@ -421,7 +422,6 @@ export class OTTDetailsPage {
     this.genericTextLocator = { selector: 'text=/.*\\w.*/' };
     this.liveTextLabel = { role: 'button', text: 'Live', selector: 'text=Live' };
     this.goLiveButtonElement = { role: 'button', text: 'Go Live', selector: 'button:has-text("Go Live")' };
-    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.playerProgressAndtimeControls = { selector: '//div[contains(@class,"player-progress-and-time-container")]' };
     this.playerFirstContentTitle = { selector: "//img[@alt='{expectedTitle}']" };
     this.contentCardImage = { selector: 'img[alt], img[title]' };
@@ -438,6 +438,7 @@ export class OTTDetailsPage {
     this.railThumbnailSelector = { selector: "(//div[contains(@class,'thumbnail') and contains(@class,'cursor-pointer')])[1]" };
     this.sponsoredRailContentCard = { selector: "xpath=((//div[contains(@class,'rail z-1')][.//div[contains(@class,'rail-container')]][.//div[contains(@class,'title')]//img[contains(@class,'object-contain')]])[1]//img[contains(@class,'title-image')])[2]" };
     this.adBanner = { selector: '//a[@id="aw0"]/img' };
+    this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item'
   }
 
   private getRoleLocator(element: PageElement, exact = false) {
@@ -995,21 +996,76 @@ export class OTTDetailsPage {
 
   async getSeasonLabelsText(): Promise<string[]> {
     try {
-      const labels = this.page.locator(this.seasonLabels.selector);
-      const count = await labels.count().catch(() => 0);
-      if (!count) {
-        const bodyText = (await this.page.locator('body').textContent().catch(() => '') || '').replace(/\s+/g, ' ').trim();
-        const fallbackMatches = Array.from(bodyText.matchAll(/Season\s*(\d+)/gi)).map((match) => `Season ${match[1]}`);
-        return fallbackMatches.slice(0, 10);
+      // wait briefly for the seasons container to render
+      try {
+        const container = this.page.locator(this.seasonLabelContainer.selector);
+        if ((await container.count().catch(() => 0)) > 0) {
+          await container.first().scrollIntoViewIfNeeded().catch(() => undefined);
+          await this.page.waitForTimeout(300).catch(() => undefined);
+        }
+      } catch {
+        // ignore
       }
+      const labels = this.page.locator(this.seasonLabels.selector);
+      let count = await labels.count().catch(() => 0);
       const seasonTexts: string[] = [];
-      for (let index = 0; index < Math.min(count, 10); index += 1) {
-        const text = (await labels.nth(index).textContent().catch(() => '') || '').trim();
-        if (text) {
-          seasonTexts.push(text.replace(/\s+/g, ' '));
+      // If primary locator finds none, try a few alternate selectors and a DOM fallback
+      if (!count) {
+        const altSelectors = [this.seasonTitleContainer];
+        for (const sel of altSelectors) {
+          try {
+            const alt = this.page.locator(sel as any);
+            const altCount = await alt.count().catch(() => 0);
+            if (altCount) {
+              count = altCount;
+              for (let i = 0; i < Math.min(altCount, 10); i += 1) {
+                const txt = (await alt.nth(i).textContent().catch(() => '') || '').replace(/\s+/g, ' ').trim();
+                if (txt) seasonTexts.push(txt);
+              }
+              break;
+            }
+          } catch {
+            // ignore selector errors
+          }
         }
       }
-      return seasonTexts;
+      if (!count && seasonTexts.length === 0) {
+        // DOM evaluation fallback: read visible season-like elements directly
+        try {
+          const evalTexts: string[] = await this.page.evaluate(() => {
+            const nodes = Array.from(document.querySelectorAll(this.seasonTitleContainer));
+            return nodes
+              .map((n) => (n.textContent || '').replace(/\s+/g, ' ').trim())
+              .filter(Boolean)
+              .slice(0, 10);
+          }).catch(() => []);
+          for (const t of evalTexts) seasonTexts.push(t);
+        } catch {
+          // ignore
+        }
+      }
+      // If we still don't have texts but primary locator has items, read from it
+      if (seasonTexts.length === 0 && count) {
+        for (let index = 0; index < Math.min(count, 10); index += 1) {
+          const text = (await labels.nth(index).textContent().catch(() => '') || '').trim();
+          if (text) seasonTexts.push(text.replace(/\s+/g, ' '));
+        }
+      }
+      // Filter/validate: prefer labels that match month-year (e.g., "Aug 2026") or Season patterns
+      const monthYearFull = /^(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}$/i;
+      const seasonFull = /^(?:Season|S)\s*0*\d+$/i;
+      const validated: string[] = [];
+      for (const t of seasonTexts) {
+        const trimmed = (t || '').replace(/\s+/g, ' ').trim();
+        if (!trimmed) continue;
+        if (monthYearFull.test(trimmed) || seasonFull.test(trimmed) || /Season\s*\d+/i.test(trimmed) || /S\d+/i.test(trimmed)) {
+          validated.push(trimmed);
+        }
+      }
+      // If validated list is empty, return the raw texts; otherwise return validated ones
+      const result = validated.length ? validated.slice(0, 10) : seasonTexts.slice(0, 10);
+      logger.debug('getSeasonLabelsText -> returning', { result });
+      return result;
     } catch (error) {
       logger.debug('Could not read season labels', error);
       return [];

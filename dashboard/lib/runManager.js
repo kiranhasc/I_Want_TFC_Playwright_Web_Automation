@@ -295,7 +295,12 @@ class RunManager {
    */
   start({ env, project, grep }) {
     const run = this._newRun({ type: 'manual', env, project: project || null, grep: grep || null, sourceRunId: null });
-    const jobSpecs = this._specFileJobSpecs({ project: project || null });
+
+    // Full-suite runs must execute as one real Playwright invokation to match
+    // the repo's configured suite behavior. Splitting a full run into one job
+    // per file is what causes the dashboard to silently truncate the suite when
+    // one file hangs or stalls. Only project-scoped runs keep the per-file queue.
+    const jobSpecs = project || grep ? this._specFileJobSpecs({ project: project || null }) : [{ project: null, targets: [] }];
 
     const total = listTestCount({ env, grep, project });
     if (total != null) {
@@ -702,6 +707,25 @@ class RunManager {
       jobMeta.pid = child.pid;
       this.activeJobs.set(jobId, { child });
       this._saveRun(run);
+
+      // Drain stdout/stderr so the child process doesn't block on full buffers.
+      // We don't log them here (Playwright already logs to console), but we must
+      // consume the streams or large test suites can deadlock on pipe buffer overflow.
+      child.stdout?.on('data', () => {});
+      child.stderr?.on('data', () => {});
+
+      child.on('error', (err) => {
+        console.error(`[dashboard] job ${jobId} spawn error:`, err.message);
+        this.activeJobs.delete(jobId);
+        jobMeta.finishedAt = new Date().toISOString();
+        if (jobMeta.status === 'running') {
+          this._interruptRunningTests(run, { project: spec.project });
+          jobMeta.status = 'failed';
+        }
+        this._saveRun(run);
+        this.broadcast({ type: 'job-status', runId: run.runId, jobId, status: jobMeta.status });
+        runNext(index + 1);
+      });
 
       child.on('close', (code) => {
         this.activeJobs.delete(jobId);
@@ -1200,7 +1224,9 @@ class RunManager {
 
   /** Ingests a lifecycle event POSTed by the custom Playwright reporter running inside a spawned job. */
   ingestEvent(payload) {
-    const { runId, jobId, event } = payload;
+    const { runId, jobId, event } = payload || {};
+    if (!runId) return; // Malformed event; silently ignore.
+    
     const run = this._getMutableRun(runId);
     if (!run) return;
 
@@ -1238,7 +1264,12 @@ class RunManager {
       // Copy attachments out of test-results/ now, before the next Playwright
       // invocation (of anything, anywhere in the suite) wipes that directory
       // out from under this run's history — see artifactArchive.js.
-      const attachments = archiveAttachments(runId, payload.testId, payload.attachments || []);
+      let attachments = [];
+      try {
+        attachments = archiveAttachments(runId, payload.testId, payload.attachments || []);
+      } catch (err) {
+        console.error(`[dashboard] attachment archival failed for ${payload.testId}:`, err.message);
+      }
       run.tests[payload.testId] = {
         ...existing,
         testId: payload.testId,
@@ -1259,12 +1290,24 @@ class RunManager {
       // path, which survives test-results/ being wiped. Never throws.
       // Stamped with this run so _resolvePendingVerification can take the
       // baseline back if this pass turns out not to confirm anything.
-      recordBaseline(run.tests[payload.testId], { runId });
+      try {
+        recordBaseline(run.tests[payload.testId], { runId });
+      } catch (err) {
+        console.error(`[dashboard] baseline recording failed for ${payload.testId}:`, err.message);
+      }
       this._recomputeStats(run);
     }
 
-    this._saveRun(run);
-    this.broadcast({ type: 'run-event', runId, jobId, event, payload });
+    try {
+      this._saveRun(run);
+    } catch (err) {
+      console.error(`[dashboard] run save failed for ${runId}:`, err.message);
+    }
+    try {
+      this.broadcast({ type: 'run-event', runId, jobId, event, payload });
+    } catch (err) {
+      console.error(`[dashboard] broadcast failed for ${runId}:`, err.message);
+    }
   }
 
   /**

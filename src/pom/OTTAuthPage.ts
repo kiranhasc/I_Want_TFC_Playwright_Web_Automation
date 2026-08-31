@@ -744,12 +744,6 @@ export class OTTAuthPage {
     }
 
     async clickHomeTab(): Promise<void> {
-        if (process.env.BROWSER === 'mchrome') {
-            logger.info('click', 'Home tab (mweb - skipping, relying on session restore to be on home)');
-            await this.page.waitForTimeout(500);
-            return;
-        }
-
         logger.info('click', 'Home tab');
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();

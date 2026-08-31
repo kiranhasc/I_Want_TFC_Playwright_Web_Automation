@@ -37,7 +37,7 @@
         "expectedOTPHeading": "Verify your identity",
         "expectedNewPasswordHeading": "Set a New Password"
     },
-        "tc-auth-021-forgot-password-reset-popup": {
+    "tc-auth-021-forgot-password-reset-popup": {
         "password": "Abcd@1234",
         "newPassword": "iWant_tfc_004",
         "expectedMarketingText": "I agree to receive marketing communications",
@@ -246,15 +246,17 @@
     },
     "tc-002-early-access-may-be-later": {
         "mode": "freeUser",
+        "pin": "1234",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
-        "earlyAccessAttributeValue" : "early_access"
+        "earlyAccessAttributeValue": "early_access"
     },
     "tc-003-early-access-subscription-flow": {
         "mode": "freeUser",
+        "pin": "1234",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
-        "earlyAccessAttributeValue" : "early_access"
+        "earlyAccessAttributeValue": "early_access"
     },
     "tc-auth-009-welcome-screen-navigation": {
         "expectedHeading": "Welcome to iWant",
@@ -297,6 +299,7 @@
     },
     "tc-disc-004-skip-intro": {
         "mode": "valid",
+        "pin": "1234",
         "searchTerm": "Lavender Fields"
     },
     "tc-disc-004-player-close-return": {
@@ -331,14 +334,17 @@
     },
     "tc-disc-006-skip-recap": {
         "mode": "valid",
+        "pin": "1234",
         "searchTerm": "Lavender Fields"
     },
     "tc-disc-007-skip-outro": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-disc-008-skip-markers-continue-watching": {
         "mode": "valid",
+        "pin": "1234",
         "searchTerm": "Incognito"
     },
     "tc-sub-001-subscribe-to-watch": {
@@ -580,61 +586,70 @@
     "tc-nav-025-search-results-guest": {
         "searchQuery": "Abandoned"
     },
-    
     "tc-sub-001-free-subscribe": {
         "mode": "freeUser",
         "query": "Karnal"
     },
     "tc-sub-004-resume-playback": {
         "mode": "valid",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-sub-003-play-content": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-005-smooth-playback": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-006-seek-bar-drag": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection",
         "seekPercent": 0.35
     },
     "tc-sub-007-live-stream-seek-restriction": {
         "mode": "valid",
+        "pin": "1234",
         "channelName": "TFC Asia"
     },
     "tc-sub-008-browser-seek-bar": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection",
         "seekPercent": 0.35
     },
     "tc-sub-009-player-controls": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-010-go-live-playback": {
         "mode": "valid",
-        "channelName": "TFC Asia"
+        "channelName": "TFC Asia",
+        "pin": "1234"
     },
     "tc-sub-043-go-live-tag-pause": {
         "mode": "valid",
+        "pin": "1234",
         "channelName": "TFC Asia"
     },
     "tc-sub-011-pre-roll-ad": {
         "mode": "freeUser",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-037-ad-label-visible": {
         "mode": "freeUser",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-038-ad-seekbar-hidden": {
         "mode": "freeUser",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-012-pause-ad": {
@@ -733,8 +748,8 @@
     },
     "tc-sub-013-pause-playback": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-014-pause-resume": {
         "mode": "valid",
@@ -742,76 +757,80 @@
     },
     "tc-sub-015-pause-seek-buttons": {
         "mode": "valid",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-sub-016-fullscreen-icon": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-025-fullscreen-functionality": {
         "mode": "valid",
+        "pin": "1234",
         "query": "Ang Panday",
         "expectedTitle": "Ang Panday",
         "expectedEpisode": "Ang Panday"
     },
     "tc-sub-026-landscape-player-ui": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-027-next-episode-cta": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-028-up-next-marker": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-029-back-button-navigation": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-035-up-next-marker-navigation": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-036-auto-next-episode-playback": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-037-up-next-marker-functionality": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-038-up-next-close-button": {
         "mode": "valid",
-        "query": "Precious Hearts Romances Presents: Araw Gabi",
-        "expectedTitle": "Precious Hearts Romances Presents: Araw Gabi",
-        "expectedEpisode": "Precious Hearts Romances Presents: Araw Gabi",
-        "pin": "1234"
+        "pin": "1234",
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-039-up-next-marker-click-navigation": {
         "mode": "valid",
-        "query": "Precious Hearts Romances Presents: Araw Gabi",
-        "expectedTitle": "Precious Hearts Romances Presents: Araw Gabi",
-        "expectedEpisode": "Precious Hearts Romances Presents: Araw Gabi",
-        "graphqlQueryName": "Collection",
-        "pin": "1234"
+        "pin": "1234",
+        "graphqlQueryName": "Collection"
     },
     "tc-sub-030-player-controls-autodismiss": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-031-player-controls-hover-dismiss": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-032-volume-button-control": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-033-end-to-end-launch-login-search-playback": {
         "mode": "valid",
@@ -819,41 +838,48 @@
     },
     "tc-sub-017-timestamp-format": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-sub-018-short-duration-timestamp-format": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-019-subtitle-selection": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-020-subtitle-next-episode": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-021-subtitle-carry-over": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-022-subtitle-default-off": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-023-subtitle-display": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-024-subtitle-synchronization": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-034-seekbar-preview": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
-
     },
     "tc-settings-001-parental-controls": {
         "mode": "freeUser"
@@ -1033,10 +1059,12 @@
     },
     "tc-sub-039-last-season-last-episode": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-040-movie-complete-details-navigation": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection"
     },
     "tc-sub-041-subscribe-to-watch-redirect-account": {
@@ -1053,8 +1081,8 @@
     },
     "tc-auth-029-continue-watching-less-than-five-percent": {
         "mode": "valid"
-        },
-        "tc-auth-030-continue-watching-resume-to-play-after-removal": {
+    },
+    "tc-auth-030-continue-watching-resume-to-play-after-removal": {
         "mode": "valid",
         "season": "Season 1",
         "episodeName": "E4"
@@ -1086,16 +1114,17 @@
     },
     "tc-cw-1955-next-episode-playback": {
         "mode": "valid"
-    }
-    ,
+    },
     "tc-sub-046-iw3-t1956-next-season-autoplay": {
         "mode": "valid"
     },
     "tc-live-2010-pause-resume-live-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-sub-042-subscribed-early-access-up-next": {
         "mode": "valid",
+        "pin": "1234",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access"
     },
@@ -1125,7 +1154,8 @@
         "mode": "valid"
     },
     "tc-auth-content-watchlist-2030": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-ad-2135-sponsored-rail-visibility": {
         "mode": "freeUser"

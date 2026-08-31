@@ -125,6 +125,7 @@ test.describe('Content details navigation', () => {
     const data = testCaseData['tc-sub-004-resume-playback'] as Record<string, any>;
     const result = await verifyPlaybackResumeFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
     });
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialPlayed).toBeTruthy();

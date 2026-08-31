@@ -126,6 +126,7 @@ export interface VerifyIWantOriginalsPreviewOnDetailsPageOutput {
 export interface VerifySkipIntroMarkerInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipIntroMarkerOutput {
@@ -136,6 +137,7 @@ export interface VerifySkipIntroMarkerOutput {
 export interface VerifySkipRecapMarkerInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipRecapMarkerOutput {
@@ -928,44 +930,44 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
   }
   let selectedEpisode, metadata;
   if (process.env.BROWSER === 'mchrome') {
-  selectedEpisode = await detailsPage.clickEpisodeOne().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
-  await page.waitForTimeout(5000);
-  selectedEpisodeTitle = 'Episode Title';
-  seasonNumber = 'Season 1';
-  episodeNumber = 'Episode 1';
-  const isAdTagVisible = await detailsPage.isAdTagVisible();
-  if(isAdTagVisible){
-    await page.waitForTimeout(110000);
-  }
-  playerVisible = await detailsPage.isVideoPlayerVisible();
-  return {
-    isLoggedIn,
-    isDetailsPageVisible,
-    seasonSectionVisible: seasonSectionHasLabels,
-    selectedEpisodeTitle,
-    showName,
-    seasonNumber,
-    episodeNumber,
-    playerVisible,
-    playbackStarted,
-    playerEpisodeTitleVisible : true,
-    playerSeasonVisible : true,
-    playerEpisodeVisible : true,
-    playerMetadataText : 'Season 1 Episode 1',
-  }
-  }else {
-  selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
-  metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
-  selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
-  seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';
-  episodeNumber = metadata.episodeNumber || selectedEpisode.episodeText || '';
+    selectedEpisode = await detailsPage.clickEpisodeOne().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
+    await page.waitForTimeout(5000);
+    selectedEpisodeTitle = 'Episode Title';
+    seasonNumber = 'Season 1';
+    episodeNumber = 'Episode 1';
+    const isAdTagVisible = await detailsPage.isAdTagVisible();
+    if(isAdTagVisible){
+      await page.waitForTimeout(110000);
+    }
+    playerVisible = await detailsPage.isVideoPlayerVisible();
+    return {
+      isLoggedIn,
+      isDetailsPageVisible,
+      seasonSectionVisible: seasonSectionHasLabels,
+      selectedEpisodeTitle,
+      showName,
+      seasonNumber,
+      episodeNumber,
+      playerVisible,
+      playbackStarted,
+      playerEpisodeTitleVisible: true,
+      playerSeasonVisible: true,
+      playerEpisodeVisible: true,
+      playerMetadataText: 'Season 1 Episode 1',
+    }
+  } else {
+    selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
+    metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
+    selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
+    seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';
+    episodeNumber = metadata.episodeNumber || selectedEpisode.episodeText || '';
   }
   logger.assertion('Episode title extracted from episode list', selectedEpisodeTitle.length > 0);
   await page.waitForTimeout(5000);
   playerVisible = await detailsPage.isVideoPlayerVisible();
   playbackStarted = playerVisible && seasonNumber.length > 0 && episodeNumber.length > 0;
   const playerMetadataValidation = await detailsPage.validatePlayerMetadataVisibility(selectedEpisodeTitle, seasonNumber, episodeNumber).catch(() => ({ titleVisible: false, seasonVisible: false, episodeVisible: false, playerText: '' }));
-  playerEpisodeTitleVisible = playerMetadataValidation.titleVisible ;
+  playerEpisodeTitleVisible = playerMetadataValidation.titleVisible;
   playerSeasonVisible = playerMetadataValidation.seasonVisible;
   playerEpisodeVisible = playerMetadataValidation.episodeVisible;
   playerMetadataText = playerMetadataValidation.playerText;
@@ -1468,7 +1470,7 @@ export async function verifySkipIntroMarkerDuringPlayback(
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
-    await detailsPage.clickEpisodeTwo(); 
+    await detailsPage.clickEpisodeTwo();
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
@@ -1492,6 +1494,7 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1505,7 +1508,9 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   let timeAfterSkipIntro = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeOne();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(1000);
     await detailsPage.clickSkipRecapMarker();
     await page.waitForTimeout(5000);
@@ -1567,6 +1572,7 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1581,7 +1587,9 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   let timeAfterSkipRecap = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeOne();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {
       timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
@@ -1609,6 +1617,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro and recap playback advancement verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1627,6 +1636,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   let timeAfterSkipRecap = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(3000);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {

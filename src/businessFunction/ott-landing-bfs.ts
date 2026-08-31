@@ -19,42 +19,6 @@ export interface VerifyTop10TagOnWatchlistOutput {
   top10TagVisible: boolean;
 }
 
-export async function verifyTop10TagOnWatchlist(
-  page: any,
-  input: VerifyTop10TagOnWatchlistInput
-): Promise<VerifyTop10TagOnWatchlistOutput> {
-  const authPage = new OTTAuthPage(page);
-  const landingPage = new OTTLandingPage(page);
-  const detailsPage = new OTTDetailsPage(page);
-  logger.step('Starting Top 10 tag validation after adding Top 10 rail content to watchlist');
-  const loginResult = await loginToOTT(page, { mode: input.mode });
-  const isLoggedIn = loginResult.isLoggedIn;
-  logger.assertion('User is logged in before verifying Top 10 tag on watchlist item', isLoggedIn);
-  if (!isLoggedIn) {
-    return {
-      isLoggedIn: false,
-      addedToWatchlist: false,
-      isVisibleInMyWatchlist: false,
-      top10TagVisible: false,
-    };
-  }
-  const toastText = await landingPage.addFirstVisibleTop10ContentToWatchlist();
-  const addedToWatchlist = toastText.toLowerCase().includes('added');
-  await authPage.clickMyWatchlistTab();
-  await page.waitForTimeout(4000);
-  const isVisibleInMyWatchlist = addedToWatchlist;
-  const top10TagVisible = await landingPage.isTop10TagVisibleOnThumbnail();
-  logger.assertion('Top 10 rail content added to watchlist', addedToWatchlist);
-  logger.assertion('Added content visible in My Watchlist', isVisibleInMyWatchlist);
-  logger.assertion('Top 10 tag visible on watchlist thumbnail', top10TagVisible);
-  return {
-    isLoggedIn,
-    addedToWatchlist,
-    isVisibleInMyWatchlist,
-    top10TagVisible,
-  };
-}
-
 export interface VerifyTop10TagOnSearchResultsInput {
   mode?: string;
   searchQuery: string;
@@ -154,8 +118,6 @@ export interface VerifyMidRailBannerAdlVisibilityOutput {
   homePageBannerVisible: boolean;
   showsPageBannerVisible: boolean;
   moviesPageBannerVisible: boolean;
-  //gmaPageBannerVisible: boolean;
-  //searchPageBannerVisible: boolean;
   allPagesVisible: boolean;
 }
 
@@ -200,6 +162,74 @@ export interface VerifyMidRailBannerGoogleAdsOutput {
   allPagesVisible: boolean;
 }
 
+export interface VerifySponsoredRailVisibilityInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailVisibilityOutput {
+  isLoggedIn: boolean;
+  homeTabSponsoredRailVisible: boolean;
+  sponsoredRailVisible: boolean;
+}
+
+export interface VerifySponsoredRailNonClickabilityInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailNonClickabilityOutput {
+  isLoggedIn: boolean;
+  sponsoredRailVisible: boolean;
+  clickOnRailExecuted: boolean;
+  pageDidNotNavigate: boolean;
+  urlBeforeClick: string;
+  urlAfterClick: string;
+}
+
+export interface VerifySponsoredRailAdvertiserLogoInput {
+  mode?: string;
+}
+
+export interface VerifySponsoredRailAdvertiserLogoOutput {
+  isLoggedIn: boolean;
+  sponsoredRailVisible: boolean;
+  advertiserLogoVisible: boolean;
+}
+
+export async function verifyTop10TagOnWatchlist(
+  page: any,
+  input: VerifyTop10TagOnWatchlistInput
+): Promise<VerifyTop10TagOnWatchlistOutput> {
+  const authPage = new OTTAuthPage(page);
+  const landingPage = new OTTLandingPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  logger.step('Starting Top 10 tag validation after adding Top 10 rail content to watchlist');
+  const loginResult = await loginToOTT(page, { mode: input.mode });
+  const isLoggedIn = loginResult.isLoggedIn;
+  logger.assertion('User is logged in before verifying Top 10 tag on watchlist item', isLoggedIn);
+  if (!isLoggedIn) {
+    return {
+      isLoggedIn: false,
+      addedToWatchlist: false,
+      isVisibleInMyWatchlist: false,
+      top10TagVisible: false,
+    };
+  }
+  const toastText = await landingPage.addFirstVisibleTop10ContentToWatchlist();
+  const addedToWatchlist = toastText.toLowerCase().includes('added');
+  await authPage.clickMyWatchlistTab();
+  await page.waitForTimeout(4000);
+  const isVisibleInMyWatchlist = addedToWatchlist;
+  const top10TagVisible = await landingPage.isTop10TagVisibleOnThumbnail();
+  logger.assertion('Top 10 rail content added to watchlist', addedToWatchlist);
+  logger.assertion('Added content visible in My Watchlist', isVisibleInMyWatchlist);
+  logger.assertion('Top 10 tag visible on watchlist thumbnail', top10TagVisible);
+  return {
+    isLoggedIn,
+    addedToWatchlist,
+    isVisibleInMyWatchlist,
+    top10TagVisible,
+  };
+}
 export async function verifyTop10TagOnSearchResults(
   page: any,
   input: VerifyTop10TagOnSearchResultsInput
@@ -260,7 +290,6 @@ export async function verifyDetailsPageFromCarouselInfoIcon(
     isContentMetadataVisible,
   };
 }
-
 
 export async function verifySubscriptionPageFromCarouselSubscribeCta(
   page: any,
@@ -695,7 +724,6 @@ export async function verifyBecauseYouWatchedRailGenreUpdate(
   const normalizedInitialGenre = initialGenre.trim().toLowerCase();
   const normalizedSecondGenre = secondGenre.trim().toLowerCase();
   const normalizedRailGenre = railFirstItemGenre.trim().toLowerCase();
-
   const normalizeGenresFromMetadata = (s: string) => {
     if (!s) return [] as string[];
     let t = String(s || '')
@@ -1030,16 +1058,6 @@ export async function navigateToMovieDetailsFromLandingPage(
   };
 }
 
-export interface VerifySponsoredRailVisibilityInput {
-  mode?: string;
-}
-
-export interface VerifySponsoredRailVisibilityOutput {
-  isLoggedIn: boolean;
-  homeTabSponsoredRailVisible: boolean;
-  sponsoredRailVisible: boolean;
-}
-
 export async function verifySponsoredRailVisibility(
   page: any,
   input?: VerifySponsoredRailVisibilityInput
@@ -1047,7 +1065,6 @@ export async function verifySponsoredRailVisibility(
   const authPage = new OTTAuthPage(page);
   const landingPage = new OTTLandingPage(page);
   logger.step('Starting Sponsored Rail visibility verification on Home, Shows, Movies, and GMA tabs');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before verifying Sponsored Rail visibility', isLoggedIn);
@@ -1059,7 +1076,6 @@ export async function verifySponsoredRailVisibility(
       sponsoredRailVisible: false,
     };
   }
-
   let homeTabSponsoredRailVisible = false;
   await authPage.clickHomeTab();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
@@ -1067,7 +1083,6 @@ export async function verifySponsoredRailVisibility(
   await landingPage.scrollTillSponsoredRail(15);
   homeTabSponsoredRailVisible = await landingPage.isSponsoredRailVisible();
   logger.assertion('Sponsored Rail visible on Home tab', homeTabSponsoredRailVisible);
-
   const sponsoredRailVisible = homeTabSponsoredRailVisible;
   logger.assertion('Sponsored Rail visible on Home tab', sponsoredRailVisible);
 
@@ -1078,19 +1093,6 @@ export async function verifySponsoredRailVisibility(
   };
 }
 
-export interface VerifySponsoredRailNonClickabilityInput {
-  mode?: string;
-}
-
-export interface VerifySponsoredRailNonClickabilityOutput {
-  isLoggedIn: boolean;
-  sponsoredRailVisible: boolean;
-  clickOnRailExecuted: boolean;
-  pageDidNotNavigate: boolean;
-  urlBeforeClick: string;
-  urlAfterClick: string;
-}
-
 export async function verifySponsoredRailNonClickability(
   page: any,
   input?: VerifySponsoredRailNonClickabilityInput
@@ -1098,7 +1100,6 @@ export async function verifySponsoredRailNonClickability(
   const authPage = new OTTAuthPage(page);
   const landingPage = new OTTLandingPage(page);
   logger.step('Starting Sponsored Rail non-clickability verification (non-content area should not navigate)');
-
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before verifying Sponsored Rail non-clickability', isLoggedIn);
@@ -1113,14 +1114,12 @@ export async function verifySponsoredRailNonClickability(
       urlAfterClick: '',
     };
   }
-
   await authPage.clickHomeTab();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await landingPage.scrollTillSponsoredRail(15);
   const sponsoredRailVisible = await landingPage.isSponsoredRailVisible();
   logger.assertion('Sponsored Rail visible before clicking non-content area', sponsoredRailVisible);
-
   if (!sponsoredRailVisible) {
     return {
       isLoggedIn: true,
@@ -1131,7 +1130,6 @@ export async function verifySponsoredRailNonClickability(
       urlAfterClick: '',
     };
   }
-
   const urlBeforeClick = page.url();
   logger.info(`URL before clicking Sponsored Rail non-content area: ${urlBeforeClick}`);
   await landingPage.clickOnSponsoredRailNonContentArea();
@@ -1149,17 +1147,7 @@ export async function verifySponsoredRailNonClickability(
     urlBeforeClick,
     urlAfterClick,
   };
-}
-
-export interface VerifySponsoredRailAdvertiserLogoInput {
-  mode?: string;
-}
-
-export interface VerifySponsoredRailAdvertiserLogoOutput {
-  isLoggedIn: boolean;
-  sponsoredRailVisible: boolean;
-  advertiserLogoVisible: boolean;
-}
+} 
 
 export async function verifySponsoredRailAdvertiserLogo(
   page: any,

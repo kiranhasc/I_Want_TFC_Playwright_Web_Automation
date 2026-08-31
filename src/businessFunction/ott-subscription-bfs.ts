@@ -55,7 +55,6 @@ export interface VerifyGuestSubscribeNavigationInput {
 }
 
 export interface VerifyGuestSubscribeNavigationOutput {
-  //isTryAgainVisible: boolean;
   isLoginScreenVisible: boolean;
   headingText: string;
   isEmailFieldVisible: boolean;
@@ -406,7 +405,6 @@ export async function verifyPremiumContentDeepLinkSubscriptionBlocker(
   await page.waitForTimeout(5000);
   await detailsPage.clickPlayVideoOverlayButton();
   await page.waitForTimeout(3000);
-  // const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
   const isSubscribeToWatchCtaVisible = await detailsPage.isSubscribeToWatchCtaVisible().catch(() => false);
   const premiumGateVisible = await playbackPage.isPremiumContentGateVisible().catch(() => false);
   const maybeLaterVisible = await playbackPage.isMaybeLaterVisible().catch(() => false);

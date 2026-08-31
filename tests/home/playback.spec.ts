@@ -71,7 +71,7 @@ test.describe('Play Back', () => {
     expect(result.adjustedVolume).toBeGreaterThanOrEqual(0);
   });
 
-  test('@Medium @DM IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
+  test('@Medium @mWeb IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
     test.setTimeout(240000);
     const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
     const result = await verifyTapToPausePlaybackFlow(page, {
@@ -568,7 +568,7 @@ test.describe('Play Back', () => {
     expect(result.autoPlaybackStarted).toBeTruthy();
   });
 
-  test('@Low @D IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
+  test('@Low @mWeb IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLiveTagOnPlayer(page, {
       mode: data.mode,

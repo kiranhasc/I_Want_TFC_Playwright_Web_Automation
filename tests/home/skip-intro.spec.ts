@@ -16,6 +16,7 @@ test.describe('Playback skip intro marker', () => {
     const playbackResult = await verifySkipIntroMarkerDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
     expect(playbackResult.isDetailsPageVisible).toBe(true);
     expect(playbackResult.isSkipIntroMarkerVisible).toBe(true);
@@ -43,6 +44,7 @@ test.describe('Playback skip intro marker', () => {
     const playbackResult = await verifySkipRecapMarkerDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isDetailsPageVisible).toBe(true);

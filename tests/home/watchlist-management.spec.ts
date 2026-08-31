@@ -9,6 +9,7 @@ test.describe('Watchlist management', () => {
     const data = testCaseData['tc-watch-010-play-content-from-watchlist'];
     const result = await playContentFromWatchlist(page, {
       mode: data.mode,
+      parentalPin: data.pin,
     });
     expect(result.isLoggedIn).toBe(true);
     expect(result.contentOpened).toBe(true);

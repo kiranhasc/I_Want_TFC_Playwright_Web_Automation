@@ -111,6 +111,7 @@ export interface VerifyBecauseYouWatchedRailGenreUpdateOutput {
 export interface VerifyMidRailBannerAdlVisibilityInput {
   mode?: string;
   searchQuery?: string;
+  
 }
 
 export interface VerifyMidRailBannerAdlVisibilityOutput {

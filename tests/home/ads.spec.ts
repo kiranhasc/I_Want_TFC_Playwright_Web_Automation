@@ -26,6 +26,8 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdAppearsOnPlayerScreenFlow(page, {
             mode: data.mode,
             query: data.query,
+            parentalPin: data.pin,
+            
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.livePauseAdVisible).toBe(true);
@@ -39,6 +41,7 @@ test.describe('Ads', () => {
         const result = await verifyBillboardAdBannerVisibilityFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.adBannerVisible).toBe(true);
@@ -47,7 +50,8 @@ test.describe('Ads', () => {
         test.setTimeout(180000);
         const data = testCaseData['tc-ad-3981-pause-ad-clickable'];
         const result = await verifyPauseAdClickableFlow(page, {
-            mode: data.mode
+            mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -58,6 +62,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdDisappearsOnResumeFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisibleDuringPause).toBe(true);
@@ -70,6 +75,7 @@ test.describe('Ads', () => {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
             providerName: data.providerName,
+            parentalPin: data.pin,
         });
         expect(result.firstUserLoggedIn).toBe(true);
         expect(result.secondUserLoggedIn).toBe(true);
@@ -81,6 +87,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdRepeatedPausesFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.allPauseAdAttemptsVisible).toBe(true);
@@ -94,6 +101,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdFullscreenFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -102,7 +110,8 @@ test.describe('Ads', () => {
         test.setTimeout(120000);
         const data = testCaseData['tc-ad-3991-pause-ad-premium-or-gma'];
         const result = await verifyPauseAdAbsenceForPremiumOrGmaFlow(page, {
-            mode: data.mode
+            mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(false);
@@ -112,6 +121,7 @@ test.describe('Ads', () => {
         const data = testCaseData['tc-ad-3992-pause-ad-seek-restriction'];
         const result = await verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page, {
             mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -122,6 +132,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdBackNavigationFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -134,6 +145,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdDismissCtaVisibilityFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -147,6 +159,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdLiveContentPlaybackFlow(page, {
             mode: data.mode,
             liveContentName: data.liveContentName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -157,6 +170,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdNoReappearWithin3SecFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisibleDuringPause).toBe(true);
@@ -169,6 +183,7 @@ test.describe('Ads', () => {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
             query: data.query,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -180,6 +195,7 @@ test.describe('Ads', () => {
             mode: data.mode,
             searchTerm: data.searchTerm,
             liveContentName: data.liveContentName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.skipRecapVisible).toBe(true);
@@ -197,6 +213,7 @@ test.describe('Ads', () => {
         const data = testCaseData['tc-ad-4011-pause-ad-no-overlap'];
         const result = await verifyPauseAdNoOverlapWithDismissAndTitleFlow(page, {
             mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.pauseAdVisible).toBe(true);
@@ -211,6 +228,7 @@ test.describe('Ads', () => {
         const data = testCaseData['tc-ad-4013-next-episode-fullscreen'];
         const result = await verifyNextEpisodePlaybackInFullscreenFlow(page, {
             mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.detailsVisible).toBe(true);
@@ -222,6 +240,7 @@ test.describe('Ads', () => {
         const data = testCaseData['tc-ad-4014-pause-screen-premium-or-gma'];
         const result = await verifyPauseScreenForPremiumOrGmaFlow(page, {
             mode: data.mode,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.moviePauseScreenVisible).toBe(true);
@@ -235,6 +254,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdNoOverlapWithUpNextMarkerFlow(page, {
             mode: data.mode,
             searchTerm: data.searchTerm,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.upNextVisibleBeforeAd).toBe(true);
@@ -247,6 +267,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdNotDisplayedWhilePlayingFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
 
         expect(result.isLoggedIn).toBe(true);
@@ -259,6 +280,7 @@ test.describe('Ads', () => {
         const result = await verifyPauseAdControlsDismissedFlow(page, {
             mode: data.mode,
             query: data.query,
+            parentalPin: data.pin,
         });
 
         expect(result.isLoggedIn).toBe(true);
@@ -279,6 +301,7 @@ test.describe('Ads', () => {
         const result = await verifyMidRollAdFullscreenFlow(page, {
             mode: data.mode,
             graphqlQueryName: data.graphqlQueryName,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.fullscreenActive).toBe(true);

@@ -299,8 +299,8 @@
     },
     "tc-disc-004-skip-intro": {
         "mode": "valid",
-        "pin": "1234",
-        "searchTerm": "Lavender Fields"
+        "searchTerm": "Lavender Fields",
+        "pin": "1234"
     },
     "tc-disc-004-player-close-return": {
         "mode": "valid"
@@ -320,7 +320,8 @@
         "graphqlQueryName": "Collection"
     },
     "tc-auth-037-mid-rail-banner-adl": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-auth-040-mid-rail-banner-ad-source": {
         "mode": "freeUser"
@@ -330,7 +331,8 @@
     },
     "tc-disc-005-skip-recap": {
         "mode": "valid",
-        "searchTerm": "Lavender Fields"
+        "searchTerm": "Lavender Fields",
+        "pin": "1234"
     },
     "tc-disc-006-skip-recap": {
         "mode": "valid",
@@ -349,10 +351,12 @@
     },
     "tc-sub-001-subscribe-to-watch": {
         "mode": "freeUser",
-        "searchTerm": "Karnal"
+        "searchTerm": "Karnal",
+        "pin": "1234"
     },
     "tc-sub-002-upgrade-plan": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-sub-004-premium-crown-icon": {
         "graphqlQueryName": "Collection",
@@ -487,7 +491,8 @@
         ]
     },
     "tc-watch-010-play-content-from-watchlist": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-watch-002-metadata-validation": {
         "mode": "valid",
@@ -660,91 +665,113 @@
     },
     "tc-ad-3998-pause-ad-live-channel": {
         "mode": "freeUser",
-        "liveContentName": "DZMM Teleradyo"
+        "liveContentName": "DZMM Teleradyo",
+        "pin": "1234"
     },
     "tc-ad-3978-pause-ad-player-screen": {
         "mode": "freeUser",
         "query": "DZMM Teleradyo",
-        "liveContentName": "DZMM Teleradyo"
+        "liveContentName": "DZMM Teleradyo",
+        "pin": "1234"
     },
     "tc-ad-4009-pause-ad-micro-drama": {
         "mode": "freeUser",
         "graphqlQueryName": "Collection",
-        "query": "Quick Feels"
+        "query": "Quick Feels",
+        "pin": "1234"
     },
     "tc-ad-3986-pause-ad-different-users": {
         "mode": "freeUser",
         "graphqlQueryName": "Collection",
-        "providerName": "Frontier, a Verizon Company"
+        "providerName": "Frontier, a Verizon Company",
+        "pin": "1234"
     },
     "tc-ad-3991-pause-ad-premium-or-gma": {
         "mode": "valid",
-        "liveContentName": "DZMM Teleradyo"
+        "liveContentName": "DZMM Teleradyo",
+        "pin": "1234"
     },
     "tc-ad-4014-pause-screen-premium-or-gma": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-ad-3985-pause-ad-disappears-on-resume": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-4017-pause-ad-not-displayed-while-playing": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-3981-pause-ad-clickable": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-ad-3990-pause-ad-fullscreen": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-4019-mid-roll-ad-fullscreen": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-4013-next-episode-fullscreen": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-ad-3992-pause-ad-seek-restriction": {
         "mode": "freeUser",
-        "query": "Eva Fonda"
+        "query": "Eva Fonda",
+        "pin": "1234"
     },
     "tc-ad-3997-dismiss-ad-cta": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-4011-pause-ad-no-overlap": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-ad-4010-pause-ad-skip-intro-recap-go-live": {
         "mode": "freeUser",
         "searchTerm": "Lavender Fields",
-        "liveContentName": "DZMM Teleradyo"
+        "liveContentName": "DZMM Teleradyo",
+        "pin": "1234"
     },
     "tc-ad-4015-pause-ad-up-next-overlap": {
         "mode": "freeUser",
-        "searchTerm": "Lavender Fields"
+        "searchTerm": "Lavender Fields",
+        "pin": "1234"
     },
     "tc-ad-4018-pause-ad-controls-dismissed": {
         "mode": "freeUser",
-        "query": "Incognito"
+        "query": "Incognito",
+        "pin": "1234"
     },
     "tc-ad-3995-pause-ad-back-navigation": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-3988-repeated-pauses": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-4003-pause-ad-no-reappear-within-3s": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-ad-3980-billboard-ad-banner": {
         "mode": "freeUser",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-sub-013-pause-playback": {
         "mode": "valid",
@@ -1158,13 +1185,15 @@
         "pin": "1234"
     },
     "tc-ad-2135-sponsored-rail-visibility": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-ad-2137-sponsored-rail-advertiser-logo": {
         "mode": "freeUser"
     },
     "tc-ad-2149-sponsored-rail-content-details-navigation": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-ad-2146-sponsored-rail-non-clickable": {
         "mode": "freeUser"

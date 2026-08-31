@@ -1460,6 +1460,7 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro marker verification flow');
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1470,12 +1471,14 @@ export async function verifySkipIntroMarkerDuringPlayback(
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
-    await detailsPage.clickEpisodeTwo();
+    await detailsPage.clickEpisodeTwo(); 
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
     await page.waitForTimeout(2000);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
   }
@@ -1544,6 +1547,7 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap marker verification flow');
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1555,9 +1559,15 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+    await detailsPage.hoverOnPlaybackScreen();
+    await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   }
   await page.waitForTimeout(4000);
   await detailsPage.waitTillAdsEnd();
+  await detailsPage.isSkipIntroMarkerVisible();
+  await detailsPage.clickSkipIntroMarker();
   const isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);

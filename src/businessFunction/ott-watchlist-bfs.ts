@@ -220,6 +220,7 @@ export interface PlayContentFromWatchlistInput {
   mode?: string;
   email?: string;
   password?: string;
+  parentalPin?: string;
 }
 
 export interface PlayContentFromWatchlistOutput {
@@ -371,10 +372,10 @@ export async function playContentFromWatchlist(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting IW3-T2046 watchlist playback flow');
-
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
   });
+  const parentalPin = (input?.parentalPin).trim();
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before playing content from watchlist', isLoggedIn);
 
@@ -399,6 +400,7 @@ export async function playContentFromWatchlist(
   const contentOpened = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page opened from watchlist', contentOpened);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible after playing content from watchlist', playerVisible);
   await page.waitForTimeout(120000);

@@ -801,7 +801,7 @@ export class OTTDetailsPage {
         await new Promise<void>((resolve) => {
           const start = window.scrollY;
           const target = start + 100;
-          const duration = 500; 
+          const duration = 500;
           const startTime = performance.now();
           function animate(currentTime: number) {
             const elapsed = currentTime - startTime;
@@ -2169,7 +2169,7 @@ async clickFirstEpisodeCard(): Promise<void> {
     }
   }
 
-  
+
 
   async isSkipMarkerVisible(markerType: 'intro' | 'recap' = 'recap'): Promise<boolean> {
     if (markerType === 'intro') {
@@ -5232,23 +5232,6 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
   }
 
-  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
-    const continueAction = nextMethod ?? (async () => undefined);
-    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
-    if (!promptVisible) {
-      await continueAction();
-      return false;
-    }
-    const parentalPin = (pin ?? '').trim();
-    if (parentalPin) {
-      await this.enterParentalPlaybackPin(parentalPin);
-      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
-      await this.page.waitForTimeout(1500);
-    }
-    await continueAction();
-    return true;
-  }
-
   async enterParentalPlaybackPin(pin: string): Promise<void> {
     logger.elementInteraction('type', 'Parental playback PIN input');
     const inputs = this.page.locator(this.parentalPinEntryInputs.selector);
@@ -5346,7 +5329,23 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     logger.info('Ad has ended. Proceeding to next step.');
   }
 
+  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
+    const continueAction = nextMethod ?? (async () => undefined);
+    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (!promptVisible) {
+      await continueAction();
+      return false;
+    }
 
+    const parentalPin = (pin ?? '').trim();
+    if (parentalPin) {
+      await this.enterParentalPlaybackPin(parentalPin);
+      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+    }
 
+    await continueAction();
+    return true;
+  }
 
 }

@@ -44,7 +44,7 @@ test.describe('Synacor Logout', () => {
         test.setTimeout(200000);
         const data = testCaseData['tc-auth-023-continue-watching-playback-synacor'];
         const result = await verifyContinueWatchingPlaybackIndependent(page, { mode: data?.mode, providerName: data?.providerName });
-        // expect(result.isValid).toBeTruthy();
+       
         expect(result.itemFound).toBeTruthy();
         expect(result.playerVisible).toBeTruthy();
         expect(result.progressObserved).toBeTruthy();

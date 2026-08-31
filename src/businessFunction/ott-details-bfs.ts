@@ -102,6 +102,7 @@ export interface VerifyVPNPlaybackRestrictionInput {
   mode?: string;
   searchQuery: string;
   expectedVPNErrorMessage: string;
+  parentalPin?: string;
 }
 
 export interface VerifyVPNPlaybackRestrictionOutput {
@@ -382,6 +383,7 @@ export async function verifyVPNPlaybackRestriction(
 ): Promise<VerifyVPNPlaybackRestrictionOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input.parentalPin || config.get('ott.parentalPin') || '1234';
   logger.step('Starting VPN playback restriction validation');
   const loginResult = await loginToOTT(page, { mode: input.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -398,9 +400,10 @@ export async function verifyVPNPlaybackRestriction(
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(input.searchQuery);
   await authPage.submitSearchQuery();
-   await page.waitForTimeout(5000);
+  await page.waitForTimeout(5000);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const vpnErrorVisible = await detailsPage.isVPNErrorMessageVisible(input.expectedVPNErrorMessage);
   const playbackStarted = false
   const errorMessage = vpnErrorVisible ? input.expectedVPNErrorMessage : '';

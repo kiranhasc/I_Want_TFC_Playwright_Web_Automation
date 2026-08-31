@@ -1,4 +1,4 @@
-import { OTTAuthPage } from '../pom/OTTAuthPage';363
+import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
 import { logger } from '../utils/logger';
 import { Page } from '@playwright/test';
@@ -155,16 +155,22 @@ export async function verifyContinueWatchingPlaybackIndependent(
         const collectionResponse = await gql.waitForOperation(operationName);
         const parser = new CollectionParser(collectionResponse as any);
         const assetResult = parser.findAsset((asset) => {
+            const candidate = asset as any;
             const title = asset.title?.trim() || '';
             const normalizedTitle = normalizeTitle(title);
-            const normalizedEpisodeTitle = normalizeTitle((asset as any)?.tvShowDetails?.defaultEpisode?.title || '');
-            const assetType = ((asset as any)?.assetType || (asset as any)?.type || '').toString().trim().toLowerCase();
+            const defaultEpisode = candidate.tvShowDetails?.defaultEpisode;
+            const normalizedEpisodeTitle = normalizeTitle(defaultEpisode?.title || '');
+            const assetType = (candidate.assetType || candidate.type || '').toString().trim().toLowerCase();
             const isTvShow = assetType === 'tvshow' || assetType === 'tv_show';
             const hasValidTitle = title.length > 3;
             const notEpisode = !/episode|season|series|show|live|channel|tv/i.test(title);
             const alreadyInContinueWatching = continueWatchingTitleSet.has(normalizedTitle)
                 || (normalizedEpisodeTitle && continueWatchingTitleSet.has(normalizedEpisodeTitle));
-            return hasValidTitle && notEpisode && isTvShow && !alreadyInContinueWatching;
+            const monetization = candidate.monetization || defaultEpisode?.monetization;
+            const hasProviderAccess = candidate.isPlayable !== false
+                && defaultEpisode?.isPlayable !== false
+                && !(monetization?.type === 'paid' && monetization?.hasSkuAccess === false);
+            return hasValidTitle && notEpisode && isTvShow && hasProviderAccess && !alreadyInContinueWatching;
         });
         if (!assetResult) {
             result.reason = 'No playable movie asset found in Collection GraphQL response';
@@ -200,7 +206,6 @@ export async function verifyContinueWatchingPlaybackIndependent(
         const assetQueryEpisodeId = assetResponseData?.tvShowDetails?.defaultEpisode?.id;
         logger.info(`Asset query returned id: ${assetQueryId}`);
         result.assetQueryTitle = assetTitleFromQuery;
-        result.selectedContentName = assetTitleFromQuery;
         logger.info(`Asset query title: ${result.assetQueryTitle}`);
         const detailsVisible = await detailsPage.isShowDetailsPageVisible();
         if (!detailsVisible) {

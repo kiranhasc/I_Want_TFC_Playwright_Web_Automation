@@ -14,6 +14,26 @@ export class OTTEarlyAccessPage {
     private readonly maybeLaterSelector: PageElement;
     private readonly upgradeCtaSelector: PageElement;
     private readonly earlyAccessLabelSelector: PageElement;
+    private readonly earlyAccessBadgeSelector: PageElement;
+    private readonly clickableAncestorSelector: PageElement;
+    private readonly followingSiblingBadgeSelector: PageElement;
+    private readonly episodeCardAncestorSelector: PageElement;
+    private readonly railTitleSelector: PageElement;
+    private readonly assetImageSelector: PageElement;
+    private readonly badgeAltSelector: PageElement;
+    private readonly episodeListSelector: PageElement;
+    private readonly episodeBadgeSelector: PageElement;
+    private readonly episodeCardBaseSelector: PageElement;
+    private readonly episodeCardClickableSelector: PageElement;
+    private readonly episodeBadgeMultiVariantSelector: PageElement;
+
+    private resolveSelector(template: string, params: Record<string, string> = {}): string {
+        let resolved = template;
+        Object.entries(params).forEach(([key, value]) => {
+            resolved = resolved.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+        });
+        return resolved;
+    }
 
     constructor(page: Page) {
         this.page = page;
@@ -31,6 +51,18 @@ export class OTTEarlyAccessPage {
           ? { selector: 'text=/Login/i' }
           : { selector: 'text=/Upgrade to Watch Now/i' };
         this.earlyAccessLabelSelector = { selector: `(//img[@alt="{assetTitle}"]/parent::div/following-sibling::div//img[@alt="early_access"])[1]` };
+        this.earlyAccessBadgeSelector = { selector: 'img[alt="early_access"], img[alt="early-access"], [aria-label*="early access" i], [data-testid*="early-access" i]' };
+        this.clickableAncestorSelector = { selector: 'xpath=ancestor::*[self::a or self::button or @role="button" or contains(@class, "cursor-pointer")][1]' };
+        this.followingSiblingBadgeSelector = { selector: 'xpath=../following-sibling::div//img[@alt="{labelText}"]' };
+        this.episodeCardAncestorSelector = { selector: 'xpath=ancestor::div[contains(@class, "cursor-pointer")][1]' };
+        this.railTitleSelector = { selector: 'text={railTitle}' };
+        this.assetImageSelector = { selector: 'img[alt="{assetTitle}"]' };
+        this.badgeAltSelector = { selector: 'img[alt="{badgeAlt}"]' };
+        this.episodeListSelector = { selector: '[class*="episodes-list"]' };
+        this.episodeBadgeSelector = { selector: 'img[alt="{labelText}"]' };
+        this.episodeCardBaseSelector = { selector: 'div' };
+        this.episodeCardClickableSelector = { selector: '.episode-info, .episode-card, .episode-item, [data-testid*="episode"]' };
+        this.episodeBadgeMultiVariantSelector = { selector: 'img[alt="{labelText}"], img[alt="Early Access"], [aria-label="Early Access"], [data-testid*="early-access" i]' };
     }
 
     async scrollToRail(railTitle: string): Promise<void> {
@@ -42,19 +74,19 @@ export class OTTEarlyAccessPage {
             logger.info(`Skipping scroll for rail: ${railTitle}`);
             return;
         }
-        const rail = this.page.locator(`text=${railTitle}`).first();
+        const railSelector = this.resolveSelector(this.railTitleSelector.selector ?? '', { railTitle });
+        const rail = this.page.locator(railSelector).first();
         await rail.scrollIntoViewIfNeeded();
     }
 
       async findAssetByBadge(badgeAlt: string): Promise<{ assetTitle: string; railTitle: string } | null> {
-        const badge = this.page.locator(`img[alt="${badgeAlt}"]`).first();
+        const badgeSelector = this.resolveSelector(this.badgeAltSelector.selector ?? '', { badgeAlt });
+        const badge = this.page.locator(badgeSelector).first();
         if (!await badge.count()) {
           return null;
         }
         await badge.scrollIntoViewIfNeeded().catch(() => undefined);
-        const card = badge.locator(
-          'xpath=ancestor::*[self::a or self::button or @role="button" or contains(@class, "cursor-pointer")][1]'
-        ).first();
+        const card = badge.locator(this.clickableAncestorSelector.selector ?? '').first();
         const scope = await card.count() ? card : badge.locator('xpath=..');
         const titleImage = scope.locator('img[alt]').first();
         const assetTitle = (await titleImage.getAttribute('alt').catch(() => ''))?.trim() ?? '';
@@ -66,20 +98,20 @@ export class OTTEarlyAccessPage {
         labelText: string = this.defaultLabelText,
         additionalLabelText?: string
     ) {
-      const assets = this.page.locator(`img[alt="${assetTitle}"]`);
+      const assetsSelector = this.resolveSelector(this.assetImageSelector.selector ?? '', { assetTitle });
+      const assets = this.page.locator(assetsSelector);
       await assets.first().waitFor({ state: 'visible', timeout: 10000 });
 
       const count = await assets.count();
       for (let index = 0; index < count; index += 1) {
         const asset = assets.nth(index);
         await asset.scrollIntoViewIfNeeded().catch(() => undefined);
-        const badgeContainer = asset.locator(
-          `xpath=../following-sibling::div//img[@alt="${labelText}"]`
-        );
+        const badgeContainerSelector = this.resolveSelector(this.followingSiblingBadgeSelector.selector ?? '', { labelText });
+        const badgeContainer = asset.locator(badgeContainerSelector);
         const hasEarlyAccessBadge = await badgeContainer.count().catch(() => 0);
         const hasAdditionalBadge = additionalLabelText
             ? await asset.locator(
-                `xpath=../following-sibling::div//img[@alt="${additionalLabelText}"]`
+                this.resolveSelector(this.followingSiblingBadgeSelector.selector ?? '', { labelText: additionalLabelText })
               ).count().catch(() => 0)
             : 1;
         if (hasEarlyAccessBadge > 0 && hasAdditionalBadge > 0) {
@@ -97,7 +129,8 @@ export class OTTEarlyAccessPage {
           await assetLocator.scrollIntoViewIfNeeded();
           return await assetLocator.isVisible();
         }
-            const tagLocator = assetLocator.locator(`xpath=../following-sibling::div//img[@alt="${label}"]`).first();
+            const resolvedSelector = this.resolveSelector(this.followingSiblingBadgeSelector.selector ?? '', { labelText: label });
+            const tagLocator = assetLocator.locator(resolvedSelector).first();
         await this.scrollToEarlyAccessThumbnail(tagLocator);
             await tagLocator.waitFor({ state: 'visible', timeout: 15000 });
             return true;
@@ -115,9 +148,7 @@ export class OTTEarlyAccessPage {
 
     async openAssetDetails(assetTitle: string, labelText: string = this.defaultLabelText): Promise<void> {
       const asset = await this.findAssetLocatorByTitle(assetTitle, labelText);
-        const clickableCard = asset.locator(
-            'xpath=ancestor::*[self::a or self::button or @role="button" or contains(@class, "cursor-pointer")][1]'
-        ).first();
+        const clickableCard = asset.locator(this.clickableAncestorSelector.selector ?? '').first();
         if (await clickableCard.count()) {
           await clickableCard.dblclick({ force: true });
             return;
@@ -128,11 +159,11 @@ export class OTTEarlyAccessPage {
     async isEpisodeLabelVisible(labelText?: string): Promise<boolean> {
         const label = labelText ?? this.defaultLabelText;
         try {
-        const episodeList = this.page.locator('[class*="episodes-list"]').first();
+        const episodeList = this.page.locator(this.episodeListSelector.selector ?? '').first();
         await episodeList.waitFor({ state: 'visible', timeout: 15000 });
         await episodeList.scrollIntoViewIfNeeded();
 
-        let episodeLabel = episodeList.locator(`img[alt="${label}"]`).last();
+        let episodeLabel = episodeList.locator(this.resolveSelector(this.episodeBadgeSelector.selector ?? '', { labelText: label })).last();
         for (let attempt = 0; attempt < 12 && !await episodeLabel.count(); attempt += 1) {
           const episodeCards = episodeList.locator('div').filter({ has: episodeList.locator('img[alt]') });
           const cardCount = await episodeCards.count().catch(() => 0);
@@ -144,7 +175,8 @@ export class OTTEarlyAccessPage {
           }).catch(() => undefined);
           await this.page.mouse.wheel(0, 700).catch(() => undefined);
           await this.page.waitForTimeout(500);
-          episodeLabel = episodeList.locator(`img[alt="${label}"]`).last();
+          const resolvedBadgeSelector = this.resolveSelector(this.episodeBadgeSelector.selector ?? '', { labelText: label });
+          episodeLabel = episodeList.locator(resolvedBadgeSelector).last();
         }
 
         if (!await episodeLabel.count()) {
@@ -160,11 +192,11 @@ export class OTTEarlyAccessPage {
 
     async openLatestEarlyAccessEpisode(labelText: string): Promise<boolean> {
       if (process.env.BROWSER !== 'mchrome') {
-      const episodeList = this.page.locator('[class*="episodes-list"]').first();
+      const episodeList = this.page.locator(this.episodeListSelector.selector ?? '').first();
       await episodeList.waitFor({ state: 'visible', timeout: 10000 });
       await episodeList.scrollIntoViewIfNeeded();
 
-      let badge = episodeList.locator(`img[alt="${labelText}"]`).last();
+      let badge = episodeList.locator(this.resolveSelector(this.episodeBadgeSelector.selector ?? '', { labelText: labelText })).last();
       for (let attempt = 0; attempt < 12 && !await badge.count(); attempt += 1) {
         const episodeCards = episodeList.locator('div').filter({ has: episodeList.locator('img[alt]') });
         const cardCount = await episodeCards.count().catch(() => 0);
@@ -176,7 +208,7 @@ export class OTTEarlyAccessPage {
         }).catch(() => undefined);
         await this.page.mouse.wheel(0, 700).catch(() => undefined);
         await this.page.waitForTimeout(500);
-        badge = episodeList.locator(`img[alt="${labelText}"]`).last();
+        badge = episodeList.locator(this.resolveSelector(this.episodeBadgeSelector.selector ?? '', { labelText: labelText })).last();
       }
 
       if (!await badge.count()) {
@@ -185,9 +217,7 @@ export class OTTEarlyAccessPage {
         }
 
       await badge.scrollIntoViewIfNeeded();
-      const episodeCard = badge.locator(
-        'xpath=ancestor::div[contains(@class, "cursor-pointer")][1]'
-      ).first();
+      const episodeCard = badge.locator(this.episodeCardAncestorSelector.selector ?? '').first();
       const target = await episodeCard.count() ? episodeCard : badge;
       const episodeName = (await target.textContent().catch(() => ''))?.trim() ?? '';
       logger.info(`Clicking Early Access episode: ${episodeName}`);
@@ -202,14 +232,9 @@ export class OTTEarlyAccessPage {
       await episodeList.waitFor({ state: 'visible', timeout: 15000 });
       await episodeList.scrollIntoViewIfNeeded();
 
-      const badgeSelector = [
-        `img[alt="${labelText}"]`,
-        'img[alt="Early Access"]',
-        '[aria-label="Early Access"]',
-        '[data-testid*="early-access" i]'
-      ].join(', ');
+      const badgeSelectorVariants = this.resolveSelector(this.episodeBadgeMultiVariantSelector.selector ?? '', { labelText: labelText });
       const textBadge = this.page.getByText('Early Access', { exact: true }).last();
-      let badge = episodeList.locator(badgeSelector).last();
+      let badge = episodeList.locator(badgeSelectorVariants).last();
       for (let attempt = 0; attempt < 12 && !await badge.count() && !await textBadge.count(); attempt += 1) {
         const episodeCards = episodeList.locator(
           '.episode-info, .episode-card, .episode-item, [data-testid*="episode"]'
@@ -222,7 +247,7 @@ export class OTTEarlyAccessPage {
         }).catch(() => undefined);
         await this.page.mouse.wheel(0, 700).catch(() => undefined);
         await this.page.waitForTimeout(500);
-        badge = episodeList.locator(badgeSelector).last();
+        badge = episodeList.locator(badgeSelectorVariants).last();
       }
 
       if (!await badge.count() && !await textBadge.count()) {
@@ -232,9 +257,7 @@ export class OTTEarlyAccessPage {
 
       const targetBadge = await badge.count() ? badge : textBadge;
       await targetBadge.scrollIntoViewIfNeeded().catch(() => undefined);
-      const episodeCard = targetBadge.locator(
-        'xpath=ancestor::*[contains(@class, "cursor-pointer") or contains(@class, "episode-info") or contains(@class, "episode-card")][1]'
-      ).first();
+      const episodeCard = targetBadge.locator(this.episodeCardClickableSelector.selector ?? '').first();
       const target = await episodeCard.count() ? episodeCard : targetBadge;
       const episodeName = (await target.textContent().catch(() => ''))?.trim() ?? '';
       logger.info(`Clicking Early Access episode: ${episodeName}`);
@@ -264,7 +287,7 @@ export class OTTEarlyAccessPage {
 
     async scrollUntilEarlyAccessTagVisible(): Promise<boolean> {
         try {
-            const tagCandidates = this.page.locator('//img[@alt="early_access"]');
+            const tagCandidates = this.page.locator(this.earlyAccessBadgeSelector.selector ?? '');
             const count = await tagCandidates.count().catch(() => 0);
             if (!count) {
                 return false;
@@ -293,9 +316,9 @@ export class OTTEarlyAccessPage {
     async clickEpisodeCardWithEarlyAccessTag(): Promise<boolean> {
         logger.elementInteraction('click', 'episode card with Early Access tag');
         try {
-            const earlyAccessTag = this.page.locator('//img[@alt="early_access"]').first();
+            const earlyAccessTag = this.page.locator(this.earlyAccessBadgeSelector.selector ?? '').first();
             await earlyAccessTag.waitFor({ state: 'visible', timeout: 15000 });
-            const clickableAncestor = earlyAccessTag.locator('xpath=ancestor::a[1] | ancestor::button[1] | ancestor::*[contains(@role, "button")][1]').first();
+            const clickableAncestor = earlyAccessTag.locator(this.clickableAncestorSelector.selector ?? '').first();
             if (await clickableAncestor.count()) {
                 await clickableAncestor.scrollIntoViewIfNeeded().catch(() => undefined);
                 await clickableAncestor.click({ timeout: 20000, force: true });

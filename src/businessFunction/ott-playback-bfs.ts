@@ -17,6 +17,7 @@ export interface OpenContentAndPlayInput {
   mode?: string;
   expectedTitle?: string;
   expectedEpisode?: string;
+  parentalPin?: string;
   seekPercent?: number;
 }
 
@@ -2335,6 +2336,7 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
 export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyUpNextCloseButtonOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input?.parentalPin ?? process.env.PARENTAL_PIN;
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
   logger.step('Starting Up Next close button verification flow');
@@ -2365,6 +2367,7 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
@@ -2396,6 +2399,7 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
 export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyUpNextMarkerClickNavigationOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input?.parentalPin ?? process.env.PARENTAL_PIN;
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
   logger.step('Starting Up Next marker click navigation verification flow');
@@ -2426,6 +2430,7 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);

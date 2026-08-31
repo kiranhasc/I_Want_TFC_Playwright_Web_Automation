@@ -13,6 +13,7 @@ export interface VerifyEarlyAccessInput {
     labelText: string;
     earlyAccessAttributeValue: string;
     graphqlQueryName: string
+    parentalPin?: string;
 }
 
 export interface VerifyEarlyAccessOutput {
@@ -29,6 +30,7 @@ export interface VerifyEarlyAccessUpgradePromptInput extends VerifyEarlyAccessIn
     expectedUpgradeDescription: string;
     expectedMaybeLaterText: string;
     expectedUpgradeCtaText: string;
+    parentalPin: string;
 }
 
 export interface VerifyEarlyAccessUpgradePromptOutput {
@@ -45,29 +47,39 @@ export interface VerifyEarlyAccessUpgradePromptOutput {
 export async function verifyEarlyAccessTag(page: any, input: VerifyEarlyAccessInput): Promise<VerifyEarlyAccessOutput> {
     const earlyAccessPage = new OTTEarlyAccessPage(page);
     const gql = GraphQLHelper.getInstance(page);
-    logger.step('Logging in before verifying Early Access tag');
+    const isMobileWeb = process.env.BROWSER === 'mchrome';
+    
+    logger.step(`Verifying Early Access tag (mode: ${input.mode || 'default'}, platform: ${isMobileWeb ? 'mweb' : 'desktop'})`);
     const login = await loginToOTT(page, { mode: input.mode });
     const loggedIn = login.isLoggedIn;
+    
     if (!loggedIn) {
         logger.assertion('User must be logged in for Early Access validation', false);
         return { loggedIn: false, foundInGraphQL: false, labelVisible: false };
     }
+    
     logger.step('Waiting for Collection GraphQL operation');
     const collectionResponse = await gql.waitForOperation(input.graphqlQueryName);
     const parser = new CollectionParser(collectionResponse as any);
     const found = parser.findAssetByLabel(input.labelText);
+    
     if (!found) {
         logger.assertion(`Asset with label ${input.labelText} found in collection`, false);
         return { loggedIn: true, foundInGraphQL: false, labelVisible: false };
     }
+    
     const railName = found.rail.title;
     const assetTitle = found.asset.title;
     logger.info(`Early Access candidate found in rail: ${railName}`);
     logger.info(`Early Access asset title: ${assetTitle}`);
+    
     await earlyAccessPage.scrollToRail(railName);
     const assetLocator = await earlyAccessPage.findAssetLocatorByTitle(assetTitle);
     const labelVisible = await earlyAccessPage.isLabelVisibleForAsset(assetLocator, input.earlyAccessAttributeValue);
+    
     logger.assertion('Early Access label visible near asset', labelVisible);
+    logger.step(`Early Access tag verification completed - labelVisible: ${labelVisible} (platform: ${isMobileWeb ? 'mweb' : 'desktop'})`);
+    
     return {
         loggedIn: true,
         foundInGraphQL: true,
@@ -79,8 +91,12 @@ export async function verifyEarlyAccessTag(page: any, input: VerifyEarlyAccessIn
 
 export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: VerifyEarlyAccessUpgradePromptInput): Promise<VerifyEarlyAccessUpgradePromptOutput> {
     const earlyAccessPage = new OTTEarlyAccessPage(page);
+    const detailsPage = new OTTDetailsPage(page);
+    const parentalPin = (input?.parentalPin).trim();
     const gql = GraphQLHelper.getInstance(page);
-    logger.step('Logging in before verifying the Early Access upgrade prompt');
+    const isMobileWeb = process.env.BROWSER === 'mchrome';
+    
+    logger.step(`Verifying Early Access upgrade prompt (platform: ${isMobileWeb ? 'mweb' : 'desktop'})`);
     const login = await loginToOTT(page, { mode: input.mode });
     const loggedIn = login.isLoggedIn;
     let foundInGraphQL = false;
@@ -90,6 +106,7 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
     let descriptionVisible = false;
     let maybeLaterVisible = false;
     let upgradeCtaVisible = false;
+    
     if (loggedIn) {
         logger.step('Waiting for Collection GraphQL operation');
         const collectionResponse = await gql.waitForOperation(input.graphqlQueryName);
@@ -133,6 +150,7 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
                     };
                 }
                 const playClicked = await earlyAccessPage.openLatestEarlyAccessEpisode(input.earlyAccessAttributeValue);
+                const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
                 if (playClicked) {
                     const promptResult = await earlyAccessPage.verifyUpgradePromptMessage();
                     upgradeIconVisible = promptResult.upgradeIconVisible;
@@ -170,35 +188,46 @@ export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: Ve
 export async function verifyEarlyAccessEpisodeTag(page: any, input: VerifyEarlyAccessInput): Promise<VerifyEarlyAccessOutput> {
     const earlyAccessPage = new OTTEarlyAccessPage(page);
     const gql = GraphQLHelper.getInstance(page);
-    logger.step('Logging in before verifying the Early Access episode tag');
+    const isMobileWeb = process.env.BROWSER === 'mchrome';
+    
+    logger.step(`Verifying Early Access episode tag (platform: ${isMobileWeb ? 'mweb' : 'desktop'})`);
     const login = await loginToOTT(page, { mode: input.mode });
     const loggedIn = login.isLoggedIn;
+    
     if (!loggedIn) {
         logger.assertion('User must be logged in for Early Access validation', false);
         return { loggedIn: false, foundInGraphQL: false, labelVisible: false };
     }
+    
     logger.step('Waiting for Collection GraphQL operation');
     const collectionResponse = await gql.waitForOperation(input.graphqlQueryName);
     const parser = new CollectionParser(collectionResponse as any);
     const found = parser.findAssetByLabel(input.labelText);
+    
     if (!found) {
         logger.assertion(`Asset with label ${input.labelText} found in collection`, false);
         return { loggedIn: true, foundInGraphQL: false, labelVisible: false };
     }
+    
     const railName = found.rail.title;
     const assetTitle = found.asset.title;
     logger.info(`Early Access candidate found in rail: ${railName}`);
     logger.info(`Early Access asset title: ${assetTitle}`);
+    
     await earlyAccessPage.scrollToRail(railName);
     const assetLocator = await earlyAccessPage.findAssetLocatorByTitle(assetTitle);
     const labelVisible = await earlyAccessPage.isLabelVisibleForAsset(assetLocator, input.earlyAccessAttributeValue);
+    
     if (!labelVisible) {
         logger.assertion('Early Access label not visible on content thumbnail', false);
         return { loggedIn: true, foundInGraphQL: true, labelVisible: false };
     }
+    
     await earlyAccessPage.openAssetDetails(assetTitle);
     const episodeLabelVisible = await earlyAccessPage.isEpisodeLabelVisible(input.earlyAccessAttributeValue);
     logger.assertion('Early Access label visible on episode thumbnail', episodeLabelVisible);
+    logger.step(`Episode tag verification completed - labelVisible: ${episodeLabelVisible} (platform: ${isMobileWeb ? 'mweb' : 'desktop'})`);
+    
     return {
         loggedIn: true,
         foundInGraphQL: true,
@@ -217,6 +246,7 @@ export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: 
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     const playbackPage = new OTTPlaybackPage(page);
+    const parentalPin = (input?.parentalPin).trim();
     const gql = GraphQLHelper.getInstance(page);
     logger.step('Logging in before verifying the Early Access Continue Watching scenario');
     const login = await loginToOTT(page, { mode: input.mode });
@@ -246,6 +276,7 @@ export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: 
     }
     await earlyAccessPage.openAssetDetails(assetTitle);
     const playClicked = await earlyAccessPage.openLatestEarlyAccessEpisode(input.earlyAccessAttributeValue);
+    const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     if (!playClicked) {
         logger.assertion('Could not open the latest Early Access episode', false);
         return { loggedIn: true, foundInGraphQL: true, assetVisibleInContinueWatching: false };

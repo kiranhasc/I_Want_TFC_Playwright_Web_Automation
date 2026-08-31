@@ -69,7 +69,7 @@ test.describe('Home Page Launch', () => {
         expect(result.isCreateAccountLinkVisible).toBe(true);
     });
 
-    test.only('@Medium IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
+    test('@Medium IW3-T1880: Verify smooth navigation between Home, Shows, Movies, GMA, Search, and Profile icons', async ({ page }) => {
         const data = testCaseData['tc-auth-007-navigate-tabs'];
         const result = await navigateAndVerifyTabs({
                 page, input: {
@@ -143,7 +143,7 @@ test.describe('Home Page Launch', () => {
         expect(result.searchResultsDisplayed).toBe(data.expectedResultsPresent);
     });
 
-    test('@High @mWeb IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
+    test ('@High @mWeb IW3-T4335: Verify application version will be displayed at the bottom of the page', async ({ page }) => {
         test.setTimeout(90000)
         const data = testCaseData['tc-auth-016-application-version'];
         const result = await verifyApplicationVersion(page, {
@@ -154,7 +154,7 @@ test.describe('Home Page Launch', () => {
         expect(result.versionDisplayed).toBe(true);
     });
 
-    test('@High @mWeb IW3-T4338: Verify search result will be displayed based on the search input text', async ({ page }) => {
+    test ('@High @mWeb IW3-T4338: Verify search result will be displayed based on the search input text', async ({ page }) => {
         const data = testCaseData['tc-auth-013-terms-search-results'];
         const result = await searchFromTermsPage(page, {
             mode: data.mode,
@@ -190,14 +190,14 @@ test.describe('Home Page Launch', () => {
         expect(result.currentUrl).toContain(data.expectedUrlPart);
     });
 
-    test ('IW3-T1870: Verify user is able to login with valid credentials', async ({ page }) => {
+    test  ('IW3-T1870: Verify user is able to login with valid credentials', async ({ page }) => {
         const data = testCaseData['tc-auth-006-valid-login'];
         const result = await loginToOTT(page, { mode: data.mode });
         expect(result.isLoggedIn).toBe(true);
         expect(result.homeTabVisible).toBe(true);
     });
 
-    test('@High @mWeb IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
+    test ('@High @mWeb IW3-T1871: Verify the content starts playing on tapping the Play button for a free asset', async ({ page }) => {
         test.setTimeout(120000);
         const data = testCaseData['tc-play-001-free-asset-playback'];
         const result = await playFreeAsset(page, { mode: data.mode });

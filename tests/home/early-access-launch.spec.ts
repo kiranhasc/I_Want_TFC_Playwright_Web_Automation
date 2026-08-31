@@ -24,6 +24,8 @@ test.describe('Early Access Tag', () => {
             expectedUpgradeDescription: data.expectedUpgradeDescription,
             expectedMaybeLaterText: data.expectedMaybeLaterText,
             expectedUpgradeCtaText: data.expectedUpgradeCtaText,
+            parentalPin: data.pin,
+ 
         });
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
@@ -53,6 +55,8 @@ test.describe('Early Access Tag', () => {
             expectedUpgradeDescription: data.expectedUpgradeDescription,
             expectedMaybeLaterText: data.expectedMaybeLaterText,
             expectedUpgradeCtaText: data.expectedUpgradeCtaText,
+            parentalPin: data.pin,
+ 
         });
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
@@ -84,9 +88,11 @@ test.describe('Early Access Tag', () => {
             graphqlQueryName: data.graphqlQueryName,
             labelText: data.labelText,
             earlyAccessAttributeValue: data.earlyAccessAttributeValue,
+            parentalPin: data.pin,
         });
         expect(result.loggedIn).toBe(true);
         expect(result.foundInGraphQL).toBe(true);
         expect(result.assetVisibleInContinueWatching).toBe(false);
+        
     });
 });

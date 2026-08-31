@@ -9,6 +9,7 @@ test.describe('VPN Playback Restriction', () => {
             mode: data.mode,
             searchQuery: data.searchQuery,
             expectedVPNErrorMessage: data.expectedVPNErrorMessage,
+            parentalPin: data.pin,
         });
         expect(result.isLoggedIn).toBe(true);
         expect(result.vpnErrorVisible).toBe(true);

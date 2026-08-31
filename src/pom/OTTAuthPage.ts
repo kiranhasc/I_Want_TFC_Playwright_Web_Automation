@@ -156,6 +156,7 @@ export class OTTAuthPage {
     private readonly searchSectionHeading: PageElement;
     private readonly searchResultContainerSelector: PageElement;
     private readonly searchResultCandidateSelector: PageElement;
+    private readonly mobileSearchInput: PageElement;
     private readonly continueWatchingContent: PageElement;
     private readonly iWantLogo: PageElement;
     private continueWatchingGraphQL?: GraphQLResult<ContinueWatchingResponse>;
@@ -209,6 +210,7 @@ export class OTTAuthPage {
         this.gmaTab = { selector: '//div[@id ="gma"]' };
         this.searchBarIcon = { selector: 'img[alt="search-icon"]' };
         this.searchBar = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
+        this.mobileSearchInput = { selector: 'input[placeholder="Search documentation…"], input[placeholder*="Search"], input[type="search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
         this.clearSearchButton = { selector: 'button:has-text("Clear All"), button[aria-label*="clear"], [data-testid*="clear"], [title*="Clear"], [aria-label*="Clear All"], //img[@alt="clear"]' };
         this.accountIcon = { selector: 'img[alt="account"]' };
         this.synacorLogOutButton = { selector: '//span[text()="Logout"]' };
@@ -230,7 +232,7 @@ export class OTTAuthPage {
         this.continueWatchingItemTitle = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img[alt]' };
         this.continueWatchingCard = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.continueWatchingImageWithAlt = { selector: 'img[alt]' };
-        this.continueWatchingProgressSelector = { selector: '.progress, [aria-label*="progress"], [data-testid*="progress"], [class*="resume"]' };
+        this.continueWatchingProgressSelector = { selector: '.progress, [class*="progress"], [aria-label*="progress"], [data-testid*="progress"], [class*="resume"], [style*="width"]' };
         this.continueWatchingProgressBarFill = { selector: '.bg-iw-primary-gradient, [class*="bg-iw-primary-gradient"], div[style*="width"]' };
         this.continueWatchingProgressBarContainer = { selector: '.bg-iw-btn-bg, [class*="bg-iw-btn-bg"]' };
         this.continueWatchingCardAncestor = { selector: 'xpath=ancestor::div[contains(@class,"relative") or contains(@class,"card") or contains(@class,"cursor-pointer") or contains(@class,"group")][1]' };
@@ -506,9 +508,7 @@ export class OTTAuthPage {
     }
 
     getMobileSearchInputSelector(): string {
-        // For mweb, search input is inside the menu and may have different selector
-        // Try multiple selectors that might work inside mobile menu
-        return '//input[@placeholder="Search documentation…"]';
+        return this.mobileSearchInput.selector;
     }
 
     async getPasswordFieldType(): Promise<string> {
@@ -1321,37 +1321,24 @@ export class OTTAuthPage {
         return false;
     }
 
-    async isContinueWatchingRailVisible(): Promise<boolean> {
+     async isContinueWatchingRailVisible(): Promise<boolean> {
         try {
-            // For mweb, the continue watching rail doesn't exist, so just return true if authenticated
-            if (process.env.BROWSER === 'mchrome') {
-                const menuVisible = await this.page.locator('//p[text()="Menu"]').first().isVisible().catch(() => false);
-                return menuVisible;
-            }
-
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
-
-            // For desktop, use the normal scrolling check
-            const maxAttempts = 8;
-            const scrollWaitMs = 1000;
-
-            for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-                if (await locator.isVisible().catch(() => false)) {
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+                if (await locator.isVisible()) {
                     return true;
                 }
-                await locator.scrollIntoViewIfNeeded().catch(() => undefined);
-                await this.page.mouse.wheel(0, 600).catch(() => undefined);
-                await this.page.waitForTimeout(scrollWaitMs);
+                await locator.scrollIntoViewIfNeeded();
+                await this.page.mouse.wheel(0, 600);
+                await this.page.waitForTimeout(1000);
             }
-
-            // Final check
             await locator.waitFor({ state: 'visible', timeout: 15000 });
             return true;
         } catch {
             return false;
         }
     }
-
+ 
     private getContinueWatchingTitleLocator() {
         return this.page.locator(this.continueWatchingRail.selector).first();
     }
@@ -1472,11 +1459,14 @@ export class OTTAuthPage {
         const count = await cards.count();
         const details: Array<{ title: string; hasThumbnail: boolean; hasProgress: boolean }> = [];
         for (let i = 0; i < count; i++) {
-            const card = cards.nth(i);
-            const alt = (await card.getAttribute('alt')) || '';
-            const text = (await card.textContent()) || '';
-            const hasThumbnail = !!alt || (await card.getAttribute('src')) !== null;
-            const hasProgress = /progress|resume|%/i.test(text) || (await card.locator('[class*="progress"], [aria-label*="progress"], [data-testid*="progress"]').count()) > 0;
+            const image = cards.nth(i);
+            const card = image.locator('xpath=ancestor::div[contains(@class,"thumbnail") or contains(@class,"cursor-pointer")][1]');
+            const container = (await card.count()) ? card : image;
+            const alt = (await image.getAttribute('alt')) || '';
+            const text = (await container.textContent()) || '';
+            const hasThumbnail = !!alt || (await image.getAttribute('src')) !== null;
+            const hasProgress = /progress|resume|%/i.test(text)
+                || (await container.locator(this.continueWatchingProgressSelector.selector).count()) > 0;
             details.push({ title: alt.trim() || text.trim(), hasThumbnail, hasProgress });
         }
         return details;

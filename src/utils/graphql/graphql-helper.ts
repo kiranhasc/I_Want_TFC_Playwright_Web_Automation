@@ -96,9 +96,6 @@ export class GraphQLHelper {
         retry = true,
         ignoreCached = false
     ): Promise<GraphQLResult<T>> {
-        if (operationName === 'Asset') {
-            throw new Error('Asset GraphQL wait is disabled for post-playback flows');
-        }
         logger.info(`Waiting for GraphQL operation: ${operationName}`);
         const waitForCache = async (): Promise<GraphQLResult<T> | null> => {
             const startTime = Date.now();

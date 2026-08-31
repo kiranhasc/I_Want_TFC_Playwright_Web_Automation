@@ -29,8 +29,10 @@ export class OTTDetailsPage {
   private readonly videoElement: PageElement;
   private readonly vpnErrorMessage: PageElement;
   private readonly firstEpisodeCard: PageElement;
+  private readonly firstEpisodeCardByEpisodeOne: PageElement;
   private readonly episodesListItems: PageElement;
   private readonly seasonLabels: PageElement;
+  private readonly lastSeasonHeading: PageElement;
   private readonly seasonLabelContainer: PageElement;
   private readonly episodeItems: PageElement;
   private readonly episodeLabelSelector: PageElement;
@@ -38,6 +40,7 @@ export class OTTDetailsPage {
   private readonly episodeBufferIndicator: PageElement;
   private readonly iWantLogo: PageElement;
   private readonly videoPlayer: PageElement;
+  private readonly leftCarouselArrow: PageElement;
   private readonly episodeTitle: PageElement;
   private readonly playbackContentTitle: PageElement;
   private readonly playbackEpisodeTitle: PageElement;
@@ -108,6 +111,7 @@ export class OTTDetailsPage {
   private readonly subtitleDisplayIndicator: PageElement;
   private readonly nextEpisodeButton: PageElement;
   private readonly upNextMarker: PageElement;
+  private readonly upNextCloseButton: PageElement;
   private readonly backButton: PageElement;
   private readonly adScreenBackToPlayer: PageElement;
   private readonly fullscreenButton: PageElement;
@@ -248,7 +252,10 @@ export class OTTDetailsPage {
     this.showsSectionLink = { selector: 'nav >> text=Shows' };
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
     this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, img[alt="Episode 1"]' };
+    this.firstEpisodeCardByEpisodeOne = { selector: 'img[alt="Episode 1"], [data-testid*="episode-1"], .episode-item:has-text("Episode 1")' };
+    this.lastSeasonHeading = { selector: '.seasons-container h3, .season-title, [data-testid*="season"] h3, h3:has-text("Season")' };
     this.videoPlayer = { selector: 'video, [data-testid="video-player"], .video-player video, .player video' };
+    this.leftCarouselArrow = { selector: 'img[alt="arrow-left"], [alt="arrow-left"], [data-testid*="arrow-left"], [aria-label*="left"], button[aria-label*="left"], [class*="arrow-left"]' };
     this.episodeTitle = { selector: '[data-testid="episode-title"], .episode-title, h2:has-text("Episode")' };
     this.playbackContentTitle = { selector: '[data-testid="player-title"], .player-title, .video-title, .content-title, .player-header h1, h1' };
     this.playbackEpisodeTitle = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode"), text=/Episode\\s+\\d+/i' };
@@ -1430,7 +1437,7 @@ export class OTTDetailsPage {
       if (await this.page.isClosed()) return;
 
       const episodeCandidates = [
-        this.page.locator('xpath=//img[@alt="Episode 1"]/ancestor::div[.//p[normalize-space()="Episode 1"]][1]').first(),
+        this.page.locator(this.firstEpisodeCardByEpisodeOne.selector).first(),
         this.page.locator(this.firstEpisodeCard.selector).first(),
         this.page.locator(this.episodeItems.selector).first(),
       ];
@@ -1472,7 +1479,7 @@ export class OTTDetailsPage {
   async clickLastSeasonIfAvailable(): Promise<boolean> {
     logger.elementInteraction('click', 'last season heading');
     try {
-      const seasonHeading = this.page.locator('xpath=//*[contains(@class,"seasons-container")]/div/div/div/h3').last();
+      const seasonHeading = this.page.locator(this.lastSeasonHeading.selector).last();
       const count = await seasonHeading.count().catch(() => 0);
       if (!count) return false;
       await seasonHeading.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
@@ -3912,7 +3919,7 @@ export class OTTDetailsPage {
       if (!beforeState.visibleItems.length) {
         return false;
       }
-      const leftArrow = this.page.locator("(//body)[1]//img[@alt='arrow-left']").first();
+      const leftArrow = this.page.locator(this.leftCarouselArrow.selector).first();
       const arrowExists = await leftArrow.count().catch(() => 0);
       if (!arrowExists) {
         return false;
@@ -4440,16 +4447,16 @@ export class OTTDetailsPage {
   }
 
   async isUpNextCloseButtonVisible(timeout: number = 30000): Promise<boolean> {
-    const closeButton = this.page.locator('//img[contains(@class, "player-upNextWidget-close-button-icon")]').first();
+    const closeButton = this.page.locator(this.upNextCloseButton.selector).first();
     await closeButton.waitFor({ state: 'visible', timeout }).catch(() => undefined);
     return await closeButton.isVisible().catch(() => false);
   }
 
   async clickUpNextCloseButton(): Promise<void> {
     logger.elementInteraction('click', 'Up Next close button');
-    const closeButton = this.page.locator('//img[contains(@class, "player-upNextWidget-close-button-icon")]').first();
+    const closeButton = this.page.locator(this.upNextCloseButton.selector).first();
     await closeButton.waitFor({ state: 'visible', timeout: 10000 });
-    const clickableParent = closeButton.locator('//img[contains(@class, "player-upNextWidget-close-button-icon")]').first();
+    const clickableParent = closeButton.locator(this.upNextCloseButton.selector).first();
     if (await clickableParent.count()) {
       await clickableParent.click({ timeout: 10000 }).catch(() => closeButton.click({ timeout: 10000, force: true }));
       return;
@@ -5278,7 +5285,24 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
   async getParentalPinPlaybackPromptText(): Promise<string> {
     return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
   }
+  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
+    const continueAction = nextMethod ?? (async () => undefined);
+    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (!promptVisible) {
+      await continueAction();
+      return false;
+    }
 
+    const parentalPin = (pin ?? '').trim();
+    if (parentalPin) {
+      await this.enterParentalPlaybackPin(parentalPin);
+      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+    }
+
+    await continueAction();
+    return true;
+  }
   async enterParentalPlaybackPin(pin: string): Promise<void> {
     logger.elementInteraction('type', 'Parental playback PIN input');
     const inputs = this.page.locator(this.parentalPinEntryInputs.selector);

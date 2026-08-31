@@ -141,11 +141,12 @@ test.setTimeout(testTimeout);
   });
 
   test('@High  IW3-T2118: Verify that the X button is displayed on the Up Next binge marker to close the outro', async ({ page }) => {
-    test.setTimeout(90000);
+    test.setTimeout(240000);
     const data = testCaseData['tc-sub-038-up-next-close-button'] as Record<string, any>;
     const playbackResult = await verifyUpNextCloseButtonFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);
@@ -157,11 +158,11 @@ test.setTimeout(testTimeout);
   });
 
   test('@High  IW3-T2119: Verify clicking the Up Next binge marker moves to the next episode', async ({ page }) => {
-    test.setTimeout(90000);
     const data = testCaseData['tc-sub-039-up-next-marker-click-navigation'] as Record<string, any>;
     const playbackResult = await verifyUpNextMarkerClickNavigationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);

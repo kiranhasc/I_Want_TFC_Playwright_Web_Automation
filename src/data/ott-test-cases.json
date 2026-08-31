@@ -10,7 +10,7 @@
     },
     "tc-auth-003-forgot-password-proceed": {
         "email": "abcd@gmail.com",
-        "expectedOTPHeading": "Verify your identity"
+        "expectedOTPIdentity": "Verify your identity"
     },
     "tc-auth-004-forgot-password-mobile": {
         "mobileNumber": "976543210",
@@ -186,7 +186,8 @@
     "tc-auth-019-vpn-playback-restriction": {
         "mode": "valid",
         "searchQuery": "Incognito",
-        "expectedVPNErrorMessage": "We detected that you’re using a VPN or proxy. Please disable it and try again."
+        "expectedVPNErrorMessage": "We detected that you’re using a VPN or proxy. Please disable it and try again.",
+        "pin": "1234"
     },
     "tc-home-top10-tag": {
         "mode": "valid"
@@ -205,20 +206,30 @@
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
         "earlyAccessAttributeValue": "early_access",
+        "recentlyAddedAttributeValue": "recently_added",
         "expectedUpgradeTitle": "Unlock Early Access",
         "expectedUpgradeDescription": "Upgrade to Premium for exclusive early viewing and be the first to watch new content.",
         "expectedMaybeLaterText": "Maybe Later",
-        "expectedUpgradeCtaText": "Upgrade to Watch Now"
+        "expectedUpgradeCtaText": "Upgrade to Watch Now",
+        "mwebExpectedUpgradeMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "mwebExpectedErrorCode": "EPS-401-24",
+        "mwebExpectedCtaText": "Login",
+        "pin": "1234"
     },
     "tc-discovery-003-early-access-popup": {
         "mode": "freeUser",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
         "earlyAccessAttributeValue": "early_access",
+        "recentlyAddedAttributeValue": "recently_added",
         "expectedUpgradeTitle": "Unlock Early Access",
         "expectedUpgradeDescription": "Upgrade to Premium for exclusive early viewing and be the first to watch new content.",
         "expectedMaybeLaterText": "Maybe Later",
-        "expectedUpgradeCtaText": "Upgrade to Watch Now"
+        "expectedUpgradeCtaText": "Upgrade to Watch Now",
+        "mwebExpectedUpgradeMessage": "A valid subscription is required to view this content. Please subscribe or renew your plan.",
+        "mwebExpectedErrorCode": "EPS-401-24",
+        "mwebExpectedCtaText": "Login",
+        "pin": "1234"
     },
     "tc-discovery-004-early-access-episode-tag": {
         "mode": "freeUser",
@@ -230,7 +241,8 @@
         "mode": "valid",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
-        "earlyAccessAttributeValue": "early_access"
+        "earlyAccessAttributeValue": "early_access",
+        "pin": "1234"
     },
     "tc-002-early-access-may-be-later": {
         "mode": "freeUser",
@@ -773,11 +785,18 @@
     },
     "tc-sub-038-up-next-close-button": {
         "mode": "valid",
-        "graphqlQueryName": "Collection"
+        "query": "Precious Hearts Romances Presents: Araw Gabi",
+        "expectedTitle": "Precious Hearts Romances Presents: Araw Gabi",
+        "expectedEpisode": "Precious Hearts Romances Presents: Araw Gabi",
+        "pin": "1234"
     },
     "tc-sub-039-up-next-marker-click-navigation": {
         "mode": "valid",
-        "graphqlQueryName": "Collection"
+        "query": "Precious Hearts Romances Presents: Araw Gabi",
+        "expectedTitle": "Precious Hearts Romances Presents: Araw Gabi",
+        "expectedEpisode": "Precious Hearts Romances Presents: Araw Gabi",
+        "graphqlQueryName": "Collection",
+        "pin": "1234"
     },
     "tc-sub-030-player-controls-autodismiss": {
         "mode": "valid",

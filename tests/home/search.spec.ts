@@ -6,7 +6,7 @@ import { verifySearchExactTitleMatchAtTop } from '../../src/businessFunction/ott
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Search navigation', () => {
-  test('@High IW3-T2060 : Verify the Search icon is visible in the top navigation bar on all pages', async ({ page }) => { //MWeb 
+  test('@High IW3-T2060 : Verify the Search icon is visible in the top navigation bar on all pages', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-001-search-icon'];
     const result = await verifySearchIconVisibilityOnAllPages(page, {
@@ -15,11 +15,11 @@ test.describe('Search navigation', () => {
     expect(result.homePageSearchIconVisible).toBe(true);
     expect(result.moviesPageSearchIconVisible).toBe(true);
     expect(result.showsPageSearchIconVisible).toBe(true);
-    // expect(result.watchlistPageSearchIconVisible).toBe(true);
+    expect(result.watchlistPageSearchIconVisible).toBe(true);
     expect(result.gmaPageSearchIconVisible).toBe(true);
   });
 
-  test('@High IW3-T2062 : Verify that the user can type a search query in the input box', async ({ page }) => { //MWeb
+  test('@High IW3-T2062 : Verify that the user can type a search query in the input box', async ({ page }) => {
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-002-search-query'];
     const result = await verifySearchQueryTyping(page, {
@@ -150,7 +150,7 @@ test.describe('Search navigation', () => {
     expect(result.searchInputValue).toBe('');
   });
 
-  test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }) => { //MWeb 
+test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }) => { //MWeb
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-010-search-placeholder'];
     const result = await navigateAndVerifyTabs(page, {

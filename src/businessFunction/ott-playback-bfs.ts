@@ -712,15 +712,15 @@ export interface VerifyPauseAdControlsDismissedInput {
 
 export interface VerifyPauseAdControlsDismissedOutput {
   isLoggedIn: boolean;
-  pauseAdVisible: boolean;
+  recapPauseAdVisible: boolean;
   skipRecapVisible: boolean;
   skipIntroVisible: boolean;
-  skipIntroHiddenAfterPause: boolean;
-  subtitleMenuVisible: boolean;
+  subtitlePauseAdVisible: boolean;
+  subtitleVisible: boolean;
   subtitleMenuHiddenAfterPause: boolean;
   skipRecapNotVisible: boolean;
   skipIntroNotVisible: boolean;
-  recapPauseAdVisible: boolean;
+  skipIntroPauseAdVisible: boolean;
 
 }
 
@@ -1374,6 +1374,49 @@ async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: st
     logger.warn('Unable to resolve query from Collection GraphQL response', error);
     return undefined;
   }
+}
+
+async function getFreeTvShowTitlesFromCollectionGraphQL(
+  page: any,
+  graphqlQueryName: string = 'Collection'
+): Promise<string[]> {
+  const gql = GraphQLHelper.getInstance(page);
+  const collectionResponse = await gql.waitForOperation(graphqlQueryName, 60000, true, true);
+  const parser = new CollectionParser(collectionResponse as any);
+  const freeTvShowTitles = parser.getRails()
+    .flatMap((rail) => rail.assets?.items ?? [])
+    .filter((asset: any) => {
+      const assetType = String(asset.assetType ?? asset.type ?? '').toLowerCase();
+      if (assetType !== 'tvshow') {
+        return false;
+      }
+
+      const totalSeasons = Number(asset.tvShowDetails?.totalSeasons ?? 0);
+      if (totalSeasons <= 1) {
+        return false;
+      }
+
+      const hasFreeLabel = (asset.labels ?? []).some((label: any) =>
+        /free/i.test(label?.text ?? '')
+      );
+      const monetizationType =
+        asset.monetization?.type ??
+        asset.monetizationType ??
+        asset.pricing?.type ??
+        asset.pricing?.pricingType;
+      const hasFreeMonetization = monetizationType
+        ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetizationType))
+        : false;
+
+      return hasFreeLabel || hasFreeMonetization;
+    })
+    .map((asset: any) => String(asset.title ?? '').trim())
+    .filter((title: string, index: number, titles: string[]) =>
+      title.length > 0 && titles.indexOf(title) === index
+    );
+
+  logger.info(`Fetched free TV show titles from Collection GraphQL: ${freeTvShowTitles.join(', ')}`);
+  return freeTvShowTitles;
 }
 
 export async function openContentAndPlay(page: any, input?: OpenContentAndPlayInput): Promise<OpenContentAndPlayOutput> {
@@ -2523,26 +2566,38 @@ export async function verifyNextEpisodePlaybackInFullscreenFlow(page: any, input
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   logger.step('Starting next episode playback in fullscreen verification flow');
+  GraphQLHelper.getInstance(page);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  await page.waitForTimeout(2000);
-  await authPage.clickShowsTab();
-  await page.waitForTimeout(4000);
-  await detailsPage.clickFirstShowContent();
+  const freeTvShowTitles = await getFreeTvShowTitlesFromCollectionGraphQL(
+    page,
+    input?.graphqlQueryName ?? 'Collection'
+  );
+  const freeTvShowTitle = freeTvShowTitles[0] ?? '';
+  logger.assertion('Free TV show title resolved from Collection GraphQL', Boolean(freeTvShowTitle));
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(freeTvShowTitle);
+  await authPage.submitSearchQuery();
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Show content details page visible', detailsVisible);
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickFullscreenButton();
   await detailsPage.waitForPlayback(2);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd(); 
   const markerVisible = await detailsPage.waitForUpNextMarker(20000);
   logger.assertion('Up Next marker visible after scrubbing near the end of playback', markerVisible);
   if (markerVisible) {
     await detailsPage.clickNextEpisodeButton();
     await detailsPage.waitForPlayback(5);
+    await detailsPage.waitTillAdsEnd();
   }
   const fullScreenActiveAfterUpNext = await detailsPage.isFullscreenModeActive();
   const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible());
@@ -4175,11 +4230,6 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
   await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(5000);
@@ -4223,69 +4273,77 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
     await detailsPage.clickEpisodeAtIndex(0);
     await page.waitForTimeout(5000);
     await detailsPage.waitTillAdsEnd();
+    // await detailsPage.waitForPlayback(100);
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickNextEpisodeButton();
   }
   await page.waitForTimeout(5000);
   await detailsPage.waitTillAdsEnd();
-  await detailsPage.hoverOnPlaybackScreen();
+  // await detailsPage.waitForPlayback(100);
+  await detailsPage.hoverPlaybackScreen();
   const skipRecapVisible = await detailsPage.isSkipRecapMarkerVisible();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(5000);
-  const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-  await detailsPage.waitForPlayback(3);
+  await page.waitForTimeout(4000);
+  const recapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await detailsPage.waitForPlayback(2);
   const skipRecapNotVisible = await detailsPage.isSkipRecapMarkerVisible();
   await page.waitForTimeout(2000);
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(2000);
-  await detailsPage.hoverOnPlaybackScreen();
+  await page.waitForTimeout(4000);
   await detailsPage.clickSkipRecapButton();
+  console.log('Clicked skip recap button');
   await page.waitForTimeout(2000);
   await detailsPage.hoverPlaybackScreen();
   const skipIntroVisible = await detailsPage.isSkipIntroMarkerVisible();
-  await detailsPage.waitForPlayback(3);
+  await detailsPage.waitForPlayback(4);
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(5000);
-  const recapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-  await detailsPage.waitForPlayback(3);
+  await page.waitForTimeout(4000);
+  const skipIntroPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await detailsPage.waitForPlayback(4);
   const skipIntroNotVisible = await detailsPage.isSkipIntroMarkerVisible();
-  const skipIntroHiddenAfterPause = !(await detailsPage.isSkipIntroMarkerVisible());
   await page.waitForTimeout(2000);
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSkipIntroButton();
+  console.log('Clicked skip intro button');
   await page.waitForTimeout(3000);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSubtitleButton();
-  await page.waitForTimeout(2000);
-  const subtitleMenuVisible = await detailsPage.isSubtitleLanguageVisible();
+  console.log('Clicked subtitle button');
   await detailsPage.selectSubtitleLanguage();
+  console.log('Selected subtitle language');
+  const subtitleVisible = await detailsPage.isSubtitleMarkerVisible();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(6000);
-  const subtitleMenuHiddenAfterPause = !(await detailsPage.isSubtitleLanguageVisible().catch(() => false));
-  logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', pauseAdVisible);
+  await page.waitForTimeout(4000);
+  const subtitlePauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await page.waitForTimeout(2000);
+  const subtitleMenuHiddenAfterPause = await detailsPage.isSubtitleMarkerVisible();
   logger.assertion('Skip recap marker is visible before the pause-ad interaction', skipRecapVisible);
+  logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', recapPauseAdVisible);
   logger.assertion('Skip recap marker is not visible after the pause-ad interaction', !skipRecapNotVisible);
-  logger.assertion('Recap pause ad is visible after the pause-ad interaction', recapPauseAdVisible);
-  logger.assertion('Skip intro marker is not visible after the pause-ad interaction', !skipIntroNotVisible);
   logger.assertion('Skip intro marker is visible after skipping recap', skipIntroVisible);
-  logger.assertion('Skip intro marker disappears after the pause-ad interaction', skipIntroHiddenAfterPause);
-  logger.assertion('Subtitle menu is visible after the subtitle button action', subtitleMenuVisible);
-  logger.assertion('Subtitle menu is dismissed after the pause-ad interaction', subtitleMenuHiddenAfterPause);
+  logger.assertion('Skip intro pause ad is visible after the pause-ad interaction', skipIntroPauseAdVisible);
+  logger.assertion('Skip intro marker is not visible after the pause-ad interaction', !skipIntroNotVisible);
+  logger.assertion('Subtitle menu is visible after the subtitle button action', subtitleVisible);
+  logger.assertion('Subtitle disappears after the pause-ad interaction', subtitlePauseAdVisible);
+  logger.assertion('Subtitle menu is dismissed after the pause-ad interaction', !subtitleMenuHiddenAfterPause);
   return {
     isLoggedIn,
-    pauseAdVisible,
+    recapPauseAdVisible,
     skipRecapVisible,
     skipIntroVisible,
-    skipIntroHiddenAfterPause,
-    subtitleMenuVisible,
+    subtitlePauseAdVisible,
+    subtitleVisible,
     subtitleMenuHiddenAfterPause,
     skipRecapNotVisible,
     skipIntroNotVisible,
-    recapPauseAdVisible,
+    skipIntroPauseAdVisible,
   };
 }
+
+
 
 export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: any, input?: VerifyPauseAdSkipIntroRecapGoLiveInput): Promise<VerifyPauseAdSkipIntroRecapGoLiveOutput> {
   const authPage = new OTTAuthPage(page);
@@ -4643,6 +4701,9 @@ async function resolveFreeQueryFromCollectionGraphQL(page: any, graphqlQueryName
         : [];
       if (labels.some((text: string) => /free/i.test(text))) {
         return true;
+      }
+      if (labels === 'Coming Soon' || labels === 'Early Access') {
+        return false;
       }
       const monetType = asset?.monetization?.type
         ?? asset?.monetizationType

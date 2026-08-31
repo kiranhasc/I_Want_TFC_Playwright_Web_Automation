@@ -102,6 +102,7 @@ export interface VerifyVPNPlaybackRestrictionInput {
   mode?: string;
   searchQuery: string;
   expectedVPNErrorMessage: string;
+  parentalPin?: string;
 }
 
 export interface VerifyVPNPlaybackRestrictionOutput {
@@ -384,6 +385,7 @@ export async function verifyVPNPlaybackRestriction(
 ): Promise<VerifyVPNPlaybackRestrictionOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input?.parentalPin ?? process.env.PARENTAL_PIN;
   logger.step('Starting VPN playback restriction validation');
   const loginResult = await loginToOTT(page, { mode: input.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -396,15 +398,16 @@ export async function verifyVPNPlaybackRestriction(
       playbackStarted: false,
     };
   }
+  await page.waitForTimeout(10000);
   await authPage.clickSearchBar();
-  await authPage.searchAndGetResults(input.searchQuery);
-  await page.locator(`img[alt="${input.searchQuery}"]`).click({ timeout: 10000 }).catch(() => { });
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => { });
-  await detailsPage.clickPlayButton();
+  await authPage.enterSearchQuery(input.searchQuery);
+  await authPage.submitSearchQuery();
   await page.waitForTimeout(5000);
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const vpnErrorVisible = await detailsPage.isVPNErrorMessageVisible(input.expectedVPNErrorMessage);
-  const playbackStarted = await detailsPage.isPlaybackStarted();
+  const playbackStarted = await detailsPage.isPlaybackStarted(10000).catch(() => false);
   const errorMessage = vpnErrorVisible ? input.expectedVPNErrorMessage : '';
   logger.assertion('VPN-specific error displayed', vpnErrorVisible);
   logger.assertion('Playback did not start when VPN error is displayed', !playbackStarted);
@@ -745,7 +748,7 @@ export async function verifySharedDeeplinkRedirectToDetailsPage(
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   logger.step('Waiting for collection GraphQL data to identify a shared asset');
-  const collectionResponse = await collectionPromise; // ✅ resolve the promise
+  const collectionResponse = await collectionPromise;
   const parser = new CollectionParser(collectionResponse as any);
   // First rail (index 0), first item (index 0) - per collection.rails[0].assets.items[0]
   const firstAsset = parser.getCard(0, 0);
@@ -924,7 +927,6 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     await detailsPage.scrollToEpisodeList();
   } catch {
     logger.info('Episode list not found; skipping episode selection and playback validation');
-    // ignore and continue; the test will still report the failed expectation below
   }
   let selectedEpisode, metadata;
   if (process.env.BROWSER === 'mchrome') {

@@ -165,15 +165,15 @@ export class OTTPlaybackPage {
         return true;
     }
 
-    async clickFirstAvailablePlayButton(): Promise<boolean> {
+    async clickFirstAvailablePlayButton(timeout: number = 15000): Promise<boolean> {
         const playTarget = this.page.getByText(/Play/i).filter({ hasNotText: /Subscribe/i }).first();
         const isVisible = await playTarget.isVisible().catch(() => false);
         if (!isVisible) {
             return false;
         }
         await playTarget.click({ force: true });
-        await this.page.waitForURL(/\/player\//, { timeout: 60000 }).catch(() => undefined);
-        await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+        await this.page.waitForURL(/\/player\//, { timeout }).catch(() => undefined);
+        await this.page.waitForLoadState('domcontentloaded', { timeout }).catch(() => undefined);
         await this.page.waitForTimeout(8000);
         return true;
     }

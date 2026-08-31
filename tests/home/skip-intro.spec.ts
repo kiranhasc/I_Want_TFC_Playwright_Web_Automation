@@ -9,8 +9,8 @@ const testTimeout = process.env.BROWSER === 'mchrome'
 test.setTimeout(testTimeout);
 
 test.describe('Playback skip intro marker', () => {
-
-  test('@High @D IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
+  
+  test('@High @mWeb IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
     const data = testCaseData['tc-disc-004-skip-intro'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipIntroMarkerDuringPlayback(page, {
@@ -36,7 +36,7 @@ test.describe('Playback skip intro marker', () => {
     expect(playbackResult.timeBeforeSkipIntro).not.toBe(playbackResult.timeAfterSkipIntro);
   });
 
-  test('@High @D IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
+  test('@High @mWeb IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
     test.setTimeout(180000);
     const data = testCaseData['tc-disc-005-skip-recap'];
     const loginResult = await loginToOTT(page, { mode: data.mode });

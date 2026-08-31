@@ -121,7 +121,7 @@ class Logger {
   /**
      * Log test step
      */
-  public step(stepName: string, meta?: any, login?: any, flow?: any): void {
+  public step(stepName: string, meta?: any): void {
     this.info(`STEP: ${stepName}`, meta);
   }
 

@@ -252,7 +252,8 @@ export class OTTDetailsPage {
     this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
     this.showsSectionLink = { selector: 'nav >> text=Shows' };
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
-    this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, img[alt="Episode 1"]' };
+    this.firstEpisodeCard ={ selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, main [role="button"], main [cursor="pointer"]' };
+    this.episodesListItems = { selector: 'xpath=//div[contains(@class,"episodes-list") or contains(@class,"episode-list")]/descendant::div[contains(@class,"episode") or contains(@data-testid,"episode") or contains(normalize-space(.),"S1 E") or contains(normalize-space(.),"S2 E")]' };
     this.firstEpisodeCardByEpisodeOne = { selector: 'img[alt="Episode 1"], [data-testid*="episode-1"], .episode-item:has-text("Episode 1")' };
     this.lastSeasonHeading = { selector: '.seasons-container h3, .season-title, [data-testid*="season"] h3, h3:has-text("Season")' };
     this.videoPlayer = { selector: 'video, [data-testid="video-player"], .video-player video, .player video' };
@@ -624,6 +625,7 @@ export class OTTDetailsPage {
       }
     }
   }
+ 
 
   async clickShowContentRail(): Promise<void> {
     logger.elementInteraction('click', 'first rail content thumbnail');
@@ -1428,50 +1430,30 @@ export class OTTDetailsPage {
     };
   }
 
-  async clickFirstEpisodeCard(): Promise<void> {
+async clickFirstEpisodeCard(): Promise<void> {
     logger.elementInteraction('click', 'first episode card');
+    const episodeCard = await this.page.locator(this.firstEpisodeCard.selector).first();
     try {
       if (await this.page.isClosed()) return;
-
-      const episodeCandidates = [
-        this.page.locator(this.firstEpisodeCardByEpisodeOne.selector).first(),
-        this.page.locator(this.firstEpisodeCard.selector).first(),
-        this.page.locator(this.episodeItems.selector).first(),
-      ];
-      let clicked = false;
-      for (const episodeCard of episodeCandidates) {
-        try {
-          await episodeCard.waitFor({ state: 'visible', timeout: 5000 });
-          await episodeCard.scrollIntoViewIfNeeded();
-          await episodeCard.click({ timeout: 15000 });
-          clicked = true;
-          logger.debug('First episode card clicked successfully');
-          break;
-        } catch {
-          // Try the next episode-card representation.
-        }
-      }
-      if (!clicked) {
-        logger.debug('Could not locate a clickable first episode card');
+      if (await episodeCard.count()) {
+        await episodeCard.waitFor({ state: 'visible', timeout: 15000 });
+        await episodeCard.scrollIntoViewIfNeeded();
+        await episodeCard.click({ timeout: 15000 });
       }
     } catch (err) {
       logger.debug('clickFirstEpisodeCard failed', err);
       return;
     }
-    
-    // Wait for page to load but don't wait for networkidle (video players have continuous network activity)
     try {
       if (this.page.isClosed()) return;
-      await this.page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
-      await this.page.waitForTimeout(3000); // Give content time to render
-      if (!(await this.isPlayerScreenVisible().catch(() => false))) {
-        logger.debug('Episode card did not open playback; clicking configured Play button');
-        await this.clickPlayButton();
-      }
+      await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 });
+      await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await this.page.waitForTimeout(5000);
     } catch (err) {
       logger.debug('Post-click waits failed or page closed', err);
     }
   }
+ 
 
   async clickLastSeasonIfAvailable(): Promise<boolean> {
     logger.elementInteraction('click', 'last season heading');
@@ -3980,32 +3962,12 @@ export class OTTDetailsPage {
       : await playerTitle.isVisible().catch(() => false);
   }
 
-  async isPlayerScreenVisible(): Promise<boolean> {
-    const playerSelectors = [
-      this.playerScreen.selector,
-      '[data-testid*="player"]',
-      '.player-screen',
-      'video',
-    ];
-    const deadline = Date.now() + 20000;
-
-    for (const selector of playerSelectors) {
-      const remaining = deadline - Date.now();
-      if (remaining <= 0) break;
-
-      const player = this.page.locator(selector).first();
-      try {
-        await player.waitFor({ state: 'visible', timeout: Math.min(5000, remaining) });
-        if (await player.isVisible().catch(() => false)) {
-          return true;
-        }
-      } catch {
-        // Try the next player representation.
-      }
-    }
-
-    return false;
+    async isPlayerScreenVisible(): Promise<boolean> {
+    const player = this.page.locator(this.playerScreen.selector).first();
+    await player.waitFor({ state: 'visible', timeout: 20000 });
+    return true;
   }
+ 
 
   async isPlayerScreenHidden(): Promise<boolean> {
     try {

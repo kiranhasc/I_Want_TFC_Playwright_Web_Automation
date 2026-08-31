@@ -2053,15 +2053,20 @@ export class OTTAuthPage {
     async clickSearchBar(): Promise<void> {
         logger.elementInteraction('click', 'Search bar');
         try {
-            const searchIcon = this.page.locator(this.searchBarIcon.selector).first();
-            await searchIcon.waitFor({ state: 'visible', timeout: 10000 });
-            await searchIcon.click({ timeout: 10000 });
-            const searchInput = this.page.locator('input[placeholder="Search by title, actor, genre..."]').first();
-            await searchInput.waitFor({ state: 'visible', timeout: 10000 });
-            logger.debug('Search icon clicked and placeholder input is visible');
+            const searchBtn = await this.page.locator(this.searchButton.selector).first();
+            if (await searchBtn.count()) {
+                await searchBtn.waitFor({ state: 'visible', timeout: 5000 });
+                await searchBtn.click();
+                return;
+            }
+        } catch (err) {
+            logger.debug('Role-based search button click failed', err);
+        }
+        try {
+            await this.pageUtils.safeClick(this.searchBarIcon);
             return;
         } catch (err) {
-            logger.debug('Search icon or placeholder input was not available', err);
+            logger.debug('Search icon click failed', err);
         }
         try {
             await this.pageUtils.safeClick(this.searchBar);
@@ -2073,7 +2078,6 @@ export class OTTAuthPage {
         await input.waitFor({ state: 'visible', timeout: 10000 });
         await input.click();
     }
-
     async hoverIWantOriginalsFirstCardAndDetectPreview(timeout: number = 20000): Promise<boolean> {
         try {
             const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();

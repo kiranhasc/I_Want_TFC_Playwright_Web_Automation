@@ -140,7 +140,7 @@ test.setTimeout(testTimeout);
     expect(playbackResult.nextEpisodePlaybackStarted).toBe(true);
   });
 
-  test.only('@High  IW3-T2118: Verify that the X button is displayed on the Up Next binge marker to close the outro', async ({ page }) => {
+  test('@High  IW3-T2118: Verify that the X button is displayed on the Up Next binge marker to close the outro', async ({ page }) => {
     test.setTimeout(240000);
     const data = testCaseData['tc-sub-038-up-next-close-button'] as Record<string, any>;
     const playbackResult = await verifyUpNextCloseButtonFlow(page, {

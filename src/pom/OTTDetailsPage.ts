@@ -5068,6 +5068,25 @@ export class OTTDetailsPage {
     return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
   }
 
+  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
+    const continueAction = nextMethod ?? (async () => undefined);
+    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (!promptVisible) {
+      await continueAction();
+      return false;
+    }
+
+    const parentalPin = (pin ?? '').trim();
+    if (parentalPin) {
+      await this.enterParentalPlaybackPin(parentalPin);
+      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+    }
+
+    await continueAction();
+    return true;
+  }
+
   async enterParentalPlaybackPin(pin: string): Promise<void> {
     logger.elementInteraction('type', 'Parental playback PIN input');
     const inputs = this.page.locator(this.parentalPinEntryInputs.selector);

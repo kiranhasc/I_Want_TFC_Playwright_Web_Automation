@@ -2061,16 +2061,19 @@ export class OTTAuthPage {
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
         await this.page.waitForTimeout(2500);
-        const locator = this.page.locator(this.searchResultImages.selector).first();
-        const altText = await locator.getAttribute('alt').catch(() => '');
-        const normalizedQuery = query.trim().toLowerCase();
+        const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const normalizedQuery = normalize(query);
         logger.info(`Normalized query: ${normalizedQuery}`);
-        const normalizedAltText = (altText || '').toLowerCase();
-        logger.info(`Normalized alt text: ${normalizedAltText}`);
+
         if (normalizedQuery) {
-            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+            const resultTitles = await this.getSearchResultTitles();
+            const matchingTitle = resultTitles.find(title => normalize(title).includes(normalizedQuery));
+            logger.info(`Search result title match: ${matchingTitle ?? 'none'}`);
+            return Boolean(matchingTitle);
         }
-        return /(search|result|thumbnail|poster|image)/i.test(altText || '');
+
+        const visibleImages = this.page.locator(this.searchResultImages.selector).filter({ visible: true });
+        return await visibleImages.count() > 0;
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {

@@ -184,6 +184,7 @@ test.describe('Search navigation', () => {
     const result = await playPremiumContentFromSearch(page, {
       mode: data?.mode,
       searchQuery: data?.searchQuery,
+      parentalPin: data?.pin,
     });
     expect.soft(result.isLoggedIn).toBe(true);
     expect.soft(result.searchQueryTyped).toBe(true)

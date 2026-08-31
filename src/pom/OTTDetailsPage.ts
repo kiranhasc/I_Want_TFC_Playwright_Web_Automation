@@ -278,17 +278,17 @@ export class OTTDetailsPage {
     this.skipAdButton = { selector: '//button[@aria-label="Skip Ad"]' };
     this.learnMoreLink = { selector: 'a:has-text("Learn More"), button:has-text("Learn More"), text=/Learn More/i' };
     this.addToWatchlistButton = { selector: 'img[alt*="add_watchlist"]' };
-    this.addToWatchlistButtonIcon = { selector: '#watchlist' }
-    this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"]' };
+    this.addToWatchlistButtonIcon = { role: 'img', text: '/assets/button_icons/focused/add_watchlist.svg' };
+     this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"]' };
     this.addWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/add_watchlist.svg' };
-    this.removeWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/remove_watchlist.svg' };
+    this.removeWatchlistIcon = {selector : "//img[@alt='/assets/button_icons/focused/remove_watchlist.svg']"};
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.cinemaOnePhSection = { selector: 'img[alt="Cinema One PH"]' };
     this.pauseBanner = { selector: '.pause-banner' };
     this.addToWatchlistButton = { selector: 'xpath=//*[@id="watchlist"]/div' };
     this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], [data-testid*="remove-watchlist"]' };
     this.addWatchlistIcon = { selector: 'img[alt*="add_watchlist"], img[src*="add_watchlist"], img[alt*="add to watchlist"], [data-testid*="add-watchlist"]' };
-    this.removeWatchlistIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], img[alt*="remove from watchlist"], [data-testid*="remove-watchlist"]' };
+    // this.removeWatchlistIcon = { selector: "'//img[@alt='/assets/button_icons/focused/remove_watchlist.svg']'" };
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.watchlistFullPopup = { selector: "//p[contains(normalize-space(),'Your watchlist is full')]" };
     this.myWatchlistLink = { selector: 'div#my_watchlist' };
@@ -5134,6 +5134,25 @@ export class OTTDetailsPage {
 
   async getParentalPinPlaybackPromptText(): Promise<string> {
     return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
+  }
+  
+  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
+    const continueAction = nextMethod ?? (async () => undefined);
+    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (!promptVisible) {
+      await continueAction();
+      return false;
+    }
+
+    const parentalPin = (pin ?? '').trim();
+    if (parentalPin) {
+      await this.enterParentalPlaybackPin(parentalPin);
+      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+    }
+
+    await continueAction();
+    return true;
   }
 
   async enterParentalPlaybackPin(pin: string): Promise<void> {

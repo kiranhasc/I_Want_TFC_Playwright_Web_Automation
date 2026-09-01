@@ -527,6 +527,7 @@ export interface PlayPremiumContentFromSearchInput {
   mode?: string;
   searchQuery: string;
   expectedPlayback?: boolean;
+  parentalPin?: string;
 }
 
 export interface PlayPremiumContentFromSearchOutput {
@@ -534,6 +535,7 @@ export interface PlayPremiumContentFromSearchOutput {
   searchQueryTyped: boolean;
   searchResultsVisible: boolean;
   detailsVisible: boolean;
+  parentalPinHandled: boolean;
   playerVisible: boolean;
   playbackStarted: boolean;
 }
@@ -1483,6 +1485,7 @@ export async function openContentAndPlay(page: any, input?: OpenContentAndPlayIn
 export async function playPremiumContentFromSearch(page: any, input?: PlayPremiumContentFromSearchInput): Promise<PlayPremiumContentFromSearchOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input?.parentalPin ?? process.env.PARENTAL_PIN ?? '';
   const searchQuery = (input?.searchQuery ?? '').trim();
   const mode = input?.mode;
   logger.step('Starting premium content search and playback flow');
@@ -1500,6 +1503,8 @@ export async function playPremiumContentFromSearch(page: any, input?: PlayPremiu
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
   await detailsPage.clickPlayButton();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  logger.info(`Parental PIN flow handled successfully: ${parentalPinHandled}`);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible', playerVisible);
   const playbackStarted = playerVisible;
@@ -1509,6 +1514,7 @@ export async function playPremiumContentFromSearch(page: any, input?: PlayPremiu
     searchQueryTyped,
     searchResultsVisible,
     detailsVisible,
+    parentalPinHandled,
     playerVisible,
     playbackStarted,
   };

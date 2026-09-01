@@ -74,7 +74,7 @@ export class OTTDetailsPage {
   private readonly addToWatchlistButton: PageElement;
   private readonly addToWatchlistButtonIcon: PageElement;
   private readonly removeFromWatchlistButton: PageElement;
-  private readonly addWatchlistIcon: PageElement;
+  private readonly searchAddWatchlistIcon: PageElement;
   private readonly removeWatchlistIcon: PageElement;
   private readonly watchlistTooltipAdd: PageElement;
   private readonly watchlistTooltipRemove: PageElement;
@@ -287,19 +287,14 @@ export class OTTDetailsPage {
     this.playButton = { selector: '#play div' };
     this.skipAdButton = { selector: '//button[@aria-label="Skip Ad"]' };
     this.learnMoreLink = { selector: 'a:has-text("Learn More"), button:has-text("Learn More"), text=/Learn More/i' };
-    this.addToWatchlistButton = { selector: 'img[alt*="add_watchlist"]' };
+    this.addToWatchlistButton = { selector: 'img[alt*="add_watchlist"], img[src*="add_watchlist"], [data-testid*="add-watchlist"], [aria-label*="Add to Watchlist"], button:has(img[src*="add_watchlist"])' };
     this.addToWatchlistButtonIcon = { selector: '#watchlist' }
-    this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"]' };
-    this.addWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/add_watchlist.svg' };
-    this.removeWatchlistIcon = { role: 'img', text: '/assets/button_icons/focused/remove_watchlist.svg' };
+    this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], [data-testid*="remove-watchlist"], [aria-label*="Remove from Watchlist"], button:has(img[src*="remove_watchlist"])' };
+    this.searchAddWatchlistIcon = { selector: 'img[alt*="add_watchlist"], img[src*="add_watchlist"], [data-testid*="add-watchlist"], [aria-label*="Add to Watchlist"], button:has(img[src*="add_watchlist"])' };
+    this.removeWatchlistIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], [data-testid*="remove-watchlist"], [aria-label*="Remove from Watchlist"], button:has(img[src*="remove_watchlist"])' };
     this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.cinemaOnePhSection = { selector: 'img[alt="Cinema One PH"]' };
     this.pauseBanner = { selector: '.pause-banner' };
-    this.addToWatchlistButton = { selector: 'xpath=//*[@id="watchlist"]/div' };
-    this.removeFromWatchlistButton = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], [data-testid*="remove-watchlist"]' };
-    this.addWatchlistIcon = { selector: 'img[alt*="add_watchlist"], img[src*="add_watchlist"], img[alt*="add to watchlist"], [data-testid*="add-watchlist"]' };
-    this.removeWatchlistIcon = { selector: 'img[alt*="remove_watchlist"], img[src*="remove_watchlist"], img[alt*="remove from watchlist"], [data-testid*="remove-watchlist"]' };
-    this.watchlistToast = { selector: "div:has-text('Added to watchlist'), div:has-text('Removed from watchlist')" };
     this.watchlistFullPopup = { selector: "//p[contains(normalize-space(),'Your watchlist is full')]" };
     this.myWatchlistLink = { selector: 'div#my_watchlist' };
     this.cinemaOnePhSection = { selector: 'img[alt="Cinema One PH"]' };
@@ -1655,34 +1650,64 @@ export class OTTDetailsPage {
     };
   }
 
+  private getScopedWatchlistIcon(card: Locator, mode: 'add' | 'remove'): Locator {
+    const selector = mode === 'add' ? this.searchAddWatchlistIcon.selector : this.removeWatchlistIcon.selector;
+    return card.locator(selector ?? '').first();
+  }
+
   async clickWatchlistIcon(): Promise<void> {
     logger.elementInteraction('click', 'watchlist icon');
-    const addIcon = this.getRoleLocator(this.addWatchlistIcon);
-    const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
+    const activeCard = this.page.locator(this.firstSearchResult.selector).first();
+    const addIcon = this.getScopedWatchlistIcon(activeCard, 'add');
+    const removeIcon = this.getScopedWatchlistIcon(activeCard, 'remove');
+
     if (await removeIcon.isVisible().catch(() => false)) {
+      await removeIcon.scrollIntoViewIfNeeded().catch(() => undefined);
       await removeIcon.click({ timeout: 15000, force: true });
       await this.page.waitForTimeout(1000);
     }
-    await addIcon.waitFor({ state: 'visible', timeout: 15000 });
-    await addIcon.click({ timeout: 15000, force: true });
+
+    await addIcon.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+    if (await addIcon.isVisible().catch(() => false)) {
+      await addIcon.scrollIntoViewIfNeeded().catch(() => undefined);
+      await addIcon.click({ timeout: 15000, force: true });
+    }
     await this.page.waitForTimeout(1000);
   }
 
   async hoverContentThumbnailAndClickWatchlistIcon(contentTitle: string): Promise<string> {
     logger.elementInteraction('hover', `content thumbnail ${contentTitle}`);
     try {
-      const contentThumbnail = this.getRoleLocator({ role: 'img', text: contentTitle });
-      await contentThumbnail.waitFor({ state: 'visible', timeout: 15000 });
-      await contentThumbnail.hover();
-      await this.page.waitForTimeout(7000);
-      const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
-      const addIcon = this.getRoleLocator(this.addWatchlistIcon);
+      const resultCard = this.page.locator(this.firstSearchResult.selector).first();
+      await resultCard.waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
+        const fallback = this.page.getByText(contentTitle, { exact: false }).first();
+        await fallback.waitFor({ state: 'visible', timeout: 15000 });
+      });
+
+      if (await resultCard.isVisible().catch(() => false)) {
+        await resultCard.hover();
+      } else {
+        const fallbackText = this.page.getByText(contentTitle, { exact: false }).first();
+        await fallbackText.hover();
+      }
+
+      await this.page.waitForTimeout(5000);
+
+      const removeIcon = this.getScopedWatchlistIcon(resultCard, 'remove');
+      const addIcon = this.getScopedWatchlistIcon(resultCard, 'add');
+
       if (await removeIcon.isVisible().catch(() => false)) {
+        await removeIcon.scrollIntoViewIfNeeded().catch(() => undefined);
         await removeIcon.click({ timeout: 15000, force: true });
         await this.page.waitForTimeout(1000);
       }
-      await addIcon.waitFor({ state: 'visible', timeout: 15000 });
-      await addIcon.click({ timeout: 15000, force: true });
+
+      await addIcon.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+      if (await addIcon.isVisible().catch(() => false)) {
+        await addIcon.scrollIntoViewIfNeeded().catch(() => undefined);
+        await addIcon.click({ timeout: 15000, force: true });
+      }
+
       await this.page.waitForTimeout(1500);
       return await this.validateAddedToWatchlistPopup();
     } catch (error) {
@@ -1699,7 +1724,7 @@ export class OTTDetailsPage {
       await contentThumbnail.hover();
       await this.page.waitForTimeout(2000);
       const removeIcon = this.getRoleLocator(this.removeWatchlistIcon);
-      const addIcon = this.getRoleLocator(this.addWatchlistIcon);
+      const addIcon = this.getRoleLocator(this.searchAddWatchlistIcon);
       if (await removeIcon.isVisible().catch(() => false)) {
         return 'remove';
       }
@@ -1745,7 +1770,7 @@ export class OTTDetailsPage {
   async ensureWatchlistIsRemovable(): Promise<void> {
     logger.elementInteraction('precondition', 'ensure watchlist is removable');
     try {
-      const watchlistIcon = this.getRoleLocator(this.addWatchlistIcon);
+      const watchlistIcon = this.getRoleLocator(this.searchAddWatchlistIcon);
       await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 }).catch(() => undefined);
       await watchlistIcon.hover().catch(() => undefined);
       const tooltipLocator = this.page.locator(this.watchlistTooltipAdd.selector ?? '').first();
@@ -1793,14 +1818,24 @@ export class OTTDetailsPage {
 
   async hoverContentThumbnailAndClickRemoveWatchlistIcon(contentTitle: string): Promise<void> {
     logger.elementInteraction('hover', `content thumbnail ${contentTitle}`);
-    try {
-      const contentThumbnail = this.getRoleLocator({ role: 'img', text: contentTitle });
-      await contentThumbnail.waitFor({ state: 'visible', timeout: 15000 });
-      await contentThumbnail.hover();
+    try {const resultCard = this.page.locator(this.firstSearchResult.selector).first();
+      await resultCard.waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
+        const fallback = this.page.getByText(contentTitle, { exact: false }).first();
+        await fallback.waitFor({ state: 'visible', timeout: 15000 });
+      });
+
+      if (await resultCard.isVisible().catch(() => false)) {
+        await resultCard.hover();
+      } else {
+        const fallbackText = this.page.getByText(contentTitle, { exact: false }).first();
+        await fallbackText.hover();
+      }
+
       await this.page.waitForTimeout(5000);
-      const watchlistIcon = this.getRoleLocator(this.removeWatchlistIcon);
-      await watchlistIcon.waitFor({ state: 'visible', timeout: 10000 });
-      await watchlistIcon.click({ timeout: 15000, force: true });
+
+      const removeIcon = this.getScopedWatchlistIcon(resultCard, 'remove');
+      await removeIcon.waitFor({ state: 'visible', timeout: 10000 });
+      await removeIcon.click({ timeout: 15000, force: true });
     } catch (error) {
       logger.debug(`Hover content thumbnail and click remove watchlist icon failed for ${contentTitle}`, error);
     }
@@ -5231,6 +5266,25 @@ export class OTTDetailsPage {
   async getParentalPinPlaybackPromptText(): Promise<string> {
     return await this.pageUtils.getTextContent(this.parentalPinPlaybackPrompt, 10000);
   }
+  
+  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
+    const continueAction = nextMethod ?? (async () => undefined);
+    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
+    if (!promptVisible) {
+      await continueAction();
+      return false;
+    }
+
+    const parentalPin = (pin ?? '').trim();
+    if (parentalPin) {
+      await this.enterParentalPlaybackPin(parentalPin);
+      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
+      await this.page.waitForTimeout(1500);
+    }
+
+    await continueAction();
+    return true;
+  }
 
   async enterParentalPlaybackPin(pin: string): Promise<void> {
     logger.elementInteraction('type', 'Parental playback PIN input');
@@ -5327,23 +5381,6 @@ export class OTTDetailsPage {
       await adOverlay.waitFor({ state: 'hidden' });
     }
     logger.info('Ad has ended. Proceeding to next step.');
-  }
-
-  async handleParentalPinFlow(nextMethod?: () => Promise<void>, pin?: string): Promise<boolean> {
-    const continueAction = nextMethod ?? (async () => undefined);
-    const promptVisible = await this.isParentalPinPlaybackPromptVisible().catch(() => false);
-    if (!promptVisible) {
-      await continueAction();
-      return false;
-    }
-    const parentalPin = (pin ?? '').trim();
-    if (parentalPin) {
-      await this.enterParentalPlaybackPin(parentalPin);
-      await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
-      await this.page.waitForTimeout(1500);
-    }
-    await continueAction();
-    return true;
   }
 
 }

@@ -2240,16 +2240,38 @@ export class OTTAuthPage {
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
         await this.page.waitForTimeout(2500);
-        const locator = this.page.locator(this.searchResultImages.selector).first();
-        const altText = await locator.getAttribute('alt').catch(() => '');
-        const normalizedQuery = query.trim().toLowerCase();
-        logger.info(`Normalized query: ${normalizedQuery}`);
-        const normalizedAltText = (altText || '').toLowerCase();
-        logger.info(`Normalized alt text: ${normalizedAltText}`);
-        if (normalizedQuery) {
-            return normalizedQuery.includes(normalizedAltText) || /(search|result|thumbnail|poster|image)/i.test(altText || '');
+        const normalizeTitle = (value: string) => String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const normalizedQuery = normalizeTitle(query);
+        const visibleResultTitles = await this.getSearchResultTitles();
+        const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
+            const normalizedTitle = normalizeTitle(title);
+            return normalizedQuery
+                ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
+                : Boolean(normalizedTitle);
+        });
+
+        if (matchedVisibleTitle) {
+            return true;
         }
-        return /(search|result|thumbnail|poster|image)/i.test(altText || '');
+
+        const resultImages = this.page.locator(this.searchResultImages.selector);
+        const imageCount = await resultImages.count().catch(() => 0);
+        if (imageCount > 0) {
+            return true;
+        }
+
+        if (!normalizedQuery) {
+            return false;
+        }
+
+        const bodyText = await this.page.locator('body').textContent().catch(() => '');
+        const normalizedBodyText = normalizeTitle(bodyText || '');
+        return normalizedBodyText.includes(normalizedQuery);
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {

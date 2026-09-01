@@ -6,7 +6,7 @@ import { verifySearchExactTitleMatchAtTop } from '../../src/businessFunction/ott
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Search navigation', () => {
-  test('@High IW3-T2060 : Verify the Search icon is visible in the top navigation bar on all pages', async ({ page }) => { //MWeb
+  test('@High @mWeb IW3-T2060 : Verify the Search icon is visible in the top navigation bar on all pages', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-001-search-icon'];
     const result = await verifySearchIconVisibilityOnAllPages(page, {
@@ -30,7 +30,7 @@ test.describe('Search navigation', () => {
     expect(result.searchInputValue).toContain(data.query);
   });
 
-  test('@High IW3-T2064 : Verify the search results are shown when a valid title is entered in the Search field', async ({ page }) => { //MWeb
+  test('@High @mWeb IW3-T2064 : Verify the search results are shown when a valid title is entered in the Search field', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-003-search-results'];
     const result = await verifySearchResults(page, {
@@ -64,7 +64,7 @@ test.describe('Search navigation', () => {
     expect(result.toastText.toLowerCase()).toContain('removed');
   });
 
-  test('@Medium IW3-T2063 : Verify the auto-suggestions while typing in the search field', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2063 : Verify the auto-suggestions while typing in the search field', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-006-search-auto-suggestions'];
     const result = await verifySearchAutoSuggestions(page, {
@@ -78,7 +78,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsContainQuery).toBe(true);
   });
 
-  test('@Medium IW3-T2065 : Verify the message like "No results found." is shown for irrelevant search terms', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2065 : Verify the message like "No results found." is shown for irrelevant search terms', async ({ page }) => { //MWeb
     const data = testCaseData['tc-nav-007-search-no-results'];
     const result = await verifySearchNoResultsMessage(page, {
       mode: data.mode,
@@ -89,7 +89,7 @@ test.describe('Search navigation', () => {
     expect(result.messageText).toContain(data.expectedNoResultsMessage);
   });
 
-  test('@Low IW3-T2083 : Verify if user enters junk characters with space in search field', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2083 : Verify if user enters junk characters with space in search field', async ({ page }) => { //MWeb
     const data = testCaseData['tc-nav-016-search-junk-characters'];
     const result = await verifySearchNoResultsMessage(page, {
       mode: data.mode,
@@ -100,7 +100,7 @@ test.describe('Search navigation', () => {
     expect(result.messageText).toContain(data.expectedNoResultsMessage);
   });
 
-  test('@Low IW3-T2085 : Verify if irrelevant search suggestions are being displayed which dont have valid results', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2085 : Verify if irrelevant search suggestions are being displayed which dont have valid results', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-017-search-invalid-suggestions'];
     const result = await verifySearchAutoSuggestions(page, {
@@ -112,7 +112,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
 
-  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
@@ -126,7 +126,7 @@ test.describe('Search navigation', () => {
     expect(result.liveContentTitleFoundInSearchResults).toBe(false);
   });
 
-  test('@Medium IW3-T2087 : Verify that back navigation returns the user from content details to the search results page', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2087 : Verify that back navigation returns the user from content details to the search results page', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-019-search-back-navigation'];
     const result = await verifySearchBackNavigationFromDetailPage(page, {
@@ -139,7 +139,7 @@ test.describe('Search navigation', () => {
     expect(result.detailsPageVisible).toBe(true);
   });
 
-  test('@Low IW3-T2067 : Verify that the Clear All icon removes the Search text from the Search field', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2067 : Verify that the Clear All icon removes the Search text from the Search field', async ({ page }) => { //MWeb
     const data = testCaseData['tc-nav-008-clear-search-input'];
     const result = await clearSearchTextFromSearchField(page, {
       mode: data.mode,
@@ -150,7 +150,7 @@ test.describe('Search navigation', () => {
     expect(result.searchInputValue).toBe('');
   });
 
-test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2070 : Verify placeholder text in search field', async ({ page }) => { //MWeb 
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-010-search-placeholder'];
     const result = await navigateAndVerifyTabs(page, {
@@ -161,7 +161,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
   });
 
-  test('@Low IW3-T2068 : Verify that the search supports typing of actor name or show genres in the Search field', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2068 : Verify that the search supports typing of actor name or show genres in the Search field', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-009-actor-or-genre-search'];
     const result = await verifySearchByActorOrGenre(page, {
@@ -178,12 +178,13 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect(result.genreResultsVisible).toBe(true);
   });
 
-  test('@Medium IW3-T2066 : Verify if subscribed users can play premium content from search results', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2066 : Verify if subscribed users can play premium content from search results', async ({ page }) => { //MWeb
     test.setTimeout(120000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-008-premium-playback'];
     const result = await playPremiumContentFromSearch(page, {
       mode: data?.mode,
       searchQuery: data?.searchQuery,
+      parentalPin: data?.pin,
     });
     expect.soft(result.isLoggedIn).toBe(true);
     expect.soft(result.searchQueryTyped).toBe(true)
@@ -193,7 +194,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.playbackStarted).toBe(true);
   });
 
-  test('@Low IW3-T2069 : Verify if free and premium content are labeled accordingly on the Search page', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2069 : Verify if free and premium content are labeled accordingly on the Search page', async ({ page }) => { //MWeb
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-011-free-premium-labels'];
     const result = await verifySearchFreePremiumLabels(page, {
@@ -209,7 +210,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     }
   });
 
-  test('@Low IW3-T2082 : Verify "New Episode", "Coming Soon", "GMA", and "Recently Added" display on search results for applicable content', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2082 : Verify "New Episode", "Coming Soon", "GMA", and "Recently Added" display on search results for applicable content', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-026-search-result-label-ui'];
     const result = await verifySearchResultLabelUI(page, {
@@ -246,7 +247,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     }
   });
 
-  test('@Low IW3-T2077 : Verify that smooth scrolling is maintained when the user searches for content', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2077 : Verify that smooth scrolling is maintained when the user searches for content', async ({ page }) => { //MWeb
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-014-search-smooth-scrolling'];
     const result = await verifySearchSmoothScrolling(page, {
@@ -263,7 +264,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.positions.length).toBeGreaterThan(1);
   });
 
-  test('@Medium IW3-T2073 : Verify if user can search with partial keyword in search field', async ({ page }) => { //MWeb 
+  test('@Medium @mWeb IW3-T2073 : Verify if user can search with partial keyword in search field', async ({ page }) => { //MWeb 
     test.setTimeout(120000);
     const data = testCaseData['tc-nav-012-partial-search'];
     const result = await verifySearchPartialKeyword(page, {
@@ -276,7 +277,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.matchedSearchValues.length).toBeGreaterThan(0);
   });
 
-  test('@Medium IW3-T2089 : Verify that trending results are shown when the user taps on the Search icon without entering any query', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2089 : Verify that trending results are shown when the user taps on the Search icon without entering any query', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-021-search-trending-results'];
     const result = await verifySearchTrendingResults(page, {
@@ -290,7 +291,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.trendingResultTitles.length).toBeGreaterThan(0);
   });
 
-  test('@Medium IW3-T2090 : Verify Trending search/Top picks near you title displayed on navigating to the search tab', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2090 : Verify Trending search/Top picks near you title displayed on navigating to the search tab', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-022-search-top-picks-title'];
     const result = await verifySearchTopPicksNearYouTitle(page, {
@@ -303,7 +304,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.headingText.toLowerCase()).toContain(data.expectedHeading.toLowerCase());
   });
 
-  test('@Low IW3-T2091 : Verify that trending results are not displayed when the user enters any query in the search field', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2091 : Verify that trending results are not displayed when the user enters any query in the search field', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-023-search-trending-hidden-on-query'];
     const result = await verifyTrendingResultsHiddenWhenSearching(page, {
@@ -320,7 +321,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 
-  test('@Medium IW3-T2088 : Verify that exact title matches appear at the top of the search results', async ({ page }) => { //MWeb
+  test('@Medium @mWeb IW3-T2088 : Verify that exact title matches appear at the top of the search results', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-020-search-exact-title-match-top'];
     const result = await verifySearchExactTitleMatchAtTop(page, {
@@ -335,7 +336,7 @@ test('@Low IW3-T2070 : Verify placeholder text in search field', async ({ page }
     expect.soft(result.exactMatchIndex).toBe(0);
   });
 
-  test('@Low IW3-T2092 : Verify that when the user taps on any trending content from the Search page, Navigated to the corresponding Detail Page', async ({ page }) => { //MWeb
+  test('@Low @mWeb IW3-T2092 : Verify that when the user taps on any trending content from the Search page, Navigated to the corresponding Detail Page', async ({ page }) => { //MWeb
     test.setTimeout(180000);
     const data = testCaseData['tc-nav-024-trending-content-detail-navigation'];
     const result = await verifyTrendingContentDetailNavigation(page, {

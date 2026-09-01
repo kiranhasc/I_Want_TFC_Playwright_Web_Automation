@@ -740,6 +740,7 @@ export async function addContentToWatchlistFromSearchPage(
   await authPage.enterSearchQuery(input?.query ?? 'Abandoned');
   await authPage.submitSearchQuery();
   const toastText = await detailsPage.hoverContentThumbnailAndClickWatchlistIcon(input?.query ?? 'Abandoned');
+  await page.waitForTimeout(2000);
   const addedToWatchlist = toastText.toLowerCase().includes('added');
   await authPage.clickMyWatchlistTab();
   const isVisibleInMyWatchlist = await detailsPage.isWatchlistItemVisible(input?.query ?? 'Abandoned');

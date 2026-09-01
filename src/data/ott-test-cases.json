@@ -1071,7 +1071,8 @@
         "mode": "valid",
         "searchQuery": "La Luna Sangre",
         "expectedPlayback": true,
-        "expectedSubscribePrompt": false
+        "expectedSubscribePrompt": false,
+        "pin" : "1234"
     },
     "tc-sub-035-add-premium-watchlist": {
         "mode": "freeUser",

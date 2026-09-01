@@ -2028,7 +2028,7 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
     const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(query);
     const suggestionsList = await authPage.getSearchAutoSuggestions();
     const suggestionsCount = suggestionsList.length;
@@ -2660,8 +2660,25 @@ export async function verifySearchPartialKeyword(
     try {
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
+        const isComingSoonAsset = (asset: any): boolean => {
+            const labels = Array.isArray(asset?.labels) ? asset.labels : [];
+            return labels.some((label: any) => {
+                const id = typeof label?.id === 'string' ? label.id.toLowerCase() : '';
+                const name = typeof label?.name === 'string' ? label.name.toLowerCase() : '';
+                return id.includes('coming_soon') || name.includes('coming soon');
+            });
+        };
         for (const rail of parser.getRails()) {
-            const candidate = rail.assets?.items?.find((asset: any) => typeof asset.title === 'string');
+            const candidate = rail.assets?.items?.find((asset: any) => {
+                const title = typeof asset?.title === 'string' ? String(asset.title).trim() : '';
+                if (!title) {
+                    return false;
+                }
+                const labels = Array.isArray(asset?.labels) ? asset.labels : [];
+                const badges = Array.isArray(asset?.badges) ? asset.badges : [];
+                const allTags = [...labels, ...badges].map((tag: any) => String(tag?.id ?? tag?.name ?? tag ?? '').toLowerCase());
+                return !allTags.some((tag: string) => tag.includes('coming_soon') || tag.includes('coming soon'));
+            });
             if (candidate?.title) {
                 collectionTitle = String(candidate.title).trim();
                 break;
@@ -2670,7 +2687,7 @@ export async function verifySearchPartialKeyword(
         const titleWords = collectionTitle.split(/\s+/).filter(Boolean);
         const selectedWord = titleWords.find(word => word.length >= 4) ?? titleWords[0] ?? '';
         partialQuery = String(selectedWord).slice(0, Math.min(8, String(selectedWord).length)).trim();
-        logger.info(`Using first collection title for partial search: ${collectionTitle}`);
+        logger.info(`Using non-coming-soon collection title for partial search: ${collectionTitle}`);
         logger.info(`[SEARCH DEBUG] Using collection title: "${collectionTitle}" for partial search query: "${partialQuery}"`);
     } catch (error) {
         logger.debug('Failed to retrieve collection content for partial search query', error);
@@ -2696,6 +2713,7 @@ export async function verifySearchPartialKeyword(
         const searchResp = await graphqlResponsePromise;
         const parser = new SearchParser(searchResp.response);
         matchedSearchValues = parser.getTitlesMatchingQuery(partialQuery);
+        await page.waitForTimeout(4000);
         logger.info(`Partial search query matched ${matchedSearchValues.length} title values in the Search GraphQL response`, {
             partialQuery,
             matchedValues: matchedSearchValues,
@@ -2835,8 +2853,9 @@ export async function verifySearchTopPicksNearYouTitle(
     }
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(collectionTitle);
+    await page.waitForTimeout(3000);
     await authPage.clearSearchInput();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;
     const headingVisible = await authPage.isSearchSectionHeadingVisible(expectedHeading);
     const headingText = await authPage.getSearchSectionHeadingText(expectedHeading);
@@ -2889,7 +2908,7 @@ export async function verifyTrendingResultsHiddenWhenSearching(
     await authPage.enterSearchQuery(collectionTitle);
     await page.waitForTimeout(3000);
     await authPage.clearSearchInput();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;
     const trendingHeadingVisibleBefore = await authPage.isSearchSectionHeadingVisible(expectedHeading);
     logger.assertion(`${expectedHeading} heading visible before new query`, trendingHeadingVisibleBefore);
@@ -3109,7 +3128,9 @@ export async function verifySearchFreePremiumLabels(
         await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
         await authPage.clickSearchBar();
         await authPage.enterSearchQuery(premiumTitle);
+        await page.waitForTimeout(2000);
         await authPage.submitSearchQuery();
+        await page.waitForTimeout(3000);
         await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
         premiumLabelVisible = await detailsPage.isContentTaggedPremiumInSearchResults(premiumTitle).catch(() => false);
         logger.assertion(`Premium label visible for "${premiumTitle}"`, premiumLabelVisible);
@@ -3118,7 +3139,9 @@ export async function verifySearchFreePremiumLabels(
     if (freeTitle) {
         await authPage.clickSearchBar();
         await authPage.enterSearchQuery(freeTitle);
+        await page.waitForTimeout(2000);
         await authPage.submitSearchQuery();
+        await page.waitForTimeout(3000);
         freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeTitle).catch(() => false);
         logger.assertion(`Free label visible for "${freeTitle}"`, freeLabelVisible);
     }
@@ -5258,11 +5281,13 @@ export async function verifyTrendingContentDetailNavigation(
     }
     await authPage.enterSearchQuery(collectionTitle);    // Open search and clear to show Top Picks Near You
     await authPage.clickSearchBar();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(2000);
+    // Clear any search text to show Top Picks
     const searchValue = await authPage.getSearchBarValue();
     if (searchValue && searchValue.trim().length > 0) {
+        await page.waitForTimeout(3000);
         await authPage.clearSearchInput();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000);
     }
     await page.waitForTimeout(2500);
     const topPicksHeadingVisible = await authPage.isSearchSectionHeadingVisible('Top Picks Near You');

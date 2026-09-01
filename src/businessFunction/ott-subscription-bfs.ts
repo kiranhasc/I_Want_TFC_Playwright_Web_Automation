@@ -42,6 +42,7 @@ export interface VerifySubscribeToWatchRedirectToAccountOutput {
 
 export interface UpgradePlanNavigationInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface UpgradePlanNavigationOutput {
@@ -55,7 +56,6 @@ export interface VerifyGuestSubscribeNavigationInput {
 }
 
 export interface VerifyGuestSubscribeNavigationOutput {
-  //isTryAgainVisible: boolean;
   isLoginScreenVisible: boolean;
   headingText: string;
   isEmailFieldVisible: boolean;
@@ -406,7 +406,6 @@ export async function verifyPremiumContentDeepLinkSubscriptionBlocker(
   await page.waitForTimeout(5000);
   await detailsPage.clickPlayVideoOverlayButton();
   await page.waitForTimeout(3000);
-  // const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible().catch(() => false);
   const isSubscribeToWatchCtaVisible = await detailsPage.isSubscribeToWatchCtaVisible().catch(() => false);
   const premiumGateVisible = await playbackPage.isPremiumContentGateVisible().catch(() => false);
   const maybeLaterVisible = await playbackPage.isMaybeLaterVisible().catch(() => false);
@@ -512,6 +511,7 @@ export async function navigateToUpgradePlanFromSubscriptionBlocker(
   logger.step('Starting upgrade plan navigation flow');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
+  const parentalPin = (input?.parentalPin).trim();
   logger.assertion('Free user logged in before upgrade-plan navigation validation', isLoggedIn);
   if (!isLoggedIn) {
     return {
@@ -523,6 +523,7 @@ export async function navigateToUpgradePlanFromSubscriptionBlocker(
   await authPage.clickGMATab();
   const isGmaTabVisible = await authPage.isTopStreamedRailVisible();
   await detailsPage.clickSubscribeToWatchCta();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.clickSubscribeToWatchCtaBlocker();
   const isUpgradePlanVisible = await detailsPage.isUpgradePlanButtonVisible();
   if (isUpgradePlanVisible) {

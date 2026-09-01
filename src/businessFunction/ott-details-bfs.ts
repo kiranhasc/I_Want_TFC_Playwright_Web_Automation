@@ -102,6 +102,7 @@ export interface VerifyVPNPlaybackRestrictionInput {
   mode?: string;
   searchQuery: string;
   expectedVPNErrorMessage: string;
+  parentalPin?: string;
 }
 
 export interface VerifyVPNPlaybackRestrictionOutput {
@@ -125,6 +126,7 @@ export interface VerifyIWantOriginalsPreviewOnDetailsPageOutput {
 export interface VerifySkipIntroMarkerInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipIntroMarkerOutput {
@@ -135,6 +137,7 @@ export interface VerifySkipIntroMarkerOutput {
 export interface VerifySkipRecapMarkerInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipRecapMarkerOutput {
@@ -172,6 +175,7 @@ export interface PlayEpisodeFromDetailsOutput {
 
 export interface VerifyEpisodePlaybackStartsFromDetailsInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
@@ -382,6 +386,7 @@ export async function verifyVPNPlaybackRestriction(
 ): Promise<VerifyVPNPlaybackRestrictionOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = input?.parentalPin ?? process.env.PARENTAL_PIN;
   logger.step('Starting VPN playback restriction validation');
   const loginResult = await loginToOTT(page, { mode: input.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -394,15 +399,16 @@ export async function verifyVPNPlaybackRestriction(
       playbackStarted: false,
     };
   }
+  await page.waitForTimeout(10000);
   await authPage.clickSearchBar();
-  await authPage.searchAndGetResults(input.searchQuery);
-  await page.locator(`img[alt="${input.searchQuery}"]`).click({ timeout: 10000 }).catch(() => { });
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => { });
-  await detailsPage.clickPlayButton();
+  await authPage.enterSearchQuery(input.searchQuery);
+  await authPage.submitSearchQuery();
   await page.waitForTimeout(5000);
+  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickPlayButton();
+  const parentalPinHandled = await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const vpnErrorVisible = await detailsPage.isVPNErrorMessageVisible(input.expectedVPNErrorMessage);
-  const playbackStarted = await detailsPage.isPlaybackStarted();
+  const playbackStarted = await detailsPage.isPlaybackStarted(10000).catch(() => false);
   const errorMessage = vpnErrorVisible ? input.expectedVPNErrorMessage : '';
   logger.assertion('VPN-specific error displayed', vpnErrorVisible);
   logger.assertion('Playback did not start when VPN error is displayed', !playbackStarted);
@@ -743,7 +749,7 @@ export async function verifySharedDeeplinkRedirectToDetailsPage(
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   logger.step('Waiting for collection GraphQL data to identify a shared asset');
-  const collectionResponse = await collectionPromise; // ✅ resolve the promise
+  const collectionResponse = await collectionPromise;
   const parser = new CollectionParser(collectionResponse as any);
   // First rail (index 0), first item (index 0) - per collection.rails[0].assets.items[0]
   const firstAsset = parser.getCard(0, 0);
@@ -876,6 +882,7 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
 ): Promise<VerifyEpisodePlaybackStartsFromDetailsOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting episode playback verification from details page');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -922,48 +929,48 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     await detailsPage.scrollToEpisodeList();
   } catch {
     logger.info('Episode list not found; skipping episode selection and playback validation');
-    // ignore and continue; the test will still report the failed expectation below
   }
   let selectedEpisode, metadata;
   if (process.env.BROWSER === 'mchrome') {
-  selectedEpisode = await detailsPage.clickEpisodeOne().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
-  await page.waitForTimeout(5000);
-  selectedEpisodeTitle = 'Episode Title';
-  seasonNumber = 'Season 1';
-  episodeNumber = 'Episode 1';
-  const isAdTagVisible = await detailsPage.isAdTagVisible();
-  if(isAdTagVisible){
-    await page.waitForTimeout(110000);
-  }
-  playerVisible = await detailsPage.isVideoPlayerVisible();
-  return {
-    isLoggedIn,
-    isDetailsPageVisible,
-    seasonSectionVisible: seasonSectionHasLabels,
-    selectedEpisodeTitle,
-    showName,
-    seasonNumber,
-    episodeNumber,
-    playerVisible,
-    playbackStarted,
-    playerEpisodeTitleVisible : true,
-    playerSeasonVisible : true,
-    playerEpisodeVisible : true,
-    playerMetadataText : 'Season 1 Episode 1',
-  }
-  }else {
-  selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
-  metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
-  selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
-  seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';
-  episodeNumber = metadata.episodeNumber || selectedEpisode.episodeText || '';
+    selectedEpisode = await detailsPage.clickEpisodeOne().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
+    await page.waitForTimeout(5000);
+    selectedEpisodeTitle = 'Episode Title';
+    seasonNumber = 'Season 1';
+    episodeNumber = 'Episode 1';
+    const isAdTagVisible = await detailsPage.isAdTagVisible();
+    if (isAdTagVisible) {
+      await page.waitForTimeout(110000);
+    }
+    playerVisible = await detailsPage.isVideoPlayerVisible();
+    return {
+      isLoggedIn,
+      isDetailsPageVisible,
+      seasonSectionVisible: seasonSectionHasLabels,
+      selectedEpisodeTitle,
+      showName,
+      seasonNumber,
+      episodeNumber,
+      playerVisible,
+      playbackStarted,
+      playerEpisodeTitleVisible: true,
+      playerSeasonVisible: true,
+      playerEpisodeVisible: true,
+      playerMetadataText: 'Season 1 Episode 1',
+    }
+  } else {
+    selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+    metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
+    selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
+    seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';
+    episodeNumber = metadata.episodeNumber || selectedEpisode.episodeText || '';
   }
   logger.assertion('Episode title extracted from episode list', selectedEpisodeTitle.length > 0);
   await page.waitForTimeout(5000);
   playerVisible = await detailsPage.isVideoPlayerVisible();
   playbackStarted = playerVisible && seasonNumber.length > 0 && episodeNumber.length > 0;
   const playerMetadataValidation = await detailsPage.validatePlayerMetadataVisibility(selectedEpisodeTitle, seasonNumber, episodeNumber).catch(() => ({ titleVisible: false, seasonVisible: false, episodeVisible: false, playerText: '' }));
-  playerEpisodeTitleVisible = playerMetadataValidation.titleVisible ;
+  playerEpisodeTitleVisible = playerMetadataValidation.titleVisible;
   playerSeasonVisible = playerMetadataValidation.seasonVisible;
   playerEpisodeVisible = playerMetadataValidation.episodeVisible;
   playerMetadataText = playerMetadataValidation.playerText;
@@ -1456,6 +1463,7 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro marker verification flow');
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1467,11 +1475,13 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo(); 
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
     await page.waitForTimeout(2000);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
   }
@@ -1490,6 +1500,7 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1503,7 +1514,9 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   let timeAfterSkipIntro = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeOne();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(1000);
     await detailsPage.clickSkipRecapMarker();
     await page.waitForTimeout(5000);
@@ -1537,6 +1550,7 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap marker verification flow');
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1548,9 +1562,15 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+    await detailsPage.hoverOnPlaybackScreen();
+    await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   }
   await page.waitForTimeout(4000);
   await detailsPage.waitTillAdsEnd();
+  await detailsPage.isSkipIntroMarkerVisible();
+  await detailsPage.clickSkipIntroMarker();
   const isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
   logger.assertion('Details page visible', isDetailsPageVisible);
   logger.assertion('Skip recap marker visible', isSkipRecapMarkerVisible);
@@ -1565,6 +1585,7 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1579,7 +1600,9 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   let timeAfterSkipRecap = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeOne();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {
       timeBeforeSkipRecap = await detailsPage.getTrimmedPlaybackTime();
@@ -1607,6 +1630,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro and recap playback advancement verification flow');
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1625,6 +1649,7 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   let timeAfterSkipRecap = '';
   if (isDetailsPageVisible) {
     await detailsPage.clickEpisodeTwo();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(3000);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {

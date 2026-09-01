@@ -14,6 +14,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-003-play-content'] as Record<string, any>;
     const result = await openContentAndPlay(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -28,6 +29,7 @@ test.describe('Play Back', () => {
     const result = await verifySmoothPlaybackFlow(page, {
       graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -42,6 +44,7 @@ test.describe('Play Back', () => {
     const result = await verifySeekBarDragFlow(page, {
       graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
+      parentalPin: data.pin,
       seekPercent: data.seekPercent,
     });
 
@@ -53,6 +56,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-030-player-controls-autodismiss'] as Record<string, any>;
     const result = await verifyPlayerControlsAutoDismissFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
     expect(result.detailsVisible).toBeTruthy();
@@ -63,6 +67,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-032-volume-button-control'] as Record<string, any>;
     const result = await verifyVolumeControlFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -71,12 +76,13 @@ test.describe('Play Back', () => {
     expect(result.adjustedVolume).toBeGreaterThanOrEqual(0);
   });
 
-  test('@Medium @DM IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
+  test('@Medium @mWeb IW3-T2003 - content gets paused on tapping the player screen when controls are visible', async ({ page }) => {
     test.setTimeout(240000);
     const data = testData['tc-sub-013-pause-playback'] as Record<string, any>;
     const result = await verifyTapToPausePlaybackFlow(page, {
       graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -88,6 +94,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-034-seekbar-preview'] as Record<string, any>;
     const result = await verifySeekbarPreviewFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -100,6 +107,7 @@ test.describe('Play Back', () => {
     const result = await verifyBrowserSeekBarFlow(page, {
       graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
+      parentalPin: data.pin,
       seekPercent: data.seekPercent,
     });
 
@@ -115,6 +123,7 @@ test.describe('Play Back', () => {
     const result = await verifyPlayerControlsFlow(page, {
       graphqlQueryName: data.graphqlQueryName,
       mode: data.mode,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -131,6 +140,7 @@ test.describe('Play Back', () => {
     const result = await verifyFullscreenButtonVisibilityFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -142,6 +152,7 @@ test.describe('Play Back', () => {
     const result = await verifyPlaybackTimestampFormatFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -152,6 +163,7 @@ test.describe('Play Back', () => {
     const result = await verifyPlaybackShortDurationTimestampFormatFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -162,6 +174,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleSelectionFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -174,6 +187,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitlePersistenceFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
     expect(result.detailsVisible).toBeTruthy();
     expect(result.subtitleSelectionSuccessful).toBeTruthy();
@@ -185,6 +199,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-live-2010-pause-resume-live-playback'] as Record<string, any>;
     const result = await verifyLivePlaybackPauseResume(page, {
       mode: data.mode,
+      parentalPin: data.pin,
     });
     expect(result.liveSectionSelected).toBeTruthy();
     expect(result.playbackStarted).toBeTruthy();
@@ -200,6 +215,7 @@ test.describe('Play Back', () => {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
       labelText: data.labelText,
+      parentalPin: data.pin,
     });
 
     expect(result.searchResultsVisible).toBeTruthy();
@@ -217,6 +233,7 @@ test.describe('Play Back', () => {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
       labelText: data.labelText,
+      parentalPin: data.pin,
     });
 
     expect(result.searchResultsVisible).toBeTruthy();
@@ -236,6 +253,7 @@ test.describe('Play Back', () => {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
       labelText: data.labelText,
+      parentalPin: data.pin,
     });
 
     expect(result.searchResultsVisible).toBeTruthy();
@@ -254,6 +272,7 @@ test.describe('Play Back', () => {
       query: data.query,
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -267,6 +286,7 @@ test.describe('Play Back', () => {
       query: data.query,
       expectedTitle: data.expectedTitle,
       expectedEpisode: data.expectedEpisode,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -278,6 +298,7 @@ test.describe('Play Back', () => {
     const result = await verifySkipAdDuringPreRollAdFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect.soft(result.playerVisible).toBeTruthy();
@@ -291,6 +312,7 @@ test.describe('Play Back', () => {
     const result = await verifyAdCountdownFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -305,6 +327,7 @@ test.describe('Play Back', () => {
     const result = await verifyMidRollAdInterruptionFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -318,6 +341,7 @@ test.describe('Play Back', () => {
     const result = await verifyAdLearnMoreRedirectFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -332,6 +356,7 @@ test.describe('Play Back', () => {
     const result = await verifyAdLabelVisibilityFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -344,6 +369,7 @@ test.describe('Play Back', () => {
     const result = await verifyAdSeekBarHiddenDuringAdFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -356,6 +382,7 @@ test.describe('Play Back', () => {
     const result = await verifyAdDurationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -369,6 +396,7 @@ test.describe('Play Back', () => {
     const result = await verifyPausePlaybackFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -381,6 +409,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-004-resume-playback'] as Record<string, any>;
     const result = await verifyPlaybackResumeFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
     });
     expect(result.detailsVisible).toBeTruthy();
     expect(result.initialPlayed).toBeTruthy();
@@ -393,6 +422,7 @@ test.describe('Play Back', () => {
     const result = await verifyforwardBackwardButtonsFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -408,6 +438,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleCarryOverFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -420,6 +451,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleDefaultOffFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -432,6 +464,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleDisplayFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -444,6 +477,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleSynchronizationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -458,6 +492,7 @@ test.describe('Play Back', () => {
     const result = await verifyFullscreenFunctionalityFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -471,6 +506,7 @@ test.describe('Play Back', () => {
     const result = await verifyPlayerUIFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -488,6 +524,7 @@ test.describe('Play Back', () => {
     const result = await verifyNextEpisodeCtaVisibilityFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -501,6 +538,7 @@ test.describe('Play Back', () => {
     const result = await verifyBackButtonNavigationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -512,6 +550,7 @@ test.describe('Play Back', () => {
     const result = await verifyPauseforwardBackwardButtonsFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.playerVisible).toBeTruthy();
@@ -527,6 +566,7 @@ test.describe('Play Back', () => {
     const result = await verifyPlayerControlsHoverDismissFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -538,6 +578,7 @@ test.describe('Play Back', () => {
     const result = await verifyUpNextBingeMarkerFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -549,6 +590,7 @@ test.describe('Play Back', () => {
     const result = await verifyUpNextMarkerNavigationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -561,6 +603,7 @@ test.describe('Play Back', () => {
     const result = await verifyAutomaticNextEpisodePlaybackFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(result.detailsVisible).toBeTruthy();
@@ -568,11 +611,12 @@ test.describe('Play Back', () => {
     expect(result.autoPlaybackStarted).toBeTruthy();
   });
 
-  test('@Low @D IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
+  test('@Low @mWeb IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLiveTagOnPlayer(page, {
       mode: data.mode,
       channelName: data.channelName,
+      parentalPin: data.pin,
     });
 
     expect(result.liveChannelOpened).toBeTruthy();
@@ -583,6 +627,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLivePlaybackGoLiveFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       channelName: data.channelName,
     });
 
@@ -594,6 +639,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-043-go-live-tag-pause'] as Record<string, any>;
     const result = await verifyGoLiveTagAfterPause(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       channelName: data.channelName,
     });
 
@@ -607,6 +653,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-007-live-stream-seek-restriction'] as Record<string, any>;
     const result = await verifyLiveStreamSeekRestrictionFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       channelName: data.channelName,
     });
 
@@ -619,6 +666,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-040-movie-complete-details-navigation'] as Record<string, any>;
     const result = await verifyMoviePlaybackReturnsToDetailsFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -632,6 +680,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-039-last-season-last-episode'] as Record<string, any>;
     const result = await verifyLastSeasonLastEpisodeCompletionNavigationFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -667,11 +716,12 @@ test.describe('Play Back', () => {
     expect(result.isPlaybackBlocked).toBe(true);
   });
 
-    test('@High IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
+  test('@High IW3-T2030: Verify that a selected item from My Watchlist can be played', async ({ page }) => {
     test.setTimeout(180000);
     const data = testData['tc-auth-content-watchlist-2030'];
     const result = await playselectedContentFromWatchlist(page, {
       mode: data.mode,
+      parentalPin: data.pin,
     });
     expect(result.isLoggedIn).toBeTruthy();
     expect(result.watchlistOpened).toBeTruthy();

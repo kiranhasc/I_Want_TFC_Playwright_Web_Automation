@@ -1,12 +1,10 @@
 pipeline {
-
     agent any
 
     stages {
-
-        stage('Checkout Repo B') {
+        stage('Checkout Repo') {
             steps {
-                echo "Repo B checkout handled by Pipeline from SCM"
+                echo "Repo checkout handled by Pipeline from SCM"
             }
         }
 
@@ -22,7 +20,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo "Installing npm dependencies"
+                echo "Installing root npm dependencies"
 
                 bat 'npm install'
             }
@@ -36,37 +34,26 @@ pipeline {
             }
         }
 
-        stage('Run Selected Playwright Test') {
+        stage('Build Dashboard') {
             steps {
-                echo "Building and starting frontend application"
+                echo "Installing dashboard dependencies and building frontend"
 
-                dir('./dashboard/frontend') {
-                    bat 'npm install'
-                    bat 'npm run build'
-                    bat 'start /B npm start'
-                }
+                bat 'npm run dashboard:install'
+                bat 'npm run dashboard:build'
+            }
+        }
 
-                echo "Running Playwright tests"
+        stage('Start Dashboard') {
+            steps {
+                echo "Starting dashboard in background"
 
-                bat 'npx playwright test'
+                bat 'start /B npm run dashboard'
+                echo "Playwright dashboard running at http://127.0.0.1:4300"
             }
         }
     }
 
     post {
-        always {
-            echo "Publishing Playwright HTML Report"
-
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright HTML Report'
-            ])
-        }
-
         success {
             echo "Playwright execution completed successfully"
         }

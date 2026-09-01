@@ -306,7 +306,12 @@ module.exports = function createApiRouter(runManager, autoUpdater) {
 
   // Ingestion endpoint for dashboard/reporter/dashboard-reporter.js running inside a spawned job.
   router.post('/internal/run-events', (req, res) => {
-    runManager.ingestEvent(req.body || {});
+    try {
+      runManager.ingestEvent(req.body || {});
+    } catch (err) {
+      // Event ingestion errors must never crash the server. Log and continue.
+      console.error('[dashboard] event ingestion error:', err.message);
+    }
     res.status(204).end();
   });
 

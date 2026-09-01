@@ -155,16 +155,22 @@ export async function verifyContinueWatchingPlaybackIndependent(
         const collectionResponse = await gql.waitForOperation(operationName);
         const parser = new CollectionParser(collectionResponse as any);
         const assetResult = parser.findAsset((asset) => {
+            const candidate = asset as any;
             const title = asset.title?.trim() || '';
             const normalizedTitle = normalizeTitle(title);
-            const normalizedEpisodeTitle = normalizeTitle((asset as any)?.tvShowDetails?.defaultEpisode?.title || '');
-            const assetType = ((asset as any)?.assetType || (asset as any)?.type || '').toString().trim().toLowerCase();
+            const defaultEpisode = candidate.tvShowDetails?.defaultEpisode;
+            const normalizedEpisodeTitle = normalizeTitle(defaultEpisode?.title || '');
+            const assetType = (candidate.assetType || candidate.type || '').toString().trim().toLowerCase();
             const isTvShow = assetType === 'tvshow' || assetType === 'tv_show';
             const hasValidTitle = title.length > 3;
             const notEpisode = !/episode|season|series|show|live|channel|tv/i.test(title);
             const alreadyInContinueWatching = continueWatchingTitleSet.has(normalizedTitle)
                 || (normalizedEpisodeTitle && continueWatchingTitleSet.has(normalizedEpisodeTitle));
-            return hasValidTitle && notEpisode && isTvShow && !alreadyInContinueWatching;
+            const monetization = candidate.monetization || defaultEpisode?.monetization;
+            const hasProviderAccess = candidate.isPlayable !== false
+                && defaultEpisode?.isPlayable !== false
+                && !(monetization?.type === 'paid' && monetization?.hasSkuAccess === false);
+            return hasValidTitle && notEpisode && isTvShow && hasProviderAccess && !alreadyInContinueWatching;
         });
         if (!assetResult) {
             result.reason = 'No playable movie asset found in Collection GraphQL response';
@@ -200,7 +206,6 @@ export async function verifyContinueWatchingPlaybackIndependent(
         const assetQueryEpisodeId = assetResponseData?.tvShowDetails?.defaultEpisode?.id;
         logger.info(`Asset query returned id: ${assetQueryId}`);
         result.assetQueryTitle = assetTitleFromQuery;
-        result.selectedContentName = assetTitleFromQuery;
         logger.info(`Asset query title: ${result.assetQueryTitle}`);
         const detailsVisible = await detailsPage.isShowDetailsPageVisible();
         if (!detailsVisible) {
@@ -225,20 +230,24 @@ export async function verifyContinueWatchingPlaybackIndependent(
         await detailsPage.waitForPlayback(60);
         await detailsPage.hoverPlaybackControls()
         await detailsPage.dragSeekBarToPosition(0.8)
+        await page.waitForTimeout(18000);
         const currentPlaybackTime = await detailsPage.getPlaybackTimeText().catch(() => '');
         result.forwardedTime = currentPlaybackTime;
         result.progressObserved = !!currentPlaybackTime && currentPlaybackTime !== '0:00';
+        logger.step('Returning to Home and scrolling to the Continue Watching tray');
         await authPage.navigateHome();
-        await page.reload({ waitUntil: 'networkidle' }).catch(() => undefined);
         await page.waitForTimeout(4000);
-        await authPage.waitForContinueWatchingTrayToBeReady();
-        const continueWatchingVisible = await authPage.isContinueWatchingRailVisible();
-        if (!continueWatchingVisible) {
-            result.reason = 'Continue Watching tray not visible after returning home';
+        const trayReady = await authPage.ensureContinueWatchingTrayInView(30000);
+        if (!trayReady) {
+            result.reason = 'Continue Watching tray could not be brought into view after returning home';
             return result;
         }
         const itemVisible = await authPage.isContinueWatchingItemVisible(result.selectedContentName);
-        result.progressObserved = result.progressObserved && itemVisible;
+        const trayItems = await authPage.getContinueWatchingTrayItemDetails();
+        const normalizedSelectedTitle = normalizeTitle(result.selectedContentName);
+        const selectedTrayItem = trayItems.find((item) => normalizeTitle(item.title).includes(normalizedSelectedTitle));
+        const trayProgressVisible = selectedTrayItem?.hasProgress ?? false;
+        result.progressObserved = result.progressObserved && itemVisible && trayProgressVisible;
         result.isValid = result.itemFound && result.playerVisible && itemVisible && result.progressObserved;
         if (!result.isValid && !result.reason) {
             result.reason = 'Continue Watching validation failed for selected movie';

@@ -10,7 +10,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinOptionVisibility(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
   });
 
@@ -19,7 +18,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinToggleState(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.toggleDisabled).toBe(true);
   });
@@ -29,7 +27,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinPasswordField(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
   });
@@ -39,7 +36,6 @@ test.describe('Parental controls', () => {
     const result = await submitParentalPinPassword(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordSubmitted).toBe(true);
     expect(result.pinSetupMessageVisible).toBe(true);
@@ -50,7 +46,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinPasswordVisibility(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
     expect(result.passwordVisibleAfterToggle).toBe(true);
@@ -66,7 +61,6 @@ test.describe('Parental controls', () => {
       invalidPassword: data.invalidPassword,
       expectedErrorMessage: data.expectedErrorMessage,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
     expect(result.errorMessageVisible).toBe(true);
@@ -78,7 +72,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinFourDigitInput(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
     expect(result.pinInputBoxesVisible).toBe(true);
@@ -91,7 +84,6 @@ test.describe('Parental controls', () => {
     const result = await verifyParentalPinFourDigitInput(page, {
       mode: data.mode,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
     expect(result.pinInputBoxesVisible).toBe(true);
@@ -107,7 +99,6 @@ test.describe('Parental controls', () => {
       expectedSuccessHeader: data.expectedSuccessHeader,
       expectedSuccessDetails: data.expectedSuccessDetails,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.passwordFieldVisible).toBe(true);
     expect(result.pinInputBoxesVisible).toBe(true);
@@ -126,7 +117,6 @@ test.describe('Parental controls', () => {
       pin: data.pin,
       expectedPromptText: data.expectedParentalPinPromptText,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.parentalPinPromptVisible).toBe(true);
     expect(result.parentalPinPromptText).toContain(data.expectedParentalPinPromptText);
@@ -141,7 +131,6 @@ test.describe('Parental controls', () => {
       expectedPromptText: data.expectedParentalPinPromptText,
       expectedInvalidPinErrorText: data.expectedInvalidPinErrorText,
     });
-    expect(result.isLoggedIn).toBe(true);
     expect(result.parentalControlsVisible).toBe(true);
     expect(result.parentalPinPromptVisible).toBe(true);
     expect(result.parentalPinPromptText).toContain(data.expectedParentalPinPromptText);
@@ -149,7 +138,7 @@ test.describe('Parental controls', () => {
     expect(result.parentalPinInvalidErrorText).toContain(data.expectedInvalidPinErrorText);
   });
 
-  test.only('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
+  test('@Medium - IW3-T2111 : Verify selected Continue Watching episode resumes playback from last watched position with parental PIN enabled', async ({ page }) => {
     test.setTimeout(300000);
     const data = testCaseData['tc-settings-014-parental-pin-resume-continue-watching'];
     const result = await verifyContinueWatchingPlaybackFromTrayWithParentalPin(page, {

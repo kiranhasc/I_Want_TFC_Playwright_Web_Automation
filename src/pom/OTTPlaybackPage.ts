@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { PageUtils } from '../utils/page-utils';
 import { PageElement } from '../types/index';
 import { logger } from '../utils/logger';
+import { config } from '../utils/config-manager';
 
 export class OTTPlaybackPage {
     private readonly page: Page;
@@ -39,6 +40,8 @@ export class OTTPlaybackPage {
     private readonly episodeSelector: PageElement;
     private readonly unlockEarlyAccessButton: PageElement;
     private readonly updateToWatchNowButton: PageElement;
+    private readonly progressBarContainer: PageElement;
+    private readonly progressBarIndicator: PageElement;
 
     constructor(page: Page) {
         this.page = page;
@@ -76,10 +79,12 @@ export class OTTPlaybackPage {
         this.episodeSelector = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode")' };
         this.unlockEarlyAccessButton = { selector: '//div[text()="Unlock Early Access"]' };
         this.updateToWatchNowButton = { selector: '//p[text()="Upgrade to Watch Now"]' };
+        this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
+        this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     }
 
     async navigateToHomePage(): Promise<void> {
-        await this.page.goto('https://www.iwanttfc.com/');
+        await this.page.goto(config.getBaseURL());
         await this.pageUtils.waitForPageLoad();
     }
 
@@ -160,15 +165,15 @@ export class OTTPlaybackPage {
         return true;
     }
 
-    async clickFirstAvailablePlayButton(): Promise<boolean> {
+    async clickFirstAvailablePlayButton(timeout: number = 15000): Promise<boolean> {
         const playTarget = this.page.getByText(/Play/i).filter({ hasNotText: /Subscribe/i }).first();
         const isVisible = await playTarget.isVisible().catch(() => false);
         if (!isVisible) {
             return false;
         }
         await playTarget.click({ force: true });
-        await this.page.waitForURL(/\/player\//, { timeout: 60000 }).catch(() => undefined);
-        await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+        await this.page.waitForURL(/\/player\//, { timeout }).catch(() => undefined);
+        await this.page.waitForLoadState('domcontentloaded', { timeout }).catch(() => undefined);
         await this.page.waitForTimeout(8000);
         return true;
     }
@@ -369,14 +374,6 @@ export class OTTPlaybackPage {
         }
     }
 
-    // async isUnlockEarlyAccessVisible(): Promise<boolean> {
-    //     const bodyText = await this.page.locator('body').innerText().catch(() => '');
-    //     if (/unlock early access/i.test(bodyText)) {
-    //         return true;
-    //     }
-    //     return await this.page.locator('//div[text()="Unlock Early Access"]').first().isVisible();
-    // }
-
     async isUnlockEarlyAccessVisible(): Promise<boolean> {
        const bodyText = await this.page.locator('body').innerText().catch(() => '');
         return bodyText.toLowerCase().includes('unlock early access') || await this.pageUtils.isVisible(this.unlockEarlyAccessButton, 10000);
@@ -446,7 +443,7 @@ export class OTTPlaybackPage {
 
     async navigateToWatchlistPage(): Promise<boolean> {
         try {
-            const watchlistLink = this.page.getByText(/My Watchlist|Watchlist/i).first();
+            const watchlistLink = this.page.getByText(/#my_watchlist|Watchlist/i).first();
             await watchlistLink.waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
             await watchlistLink.click({ force: true, timeout: 30000 }).catch(() => undefined);
             await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -520,7 +517,7 @@ export class OTTPlaybackPage {
         let resumeClicked = false;
         let playbackCompleted = false;
         const currentTimeBeforePause = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
-        await this.page.waitForTimeout(8000);
+        await this.page.waitForTimeout(5000);
         await this.page.mouse.move(700, 400).catch(() => undefined);
         await this.page.waitForTimeout(2000);
         const pauseButton = this.page.getByRole('button', { name: 'Pause' }).first();
@@ -540,7 +537,7 @@ export class OTTPlaybackPage {
             await playButton.hover({ force: true }).catch(() => undefined);
             await this.page.waitForTimeout(1000);
             await playButton.click({ force: true, timeout: 30000 }).catch(() => undefined);
-            await this.page.waitForTimeout(8000);
+            await this.page.waitForTimeout(5000);
             resumeClicked = true;
         }
         const currentTimeAfterResume = await videoElement.evaluate((node: HTMLVideoElement) => node.currentTime).catch(() => 0);
@@ -558,7 +555,6 @@ export class OTTPlaybackPage {
         const seekBar = this.page.locator(this.seekBar.selector).first();
         await seekBar.waitFor({ state: 'visible', timeout: 15000 });
         const box = await seekBar.boundingBox();
-    
         if (!box) {
         return;
         }
@@ -571,4 +567,36 @@ export class OTTPlaybackPage {
         await this.page.mouse.move(endX, endY, { steps: 8 });
         await this.page.mouse.up();
   }
+
+    async dragProgressBarToPosition(targetPercent: number): Promise<void> {
+        const candidates = [this.progressBarContainer, this.progressBarIndicator, this.seekBar];
+        let targetLocator = null as any;
+        for (const candidate of candidates) {
+            const locator = this.page.locator(candidate.selector).first();
+            const count = await locator.count().catch(() => 0);
+            if (count > 0) {
+                const visible = await locator.isVisible().catch(() => false);
+                if (visible) {
+                    targetLocator = locator;
+                    break;
+                }
+            }
+        }
+        if (!targetLocator) {
+            return;
+        }
+        const box = await targetLocator.boundingBox().catch(() => null);
+        if (!box) {
+            return;
+        }
+        const safePercent = Math.min(Math.max(targetPercent, 0.05), 0.99);
+        const startX = box.x + box.width * 0.05;
+        const startY = box.y + box.height / 2;
+        const endX = box.x + box.width * safePercent;
+        await this.page.mouse.move(startX, startY);
+        await this.page.mouse.down();
+        await this.page.mouse.move(endX, startY, { steps: 30 });
+        await this.page.mouse.up();
+        await this.page.waitForTimeout(1000);
+    }
 }

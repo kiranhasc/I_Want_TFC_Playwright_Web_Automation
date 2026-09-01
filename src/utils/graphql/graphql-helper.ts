@@ -96,8 +96,10 @@ export class GraphQLHelper {
         retry = true,
         ignoreCached = false
     ): Promise<GraphQLResult<T>> {
-
         logger.info(`Waiting for GraphQL operation: ${operationName}`);
+        if (operationName === 'Asset') {
+            throw new Error('Asset GraphQL wait is disabled for post-playback flows');
+        }
         const waitForCache = async (): Promise<GraphQLResult<T> | null> => {
             const startTime = Date.now();
             while (Date.now() - startTime < timeout) {
@@ -115,17 +117,14 @@ export class GraphQLHelper {
         if (ignoreCached) {
             this.responses.delete(operationName);
         }
-        // First attempt
         let result = await waitForCache();
         if (result) {
             return result;
         }
-        // Retry by refreshing page once
         if (retry) {
             logger.warn(`GraphQL operation '${operationName}' not found. Refreshing page and retrying...`);
-            // Clear old cache before refresh
             this.responses.delete(operationName);
-            await this.page.reload({waitUntil: 'networkidle'});
+            await this.page.reload({ waitUntil: 'networkidle' });
             logger.info(`Page refreshed. Waiting again for ${operationName}`);
             result = await waitForCache();
             if (result) {

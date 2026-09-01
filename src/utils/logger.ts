@@ -80,7 +80,6 @@ class Logger {
       console.debug(`\x1b[37m${formattedMessage}\x1b[0m`);
       break;
     default:
-      console.log(formattedMessage);
     }
 
     // Write to file
@@ -191,12 +190,15 @@ class Logger {
     this.info(`SCREENSHOT: ${path}`);
   }
 
-  /**
-     * Log assertion
-     */
-  public assertion(description: string, result: boolean | string): void {
+  public assertion(description: string, result: boolean): void {
     const status = result ? 'PASSED' : 'FAILED';
-    this.info(`ASSERTION ${status}: ${description}`);
+
+    if (result) {
+      this.info(`ASSERTION ${status}: ${description}`);
+    } else {
+      this.error(`ASSERTION ${status}: ${description}`);
+      throw new Error(`ASSERTION FAILED: ${description}`);
+    }
   }
 
   /**
@@ -225,7 +227,7 @@ class Logger {
    */
   private colorLog(message: string, colorCode: string): void {
     const formattedMessage = this.formatMessage('info', message);
-    console.log(`${colorCode}${formattedMessage}\x1b[0m`);
+    logger.info(`${colorCode}${formattedMessage}\x1b[0m`);
     this.writeToFile('info', formattedMessage);
   }
 
@@ -235,7 +237,7 @@ class Logger {
 
   const formattedMessage = this.formatMessage('info', message);
 
-  console.log(
+  logger.info(
     `${BOLD}${GREEN}${formattedMessage}${RESET}`
   );
 
@@ -247,7 +249,7 @@ public success(message: string): void {
 
   const formattedMessage = this.formatMessage('info', message);
 
-  console.log(
+  logger.info(
     `${BOLD}${GREEN}${formattedMessage}${RESET}`
   );
 

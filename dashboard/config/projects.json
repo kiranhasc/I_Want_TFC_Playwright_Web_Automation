@@ -1,0 +1,186 @@
+{
+  "environments": [
+    {
+      "value": "dev",
+      "label": "Dev"
+    },
+    {
+      "value": "qa",
+      "label": "QA"
+    },
+    {
+      "value": "prod",
+      "label": "Prod"
+    }
+  ],
+  "projects": [
+    {
+      "name": "account-subscriptions-profile",
+      "label": "Account - Subscriptions Profile",
+      "specs": [
+        "account-subscriptions-profile.spec.ts"
+      ]
+    },
+    {
+      "name": "create-account-ui",
+      "label": "Create Account UI",
+      "specs": [
+        "create-account-ui.spec.ts"
+      ]
+    },
+    {
+      "name": "parental-pin",
+      "label": "Parental PIN",
+      "specs": [
+        "parential-pin.spec.ts"
+      ]
+    },
+    {
+      "name": "subscription",
+      "label": "Subscription",
+      "specs": [
+        "subscription.spec.ts"
+      ]
+    },
+    {
+      "name": "playback",
+      "label": "Playback",
+      "specs": [
+        "playback.spec.ts"
+      ]
+    },
+    {
+      "name": "skip-intro",
+      "label": "Skip Intro",
+      "specs": [
+        "skip-intro.spec.ts"
+      ]
+    },
+    {
+      "name": "continue-watching",
+      "label": "Continue Watching",
+      "specs": [
+        "continue-watching.spec.ts"
+      ]
+    },
+    {
+      "name": "home-page-launch",
+      "label": "Home Page Launch",
+      "specs": [
+        "home-page-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "landing-page-launch",
+      "label": "Landing Page Launch",
+      "specs": [
+        "landing-page-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "login-page-launch",
+      "label": "Login Page Launch",
+      "specs": [
+        "login-page-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "early-access-launch",
+      "label": "Early Access Launch",
+      "specs": [
+        "early-access-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "synacor-page-launch",
+      "label": "Synacor Page Launch",
+      "specs": [
+        "synacor-page-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "vpn-page-launch",
+      "label": "VPN Page Launch",
+      "specs": [
+        "vpn-page-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "details-page",
+      "label": "Details Page",
+      "specs": [
+        "details-page.spec.ts"
+      ]
+    },
+    {
+      "name": "registration-launch",
+      "label": "Registration Launch",
+      "specs": [
+        "registration-launch.spec.ts"
+      ]
+    },
+    {
+      "name": "iwant-originals",
+      "label": "iWant Originals",
+      "specs": [
+        "iwant-originals.spec.ts"
+      ]
+    },
+    {
+      "name": "landing-page",
+      "label": "Landing Page",
+      "specs": [
+        "landing-page.spec.ts"
+      ]
+    },
+    {
+      "name": "search",
+      "label": "Search",
+      "specs": [
+        "search.spec.ts"
+      ]
+    },
+    {
+      "name": "watchlist-management",
+      "label": "Watchlist Management",
+      "specs": [
+        "watchlist-management.spec.ts"
+      ]
+    },
+    {
+      "name": "end-to-end",
+      "label": "End to End",
+      "specs": [
+        "end-to-end.spec.ts"
+      ]
+    },
+    {
+      "name": "ph-region",
+      "label": "PH Region",
+      "specs": [
+        "ph_region.spec.ts"
+      ]
+    },
+    {
+      "name": "ads",
+      "label": "Ads",
+      "specs": [
+        "ads.spec.ts"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "value": "@High",
+      "label": "High priority"
+    },
+    {
+      "value": "@Medium",
+      "label": "Medium priority"
+    },
+    {
+      "value": "@Low",
+      "label": "Low priority"
+    }
+  ]
+}

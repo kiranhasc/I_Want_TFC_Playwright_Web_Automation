@@ -13,6 +13,7 @@ declare const process: { env: Record<string, string | undefined> };
 
 export interface OpenContentAndPlayInput {
   query?: string;
+  parentalPin?: string;
   graphqlQueryName?: string;
   mode?: string;
   expectedTitle?: string;
@@ -58,6 +59,7 @@ export interface VerifyEarlyAccessMaybeLaterInput {
   mode?: string;
   graphqlQueryName?: string;
   labelText?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyEarlyAccessMaybeLaterOutput {
@@ -85,7 +87,7 @@ export interface VerifySkipMarkerVisibilityAfterPauseResumeInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
-
+  parentalPin?: string;
 }
 
 export interface VerifySkipMarkerVisibilityAfterPauseResumeOutput {
@@ -99,6 +101,7 @@ export interface VerifySkipMarkerVisibilityAfterPauseResumeOutput {
 export interface VerifySkipMarkersReappearAfterRewindInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipMarkersReappearAfterRewindOutput {
@@ -150,6 +153,7 @@ export interface VerifyUpNextMarkerClickNavigationOutput {
 export interface VerifySkipMarkersNotVisibleInContinueWatchingInput {
   mode?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySkipMarkersNotVisibleInContinueWatchingOutput {
@@ -196,6 +200,7 @@ export interface VerifyTapToPausePlaybackInput {
   query?: string;
   mode?: string;
   expectedTitle?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyTapToPausePlaybackOutput {
@@ -213,6 +218,7 @@ export interface VerifySeekbarPreviewInput {
   graphqlQueryName?: string;
   expectedTitle?: string;
   expectedEpisode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySeekbarPreviewOutput {
@@ -276,6 +282,7 @@ export interface VerifySubtitlePersistenceOutput {
 
 export interface VerifyLivePlaybackPauseResumeInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyLivePlaybackPauseResumeOutput {
@@ -294,6 +301,7 @@ export interface VerifyEarlyAccessSubscriptionFlowInput {
   mode?: string;
   graphqlQueryName?: string;
   labelText?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyEarlyAccessSubscriptionFlowOutput {
@@ -313,6 +321,7 @@ export interface VerifySubscribedEarlyAccessUpNextFlowInput {
   mode?: string;
   graphqlQueryName?: string;
   labelText?: string;
+  parentalPin?: string;
 }
 
 export interface VerifySubscribedEarlyAccessUpNextFlowOutput {
@@ -552,6 +561,7 @@ export interface VerifySubtitleSynchronizationOutput {
 
 export interface PlayFreeAssetInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface PlayFreeAssetOutput {
@@ -580,6 +590,7 @@ export interface VerifyPauseAdForDifferentUsersInput {
   graphqlQueryName?: string;
   query?: string;
   providerName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdForDifferentUsersOutput {
@@ -593,6 +604,7 @@ export interface VerifyPauseAdClickableInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdClickableOutput {
@@ -604,6 +616,7 @@ export interface VerifyPauseAdForMicroDramaInput {
   mode?: string;
   graphqlQueryName?: string;
   query?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdForMicroDramaOutput {
@@ -616,6 +629,7 @@ export interface VerifyPauseAdFullscreenInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdFullscreenOutput {
@@ -627,6 +641,7 @@ export interface VerifyMidRollAdFullscreenInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyMidRollAdFullscreenOutput {
@@ -639,6 +654,7 @@ export interface VerifyMidRollAdFullscreenOutput {
 export interface VerifyPauseAdRepeatedPausesInput {
   mode?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdRepeatedPausesOutput {
@@ -652,6 +668,7 @@ export interface VerifyPauseAdRepeatedPausesOutput {
 export interface VerifyPauseAdDismissCtaInput {
   mode?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdDismissCtaOutput {
@@ -666,6 +683,7 @@ export interface VerifyPauseAdNoOverlapInput {
   mode?: string;
   graphqlQueryName?: string;
   searchTerm?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdNoOverlapOutput {
@@ -699,19 +717,20 @@ export interface VerifyPauseAdSeekBarOverlapOutput {
 export interface VerifyPauseAdControlsDismissedInput {
   mode?: string;
   query?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdControlsDismissedOutput {
   isLoggedIn: boolean;
-  pauseAdVisible: boolean;
+  recapPauseAdVisible: boolean;
   skipRecapVisible: boolean;
   skipIntroVisible: boolean;
-  skipIntroHiddenAfterPause: boolean;
-  subtitleMenuVisible: boolean;
+  subtitlePauseAdVisible: boolean;
+  subtitleVisible: boolean;
   subtitleMenuHiddenAfterPause: boolean;
   skipRecapNotVisible: boolean;
   skipIntroNotVisible: boolean;
-  recapPauseAdVisible: boolean;
+  skipIntroPauseAdVisible: boolean;
 
 }
 
@@ -719,6 +738,7 @@ export interface VerifyPauseAdSkipIntroRecapGoLiveInput {
   mode?: string;
   searchTerm?: string;
   liveContentName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdSkipIntroRecapGoLiveOutput {
@@ -738,6 +758,7 @@ export interface VerifyPauseAdSkipIntroRecapGoLiveOutput {
 export interface VerifyPauseAdBackNavigationInput {
   mode?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdBackNavigationOutput {
@@ -750,11 +771,13 @@ export interface VerifyPauseAdBackNavigationOutput {
 export interface VerifyPauseAdLiveContentInput {
   mode?: string;
   liveContentName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdAbsenceForPremiumOrGmaInput {
   mode?: string;
   liveContentName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdAbsenceForPremiumOrGmaOutput {
@@ -764,6 +787,7 @@ export interface VerifyPauseAdAbsenceForPremiumOrGmaOutput {
 
 export interface VerifyPauseScreenForPremiumOrGmaInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseScreenForPremiumOrGmaOutput {
@@ -774,12 +798,14 @@ export interface VerifyPauseScreenForPremiumOrGmaOutput {
   showAdBannerVisible: boolean;
   pauseMovieBannerVisible: boolean;
   pauseShowBannerVisible: boolean;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdAppearsOnPlayerScreenInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdAppearsOnPlayerScreenOutput {
@@ -793,6 +819,7 @@ export interface VerifyPauseAdDisappearsOnResumeInput {
   mode?: string;
   query?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdDisappearsOnResumeOutput {
@@ -805,6 +832,7 @@ export interface VerifyPauseAdNotDisplayedWhilePlayingInput {
   mode?: string;
   graphqlQueryName?: string;
   query?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdNotDisplayedWhilePlayingOutput {
@@ -827,6 +855,7 @@ export interface VerifyPauseAdSeekRestrictionOutput {
 export interface VerifyPauseAdSeekRestrictionGraphQLInput {
   mode?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdSeekRestrictionGraphQLOutput {
@@ -835,6 +864,7 @@ export interface VerifyPauseAdSeekRestrictionGraphQLOutput {
   seekBlocked: boolean;
   freeContentTitle: string;
   seekBarVisible: boolean;
+  parentalPin?: string;
 }
 
 export interface VerifyBillboardAdBannerOutput {
@@ -891,6 +921,7 @@ export interface VerifyLivePlaybackGoLiveOutput {
 export interface VerifyGoLiveTagAfterPauseInput {
   mode?: string;
   channelName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyGoLiveTagAfterPauseOutput {
@@ -924,6 +955,7 @@ export interface VerifyMovieCompletionRedirectToDetailsOutput {
 export interface VerifyPauseAdNoReappearWithin3SecInput {
   mode?: string;
   graphqlQueryName?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyPauseAdNoReappearWithin3SecOutput {
@@ -965,6 +997,7 @@ export interface VerifyLiveTagOnPlayerOutput {
 
 export interface PlayContentFromWatchlistInput {
   mode: string;
+  parentalPin?: string;
 }
 
 export interface PlayContentFromWatchlistOutput {
@@ -1038,6 +1071,7 @@ export async function verifyEarlyAccessMaybeLaterFlow(page: any, input?: VerifyE
   const playbackPage = new OTTPlaybackPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Early Access Maybe Later navigation verification flow');
   await loginToOTT(page, { mode });
   const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
@@ -1072,6 +1106,7 @@ export async function verifyEarlyAccessMaybeLaterFlow(page: any, input?: VerifyE
   logger.assertion('Early Access tag visible on episode thumbnail', earlyAccessTagVisible);
   const episodeClicked = await detailsPage.clickEpisodeCardWithEarlyAccessTag();
   logger.assertion('Early Access episode clicked', episodeClicked);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const unlockEarlyAccessVisible = await playbackPage.isUnlockEarlyAccessVisible();
   const maybeLaterVisible = await playbackPage.isMaybeLaterVisible();
   logger.assertion('Unlock Early Access prompt is visible', unlockEarlyAccessVisible);
@@ -1100,6 +1135,7 @@ export async function verifyEarlyAccessSubscriptionFlow(page: any, input?: Verif
   const playbackPage = new OTTPlaybackPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Early Access subscription initiation verification flow');
   await loginToOTT(page, { mode });
   const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
@@ -1134,6 +1170,7 @@ export async function verifyEarlyAccessSubscriptionFlow(page: any, input?: Verif
   logger.assertion('Early Access tag visible on episode thumbnail', earlyAccessTagVisible);
   const episodeClicked = await detailsPage.clickEpisodeCardWithEarlyAccessTag();
   logger.assertion('Early Access episode clicked', episodeClicked);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const unlockEarlyAccessVisible = await playbackPage.isUnlockEarlyAccessVisible();
   const updateToWatchNowVisible = await playbackPage.isUpdateToWatchNowVisible();
   logger.assertion('Unlock Early Access prompt visible', unlockEarlyAccessVisible);
@@ -1166,6 +1203,7 @@ export async function verifySubscribedEarlyAccessUpNextFlow(page: any, input?: V
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subscribed user Early Access Up Next / Next Episode verification flow');
   await loginToOTT(page, { mode });
   const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
@@ -1190,6 +1228,7 @@ export async function verifySubscribedEarlyAccessUpNextFlow(page: any, input?: V
   await page.waitForTimeout(2000);
   const episodeClicked = earlyAccessTagVisible ? await detailsPage.clickPreviousEpisodeOfEarlyAccessTag() : false;
   logger.assertion('Previous episode before Early Access episode clicked', episodeClicked);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.98);
@@ -1224,6 +1263,7 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle display verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1265,6 +1305,7 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -1289,6 +1330,7 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting fullscreen functionality verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1305,6 +1347,7 @@ export async function verifyFullscreenFunctionalityFlow(page: any, input?: OpenC
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(7);
   await detailsPage.hoverPlaybackScreen();
@@ -1339,7 +1382,8 @@ async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: st
       const title = asset?.title?.trim();
       const isComingSoon = Array.isArray(asset?.labels) &&
         asset.labels.some((label: any) => label?.id === 'coming_soon');
-      return Boolean(title) && !isComingSoon;
+      const isLive = String(asset?.assetType ?? '').toLowerCase() === 'live';
+      return Boolean(title) && !isComingSoon && !isLive;
     });
     const title = foundAsset?.asset?.title?.trim();
     if (!title) {
@@ -1349,15 +1393,59 @@ async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: st
     logger.info(`Resolved collection search query from GraphQL asset: ${title}`);
     return title;
   } catch (error) {
-    logger.warn(`Unable to resolve query from Collection GraphQL response`, error);
+    logger.warn('Unable to resolve query from Collection GraphQL response', error);
     return undefined;
   }
+}
+
+async function getFreeTvShowTitlesFromCollectionGraphQL(
+  page: any,
+  graphqlQueryName: string = 'Collection'
+): Promise<string[]> {
+  const gql = GraphQLHelper.getInstance(page);
+  const collectionResponse = await gql.waitForOperation(graphqlQueryName, 60000, true, true);
+  const parser = new CollectionParser(collectionResponse as any);
+  const freeTvShowTitles = parser.getRails()
+    .flatMap((rail) => rail.assets?.items ?? [])
+    .filter((asset: any) => {
+      const assetType = String(asset.assetType ?? asset.type ?? '').toLowerCase();
+      if (assetType !== 'tvshow') {
+        return false;
+      }
+
+      const totalSeasons = Number(asset.tvShowDetails?.totalSeasons ?? 0);
+      if (totalSeasons <= 1) {
+        return false;
+      }
+
+      const hasFreeLabel = (asset.labels ?? []).some((label: any) =>
+        /free/i.test(label?.text ?? '')
+      );
+      const monetizationType =
+        asset.monetization?.type ??
+        asset.monetizationType ??
+        asset.pricing?.type ??
+        asset.pricing?.pricingType;
+      const hasFreeMonetization = monetizationType
+        ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetizationType))
+        : false;
+
+      return hasFreeLabel || hasFreeMonetization;
+    })
+    .map((asset: any) => String(asset.title ?? '').trim())
+    .filter((title: string, index: number, titles: string[]) =>
+      title.length > 0 && titles.indexOf(title) === index
+    );
+
+  logger.info(`Fetched free TV show titles from Collection GraphQL: ${freeTvShowTitles.join(', ')}`);
+  return freeTvShowTitles;
 }
 
 export async function openContentAndPlay(page: any, input?: OpenContentAndPlayInput): Promise<OpenContentAndPlayOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting content search, navigation to details, and play flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1374,7 +1462,9 @@ export async function openContentAndPlay(page: any, input?: OpenContentAndPlayIn
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForPlayback(3);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  await detailsPage.waitForPlayback(7);
+  await detailsPage.hoverPlaybackScreen();
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const contentTitleVisible = await detailsPage.isPlayerContentTitleVisible(expectedTitle);
   const episodeNameVisible = await detailsPage.isEpisodeNameVisible(expectedTitle);
@@ -1480,6 +1570,7 @@ export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: 
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting last-season last-episode completion -> details navigation flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1523,6 +1614,7 @@ export async function verifyLastSeasonLastEpisodeCompletionNavigationFlow(page: 
   logger.assertion('Clicked last season when available', clickedSeason);
   const clickedEpisode = await detailsPage.clickLastEpisode();
   logger.assertion('Clicked last episode', clickedEpisode);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -1546,6 +1638,7 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting dedicated movie completion redirect to details validation flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1572,6 +1665,7 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible before playback', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const adsVisible = await detailsPage.isAdTagVisible();
   if (adsVisible) {
     await page.waitForTimeout(150000);
@@ -1606,6 +1700,7 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   let query = (input?.query ?? '').trim();
   logger.step('Starting movie playback completion details navigation flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -1653,6 +1748,7 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   const playbackStarted = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Movie playback started', playbackStarted);
@@ -1676,22 +1772,22 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting playback resume verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (queryFromCollection).trim();
-  const expectedTitle = input?.expectedTitle ?? query;
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   const initialPlayed = true;
@@ -1718,6 +1814,7 @@ export async function verifySmoothPlaybackFlow(page: any, input?: OpenContentAnd
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting smooth playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1734,8 +1831,11 @@ export async function verifySmoothPlaybackFlow(page: any, input?: OpenContentAnd
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
-  await page.waitForTimeout(2000);
+  // await page.waitForTimeout(2000);
+  await detailsPage.waitForPlayback(20);
+  await detailsPage.hoverPlaybackScreen();
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const contentTitleVisible = await detailsPage.isPlayerContentTitleVisible(expectedTitle);
   const episodeNameVisible = await detailsPage.isEpisodeNameVisible(input?.expectedEpisode);
@@ -1744,7 +1844,6 @@ export async function verifySmoothPlaybackFlow(page: any, input?: OpenContentAnd
   logger.assertion('Content title visible on player screen', contentTitleVisible);
   logger.assertion('Episode name visible on player screen', episodeNameVisible);
   logger.assertion('Seek bar visible during smooth playback', seekBarVisible);
-  await detailsPage.waitForPlayback(20);
   return {
     isLoggedIn,
     detailsVisible,
@@ -1759,6 +1858,7 @@ export async function verifySeekBarDragFlow(page: any, input?: OpenContentAndPla
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   const targetPercent = input?.seekPercent ?? 0.35;
   logger.step('Starting seek bar drag verification flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -1775,6 +1875,7 @@ export async function verifySeekBarDragFlow(page: any, input?: OpenContentAndPla
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.hoverPlaybackScreen();
   const initialPlaybackTime = await detailsPage.getTrimmedPlaybackTime();
@@ -1795,6 +1896,7 @@ export async function verifyBrowserSeekBarFlow(page: any, input?: OpenContentAnd
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const targetPercent = input?.seekPercent ?? 0.35;
   logger.step('Starting browser seek bar verification flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -1812,6 +1914,7 @@ export async function verifyBrowserSeekBarFlow(page: any, input?: OpenContentAnd
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await page.waitForTimeout(8000);
   await detailsPage.hoverPlaybackScreen();
@@ -1841,6 +1944,7 @@ export async function verifyPlayerControlsFlow(page: any, input?: OpenContentAnd
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting player controls visibility verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1857,6 +1961,7 @@ export async function verifyPlayerControlsFlow(page: any, input?: OpenContentAnd
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -1883,6 +1988,7 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting player controls auto-dismiss verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1899,8 +2005,10 @@ export async function verifyPlayerControlsAutoDismissFlow(page: any, input?: Ope
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
-  await detailsPage.waitForPlayback(1);
+  await detailsPage.waitForPlayback(7);
+  await detailsPage.hoverPlaybackScreen();
   const controlsInitiallyVisibleResult = await detailsPage.isPlayerVideoControlsVisible();
   const controlsInitiallyVisible = controlsInitiallyVisibleResult.playerVideoControlsVisible;
   logger.assertion('Player controls visible before auto-dismiss', controlsInitiallyVisible);
@@ -1921,6 +2029,7 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting player controls hover-visible verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1939,6 +2048,7 @@ export async function verifyPlayerControlsHoverDismissFlow(page: any, input?: Op
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -1969,6 +2079,7 @@ export async function verifyVolumeControlFlow(page: any, input?: OpenContentAndP
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting volume control verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1985,6 +2096,7 @@ export async function verifyVolumeControlFlow(page: any, input?: OpenContentAndP
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   const initialUnMuted = await detailsPage.isPlayerUnMuted();
@@ -2010,6 +2122,7 @@ export async function verifyFullscreenButtonVisibilityFlow(page: any, input?: Op
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting fullscreen button visibility verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2026,6 +2139,7 @@ export async function verifyFullscreenButtonVisibilityFlow(page: any, input?: Op
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -2043,6 +2157,7 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting landscape player UI verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2073,6 +2188,7 @@ export async function verifyPlayerUIFlow(page: any, input?: OpenContentAndPlayIn
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -2113,6 +2229,7 @@ export async function verifyNextEpisodeCtaVisibilityFlow(page: any, input?: Open
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting next episode CTA visibility verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2143,6 +2260,7 @@ export async function verifyNextEpisodeCtaVisibilityFlow(page: any, input?: Open
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -2166,6 +2284,7 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next binge marker verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2194,6 +2313,7 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
@@ -2214,6 +2334,7 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next marker navigation verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2244,6 +2365,7 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -2255,6 +2377,7 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   logger.assertion('Up Next marker is visible', markerVisible);
   if (markerVisible) {
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForMobileAdPlayback();
     await detailsPage.waitForPlayback(2);
     await detailsPage.tapPlaybackScreen();
@@ -2274,6 +2397,7 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next marker functionality verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2302,6 +2426,7 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
@@ -2315,6 +2440,7 @@ export async function verifyUpNextMarkerFunctionalityFlow(page: any, input?: Ope
     timeBeforeMarkerClick = await detailsPage.getTrimmedPlaybackTime();
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickUpNextMarker();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(5);
     timeAfterMarkerClick = await detailsPage.getTrimmedPlaybackTime();
     nextEpisodePlaybackStarted = timeBeforeMarkerClick !== timeAfterMarkerClick;
@@ -2337,6 +2463,7 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next close button verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2365,6 +2492,7 @@ export async function verifyUpNextCloseButtonFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
@@ -2398,6 +2526,7 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next marker click navigation verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2426,6 +2555,7 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
@@ -2437,6 +2567,7 @@ export async function verifyUpNextMarkerClickNavigationFlow(page: any, input?: O
   if (markerVisible) {
     markerClicked = await detailsPage.clickUpNextMarker();
     logger.info('Clicked Up Next marker, waiting for next episode playback to start...');
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(2);
     await detailsPage.tapPlaybackScreen();
     nextEpisodePlaybackStarted = markerClicked && (await detailsPage.isPlayerScreenVisible().catch(() => false));
@@ -2456,27 +2587,42 @@ export async function verifyNextEpisodePlaybackInFullscreenFlow(page: any, input
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting next episode playback in fullscreen verification flow');
+  GraphQLHelper.getInstance(page);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  await page.waitForTimeout(2000);
-  await authPage.clickShowsTab();
-  await page.waitForTimeout(4000);
-  await detailsPage.clickFirstShowContent();
+  const freeTvShowTitles = await getFreeTvShowTitlesFromCollectionGraphQL(
+    page,
+    input?.graphqlQueryName ?? 'Collection'
+  );
+  const freeTvShowTitle = freeTvShowTitles[0] ?? '';
+  logger.assertion('Free TV show title resolved from Collection GraphQL', Boolean(freeTvShowTitle));
+  await authPage.clickSearchBar();
+  await authPage.enterSearchQuery(freeTvShowTitle);
+  await authPage.submitSearchQuery();
+  await detailsPage.waitForPlayback(2);
+  await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Show content details page visible', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickFullscreenButton();
   await detailsPage.waitForPlayback(2);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.99);
+  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd(); 
   const markerVisible = await detailsPage.waitForUpNextMarker(20000);
   logger.assertion('Up Next marker visible after scrubbing near the end of playback', markerVisible);
   if (markerVisible) {
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(5);
+    await detailsPage.waitTillAdsEnd();
   }
   const fullScreenActiveAfterUpNext = await detailsPage.isFullscreenModeActive();
   const nextEpisodePlaybackStarted = markerVisible && (await detailsPage.isPlayerScreenVisible());
@@ -2495,6 +2641,7 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting automatic next episode playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2525,6 +2672,7 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
@@ -2536,6 +2684,7 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   let autoPlaybackStarted = false;
   if (markerVisible) {
     await detailsPage.waitForPlayback(8);
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     autoPlaybackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
   }
   logger.assertion('Next episode playback started automatically', autoPlaybackStarted);
@@ -2551,6 +2700,7 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting back button navigation verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2567,6 +2717,7 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
   await detailsPage.isPlayerScreenVisible();
@@ -2587,10 +2738,12 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
 export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlayerCloseReturnsToDetailsOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
-  const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting close-player return to details verification flow');
   const loginResult = await loginToOTT(page, { mode });
+  const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
+  const query = (queryFromCollection).trim();
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before testing player close return flow', isLoggedIn);
   if (!isLoggedIn) {
@@ -2614,7 +2767,8 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
-  if(process.env.BROWSER === 'mchrome'){
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  if (process.env.BROWSER === 'mchrome') {
     page.waitForTimeout(90000);
   }
   await detailsPage.waitForPlayback(2);
@@ -2644,6 +2798,7 @@ export async function verifyPlaybackTimestampFormatFlow(page: any, input?: OpenC
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   let query = (input?.query ?? '').trim();
   logger.step('Starting playback timestamp format verification flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -2687,6 +2842,7 @@ export async function verifyPlaybackTimestampFormatFlow(page: any, input?: OpenC
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
@@ -2713,6 +2869,7 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting playback short-duration timestamp format verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2760,6 +2917,7 @@ export async function verifyPlaybackShortDurationTimestampFormatFlow(page: any, 
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -2788,6 +2946,7 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle selection verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2834,6 +2993,7 @@ export async function verifySubtitleSelectionFlow(page: any, input?: OpenContent
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -2855,6 +3015,7 @@ export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarP
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting seekbar thumbnail preview verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2871,6 +3032,7 @@ export async function verifySeekbarPreviewFlow(page: any, input?: VerifySeekbarP
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(7);
   await detailsPage.tapPlaybackScreen();
@@ -2888,6 +3050,7 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle persistence verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2936,12 +3099,14 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   await detailsPage.clickSubtitleButton();
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   await detailsPage.clickNextEpisodeButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(1);
   await detailsPage.tapPlaybackScreen();
@@ -2964,6 +3129,7 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   let query = (input?.query ?? '').trim();
   let secondQuery = (input?.secondQuery ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle carry-over verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -3017,6 +3183,7 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening first search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -3032,6 +3199,7 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -3053,6 +3221,7 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle synchronization verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -3093,6 +3262,7 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback()
   await detailsPage.waitForPlayback(2);
   await detailsPage.hoverPlaybackScreen();
@@ -3138,6 +3308,7 @@ export async function verifySkipAdDuringPreRollAdFlow(page: any, input?: OpenCon
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Skip Ad verification flow during pre-roll ad playback');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -3168,6 +3339,7 @@ export async function verifySkipAdDuringPreRollAdFlow(page: any, input?: OpenCon
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
   const skipAdButtonVisible = await detailsPage.waitForSkipAdButton(60);
@@ -3198,6 +3370,7 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting pre-roll ad playback verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -3235,6 +3408,7 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -3253,6 +3427,7 @@ export async function verifySubtitleDefaultOffFlow(page: any, input?: OpenConten
   const detailsPage = new OTTDetailsPage(page);
   let query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting subtitle default-off verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -3294,6 +3469,7 @@ export async function verifySubtitleDefaultOffFlow(page: any, input?: OpenConten
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -3329,7 +3505,8 @@ export async function verifyPauseAdPlaybackFlow(page: any, input?: OpenContentAn
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
-  await detailsPage.waitForPlayback(100);
+  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverPlaybackScreen();
   const mainContentVisible = await detailsPage.isPlaybackTimeVisible();
   await detailsPage.waitForPlayback(10);
@@ -3351,6 +3528,7 @@ export async function verifyPauseAdDisplaysForDifferentUsersFlow(page: any, inpu
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
+  const parentalPin = (input?.parentalPin ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   const providerName = input?.providerName ?? 'Frontier, a Verizon Company';
   logger.step('Starting pause ad verification flow for different users');
@@ -3399,13 +3577,9 @@ export async function verifyPauseAdDisplaysForDifferentUsersFlow(page: any, inpu
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickFirstSearchResult();
     await detailsPage.clickPlayButton();
-    await detailsPage.waitForPlayback(4);
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+    await detailsPage.waitForPlayback(6);
     await detailsPage.waitTillAdsEnd();
-    try {
-      const gql = GraphQLHelper.getInstance(page);
-      await gql.waitForOperation('Asset', 10000).catch(() => null);
-    } catch (err) {
-    }
     await detailsPage.hoverOnPlaybackScreen();
     await detailsPage.clickPauseButton();
     await detailsPage.waitForPlayback(5);
@@ -3441,6 +3615,7 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad clickability verification flow');
@@ -3492,6 +3667,7 @@ export async function verifyPauseAdClickableFlow(page: any, input?: VerifyPauseA
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
   await detailsPage.waitForPlayback(3);
@@ -3515,6 +3691,7 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const query = (input?.query ?? 'Quick Feels').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting micro drama pause ad verification flow for Basic user');
@@ -3571,13 +3748,9 @@ export async function verifyPauseAdForMicroDramaFlow(page: any, input?: VerifyPa
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(7);
@@ -3595,6 +3768,7 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin ?? '').trim();
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad fullscreen verification flow');
@@ -3646,13 +3820,9 @@ export async function verifyPauseAdFullscreenFlow(page: any, input?: VerifyPause
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickFullscreenButton();
   await page.waitForTimeout(5000);
@@ -3682,6 +3852,7 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const query = (input?.query ?? '').trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting mid-roll ad fullscreen verification flow');
@@ -3737,6 +3908,7 @@ export async function verifyMidRollAdFullscreenFlow(page: any, input?: VerifyMid
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(5000);
   await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverPlaybackScreen();
@@ -3764,6 +3936,7 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad repeated-pauses verification flow');
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
@@ -3808,28 +3981,23 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   let allPauseAdAttemptsVisible = true;
   let pauseAdVisible = false;
   let returnToContentVisible = false;
   let playbackTitleVisible = false;
-  let seekBarVisible = false;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickPauseButton();
-    await page.waitForTimeout(7000);
+    await detailsPage.waitForPlayback(7);
     pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-    await page.waitForTimeout(5000);
+    await detailsPage.waitForPlayback(5);
     returnToContentVisible = await detailsPage.isReturnToContentTextVisible();
     await detailsPage.clickReturnToContentText().catch(() => undefined);
     await detailsPage.tapPlaybackScreen();
-    await page.waitForTimeout(5000);
+    await detailsPage.waitForPlayback(7);
     logger.assertion(`Pause ad visible during repeated pause attempt ${attempt}`, pauseAdVisible);
     logger.assertion(`Return-to-content overlay visible during repeated pause attempt ${attempt}`, returnToContentVisible);
     if (!pauseAdVisible) {
@@ -3837,7 +4005,7 @@ export async function verifyPauseAdRepeatedPausesFlow(page: any, input?: VerifyP
     }
     if (returnToContentVisible) {
       await detailsPage.clickReturnToContentText();
-      await page.waitForTimeout(5000);
+      await detailsPage.waitForPlayback(5);
     }
     playbackTitleVisible = await detailsPage.isPlayerContentTitleVisible().catch(() => false);
   }
@@ -3856,6 +4024,7 @@ export async function verifyPauseAdNoOverlapWithDismissAndTitleFlow(page: any, i
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad overlap verification flow');
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
@@ -3896,17 +4065,13 @@ export async function verifyPauseAdNoOverlapWithDismissAndTitleFlow(page: any, i
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
     await authPage.submitSearchQuery();
-    await detailsPage.waitForPlayback(2);
+    await detailsPage.waitForPlayback(3);
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(7000);
@@ -3994,6 +4159,7 @@ export async function verifyPauseAdNoOverlapWithUpNextMarkerFlow(page: any, inpu
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = (input?.searchTerm ?? 'Lavender Fields').trim();
   logger.step('Starting pause-ad overlap verification flow for the Up Next binge marker');
   const loginResult = await loginToOTT(page, { mode });
@@ -4005,6 +4171,8 @@ export async function verifyPauseAdNoOverlapWithUpNextMarkerFlow(page: any, inpu
   await detailsPage.clickFirstSearchResult();
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickEpisodeAtIndex(0);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  await detailsPage.clickPlayButton();
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitTillAdsEnd();
   await page.waitForTimeout(5000);
@@ -4036,6 +4204,7 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad dismiss CTA visibility verification flow');
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
@@ -4080,13 +4249,9 @@ export async function verifyPauseAdDismissCtaVisibilityFlow(page: any, input?: V
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(5000);
@@ -4116,6 +4281,7 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const searchQuery = (input?.query ?? '').trim();
   logger.step('Starting pause-ad controls-dismissed verification flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -4128,76 +4294,81 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
     await detailsPage.clickFirstSearchResult();
     await detailsPage.waitForPlayback(3);
     await detailsPage.clickEpisodeAtIndex(0);
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(5000);
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
     await detailsPage.clickNextEpisodeButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   }
   await page.waitForTimeout(5000);
   await detailsPage.waitTillAdsEnd();
-  await detailsPage.hoverOnPlaybackScreen();
+  await detailsPage.hoverPlaybackScreen();
   const skipRecapVisible = await detailsPage.isSkipRecapMarkerVisible();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(5000);
-  const pauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-  await detailsPage.waitForPlayback(3);
+  await page.waitForTimeout(4000);
+  const recapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await detailsPage.waitForPlayback(2);
   const skipRecapNotVisible = await detailsPage.isSkipRecapMarkerVisible();
   await page.waitForTimeout(2000);
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(2000);
-  await detailsPage.hoverOnPlaybackScreen();
+  await page.waitForTimeout(4000);
   await detailsPage.clickSkipRecapButton();
   await page.waitForTimeout(2000);
   await detailsPage.hoverPlaybackScreen();
   const skipIntroVisible = await detailsPage.isSkipIntroMarkerVisible();
-  await detailsPage.waitForPlayback(3);
+  await detailsPage.waitForPlayback(4);
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(5000);
-  const recapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-  await detailsPage.waitForPlayback(3);
+  await page.waitForTimeout(4000);
+  const skipIntroPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await detailsPage.waitForPlayback(4);
   const skipIntroNotVisible = await detailsPage.isSkipIntroMarkerVisible();
-  const skipIntroHiddenAfterPause = !(await detailsPage.isSkipIntroMarkerVisible());
   await page.waitForTimeout(2000);
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSkipIntroButton();
   await page.waitForTimeout(3000);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickSubtitleButton();
-  await page.waitForTimeout(2000);
-  const subtitleMenuVisible = await detailsPage.isSubtitleLanguageVisible();
   await detailsPage.selectSubtitleLanguage();
+  const subtitleVisible = await detailsPage.isSubtitleMarkerVisible();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(6000);
-  const subtitleMenuHiddenAfterPause = !(await detailsPage.isSubtitleLanguageVisible().catch(() => false));
-  logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', pauseAdVisible);
+  await page.waitForTimeout(4000);
+  const subtitlePauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
+  await page.waitForTimeout(2000);
+  const subtitleMenuHiddenAfterPause = await detailsPage.isSubtitleMarkerVisible();
   logger.assertion('Skip recap marker is visible before the pause-ad interaction', skipRecapVisible);
+  logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', recapPauseAdVisible);
   logger.assertion('Skip recap marker is not visible after the pause-ad interaction', !skipRecapNotVisible);
-  logger.assertion('Recap pause ad is visible after the pause-ad interaction', recapPauseAdVisible);
-  logger.assertion('Skip intro marker is not visible after the pause-ad interaction', !skipIntroNotVisible);
   logger.assertion('Skip intro marker is visible after skipping recap', skipIntroVisible);
-  logger.assertion('Skip intro marker disappears after the pause-ad interaction', skipIntroHiddenAfterPause);
-  logger.assertion('Subtitle menu is visible after the subtitle button action', subtitleMenuVisible);
-  logger.assertion('Subtitle menu is dismissed after the pause-ad interaction', subtitleMenuHiddenAfterPause);
+  logger.assertion('Skip intro pause ad is visible after the pause-ad interaction', skipIntroPauseAdVisible);
+  logger.assertion('Skip intro marker is not visible after the pause-ad interaction', !skipIntroNotVisible);
+  logger.assertion('Subtitle menu is visible after the subtitle button action', subtitleVisible);
+  logger.assertion('Subtitle disappears after the pause-ad interaction', subtitlePauseAdVisible);
+  logger.assertion('Subtitle menu is dismissed after the pause-ad interaction', !subtitleMenuHiddenAfterPause);
   return {
     isLoggedIn,
-    pauseAdVisible,
+    recapPauseAdVisible,
     skipRecapVisible,
     skipIntroVisible,
-    skipIntroHiddenAfterPause,
-    subtitleMenuVisible,
+    subtitlePauseAdVisible,
+    subtitleVisible,
     subtitleMenuHiddenAfterPause,
     skipRecapNotVisible,
     skipIntroNotVisible,
-    recapPauseAdVisible,
+    skipIntroPauseAdVisible,
   };
 }
+
+
 
 export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: any, input?: VerifyPauseAdSkipIntroRecapGoLiveInput): Promise<VerifyPauseAdSkipIntroRecapGoLiveOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const searchTerm = (input?.searchTerm ?? 'Lavender Fields').trim();
   const liveContentName = input?.liveContentName ?? 'DZMM Teleradyo';
   logger.step('Starting pause ad overlap verification flow for skip intro, skip recap, and Go Live CTAs');
@@ -4210,6 +4381,7 @@ export async function verifyPauseAdNotDisplayedOnSkipIntroRecapGoLiveFlow(page: 
   await detailsPage.clickFirstSearchResult();
   await detailsPage.scrollToSeasonsSection();
   await detailsPage.clickEpisodeTwo();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverOnPlaybackScreen();
@@ -4271,6 +4443,7 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad back-navigation verification flow');
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
@@ -4311,18 +4484,14 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(searchTitle);
     await authPage.submitSearchQuery();
-    await detailsPage.waitForPlayback(2);
+    await detailsPage.waitForPlayback(4);
     await detailsPage.clickFirstSearchResult();
     await page.waitForTimeout(2000);
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverOnPlaybackScreen();
   await detailsPage.clickPauseButton();
   await page.waitForTimeout(6000);
@@ -4346,11 +4515,13 @@ export async function verifyPauseAdBackNavigationFlow(page: any, input?: VerifyP
 export async function verifyPauseAdLiveContentPlaybackFlow(page: any, input?: VerifyPauseAdLiveContentInput): Promise<VerifyPauseAdPlaybackOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const liveContentName = (input?.liveContentName ?? '').trim();
   logger.step('Starting live-channel pause ad playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await detailsPage.clickFreeContentUnderLiveChannelsTray(liveContentName);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -4368,11 +4539,13 @@ export async function verifyPauseAdAbsenceForPremiumOrGmaFlow(page: any, input?:
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting premium/GMA pause ad absence verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.clickMoviesTab();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(5000);
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(5000);
@@ -4388,12 +4561,14 @@ export async function verifyPauseScreenForPremiumOrGmaFlow(page: any, input?: Ve
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting premium/GMA pause-screen verification flow for movie and show content');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.clickMoviesTab();
   await detailsPage.clickFirstMovieContent();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.tapPlaybackScreen();
@@ -4435,12 +4610,14 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const liveContentName = (input?.query ?? '').trim();
   logger.step('Starting pause ad visibility verification for live, movie, and show content');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await page.waitForTimeout(5000);
   await detailsPage.clickFreeContentUnderLiveChannelsTray(liveContentName);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
@@ -4551,6 +4728,9 @@ async function resolveFreeQueryFromCollectionGraphQL(page: any, graphqlQueryName
       if (labels.some((text: string) => /free/i.test(text))) {
         return true;
       }
+      if (labels === 'Coming Soon' || labels === 'Early Access') {
+        return false;
+      }
       const monetType = asset?.monetization?.type
         ?? asset?.monetizationType
         ?? asset?.pricing?.type
@@ -4574,6 +4754,7 @@ export async function verifyPauseAdDisappearsOnResumeFlow(page: any, input?: Ver
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin ?? '').trim();
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveFreeQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
@@ -4589,6 +4770,7 @@ export async function verifyPauseAdDisappearsOnResumeFlow(page: any, input?: Ver
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
   try {
@@ -4618,6 +4800,7 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+    const parentalPin = (input?.parentalPin).trim();
   const graphqlQueryName = input?.graphqlQueryName ?? 'Collection';
   logger.step('Starting pause-ad no-reappear-within-3s verification flow');
   const collectionWait = gql.waitForOperation(graphqlQueryName, 20000);
@@ -4660,13 +4843,9 @@ export async function verifyPauseAdNoReappearWithin3SecFlow(page: any, input?: V
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(6000);
   const pauseAdVisibleDuringPause = await detailsPage.isPauseAdMidBannerVisible();
@@ -4689,6 +4868,7 @@ export async function verifyPauseAdNotDisplayedWhilePlayingFlow(page: any, input
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveFreeQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
@@ -4705,13 +4885,9 @@ export async function verifyPauseAdNotDisplayedWhilePlayingFlow(page: any, input
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.hoverPlaybackScreen();
   const pauseAdVisible = await detailsPage.pauseAdBannerNotVisible();
   logger.assertion('Pause ad should not be visible while content is playing', !pauseAdVisible);
@@ -4726,6 +4902,7 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting pause-ad seek restriction verification flow using a free title from Collection GraphQL');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -4769,6 +4946,7 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
     await detailsPage.clickFirstSearchResult();
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverOnPlaybackScreen();
@@ -4799,10 +4977,11 @@ export async function verifyPauseAdSeekRestrictionGraphQLFreeContentFlow(page: a
   };
 }
 
-export async function verifyBillboardAdBannerVisibilityFlow(page: any, input?: { mode?: string; graphqlQueryName?: string }): Promise<VerifyBillboardAdBannerOutput> {
+export async function verifyBillboardAdBannerVisibilityFlow(page: any, input?: { mode?: string; graphqlQueryName?: string; parentalPin?: string }): Promise<VerifyBillboardAdBannerOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting billboard ad banner visibility verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -4816,13 +4995,9 @@ export async function verifyBillboardAdBannerVisibilityFlow(page: any, input?: {
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(6);
   await detailsPage.waitTillAdsEnd();
-  try {
-    const gql = GraphQLHelper.getInstance(page);
-    await gql.waitForOperation('Asset', 10000).catch(() => null);
-  } catch (err) {
-  }
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(5000);
   const adBannerVisible = await detailsPage.isPauseAdBannerVisible();
@@ -4839,6 +5014,7 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad playback UI verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -4875,6 +5051,7 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -4893,6 +5070,7 @@ export async function verifyAdLearnMoreRedirectFlow(page: any, input?: OpenConte
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad Learn More redirect verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -4937,6 +5115,7 @@ export async function verifyAdLearnMoreRedirectFlow(page: any, input?: OpenConte
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(10);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -4972,6 +5151,7 @@ export async function verifyAdLabelVisibilityFlow(page: any, input?: OpenContent
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad label visibility verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -5006,6 +5186,7 @@ export async function verifyAdLabelVisibilityFlow(page: any, input?: OpenContent
   logger.assertion('Search results visible for free content', resultsVisible);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -5041,6 +5222,7 @@ export async function verifyAdCountdownFlow(page: any, input?: OpenContentAndPla
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad countdown visibility verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -5070,6 +5252,7 @@ export async function verifyAdCountdownFlow(page: any, input?: OpenContentAndPla
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -5109,6 +5292,7 @@ export async function verifyMidRollAdInterruptionFlow(page: any, input?: OpenCon
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting mid-roll ad interruption verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -5145,6 +5329,7 @@ export async function verifyMidRollAdInterruptionFlow(page: any, input?: OpenCon
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const initialAdVisible = await detailsPage.isAdTagVisible();
@@ -5174,6 +5359,7 @@ export async function verifyAdSeekBarHiddenDuringAdFlow(page: any, input?: OpenC
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad seek bar hidden verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -5210,6 +5396,7 @@ export async function verifyAdSeekBarHiddenDuringAdFlow(page: any, input?: OpenC
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(10);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -5233,6 +5420,7 @@ export async function verifyAdDurationFlow(page: any, input?: OpenContentAndPlay
   const gql = GraphQLHelper.getInstance(page);
   const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting ad duration verification flow');
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
@@ -5270,6 +5458,7 @@ export async function verifyAdDurationFlow(page: any, input?: OpenContentAndPlay
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
@@ -5291,6 +5480,7 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting playback pause verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -5305,6 +5495,7 @@ export async function verifyPausePlaybackFlow(page: any, input?: OpenContentAndP
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(20);
   await detailsPage.hoverPlaybackScreen();
@@ -5329,6 +5520,7 @@ export async function verifySkipMarkerVisibilityAfterPauseResume(page: any, inpu
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   let query = (input?.query ?? '').trim();
   logger.step('Starting Up Next marker visibility after pause/resume verification flow');
   const gql = GraphQLHelper.getInstance(page);
@@ -5366,7 +5558,9 @@ export async function verifySkipMarkerVisibilityAfterPauseResume(page: any, inpu
     };
   }
   await detailsPage.clickEpisodeOne();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.clickNextEpisodeButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   await detailsPage.hoverPlaybackScreen();
@@ -5414,6 +5608,7 @@ export async function verifySkipMarkersReappearAfterRewind(page: any, input?: Ve
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const searchTerm = input?.searchTerm ?? '';
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting skip marker reappearance after rewind verification flow');
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -5436,6 +5631,7 @@ export async function verifySkipMarkersReappearAfterRewind(page: any, input?: Ve
   let isSkipRecapMarkerVisibleAfterSeekToStart = false;
   if (detailsVisible) {
     await detailsPage.clickEpisodeTwo();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(3);
     isSkipRecapMarkerVisible = await detailsPage.isSkipRecapMarkerVisible();
     if (isSkipRecapMarkerVisible) {
@@ -5488,6 +5684,7 @@ export async function verifySkipMarkersNotVisibleInContinueWatching(page: any, i
   const detailsPage = new OTTDetailsPage(page);
   const searchTerm = (input?.searchTerm ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting skip marker visibility check for Continue Watching content flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -5511,6 +5708,7 @@ export async function verifySkipMarkersNotVisibleInContinueWatching(page: any, i
   let skipIntroVisibleInContinueWatching = false;
   if (detailsVisible) {
     await detailsPage.clickEpisodeThree();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(3);
     episodeOpened = true;
     const skipRecapVisibleBefore = await detailsPage.isSkipRecapMarkerVisible().catch(() => false);
@@ -5541,6 +5739,7 @@ export async function verifySkipMarkersNotVisibleInContinueWatching(page: any, i
     await detailsPage.waitForPlayback(2);
     await detailsPage.clickPlayButton();
     logger.info('Clicked Play button on Continue Watching content');
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await detailsPage.waitForPlayback(3);
     skipRecapVisibleInContinueWatching = await detailsPage.isSkipRecapMarkerVisible().catch(() => false);
     skipIntroVisibleInContinueWatching = await detailsPage.isSkipIntroMarkerVisible().catch(() => false);
@@ -5570,6 +5769,7 @@ export async function verifyTapToPausePlaybackFlow(page: any, input?: VerifyTapT
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting tap-to-pause playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -5584,6 +5784,7 @@ export async function verifyTapToPausePlaybackFlow(page: any, input?: VerifyTapT
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
   await detailsPage.waitForPlayback(1);
@@ -5608,6 +5809,7 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting pause seek buttons verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -5622,6 +5824,7 @@ export async function verifyPauseforwardBackwardButtonsFlow(page: any, input?: O
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(30);
   await detailsPage.hoverPlaybackScreen();
@@ -5655,6 +5858,7 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting pause seek buttons verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -5669,6 +5873,7 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(30);
   await detailsPage.hoverPlaybackScreen();
@@ -5698,14 +5903,16 @@ export async function verifyforwardBackwardButtonsFlow(page: any, input?: OpenCo
   };
 }
 
-export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: string; channelName?: string }): Promise<VerifyLivePlaybackGoLiveOutput> {
+export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: string; channelName?: string; parentalPin?: string; }): Promise<VerifyLivePlaybackGoLiveOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const channelName = input?.channelName ?? 'TFC Asia';
   logger.step('Starting live playback Go Live verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await detailsPage.clickliveContent(channelName);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickResumeButton();
@@ -5720,18 +5927,17 @@ export async function verifyLivePlaybackGoLiveFlow(page: any, input?: { mode?: s
   };
 }
 
-export async function verifyGoLiveTagAfterPause(
-  page: any,
-  input?: VerifyGoLiveTagAfterPauseInput,
-): Promise<VerifyGoLiveTagAfterPauseOutput> {
+export async function verifyGoLiveTagAfterPause(page: any, input?: VerifyGoLiveTagAfterPauseInput,): Promise<VerifyGoLiveTagAfterPauseOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const channelName = input?.channelName ?? 'TFC Asia';
   logger.step('Starting Go Live tag verification after pausing live playback');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User loaded the home screen before live playback', isLoggedIn);
   await detailsPage.clickliveContent(channelName);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(10);
   const liveChannelOpened = await detailsPage.isPlayerScreenVisible().catch(() => false);
   await detailsPage.hoverPlaybackScreen();
@@ -5748,14 +5954,16 @@ export async function verifyGoLiveTagAfterPause(
   };
 }
 
-export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { mode?: string; channelName?: string }): Promise<VerifyLiveStreamSeekRestrictionOutput> {
+export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { mode?: string; channelName?: string; parentalPin?: string; }): Promise<VerifyLiveStreamSeekRestrictionOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const channelName = input?.channelName ?? 'TFC Asia';
   logger.step('Starting live stream seek restriction verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await detailsPage.clickliveContent(channelName);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const rewindButtonVisible = await detailsPage.RewindButtonNotVisible();
   const forwardButtonVisible = await detailsPage.ForwardButtonNotVisible();
@@ -5772,6 +5980,8 @@ export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { m
 
 export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Promise<PlayFreeAssetOutput> {
   const playbackPage = new OTTPlaybackPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   logger.step('Starting free asset playback flow');
   const isLoggedIn = await playbackPage.isHomeScreenReady();
@@ -5779,6 +5989,7 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
   const isPlayableContentDetected = await playbackPage.hoverFirstPlayableContentCard();
   logger.assertion('Playable free content detected', isPlayableContentDetected);
   const playAttempted = isPlayableContentDetected ? await playbackPage.clickFirstAvailablePlayButton() : false;
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   logger.assertion('Play button attempted on detected content', playAttempted);
   const playbackStarted = await playbackPage.isPlaybackStarted();
   logger.assertion('Playback started for free content', playbackStarted);
@@ -5819,10 +6030,11 @@ export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumC
   };
 }
 
-export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; channelName?: string; graphqlQueryName?: string }): Promise<VerifyLiveTagOnPlayerOutput> {
+export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; channelName?: string; graphqlQueryName?: string; parentalPin?: string; }): Promise<VerifyLiveTagOnPlayerOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   let channelName = (input?.channelName ?? '').trim();
   logger.step('Starting live tag visibility verification flow');
   async function resolveFreeLiveChannelFromCollection(graphqlQueryName = 'Collection'): Promise<{ title?: string; id?: string; asset?: any } | undefined> {
@@ -5879,6 +6091,7 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
     throw new Error('No free live content could be resolved from Collection GraphQL');
   }
   // Wait a few seconds for playback to start and player to become visible
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
   const liveBadgeVisible = await detailsPage.isLiveTagVisible().catch(() => false);
@@ -5892,13 +6105,16 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
 
 export async function verifyLivePlaybackPauseResume(page: any, input?: VerifyLivePlaybackPauseResumeInput): Promise<VerifyLivePlaybackPauseResumeOutput> {
   const playbackPage = new OTTPlaybackPage(page);
+  const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.step('Starting live playback pause and resume validation flow');
   logger.assertion('User loaded the home screen before live TV playback', isLoggedIn);
   const liveSectionSelected = await playbackPage.selectLiveTVSection();
   logger.assertion('Live TV section selected', liveSectionSelected);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playbackStarted = await playbackPage.waitForPlaybackToStart();
   logger.assertion('Live playback started', playbackStarted);
   const pauseResumeState = playbackStarted ? await playbackPage.pauseAndResumePlayback() : { pauseClicked: false, resumeClicked: false, playbackCompleted: false, currentTimeBeforePause: 0, currentTimeAfterResume: 0 };
@@ -5952,7 +6168,9 @@ export async function verifySubscribeToWatchCarouselMessage(page: any, input?: V
 
 export async function playselectedContentFromWatchlist(page: any, input?: PlayContentFromWatchlistInput): Promise<PlayContentFromWatchlistOutput> {
   const playbackPage = new OTTPlaybackPage(page);
+  const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode });
   logger.step('Starting watchlist playback validation flow');
   const isLoggedIn = await playbackPage.isHomeScreenReady();
@@ -5963,6 +6181,7 @@ export async function playselectedContentFromWatchlist(page: any, input?: PlayCo
   logger.assertion('Watchlist content selected', contentSelected);
   const playClicked = await playbackPage.clickWatchlistPlayOrResume();
   logger.assertion('Play or resume action clicked from watchlist content', playClicked);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playbackState = await playbackPage.waitForWatchlistPlayback();
   logger.assertion('Playback started from watchlist content', playbackState.playbackStarted);
   const contentPlayed = playbackState.playbackStarted && (playbackState.playbackCompleted || playbackState.currentTime > 0 || playbackState.duration > 0);

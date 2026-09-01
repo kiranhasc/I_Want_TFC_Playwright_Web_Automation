@@ -3,19 +3,20 @@ import { loginToOTT } from '../../src/businessFunction/ott-auth-bfs';
 import { verifySkipIntroMarkerDuringPlayback, verifySkipIntroFunctionalityDuringPlayback, verifySkipRecapMarkerDuringPlayback, verifySkipRecapFunctionalityDuringPlayback, verifySkipIntroAndRecapAdvancePlaybackDuration } from '../../src/businessFunction/ott-details-bfs';
 import { verifySkipMarkerVisibilityAfterPauseResume, verifySkipMarkersReappearAfterRewind, verifySkipMarkersNotVisibleInContinueWatching, verifyUpNextBingeMarkerFlow, verifyUpNextMarkerFunctionalityFlow, verifyUpNextCloseButtonFlow, verifyUpNextMarkerClickNavigationFlow } from '../../src/businessFunction/ott-playback-bfs';
 import testCaseData from '../../src/data/ott-test-cases.json';
+const testTimeout = process.env.BROWSER === 'mchrome'
+  ? 240_000
+  : 120_000;
+test.setTimeout(testTimeout);
 
 test.describe('Playback skip intro marker', () => {
   
-  test('@High @D IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
-  const testTimeout = process.env.BROWSER === 'mchrome'
-  ? 240_000
-  : 90_000;
-test.setTimeout(testTimeout);
+  test('@High @mWeb IW3-T2112: Verify presence of Skip Intro marker during initial content playback', async ({ page }) => {
     const data = testCaseData['tc-disc-004-skip-intro'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipIntroMarkerDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
     expect(playbackResult.isDetailsPageVisible).toBe(true);
     expect(playbackResult.isSkipIntroMarkerVisible).toBe(true);
@@ -27,6 +28,7 @@ test.setTimeout(testTimeout);
     const playbackResult = await verifySkipIntroFunctionalityDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isDetailsPageVisible).toBe(true);
@@ -35,13 +37,14 @@ test.setTimeout(testTimeout);
     expect(playbackResult.timeBeforeSkipIntro).not.toBe(playbackResult.timeAfterSkipIntro);
   });
 
-  test('@High @D IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
+  test('@High @mWeb IW3-T2114: Verify presence of Skip Recap marker during initial content playback', async ({ page }) => {
     test.setTimeout(180000);
     const data = testCaseData['tc-disc-005-skip-recap'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipRecapMarkerDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isDetailsPageVisible).toBe(true);
@@ -54,6 +57,7 @@ test.setTimeout(testTimeout);
     const playbackResult = await verifySkipRecapFunctionalityDuringPlayback(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isDetailsPageVisible).toBe(true);
@@ -68,6 +72,7 @@ test.setTimeout(testTimeout);
     const playbackResult = await verifySkipMarkerVisibilityAfterPauseResume(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.detailsVisible).toBe(true);
@@ -83,6 +88,7 @@ test.setTimeout(testTimeout);
     const playbackResult = await verifySkipIntroAndRecapAdvancePlaybackDuration(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isDetailsPageVisible).toBe(true);
@@ -95,12 +101,12 @@ test.setTimeout(testTimeout);
   });
 
   test('@Medium IW3-T2122: Verify that skip markers reappear after content is rewound', async ({ page }) => {
-    test.setTimeout(90000)
     const data = testCaseData['tc-disc-006-skip-recap'];
     const loginResult = await loginToOTT(page, { mode: data.mode });
     const playbackResult = await verifySkipMarkersReappearAfterRewind(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.detailsVisible).toBe(true);
@@ -119,6 +125,7 @@ test.setTimeout(testTimeout);
     const playbackResult = await verifyUpNextBingeMarkerFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.detailsVisible).toBe(true);
@@ -126,11 +133,11 @@ test.setTimeout(testTimeout);
   });
 
   test('@High  IW3-T2117: Verify functionality of Skip Outro(Up Next) binge marker', async ({ page }) => {
-    test.setTimeout(90000);
     const data = testCaseData['tc-sub-037-up-next-marker-functionality'] as Record<string, any>;
     const playbackResult = await verifyUpNextMarkerFunctionalityFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);
@@ -141,10 +148,10 @@ test.setTimeout(testTimeout);
   });
 
   test('@High  IW3-T2118: Verify that the X button is displayed on the Up Next binge marker to close the outro', async ({ page }) => {
-    test.setTimeout(90000);
     const data = testCaseData['tc-sub-038-up-next-close-button'] as Record<string, any>;
     const playbackResult = await verifyUpNextCloseButtonFlow(page, {
       mode: data.mode,
+      parentalPin: data.pin,
       graphqlQueryName: data.graphqlQueryName,
     });
 
@@ -157,11 +164,11 @@ test.setTimeout(testTimeout);
   });
 
   test('@High  IW3-T2119: Verify clicking the Up Next binge marker moves to the next episode', async ({ page }) => {
-    test.setTimeout(90000);
     const data = testCaseData['tc-sub-039-up-next-marker-click-navigation'] as Record<string, any>;
     const playbackResult = await verifyUpNextMarkerClickNavigationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);
@@ -172,11 +179,11 @@ test.setTimeout(testTimeout);
   });
 
   test('@High IW3-T2123: Verify Skip Intro and Skip Recap markers are not displayed for content under the Continue Watching tray', async ({ page }) => {
-    test.setTimeout(120000);
     const data = testCaseData['tc-disc-008-skip-markers-continue-watching'] as Record<string, any>;
     const playbackResult = await verifySkipMarkersNotVisibleInContinueWatching(page, {
       mode: data.mode,
       searchTerm: data.searchTerm,
+      parentalPin: data.pin,
     });
 
     expect(playbackResult.isLoggedIn).toBe(true);

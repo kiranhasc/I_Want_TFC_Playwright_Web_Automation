@@ -1751,7 +1751,7 @@ export async function verifySearchAutoSuggestions(page: any, input?: Partial<Ver
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(query);
     logger.step(`Waiting for auto-suggestions to load for query: ${query}`);
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
     const suggestionsVisible = await authPage.isSearchAutoSuggestionsVisible(query);
     const suggestionsList = await authPage.getSearchAutoSuggestions();
     const suggestionsCount = suggestionsList.length;
@@ -2384,7 +2384,16 @@ export async function verifySearchPartialKeyword(
         const collectionResp = await collectionWait;
         const parser = new CollectionParser(collectionResp as any);
         for (const rail of parser.getRails()) {
-            const candidate = rail.assets?.items?.find((asset: any) => typeof asset.title === 'string');
+            const candidate = rail.assets?.items?.find((asset: any) => {
+                const title = typeof asset?.title === 'string' ? String(asset.title).trim() : '';
+                if (!title) {
+                    return false;
+                }
+                const labels = Array.isArray(asset?.labels) ? asset.labels : [];
+                const badges = Array.isArray(asset?.badges) ? asset.badges : [];
+                const allTags = [...labels, ...badges].map((tag: any) => String(tag?.id ?? tag?.name ?? tag ?? '').toLowerCase());
+                return !allTags.some((tag: string) => tag.includes('coming_soon') || tag.includes('coming soon'));
+            });
             if (candidate?.title) {
                 collectionTitle = String(candidate.title).trim();
                 break;
@@ -2559,7 +2568,7 @@ export async function verifySearchTopPicksNearYouTitle(
     await authPage.clickSearchBar();
     await authPage.enterSearchQuery(collectionTitle);
     await authPage.clearSearchInput();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     const searchInputCleared = (await authPage.getSearchBarValue()).trim().length === 0;
     const headingVisible = await authPage.isSearchSectionHeadingVisible(expectedHeading);
     const headingText = await authPage.getSearchSectionHeadingText(expectedHeading);
@@ -2832,6 +2841,7 @@ export async function verifySearchFreePremiumLabels(
         await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
         await authPage.clickSearchBar();
         await authPage.enterSearchQuery(premiumTitle);
+        await page.waitForTimeout(2000);
         await authPage.submitSearchQuery();
         await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
         premiumLabelVisible = await detailsPage.isContentTaggedPremiumInSearchResults(premiumTitle).catch(() => false);
@@ -2841,6 +2851,7 @@ export async function verifySearchFreePremiumLabels(
     if (freeTitle) {
         await authPage.clickSearchBar();
         await authPage.enterSearchQuery(freeTitle);
+        await page.waitForTimeout(2000);
         await authPage.submitSearchQuery();
         freeLabelVisible = await detailsPage.isContentTaggedFreeInSearchResults(freeTitle).catch(() => false);
         logger.assertion(`Free label visible for "${freeTitle}"`, freeLabelVisible);
@@ -5251,7 +5262,7 @@ export async function verifyTrendingContentDetailNavigation(
     }
     await authPage.enterSearchQuery(collectionTitle);    // Open search and clear to show Top Picks Near You
     await authPage.clickSearchBar();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(2000);
     // Clear any search text to show Top Picks
     const searchValue = await authPage.getSearchBarValue();
     if (searchValue && searchValue.trim().length > 0) {

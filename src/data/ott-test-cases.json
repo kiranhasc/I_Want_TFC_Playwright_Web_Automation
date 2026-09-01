@@ -84,7 +84,8 @@
         "mode": "freeUser"
     },
     "tc-disc-011-movie-completion-redirect": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-disc-012-shared-deeplink-redirect": {
         "mode": "valid"
@@ -93,7 +94,8 @@
         "mode": "valid"
     },
     "tc-disc-014-episode-playback-on-details-page": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-disc-002-episode-playback": {
         "mode": "valid",
@@ -303,7 +305,8 @@
         "pin": "1234"
     },
     "tc-disc-004-player-close-return": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-034-details-page-back-navigation": {
         "mode": "valid",
@@ -396,35 +399,38 @@
         "mode": "provider",
         "providerName": "Frontier, a Verizon Company"
     },
-
     "tc-discovery-002-early-access-premium-monthly": {
         "mode": "valid",
         "graphqlQueryName": "Collection",
         "labelText": "Early Access",
         "earlyAccessAttributeValue": "early_access"
     },
-
     "tc-cw-1948-free-and-paid-content": {
         "mode": "valid"
     },
     "tc-auth-023-continue-watching-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-024-continue-watching-across-tabs": {
         "mode": "valid",
+        "pin": "1234",
         "tabs": [
             "Movies",
             "Shows"
         ]
     },
     "tc-auth-025-continue-watching-resume-cta": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-026-continue-watching-resume-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-027-continue-watching-five-percent": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-home-001-iwant-originals-rail": {
         "mode": "valid"
@@ -983,10 +989,12 @@
         "mode": "valid"
     },
     "tc-auth-013-continue-watching-removal-after-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-cw-1961-show-removal": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-014-continue-watching-details-and-more": {
         "mode": "valid"
@@ -1101,35 +1109,42 @@
     },
     "tc-auth-028-continue-watching-fifty-percent": {
         "mode": "valid",
+        "pin": "1234",
         "searchTerm": "You Got Me"
     },
     "tc-auth-040-landing-page-ui": {
         "mode": "valid"
     },
     "tc-auth-029-continue-watching-less-than-five-percent": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-auth-030-continue-watching-resume-to-play-after-removal": {
         "mode": "valid",
+        "pin": "1234",
         "season": "Season 1",
         "episodeName": "E4"
     },
     "tc-cw-1930-latest-watched-episode": {
         "mode": "valid",
+        "pin": "1234",
         "expectedSeasonNumber": "1",
         "expectedEpisodeNumber": "6"
     },
     "tc-cw-1941-content-updated-in-tray": {
         "mode": "valid",
+        "pin": "1234",
         "seekMinutes": 1
     },
     "tc-cw-1947-continue-watching-subscription-prompt": {
         "mode": "freeUser",
+        "pin": "1234",
         "season": "Season 1",
         "episodeName": "E1"
     },
     "tc-cw-1946-season-episode-update": {
         "mode": "valid",
+        "pin": "1234",
         "seasonOneEpisode": "E5",
         "seasonOneSeekPosition": 0.5,
         "seasonTwoSeekPosition": 0.2,
@@ -1137,13 +1152,16 @@
         "expectedEpisodeNumber": "1"
     },
     "tc-cw-1942-free-user-ad-resume": {
-        "mode": "freeUser"
+        "mode": "freeUser",
+        "pin": "1234"
     },
     "tc-cw-1955-next-episode-playback": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-sub-046-iw3-t1956-next-season-autoplay": {
-        "mode": "valid"
+        "mode": "valid",
+        "pin": "1234"
     },
     "tc-live-2010-pause-resume-live-playback": {
         "mode": "valid",

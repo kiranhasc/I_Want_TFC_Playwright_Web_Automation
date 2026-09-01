@@ -54,7 +54,12 @@ function regenerateProjectsManifest() {
     ? JSON.parse(fs.readFileSync(PROJECTS_MANIFEST, 'utf-8'))
     : {};
 
-  const manifest = { ...existing, projects };
+  // Preserve the environment and tag metadata that are not derivable from the
+  // Playwright config itself while replacing just the generated project list.
+  const manifest = {
+    ...(existing && typeof existing === 'object' ? existing : {}),
+    projects,
+  };
   fs.writeFileSync(PROJECTS_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
   return manifest;
 }

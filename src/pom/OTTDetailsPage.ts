@@ -252,7 +252,7 @@ export class OTTDetailsPage {
     this.cookieConfirmButton = { role: 'button', text: 'Confirm', selector: 'button:has-text("Confirm")' };
     this.showsSectionLink = { selector: 'nav >> text=Shows' };
     this.firstShowContentCard = { selector: 'main img.title-image, [data-testid="show-card"] img.title-image, [data-testid="content-card"] img.title-image, img.title-image' };
-    this.firstEpisodeCard ={ selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, main [role="button"], main [cursor="pointer"]' };
+    this.firstEpisodeCard = { selector: '[data-testid="episode-card"], .episode-card, .season-episodes .episode-item, .episode-list .episode-item, main [role="button"], main [cursor="pointer"]' };
     this.episodesListItems = { selector: 'xpath=//div[contains(@class,"episodes-list") or contains(@class,"episode-list")]/descendant::div[contains(@class,"episode") or contains(@data-testid,"episode") or contains(normalize-space(.),"S1 E") or contains(normalize-space(.),"S2 E")]' };
     this.firstEpisodeCardByEpisodeOne = { selector: 'img[alt="Episode 1"], [data-testid*="episode-1"], .episode-item:has-text("Episode 1")' };
     this.lastSeasonHeading = { selector: '.seasons-container h3, .season-title, [data-testid*="season"] h3, h3:has-text("Season")' };
@@ -625,7 +625,7 @@ export class OTTDetailsPage {
       }
     }
   }
- 
+
 
   async clickShowContentRail(): Promise<void> {
     logger.elementInteraction('click', 'first rail content thumbnail');
@@ -1430,7 +1430,7 @@ export class OTTDetailsPage {
     };
   }
 
-async clickFirstEpisodeCard(): Promise<void> {
+  async clickFirstEpisodeCard(): Promise<void> {
     logger.elementInteraction('click', 'first episode card');
     const episodeCard = await this.page.locator(this.firstEpisodeCard.selector).first();
     try {
@@ -1453,7 +1453,7 @@ async clickFirstEpisodeCard(): Promise<void> {
       logger.debug('Post-click waits failed or page closed', err);
     }
   }
- 
+
 
   async clickLastSeasonIfAvailable(): Promise<boolean> {
     logger.elementInteraction('click', 'last season heading');
@@ -3962,12 +3962,12 @@ async clickFirstEpisodeCard(): Promise<void> {
       : await playerTitle.isVisible().catch(() => false);
   }
 
-    async isPlayerScreenVisible(): Promise<boolean> {
+  async isPlayerScreenVisible(): Promise<boolean> {
     const player = this.page.locator(this.playerScreen.selector).first();
     await player.waitFor({ state: 'visible', timeout: 20000 });
     return true;
   }
- 
+
 
   async isPlayerScreenHidden(): Promise<boolean> {
     try {
@@ -4493,7 +4493,7 @@ async clickFirstEpisodeCard(): Promise<void> {
       return false;
     }
   }
- 
+
 
   async isNextEpisodeButtonBelowSeekBar(): Promise<boolean> {
     const nextEpisodeButton = this.page.locator(this.nextEpisodeButton.selector).first();
@@ -4754,7 +4754,7 @@ async clickFirstEpisodeCard(): Promise<void> {
     return match?.[1] ?? playbackText;
   }
 
-async dragSeekBarToPosition(targetPercent: number): Promise<void> {
+  async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
     await seekBar.waitFor({ state: 'visible', timeout: 315000 }).catch(() => undefined);
     const box = await seekBar.boundingBox().catch(() => null);
@@ -4788,7 +4788,7 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     }
     await this.page.waitForTimeout(1500);
   }
-  
+
   async dragSeekBarUntilUpNextMarkerReached(): Promise<boolean> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
     const nextEpisodeText = this.page.locator("//span[contains(normalize-space(), 'Next Episode')]").first();
@@ -4879,8 +4879,8 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     if (this.page.isClosed()) {
       logger.debug('Page is closed, skipping waitForPlayback');
       return;
-     }
-     await this.page.waitForTimeout(seconds * 1000).catch(() => undefined);
+    }
+    await this.page.waitForTimeout(seconds * 1000).catch(() => undefined);
   }
 
   async verifyEpisodeName(expectedEpisodeName: string): Promise<boolean> {
@@ -5336,14 +5336,12 @@ async dragSeekBarToPosition(targetPercent: number): Promise<void> {
       await continueAction();
       return false;
     }
-
     const parentalPin = (pin ?? '').trim();
     if (parentalPin) {
       await this.enterParentalPlaybackPin(parentalPin);
       await this.clickParentalPlaybackPinSubmitButton().catch(() => undefined);
       await this.page.waitForTimeout(1500);
     }
-
     await continueAction();
     return true;
   }

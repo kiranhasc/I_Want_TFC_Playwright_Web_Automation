@@ -149,6 +149,7 @@ test.describe('Content details navigation', () => {
     const data = testCaseData['tc-disc-004-player-close-return'] as Record<string, any>;
     const result = await verifyPlayerCloseReturnsToDetailsFlow(page, {
       mode: data?.mode,
+      parentalPin: data?.pin,
     });
     expect(result.isLoggedIn).toBe(true);
     expect(result.detailsVisible).toBe(true);
@@ -161,6 +162,7 @@ test.describe('Content details navigation', () => {
     const data = testCaseData['tc-disc-011-movie-completion-redirect'] as Record<string, any>;
     const result = await verifyMovieCompletionRedirectToDetailsFlow(page, {
       mode: data?.mode,
+      parentalPin: data?.pin,
     });
     expect(result.isLoggedIn).toBe(true);
     expect(result.detailsVisible).toBe(true);
@@ -217,7 +219,7 @@ test.describe('Content details navigation', () => {
   test('@Medium @mWeb IW3-T1921: Verify that respective episode playback starts post tapping on episode cards in detail page', async ({ page }) => {
     test.setTimeout(250000);
     const data = testCaseData['tc-disc-014-episode-playback-on-details-page'] as Record<string, any>;
-    const result = await verifyEpisodePlaybackStartsFromDetailsPage(page, { mode: data?.mode });
+    const result = await verifyEpisodePlaybackStartsFromDetailsPage(page, { mode: data?.mode, parentalPin: data?.pin });
     expect(result.isLoggedIn).toBe(true);
     expect(result.isDetailsPageVisible).toBe(true);
     expect(result.showName.length).toBeGreaterThan(0);

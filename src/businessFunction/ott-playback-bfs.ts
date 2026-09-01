@@ -13,9 +13,9 @@ declare const process: { env: Record<string, string | undefined> };
 
 export interface OpenContentAndPlayInput {
   query?: string;
+  parentalPin?: string;
   graphqlQueryName?: string;
   mode?: string;
-  parentalPin?: string;
   expectedTitle?: string;
   expectedEpisode?: string;
   seekPercent?: number;
@@ -561,6 +561,7 @@ export interface VerifySubtitleSynchronizationOutput {
 
 export interface PlayFreeAssetInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface PlayFreeAssetOutput {
@@ -1637,6 +1638,7 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting dedicated movie completion redirect to details validation flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1663,6 +1665,7 @@ export async function verifyMovieCompletionRedirectToDetailsFlow(page: any, inpu
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible before playback', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const adsVisible = await detailsPage.isAdTagVisible();
   if (adsVisible) {
     await page.waitForTimeout(150000);
@@ -1775,13 +1778,11 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   const isLoggedIn = loginResult.isLoggedIn;
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
   const query = (queryFromCollection).trim();
-  const expectedTitle = input?.expectedTitle ?? query;
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
-  await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
@@ -2737,10 +2738,12 @@ export async function verifyBackButtonNavigationFlow(page: any, input?: OpenCont
 export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: OpenContentAndPlayInput): Promise<VerifyPlayerCloseReturnsToDetailsOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
-  const query = (input?.query ?? '').trim();
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting close-player return to details verification flow');
   const loginResult = await loginToOTT(page, { mode });
+  const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
+  const query = (queryFromCollection).trim();
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before testing player close return flow', isLoggedIn);
   if (!isLoggedIn) {
@@ -2764,6 +2767,7 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   const detailsVisible = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   if (process.env.BROWSER === 'mchrome') {
     page.waitForTimeout(90000);
   }
@@ -5976,6 +5980,8 @@ export async function verifyLiveStreamSeekRestrictionFlow(page: any, input?: { m
 
 export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Promise<PlayFreeAssetOutput> {
   const playbackPage = new OTTPlaybackPage(page);
+  const detailsPage = new OTTDetailsPage(page);
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   logger.step('Starting free asset playback flow');
   const isLoggedIn = await playbackPage.isHomeScreenReady();
@@ -5983,6 +5989,7 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
   const isPlayableContentDetected = await playbackPage.hoverFirstPlayableContentCard();
   logger.assertion('Playable free content detected', isPlayableContentDetected);
   const playAttempted = isPlayableContentDetected ? await playbackPage.clickFirstAvailablePlayButton() : false;
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   logger.assertion('Play button attempted on detected content', playAttempted);
   const playbackStarted = await playbackPage.isPlaybackStarted();
   logger.assertion('Playback started for free content', playbackStarted);

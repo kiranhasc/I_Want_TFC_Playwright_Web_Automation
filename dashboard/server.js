@@ -4,7 +4,7 @@ const { WebSocketServer } = require('ws');
 const path = require('path');
 const fs = require('fs');
 
-const { FRONTEND_DIST_DIR, REPO_ROOT, TRACE_VIEWER_DIR } = require('./lib/paths');
+const { FRONTEND_DIST_DIR, REPO_ROOT, TRACE_VIEWER_DIR, PROJECTS_MANIFEST } = require('./lib/paths');
 const RunManager = require('./lib/runManager');
 const createApiRouter = require('./routes/api');
 const filesRouter = require('./routes/files');
@@ -72,10 +72,16 @@ try {
   console.error('[dashboard] could not build the history index:', err.message);
 }
 
-// Keep dashboard/config/projects.json in sync with playwright.config.ts on
-// every boot. Never let a sync failure block the server from starting.
+// Keep dashboard/config/projects.json in sync with playwright.config.ts only
+// when explicitly enabled, or when the file does not exist yet. Keeping the
+// current manifest intact prevents a hand-edited/customized project list from
+// being silently overwritten on every dashboard restart.
+const shouldSyncProjectsManifest = process.env.DASHBOARD_SYNC_PROJECTS_MANIFEST === 'true';
 try {
-  regenerateProjectsManifest();
+  if (shouldSyncProjectsManifest || !fs.existsSync(PROJECTS_MANIFEST)) {
+    regenerateProjectsManifest();
+    console.log('[dashboard] projects.json synced from playwright.config.ts');
+  }
 } catch (err) {
   console.error('[dashboard] failed to sync projects.json on startup:', err.message);
 }

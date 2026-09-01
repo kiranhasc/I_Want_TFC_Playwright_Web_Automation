@@ -749,6 +749,7 @@ export interface VerifyContinueWatchingRemoveItemOutput {
 
 export interface VerifyContinueWatchingRemovalAfterPlaybackInput {
     mode?: string;
+    parentalPin?: string;
 }
 
 export interface VerifyContinueWatchingRemovalAfterPlaybackOutput {
@@ -3478,6 +3479,7 @@ export async function verifyContinueWatchingRemovalAfterPlayback(page: any, inpu
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     const mode = normalizeLoginMode(input?.mode);
+    const parentalPin = (input?.parentalPin).trim();
     logger.step('Starting IW3-T1960 flow for watched movie removal from Continue Watching');
     const loginResult = await loginToOTT(page, { mode });
     if (!loginResult.isLoggedIn) {
@@ -3537,6 +3539,7 @@ export async function verifyContinueWatchingRemovalAfterPlayback(page: any, inpu
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(5000);
     await detailsPage.clickPlayButton();
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(4000);
     logger.step('Completing playback by moving the seek bar to the end');
@@ -3681,7 +3684,7 @@ export async function verifyContinueWatchingAbsent(page: any, input?: VerifyCont
     const loginResult = await loginToOTT(page, { mode });
     const isLoggedIn = loginResult.isLoggedIn;
     await authPage.waitForLoadingToDisappear();
-    const isVisible = await authPage.isContinueWatchingRailVisible().catch(() => false);
+    const isVisible = await authPage.isContinueWatchingRailPresent().catch(() => false);
     const itemsCount = isVisible ? await authPage.getContinueWatchingItemsCount().catch(() => 0) : 0;
     const itemsDetails = isVisible ? await authPage.getContinueWatchingItemsDetails().catch(() => []) : [];
     logger.assertion('Continue Watching rail not present (expected for new user)', !isVisible);

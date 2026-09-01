@@ -15,6 +15,7 @@ import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 
 export interface ContinueWatchingPlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ContinueWatchingPlaybackOutput {
@@ -100,6 +101,7 @@ export interface ContinueWatchingDetailsAndMoreOutput {
 
 export interface ResumeCTADetailsPageInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ResumeCTADetailsPageOutput {
@@ -111,6 +113,7 @@ export interface ResumeCTADetailsPageOutput {
 
 export interface ResumeToPlayAfterRemovalInput {
   mode?: string;
+  parentalPin?: string;
   season?: string;
   episodeName?: string;
 }
@@ -125,6 +128,7 @@ export interface ResumeToPlayAfterRemovalOutput {
 
 export interface ContinueWatchingResumePlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ContinueWatchingResumePlaybackOutput {
@@ -137,6 +141,7 @@ export interface ContinueWatchingResumePlaybackOutput {
 
 export interface ContinueWatchingFivePercentPlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ContinueWatchingFivePercentPlaybackOutput {
@@ -163,6 +168,7 @@ export interface ContinueWatchingAcrossTabsOutput {
 
 export interface ContinueWatchingLessThanFivePercentPlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ContinueWatchingLessThanFivePercentPlaybackOutput {
@@ -174,6 +180,7 @@ export interface ContinueWatchingLessThanFivePercentPlaybackOutput {
 
 export interface ContinueWatchingFiftyPercentPlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface ContinueWatchingFiftyPercentPlaybackOutput {
@@ -204,6 +211,7 @@ export interface ValidateContinueWatchingProgressOutput {
 export interface ContentUpdatedInContinueWatchingInput {
   mode?: string;
   seekMinutes?: number;
+  parentalPin?: string;
 }
 
 
@@ -219,6 +227,7 @@ export interface ContentUpdatedInContinueWatchingOutput {
 
 export interface UpNextContinueWatchingInput {
   mode?: string;
+  parentalPin?: string;
   query?: string;
 }
 
@@ -237,10 +246,12 @@ export interface UpNextContinueWatchingOutput {
 
 export interface ContinueWatchingFreeUserAdResumePlaybackInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface LatestWatchedSeasonEpisodeContinueWatchingInput {
   mode?: string;
+  parentalPin?: string;
   expectedSeasonNumber?: string;
   expectedEpisodeNumber?: string;
 }
@@ -259,6 +270,7 @@ export interface LatestWatchedSeasonEpisodeContinueWatchingOutput {
 
 export interface VerifyContinueWatchingSubscriptionPromptInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyContinueWatchingSubscriptionPromptOutput {
@@ -273,6 +285,7 @@ export interface VerifyContinueWatchingSubscriptionPromptOutput {
 
 export interface SeasonEpisodeUpdateContinueWatchingInput {
   mode?: string;
+  parentalPin?: string;
   seasonOneEpisode?: string;
   seasonOneSeekPosition?: number;
   seasonTwoSeekPosition?: number;
@@ -301,6 +314,7 @@ export interface ContinueWatchingFreeUserAdResumePlaybackOutput {
 
 export interface VerifyShowContentRemovalFromContinueWatchingInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyShowContentRemovalFromContinueWatchingOutput {
@@ -326,8 +340,7 @@ export interface VerifyContinueWatchingFreeAndPaidContentOutput {
 
 export interface ContinueWatchingAcrossTabsInput {
   mode?: string;
-  email?: string;
-  password?: string;
+  parentalPin?: string;
   tabs?: string[];
 }
 
@@ -603,6 +616,7 @@ export async function verifyLatestWatchedSeasonEpisodeInContinueWatchingTray(
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const expectedSeasonNumber = input?.expectedSeasonNumber;
   const expectedEpisodeNumber = input?.expectedEpisodeNumber;
   logger.step(`Starting IW3-T1930 flow for latest watched season/episode update under continue watching tray`);
@@ -657,6 +671,7 @@ export async function verifyLatestWatchedSeasonEpisodeInContinueWatchingTray(
   const selectedEpisode = await detailsPage.selectEpisodeBySeasonAndEpisode(expectedSeasonNumber, expectedEpisodeNumber);
   await detailsPage.clickPlayButton();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(4000);
   await detailsPage.hoverPlaybackControls();
   await detailsPage.dragSeekBarToPosition(0.50);
@@ -705,6 +720,7 @@ export async function verifyContinueWatchingSeasonEpisodeUpdateAfterNextSeasonPl
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   const seasonOneEpisode = (input?.seasonOneEpisode ?? 'E5').trim();
   const seasonOneSeekPosition = input?.seasonOneSeekPosition;
   const seasonTwoSeekPosition = input?.seasonTwoSeekPosition;
@@ -754,6 +770,7 @@ export async function verifyContinueWatchingSeasonEpisodeUpdateAfterNextSeasonPl
   await detailsPage.clickSeasonLabel('Season 1').catch(() => undefined);
   await detailsPage.selectEpisodeBySeasonAndEpisode('Season 1', seasonOneEpisode).catch(() => undefined);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(4000);
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
@@ -820,6 +837,7 @@ export async function verifyContinueWatchingSeasonEpisodeUpdateAfterNextSeasonPl
   await detailsPage.clickSeasonLabel('Season 1').catch(() => undefined);
   await detailsPage.scrollEpisodeListToEnd();
   await detailsPage.clickLastEpisodeFromEpisodesList();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(6000);
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
   await detailsPage.dragSeekBarToPosition(0.99).catch(() => undefined);
@@ -977,6 +995,7 @@ export async function verifyContinueWatchingSubscriptionPrompt(
   const detailsPage = new OTTDetailsPage(page);
   const playbackPage = new OTTPlaybackPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   logger.step('Starting IW3-T1947 flow to verify subscription prompt for premium Continue Watching episode');
   const loginResult = await loginToOTT(page, { mode });
   if (!loginResult.isLoggedIn) {
@@ -1076,6 +1095,7 @@ export async function verifyContinueWatchingSubscriptionPrompt(
       reason: `Unable to click the episode before the paid episode at index ${previousEpisodeIndex}`,
     };
   }
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   let adVisible = false;
   adVisible = await detailsPage.isAdTagVisible().catch(() => false);
@@ -1172,6 +1192,7 @@ export async function verifyShowContentRemovalFromContinueWatching(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin)?.trim();
   logger.step('Starting IW3-T1961 flow for show content removal from Continue Watching after playback completion');
   const loginResult = await loginToOTT(page, { mode });
   if (!loginResult.isLoggedIn) {
@@ -1223,6 +1244,7 @@ export async function verifyShowContentRemovalFromContinueWatching(
     await detailsPage.scrollEpisodeListToEnd();
     await detailsPage.clickLastEpisodeFromEpisodesList();
   }
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(4000);
   await detailsPage.clickPlayButton();
@@ -1267,6 +1289,7 @@ export async function verifyContinueWatchingFreeUserAdResumePlayback(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting free-user Continue Watching ad resume validation');
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   const loginResult = await loginToOTT(page, { mode: mode === 'valid' ? 'freeUser' : mode });
   if (!loginResult.isLoggedIn) {
     return {
@@ -1311,6 +1334,7 @@ export async function verifyContinueWatchingFreeUserAdResumePlayback(
   if (resumeActionVisible) {
     await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
   }
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(6000);
   const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
@@ -1344,6 +1368,7 @@ export async function verifyContinueWatchingPlaybackFromTray(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching playback validation from tray');
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.waitForContinueWatchingTrayToBeReady();
@@ -1404,6 +1429,7 @@ export async function verifyContinueWatchingPlaybackFromTray(
   }
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
   if (playerVisible) {
     await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
@@ -1459,6 +1485,7 @@ export async function verifyContinueWatchingPlaybackFromTray(
   if (resumedActionVisible) {
     await page.getByText(/Resume|Play/i).first().click({ force: true, timeout: 30000 }).catch(() => undefined);
   }
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   await pausePlaybackAfterControlsSettle(page, detailsPage, 2000);
@@ -1665,6 +1692,7 @@ export async function verifyResumeCtaOnContentDetailsPage(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Resume CTA validation on content details page');
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.waitForContinueWatchingTrayToBeReady();
@@ -1696,6 +1724,7 @@ export async function verifyResumeCtaOnContentDetailsPage(
   await page.waitForTimeout(5000);
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
   const resumeCtaVisible = await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   logger.assertion('Details page visible for selected Continue Watching item', detailsPageVisible);
   logger.assertion('Resume CTA visible on the details page', resumeCtaVisible);
   return {
@@ -1714,6 +1743,7 @@ export async function verifyContinueWatchingTrayForNewUserAfterFivePercentPlayba
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting smooth playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1741,6 +1771,7 @@ export async function verifyContinueWatchingTrayForNewUserAfterFivePercentPlayba
     logger.debug('Failed to parse Asset GraphQL response for title; falling back to details page title', err);
   }
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   await detailsPage.dragSeekBarToPosition(0.05);
@@ -1783,6 +1814,7 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step(`Starting less-than-5% playback verification flow`);
   const loginResult = await loginToOTT(page, { mode });
   let searchTerm = '';
@@ -1826,6 +1858,7 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
   await detailsPage.clickPlayButton();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(0.02);
   await detailsPage.hoverPlaybackScreen();
@@ -1860,6 +1893,7 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin?.trim();
   logger.step('Starting 50% playback verification flow for Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
   const gql = GraphQLHelper.getInstance(page);
@@ -1903,6 +1937,7 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await detailsPage.hoverPlaybackControls();
   await detailsPage.dragSeekBarToPosition(0.50);
@@ -1942,6 +1977,7 @@ export async function verifyContinueWatchingResumePlayback(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   logger.step('Starting smooth playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1976,8 +2012,8 @@ export async function verifyContinueWatchingResumePlayback(
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible();
-  const resumeActionVisible = await detailsPage.isResumeButtonVisible().catch(() => false)
-    || await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+  const resumeActionVisible = await detailsPage.isResumeButtonVisible().catch(() => false) || await page.getByText(/Resume|Play/i).first().isVisible().catch(() => false);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   logger.assertion('Details page visible for selected Continue Watching item', detailsPageVisible);
   logger.assertion('Resume CTA visible on the details page', resumeActionVisible);
   if (!resumeActionVisible) {
@@ -2022,6 +2058,7 @@ export async function verifyContinueWatchingAcrossTabs(
   logger.step('Starting Continue Watching cross-tab validation');
   const tabsToTry = (input?.tabs && input.tabs.length > 0 ? input.tabs : ['Movies', 'Shows']).filter(Boolean);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   logger.step('Starting smooth playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2066,33 +2103,8 @@ export async function verifyContinueWatchingAcrossTabs(
       await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
       await page.waitForTimeout(3000);
       logger.info('Selected content title', { contentTitle, tabName });
-      const clickPlayAction = async (): Promise<void> => {
-        const playSelectors = [
-          '#play',
-          'button:has-text("Play")',
-          'button:has-text("Resume")',
-          'img[alt="play"]',
-          'img[alt="Resume"]',
-          '[aria-label*="play"]',
-          '[aria-label*="resume"]',
-          'div:has-text("Resume")',
-          'div:has-text("Play")',
-        ];
-        for (const selector of playSelectors) {
-          const button = page.locator(selector).first();
-          if (await button.count()) {
-            try {
-              await button.scrollIntoViewIfNeeded();
-              await button.click({ force: true, timeout: 15000 });
-              await page.waitForTimeout(2500);
-              return;
-            } catch (err) {
-              logger.debug(`Play action click failed for selector ${selector}`, err);
-            }
-          }
-        }
-      };
-      await clickPlayAction();
+      await detailsPage.clickPlayButton();
+      await detailsPage.handleParentalPinFlow(undefined, parentalPin);
       await page.waitForTimeout(2000);
       const getVideoState = async (): Promise<{ currentTime: number; paused: boolean; readyState: number; ended: boolean } | null> => {
         return await page.evaluate(() => {
@@ -2311,7 +2323,8 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
 ): Promise<UpNextContinueWatchingOutput> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
-  const mode = input?.mode === 'valid' || input?.mode === undefined ? 'valid' : input.mode;
+  const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting Up Next binge marker validation from Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2332,6 +2345,7 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 120000 }).catch(() => undefined);
   await page.waitForTimeout(6000);
   await detailsPage.hoverPlaybackScreen();
@@ -2456,6 +2470,7 @@ export async function verifyNextSeasonFirstEpisodeAutoPlayFlow(page: any, input?
   const detailsPage = new OTTDetailsPage(page);
   const playbackPage = new OTTPlaybackPage(page);
   const mode = input?.mode;
+  const parentalPin = input?.parentalPin;
   const gql = GraphQLHelper.getInstance(page);
   logger.step('Starting verify next season first episode autoplay flow');
   const loginResult = await loginToOTT(page, { mode });
@@ -2500,6 +2515,7 @@ export async function verifyNextSeasonFirstEpisodeAutoPlayFlow(page: any, input?
   const finalSelectedContentName = (await detailsPage.getShowDetailsHeadingText().catch(() => '')).trim() || selectedContentName;
   await detailsPage.clickSeasonLabel('Season 1').catch(() => undefined);
   await detailsPage.selectEpisodeBySeasonAndEpisode('Season 1', 'E5').catch(() => undefined);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.clickPlayButton();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(4000);
@@ -2530,6 +2546,7 @@ export async function verifyNextSeasonFirstEpisodeAutoPlayFlow(page: any, input?
   await detailsPage.clickSeasonLabel('Season 1').catch(() => undefined);
   await detailsPage.scrollEpisodeListToEnd().catch(() => undefined);
   await detailsPage.clickLastEpisodeFromEpisodesList().catch(() => false);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(6000);
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
   await detailsPage.dragSeekBarToPosition(0.99).catch(() => undefined);
@@ -2585,6 +2602,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('IW3-T1941: Verifying content is updated in Continue Watching tray after partial watch');
   const mode = input?.mode;
+  const parentalPin = (input?.parentalPin).trim();
   const seekMinutes = input?.seekMinutes ?? 1;
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2596,6 +2614,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await detailsPage.clickFirstMovieContent().catch(() => undefined);
     await detailsPage.clickPlayButton().catch(() => undefined);
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(5000);
     await detailsPage.dragSeekBarByMinutes(seekMinutes).catch(() => undefined);
@@ -2640,6 +2659,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
   await detailsPage.clickResumeAction().catch(() => undefined);
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(7000);
   await detailsPage.hoverPlaybackControls().catch(() => undefined);
@@ -2677,6 +2697,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(3000);
     await detailsPage.clickResumeAction().catch(() => undefined);
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
     await page.waitForTimeout(3000);
   }
@@ -2725,6 +2746,7 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
+  const parentalPin = (input?.parentalPin).trim();
   logger.step(`Starting resume-to-play regression flow`);
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const collectionResponse = await gql.waitForOperation('Collection', 60000).catch(() => null);
@@ -2767,6 +2789,7 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   const selectedEpisode = await detailsPage.selectEpisodeBySeasonAndEpisode(input?.season, input?.episodeName);
   logger.info('Selected episode metadata for playback', selectedEpisode);
   await detailsPage.clickPlayButton();
+  await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(4000);
   await detailsPage.dragSeekBarByMinutes(1);
   await page.waitForTimeout(5000);

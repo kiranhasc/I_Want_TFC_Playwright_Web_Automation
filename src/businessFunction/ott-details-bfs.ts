@@ -175,6 +175,7 @@ export interface PlayEpisodeFromDetailsOutput {
 
 export interface VerifyEpisodePlaybackStartsFromDetailsInput {
   mode?: string;
+  parentalPin?: string;
 }
 
 export interface VerifyEpisodePlaybackStartsFromDetailsOutput {
@@ -881,6 +882,7 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
 ): Promise<VerifyEpisodePlaybackStartsFromDetailsOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
+  const parentalPin = (input?.parentalPin).trim();
   logger.step('Starting episode playback verification from details page');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -936,7 +938,7 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     seasonNumber = 'Season 1';
     episodeNumber = 'Episode 1';
     const isAdTagVisible = await detailsPage.isAdTagVisible();
-    if(isAdTagVisible){
+    if (isAdTagVisible) {
       await page.waitForTimeout(110000);
     }
     playerVisible = await detailsPage.isVideoPlayerVisible();
@@ -957,6 +959,7 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
     }
   } else {
     selectedEpisode = await detailsPage.clickRandomEpisodeCard().catch(() => ({ title: '', seasonText: '', episodeText: '' }));
+    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     metadata = await detailsPage.getSelectedEpisodeMetadata().catch(() => ({ seasonNumber: '', episodeNumber: '', title: '' }));
     selectedEpisodeTitle = metadata.title || selectedEpisode.title || '';
     seasonNumber = metadata.seasonNumber || selectedEpisode.seasonText || '';

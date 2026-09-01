@@ -61,9 +61,8 @@ class KeepAwake {
    * Reference-counted so overlapping callers can't release each other's hold.
    * Safe to call when already held.
    */
-  acquire() {
-    this.holders += 1;
-    if (this.child || this.holders > 1) return;
+  _spawnIfNeeded() {
+    if (this.child) return;
 
     try {
       if (IS_WINDOWS) {
@@ -106,10 +105,17 @@ class KeepAwake {
         this.log.error?.(
           `[dashboard] sleep inhibitor exited early (code ${code}); this machine may sleep mid-run`
         );
+        this._reacquireIfNeeded();
       }
     });
 
     helper.unref();
+  }
+
+  acquire() {
+    this.holders += 1;
+    if (this.holders > 1) return;
+    this._spawnIfNeeded();
   }
 
   /** Releases one hold; the machine may sleep again once the last one is gone. */
@@ -122,6 +128,12 @@ class KeepAwake {
       // Already gone; nothing to release.
     }
     this.child = null;
+  }
+
+  /** Reacquires the sleep hold if the helper died during a still-active run. */
+  _reacquireIfNeeded() {
+    if (this.holders <= 0 || this.child) return;
+    this._spawnIfNeeded();
   }
 
   /** Drops every hold — used on server shutdown. */

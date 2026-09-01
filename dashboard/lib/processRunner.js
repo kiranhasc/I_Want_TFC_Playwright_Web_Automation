@@ -45,6 +45,7 @@ function spawnPlaywrightJob({ env, project, grep, targets = [], extraEnv = {} })
   const child = spawn('npx', args, {
     cwd: REPO_ROOT,
     shell: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, ...extraEnv },
   });
   child.preExistingBrowserPids = preExistingBrowserPids;

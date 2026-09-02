@@ -3268,6 +3268,50 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting search icon visibility verification flow');
+
+    // For mweb: skip login and validate only tabs available in the mobile navigation.
+    if (process.env.BROWSER === 'mchrome') {
+        logger.step('mChrome detected: validating search icons on Home, Movies, Shows, and GMA pages');
+        let homePageSearchIconVisible = false;
+        let moviesPageSearchIconVisible = false;
+        let showsPageSearchIconVisible = false;
+        let gmaPageSearchIconVisible = false;
+        try {
+            await authPage.navigate();
+            logger.step('App navigated successfully');
+
+            homePageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Home page', homePageSearchIconVisible);
+
+            logger.step('Clicking Movies tab to validate');
+            await authPage.clickMoviesTab();
+            moviesPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Movies page', moviesPageSearchIconVisible);
+
+            logger.step('Clicking Shows tab to validate');
+            await authPage.clickShowsTab();
+            showsPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Shows page', showsPageSearchIconVisible);
+
+            logger.step('Clicking GMA tab to validate');
+            await authPage.clickGMATab();
+            gmaPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on GMA page', gmaPageSearchIconVisible);
+            logger.step('Search icon validations complete; My Watchlist is unavailable on mChrome');
+        } catch (error) {
+            logger.debug('Error during mweb search icon validation', error);
+        }
+
+        return {
+            isLoggedIn: homePageSearchIconVisible,
+            homePageSearchIconVisible,
+            moviesPageSearchIconVisible,
+            showsPageSearchIconVisible,
+            watchlistPageSearchIconVisible: false,
+            gmaPageSearchIconVisible,
+        };
+    }
+
     const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });

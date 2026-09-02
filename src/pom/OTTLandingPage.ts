@@ -30,7 +30,7 @@ export class OTTLandingPage {
     this.top10FirstImageLocator = { selector: 'xpath=(.//div[contains(@class,\'flex items-end justify-end\')]//img[contains(@class,\'title-image\')])[1]' };
     this.searchInputLocator = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
     this.top10BadgeLocator = { selector: "//img[@alt='top_10']" };
-    this.sponsoredRailLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')][.//img[contains(@src,\'_Ad_Portrait_Thumbnail\') or contains(@srcset,\'_Ad_Portrait_Thumbnail\')]]' };
+    this.sponsoredRailLocator = { selector: '//div[contains(@class,"rail")][.//img[@alt="McDo"]]//div[contains(@class,"scrollable-list") and contains(@class,"horizontal-scroll")]' };
     this.sponsoredRailNonContentAreaLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')]//div[contains(@class,\'title\')]//img[contains(@class,\'object-contain\')]' };
     this.sponsoredRailAdvertiserLogoLocator = { selector: 'xpath=//div[contains(@class,\'rail z-1\')]//div[contains(@class,\'title\')]//img[contains(@class,\'object-contain\')]' };
   }

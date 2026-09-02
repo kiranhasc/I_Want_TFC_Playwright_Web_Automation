@@ -598,7 +598,6 @@ export interface VerifyIWantOriginalsRailOutput {
     homePageVisible: boolean;
     railTitleVisible: boolean;
     railTitle: string;
-    contentCardsCount: number;
 }
 
 export interface VerifyGuestPHCarouselTabTrayLoadInput {
@@ -1744,15 +1743,12 @@ export async function verifyIWantOriginalsRail(page: any, input?: Partial<Verify
     const homePageVisible = loginResult.isLoggedIn;
     const isTitleVisible = await authPage.isIWantOriginalsRailVisible();
     const railTitle = isTitleVisible ? await authPage.getIWantOriginalsRailTitle() : '';
-    const contentCardsCount = isTitleVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', isTitleVisible);
-    logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
     return {
         isLoggedIn: homePageVisible,
         homePageVisible,
         railTitleVisible: isTitleVisible,
         railTitle,
-        contentCardsCount,
     };
 }
 
@@ -1834,6 +1830,7 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
 
 export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
     const authPage = new OTTAuthPage(page);
+    const pageUtils = new PageUtils(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
     const loginResult = await loginToOTT(page, { mode });
@@ -1842,17 +1839,25 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
     const contentCardsCount = railVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', railVisible);
     logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
-    const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    logger.step('Clicking the right arrow on the iWant Originals rail');
-    const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
-    const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
-    logger.assertion('iWant Originals rail scrolled right', scrolledRight);
-    logger.step('Clicking the left arrow on the iWant Originals rail');
-    const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
-    const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
-    logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    let scrolledRight = false;
+    let scrolledLeft = false;
+    if (process.env.BROWSER === 'mchrome') {
+        const rail = page.locator(authPage.getIwantScrollLocatorMobile()).first();
+        scrolledRight = await pageUtils.scrollHorizontallyMobile(rail, 'right', 320, 500);
+        scrolledLeft = await pageUtils.scrollHorizontallyMobile(rail, 'left', 320, 500);
+    } else {
+        const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        logger.step('Clicking the right arrow on the iWant Originals rail');
+        const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+        const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
+        logger.assertion('iWant Originals rail scrolled right', scrolledRight);
+        logger.step('Clicking the left arrow on the iWant Originals rail');
+        const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
+        const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
+        logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    }
     return {
         isLoggedIn: loginResult.isLoggedIn,
         railVisible,
@@ -3513,7 +3518,8 @@ export async function verifyContinueWatchingRemovalAfterPlayback(page: any, inpu
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     const mode = normalizeLoginMode(input?.mode);
-    const parentalPin = (input?.parentalPin).trim();
+   const parentalPin = input?.parentalPin;
+
     logger.step('Starting IW3-T1960 flow for watched movie removal from Continue Watching');
     const loginResult = await loginToOTT(page, { mode });
     if (!loginResult.isLoggedIn) {

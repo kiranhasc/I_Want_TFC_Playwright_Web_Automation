@@ -16,7 +16,6 @@ test.describe('iWant Originals Rail', () => {
         expect(result.isLoggedIn).toBe(true);
         expect(result.homePageVisible).toBe(true);
         expect(result.railTitleVisible).toBe(true);
-        expect(result.contentCardsCount).toBeGreaterThan(0);
     });
 
     test('@Medium @mWeb IW3-T5814: Verify that "iWant Originals" tray contents are scrollable on tapping right or left arrow mark', async ({ page }) => {

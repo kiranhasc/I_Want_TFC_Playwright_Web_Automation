@@ -511,7 +511,8 @@ export async function navigateToUpgradePlanFromSubscriptionBlocker(
   logger.step('Starting upgrade plan navigation flow');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.assertion('Free user logged in before upgrade-plan navigation validation', isLoggedIn);
   if (!isLoggedIn) {
     return {

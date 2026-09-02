@@ -1469,7 +1469,7 @@ const parentalPin = input?.parentalPin;
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
-    await page.waitForTimeout(2000);
+    await detailsPage.waitForSearchResultsToLoad();
     await detailsPage.clickFirstSearchResult();
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();

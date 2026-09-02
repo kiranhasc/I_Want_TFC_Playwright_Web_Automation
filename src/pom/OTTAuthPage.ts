@@ -1315,7 +1315,7 @@ export class OTTAuthPage {
         return false;
     }
 
-     async isContinueWatchingRailVisible(): Promise<boolean> {
+    async isContinueWatchingRailVisible(): Promise<boolean> {
         try {
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
             for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -1819,7 +1819,7 @@ export class OTTAuthPage {
             return (await locator.textContent()) || '';
         }
     }
-
+    
     async getIWantOriginalsRailCardCount(): Promise<number> {
         if (process.env.BROWSER === 'mchrome') {
             const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();

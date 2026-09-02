@@ -91,6 +91,7 @@ export class OTTDetailsPage {
   private readonly loginCta: PageElement;
   private readonly firstSearchResult: PageElement;
   private readonly searchResultImages: PageElement;
+  private readonly searchResultsContainer: PageElement;
   private readonly thumbnailLabelOverlay: PageElement;
   private readonly playerScreen: PageElement;
   private readonly playerVideoControls: PageElement;
@@ -305,6 +306,7 @@ export class OTTDetailsPage {
     this.freeTagBadge = { selector: "img[alt='free'], img[alt='Free'], img[title='free'], img[title='Free'], [aria-label*='free']" };
     this.loginCta = { selector: '#login div' };
     this.searchResultImages = { selector: 'img[alt]' };
+    this.searchResultsContainer = { selector: '[class*="search-result"], [class*="result"], [data-testid*="result"], [role="list"], [role="grid"], .results-container, #search-results' };
     this.subtitleVisible = { selector: '//*[@id="player-container-main"]/div[6]/div/div/span' };
     this.skipIntroMarker = { selector: '//button[@id="player-container-main-skipIntroButton"]' };
     this.skipRecapMarker = { selector: '//button[@id="player-container-main-skipRecapButton"]' };
@@ -3654,12 +3656,38 @@ export class OTTDetailsPage {
     return this.getSelectedEpisodeMetadata();
   }
 
+  async waitForSearchResultsToLoad(): Promise<void> {
+    logger.step('Waiting for search results to load');
+    try {
+      // Wait for search results container to be visible using the POM selector
+      await this.page.locator(this.searchResultsContainer.selector!).first().waitFor({ state: 'visible', timeout: 15000 });
+      // Add small delay to ensure results are fully rendered
+      await this.page.waitForTimeout(500);
+    } catch {
+      logger.warn('Search results container took longer to load, retrying...');
+      // Retry once more
+      await this.page.waitForTimeout(1000);
+    }
+  }
+
   async clickFirstSearchResult(): Promise<void> {
     logger.elementInteraction('click', 'first content from first rail');
+    
+    // Wait for search results to load first
+    await this.waitForSearchResultsToLoad();
+    
     const firstResult = this.page.locator(this.firstSearchResult.selector).first();
-    if (!(await firstResult.count().catch(() => 0))) {
-      throw new Error('No search result is available to open');
+    const resultCount = await firstResult.count().catch(() => 0);
+    
+    if (resultCount === 0) {
+      // Retry once more with additional wait
+      await this.page.waitForTimeout(1000);
+      const retryCount = await firstResult.count().catch(() => 0);
+      if (retryCount === 0) {
+        throw new Error('No search result is available to open');
+      }
     }
+    
     await firstResult.waitFor({ state: 'visible', timeout: 15000 });
     await firstResult.click({ timeout: 15000 });
     await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {

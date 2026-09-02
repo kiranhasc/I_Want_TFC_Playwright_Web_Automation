@@ -36,7 +36,16 @@ const browserConfig = {
 };
 
 // Which browsers every "cross-browser" project should run on
-const CROSS_BROWSERS = ['chrome', 'edge'] as const;
+// If BROWSER env var is set, use only that browser; otherwise use default cross-browsers
+const getBrowsers = () => {
+  const envBrowser = process.env.BROWSER;
+  if (envBrowser) {
+    return [envBrowser] as const;
+  }
+  return ['chrome', 'edge'] as const;
+};
+
+const CROSS_BROWSERS = getBrowsers();
 
 type BaseProject = {
   name: string;
@@ -112,7 +121,7 @@ function withBrowsers(project: BaseProject) {
   return CROSS_BROWSERS.map((b) => ({
     ...project,
     name: `${project.name}-${b}`,
-    use: { ...browserConfig[b] },
+    use: { ...browserConfig[b as keyof typeof browserConfig] },
   }));
 }
 

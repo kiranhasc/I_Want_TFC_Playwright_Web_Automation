@@ -306,33 +306,84 @@ export class OTTPlaybackPage {
     }
 
     async tryHomePageContentForSubscribeCTA(): Promise<{ found: boolean; message: string; maybeLaterVisible: boolean; subscribeToWatchVisible: boolean; premiumGateVisible: boolean }> {
-        await this.pageUtils.waitForNetworkIdle(60000);
+        const isMobile = process.env.BROWSER === 'mchrome';
+        const initialNetworkWaitTime = isMobile ? 30000 : 20000;
+        const interactionWaitTime = isMobile ? 15000 : 10000;    
+        
+        logger.step('Waiting for carousel content to load');
+        await this.pageUtils.waitForNetworkIdle(initialNetworkWaitTime).catch(() => logger.debug('Initial network idle timeout'));
+        
         const paidIndicators = this.page.locator(this.paidContentBadge.selector);
         const paidCount = await paidIndicators.count().catch(() => 0);
+        
+        if (paidCount === 0) {
+            logger.warn('No paid indicators found on home page');
+            return {
+                found: false,
+                message: '',
+                maybeLaterVisible: false,
+                subscribeToWatchVisible: false,
+                premiumGateVisible: false,
+            };
+        }
+        
         for (let index = 0; index < Math.min(paidCount, 6); index += 1) {
-            const paidIndicator = paidIndicators.nth(index);
-            const indicatorVisible = await paidIndicator.isVisible().catch(() => false);
-            if (!indicatorVisible) {
+            try {
+                const paidIndicator = paidIndicators.nth(index);
+                const indicatorVisible = await paidIndicator.isVisible().catch(() => false);
+                
+                if (!indicatorVisible) {
+                    logger.debug(`Paid indicator ${index} not visible, skipping`);
+                    continue;
+                }
+                
+                logger.debug(`Attempting to click on carousel item ${index}`);
+                await paidIndicator.scrollIntoViewIfNeeded();
+                await this.page.waitForTimeout(500); 
+                const clickableParent = paidIndicator.locator('xpath=ancestor::a | ancestor::button | ancestor::div[@role="button"] | ancestor::li | ancestor::article').first();
+                const parentExists = await clickableParent.count().catch(() => 0);
+                
+                if (parentExists) {
+                    await clickableParent.click({ timeout: 5000, force: true }).catch(() => undefined);
+                } else {
+                    await paidIndicator.click({ timeout: 5000, force: true }).catch(() => undefined);
+                }
+                await this.page.waitForTimeout(2000);
+                await this.pageUtils.waitForNetworkIdle(interactionWaitTime).catch(() => logger.debug('Network idle after click timeout'));
+                const premiumGateVisible = await this.isPremiumContentGateVisible().catch(() => false);
+                const maybeLaterVisible = await this.isMaybeLaterVisible().catch(() => false);
+                const subscribeToWatchVisible = await this.isSubscribeToWatchVisible().catch(() => false);
+                let message = '';
+                if (subscribeToWatchVisible) {
+                    message = 'Subscribe to watch';
+                } else if (premiumGateVisible) {
+                    message = await this.getPremiumGateMessageText();
+                } else if (maybeLaterVisible) {
+                    message = 'Maybe Later';
+                }
+                
+                if (premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible) {
+                    logger.debug(`Found premium gate on item ${index}: premium=${premiumGateVisible}, maybeLater=${maybeLaterVisible}, subscribe=${subscribeToWatchVisible}, message="${message}"`);
+                    return {
+                        found: true,
+                        message,
+                        maybeLaterVisible,
+                        subscribeToWatchVisible,
+                        premiumGateVisible,
+                    };
+                }
+                await this.page.keyboard.press('Escape').catch(() => undefined);
+                await this.page.waitForTimeout(500);
+                
+            } catch (error) {
+                logger.debug(`Error checking carousel item ${index}:`, error);
+                await this.page.keyboard.press('Escape').catch(() => undefined);
+                await this.page.waitForTimeout(500);
                 continue;
             }
-            await paidIndicator.hover({ force: true }).catch(() => undefined);
-            await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 }).catch(() => undefined);
-            await this.pageUtils.waitForNetworkIdle(60000);
-            await this.page.waitForTimeout(3000);
-            const premiumGateVisible = await this.isPremiumContentGateVisible();
-            const maybeLaterVisible = await this.isMaybeLaterVisible();
-            const subscribeToWatchVisible = await this.isSubscribeToWatchVisible();
-            const message = premiumGateVisible ? await this.getPremiumGateMessageText() : (subscribeToWatchVisible ? 'Subscribe to watch' : '');
-            if (premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible) {
-                return {
-                    found: true,
-                    message,
-                    maybeLaterVisible,
-                    subscribeToWatchVisible,
-                    premiumGateVisible,
-                };
-            }
         }
+        
+        logger.warn('No premium gate found in any carousel item');
         return {
             found: false,
             message: '',
@@ -600,3 +651,7 @@ export class OTTPlaybackPage {
         await this.page.waitForTimeout(1000);
     }
 }
+function selectLiveChannel() {
+    throw new Error('Function not implemented.');
+}
+

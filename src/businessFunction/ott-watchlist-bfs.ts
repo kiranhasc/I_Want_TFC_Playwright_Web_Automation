@@ -375,7 +375,7 @@ export async function playContentFromWatchlist(
   const loginResult = await loginToOTT(page, {
     mode: input?.mode,
   });
-  const parentalPin = (input?.parentalPin).trim();
+  const parentalPin = input?.parentalPin;
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before playing content from watchlist', isLoggedIn);
 

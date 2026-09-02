@@ -882,7 +882,8 @@ export async function verifyEpisodePlaybackStartsFromDetailsPage(
 ): Promise<VerifyEpisodePlaybackStartsFromDetailsOutput> {
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.step('Starting episode playback verification from details page');
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1463,13 +1464,14 @@ export async function verifySkipIntroMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro marker verification flow');
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
     await authPage.submitSearch();
-    await page.waitForTimeout(2000);
+    await detailsPage.waitForSearchResultsToLoad();
     await detailsPage.clickFirstSearchResult();
   }
   const isDetailsPageVisible = await detailsPage.isShowDetailsPageVisible();
@@ -1500,7 +1502,8 @@ export async function verifySkipIntroFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1550,7 +1553,8 @@ export async function verifySkipRecapMarkerDuringPlayback(
   const detailsPage = new OTTDetailsPage(page);
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap marker verification flow');
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const searchTerm = input?.searchTerm ?? '';
   if (searchTerm) {
     await authPage.clickSearchBar();
@@ -1585,7 +1589,8 @@ export async function verifySkipRecapFunctionalityDuringPlayback(page: any, inpu
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip recap functionality verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);
@@ -1630,7 +1635,8 @@ export async function verifySkipIntroAndRecapAdvancePlaybackDuration(page: any, 
   const authPage = new OTTAuthPage(page);
   logger.step('Starting skip intro and recap playback advancement verification flow');
   const searchTerm = input?.searchTerm ?? '';
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   if (searchTerm) {
     await authPage.clickSearchBar();
     await authPage.enterSearchText(searchTerm);

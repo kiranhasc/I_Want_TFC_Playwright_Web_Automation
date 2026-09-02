@@ -1,4 +1,13 @@
 import { test, expect } from '../../src/fixtures/test-hooks';
+
+declare const process: {
+  env: {
+    BROWSER?: string;
+    TEST_ENV?: string;
+    [key: string]: string | undefined;
+  };
+};
+
 const testTimeout = process.env.BROWSER === 'mchrome'
   ? 420_000
   : 180_000;

@@ -616,7 +616,8 @@ export async function verifyLatestWatchedSeasonEpisodeInContinueWatchingTray(
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const expectedSeasonNumber = input?.expectedSeasonNumber;
   const expectedEpisodeNumber = input?.expectedEpisodeNumber;
   logger.step(`Starting IW3-T1930 flow for latest watched season/episode update under continue watching tray`);
@@ -1368,7 +1369,8 @@ export async function verifyContinueWatchingPlaybackFromTray(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching playback validation from tray');
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   await authPage.waitForContinueWatchingTrayToBeReady();
@@ -1530,7 +1532,8 @@ export async function verifyContinueWatchingPlaybackFromTrayWithParentalPin(
   const settingsPage = new OTTSettingsPage(page);
   const detailsPage = new OTTDetailsPage(page);
   logger.step('Starting Continue Watching playback validation from tray with parental PIN enabled');
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const modeToUse = input?.mode;
   const loginResult = await loginToOTT(page, { mode: modeToUse });
   const password = input?.password;
@@ -1743,7 +1746,8 @@ export async function verifyContinueWatchingTrayForNewUserAfterFivePercentPlayba
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.step('Starting smooth playback verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -1814,7 +1818,8 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.step(`Starting less-than-5% playback verification flow`);
   const loginResult = await loginToOTT(page, { mode });
   let searchTerm = '';
@@ -2324,7 +2329,8 @@ export async function verifyUpNextBingeMarkerFromContinueWatching(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.step('Starting Up Next binge marker validation from Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2602,7 +2608,8 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   const detailsPage = new OTTDetailsPage(page);
   logger.step('IW3-T1941: Verifying content is updated in Continue Watching tray after partial watch');
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   const seekMinutes = input?.seekMinutes ?? 1;
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
@@ -2746,7 +2753,8 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const gql = GraphQLHelper.getInstance(page);
-  const parentalPin = (input?.parentalPin).trim();
+ const parentalPin = input?.parentalPin;
+ 
   logger.step(`Starting resume-to-play regression flow`);
   const loginResult = await loginToOTT(page, { mode: input?.mode });
   const collectionResponse = await gql.waitForOperation('Collection', 60000).catch(() => null);

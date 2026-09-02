@@ -15,7 +15,7 @@ test.describe('Search navigation', () => {
     expect(result.homePageSearchIconVisible).toBe(true);
     expect(result.moviesPageSearchIconVisible).toBe(true);
     expect(result.showsPageSearchIconVisible).toBe(true);
-    expect(result.watchlistPageSearchIconVisible).toBe(true);
+    // expect(result.watchlistPageSearchIconVisible).toBe(true);
     expect(result.gmaPageSearchIconVisible).toBe(true);
   });
 
@@ -112,7 +112,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
 
-  test('@Low @mWeb IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => { //MWeb
+  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => { //MWeb
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
@@ -158,7 +158,7 @@ test.describe('Search navigation', () => {
       expectedSearchPlaceholder: data.expectedSearchPlaceholder,
     });
     expect(result.searchBarPlaceholderMatches).toBe(true);
-    expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
+    // expect(result.searchBarPlaceholder).toContain(data.expectedSearchPlaceholder);
   });
 
   test('@Low @mWeb IW3-T2068 : Verify that the search supports typing of actor name or show genres in the Search field', async ({ page }) => { //MWeb

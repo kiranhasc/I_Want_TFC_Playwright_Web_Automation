@@ -1260,7 +1260,7 @@ export class OTTAuthPage {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
+        await this.page.waitForTimeout(2000);
         await this.pageUtils.safeClick(this.gmaTab);
     }
 

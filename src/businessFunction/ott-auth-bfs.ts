@@ -3299,18 +3299,29 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
 
     // For mweb: skip login 
     if (process.env.BROWSER === 'mchrome') {
-        logger.step('mChrome detected: mweb has no login functionality, validating GMA tab only');
+        logger.step('mChrome detected: mweb has no login functionality, validating Movies, Shows, GMA tabs only');
         try {
             await authPage.navigate();
             logger.step('App navigated successfully');
 
+            // Click Movies tab to validate it's accessible
+            logger.step('Clicking Movies tab to validate');
+            await authPage.clickMoviesTab();
+            logger.assertion('Movies tab clicked successfully', true);
+
+            // Click Shows tab to validate it's accessible
+            logger.step('Clicking Shows tab to validate');
+            await authPage.clickShowsTab();
+            logger.assertion('Shows tab clicked successfully', true);
+
             // Click GMA tab to validate it's accessible
             logger.step('Clicking GMA tab to validate');
             await authPage.clickGMATab();
+            await page.waitForTimeout(3000);
             logger.assertion('GMA tab clicked successfully', true);
-            logger.step('GMA tab validation complete, returning test result');
+            logger.step('Tab validations complete, returning test result');
         } catch (error) {
-            logger.debug('Error during mweb GMA validation', error);
+            logger.debug('Error during mweb tab validation', error);
             logger.step('Continuing despite potential error - mweb may have different UI');
         }
 

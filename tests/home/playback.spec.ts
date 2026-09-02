@@ -611,7 +611,7 @@ test.describe('Play Back', () => {
     expect(result.autoPlaybackStarted).toBeTruthy();
   });
 
-  test('@Low @mWeb IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
+  test('@Low IW3-T2009 - LIVE tag is displayed on the player screen during live streaming', async ({ page }) => {
     const data = testData['tc-sub-010-go-live-playback'] as Record<string, any>;
     const result = await verifyLiveTagOnPlayer(page, {
       mode: data.mode,

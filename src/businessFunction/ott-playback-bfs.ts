@@ -2745,7 +2745,7 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
-  const parentalPin = (input?.parentalPin).trim();
+  const parentalPin = input?.parentalPin;
   logger.step('Starting close-player return to details verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const queryFromCollection = await resolveQueryFromCollectionGraphQL(page, input?.graphqlQueryName);
@@ -2766,6 +2766,7 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(query);
   await authPage.submitSearchQuery();
+  await page.waitForTimeout(2000);
   const resultsVisible = query ? await authPage.isSearchResultsVisible(query) : false;
   logger.assertion('Search results visible for query', resultsVisible);
   await page.waitForTimeout(3000);
@@ -2778,6 +2779,7 @@ export async function verifyPlayerCloseReturnsToDetailsFlow(page: any, input?: O
     page.waitForTimeout(90000);
   }
   await detailsPage.waitForPlayback(2);
+  await detailsPage.waitTillAdsEnd();
   const playerVisibleBeforeClose = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible before closing', playerVisibleBeforeClose);
   await detailsPage.clickBackButton().catch(() => undefined);

@@ -3656,20 +3656,18 @@ export class OTTDetailsPage {
     return this.getSelectedEpisodeMetadata();
   }
 
-  async waitForSearchResultsToLoad(): Promise<void> {
+    async waitForSearchResultsToLoad(): Promise<void> {
     logger.step('Waiting for search results to load');
     try {
-      // Wait for search results container to be visible using the POM selector
-      await this.page.locator(this.searchResultsContainer.selector!).first().waitFor({ state: 'visible', timeout: 15000 });
-      // Add small delay to ensure results are fully rendered
-      await this.page.waitForTimeout(500);
-    } catch {
-      logger.warn('Search results container took longer to load, retrying...');
-      // Retry once more
-      await this.page.waitForTimeout(1000);
+      await this.page.locator(this.firstSearchResult.selector).first()
+        .waitFor({ state: 'visible', timeout: 30000 });
+    } catch (error) {
+      logger.warn('First search result was not visible within the initial timeout; checking the results container', error);
+      await this.page.locator(this.searchResultsContainer.selector!).first()
+        .waitFor({ state: 'visible', timeout: 10000 });
     }
   }
-
+  
   async clickFirstSearchResult(): Promise<void> {
     logger.elementInteraction('click', 'first content from first rail');
     
@@ -4061,7 +4059,7 @@ export class OTTDetailsPage {
 
   async waitForMobileAdPlayback(): Promise<void> {
     if (process.env.BROWSER === 'mchrome') {
-      await this.page.waitForTimeout(120000);
+      await this.waitForAdPlaybackToComplete();
     }
   }
 

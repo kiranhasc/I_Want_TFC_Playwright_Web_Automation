@@ -2239,7 +2239,6 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
-        await this.page.waitForTimeout(2500);
         const normalizeTitle = (value: string) => String(value || '')
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, ' ')
@@ -2247,31 +2246,33 @@ export class OTTAuthPage {
             .trim();
 
         const normalizedQuery = normalizeTitle(query);
-        const visibleResultTitles = await this.getSearchResultTitles();
-        const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
-            const normalizedTitle = normalizeTitle(title);
-            return normalizedQuery
-                ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
-                : Boolean(normalizedTitle);
-        });
-
-        if (matchedVisibleTitle) {
-            return true;
-        }
-
         const resultImages = this.page.locator(this.searchResultImages.selector);
-        const imageCount = await resultImages.count().catch(() => 0);
-        if (imageCount > 0) {
-            return true;
+        const deadline = Date.now() + 30000;
+
+        while (Date.now() < deadline) {
+            const visibleResultTitles = await this.getSearchResultTitles();
+            const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
+                const normalizedTitle = normalizeTitle(title);
+                return normalizedQuery
+                    ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
+                    : Boolean(normalizedTitle);
+            });
+
+            if (matchedVisibleTitle || await resultImages.count().catch(() => 0) > 0) {
+                return true;
+            }
+
+            if (normalizedQuery) {
+                const bodyText = await this.page.locator('body').textContent().catch(() => '');
+                if (normalizeTitle(bodyText || '').includes(normalizedQuery)) {
+                    return true;
+                }
+            }
+
+            await this.page.waitForTimeout(250);
         }
 
-        if (!normalizedQuery) {
-            return false;
-        }
-
-        const bodyText = await this.page.locator('body').textContent().catch(() => '');
-        const normalizedBodyText = normalizeTitle(bodyText || '');
-        return normalizedBodyText.includes(normalizedQuery);
+        return false;
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {

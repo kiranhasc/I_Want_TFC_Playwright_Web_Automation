@@ -3666,7 +3666,7 @@ export class OTTDetailsPage {
     return this.getSelectedEpisodeMetadata();
   }
 
-  async waitForSearchResultsToLoad(): Promise<void> {
+    async waitForSearchResultsToLoad(): Promise<void> {
     logger.step('Waiting for search results to load');
     try {
       await this.page.locator(this.firstSearchResult.selector).first()
@@ -3677,7 +3677,7 @@ export class OTTDetailsPage {
         .waitFor({ state: 'visible', timeout: 10000 });
     }
   }
-
+  
   async clickFirstSearchResult(): Promise<void> {
     logger.elementInteraction('click', 'first content from first rail');
     await this.waitForSearchResultsToLoad();
@@ -4071,7 +4071,7 @@ export class OTTDetailsPage {
 
   async waitForMobileAdPlayback(): Promise<void> {
     if (process.env.BROWSER === 'mchrome') {
-      await this.waitForAdPlaybackToComplete(120, 30);
+      await this.waitForAdPlaybackToComplete();
     }
   }
 

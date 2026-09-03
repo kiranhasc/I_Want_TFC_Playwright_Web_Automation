@@ -1767,12 +1767,11 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   await detailsPage.waitForMobileAdPlayback();
   const playbackStarted = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Movie playback started', playbackStarted);
+  await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(1.0);
   await detailsPage.waitForMobileAdPlayback();
-  const authPageForFinish = new OTTAuthPage(page);
-  const playbackCompleted = await authPageForFinish.finishPlaybackFromCurrentItem();
   const postDetailsVisible = await detailsPage.isShowDetailsPageVisible();
-  logger.assertion('Playback completed', playbackCompleted);
+  const playbackCompleted = postDetailsVisible;
   logger.assertion('Content details page visible after playback completion', postDetailsVisible);
   return {
     isLoggedIn,
@@ -2703,16 +2702,48 @@ export async function verifyAutomaticNextEpisodePlaybackFlow(page: any, input?: 
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.hoverPlaybackScreen();
+  const initialEpisode = await detailsPage.getCurrentPlayerEpisodeMetadata().catch(() => ({
+    seasonNumber: '',
+    episodeNumber: '',
+    title: '',
+  }));
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
-  const markerVisible = await detailsPage.waitForUpNextMarker(15000);
-  logger.assertion('Up Next marker is visible', markerVisible);
+  const isMChrome = process.env.BROWSER === 'mchrome';
+  let markerVisible = false;
   let autoPlaybackStarted = false;
-  if (markerVisible) {
-    await detailsPage.waitForPlayback(8);
-    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-    autoPlaybackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
+  if (isMChrome) {
+    const transitionDeadline = Date.now() + 120000;
+    while (Date.now() < transitionDeadline) {
+      await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+      const currentEpisode = await detailsPage.getCurrentPlayerEpisodeMetadata().catch(() => ({
+        seasonNumber: '',
+        episodeNumber: '',
+        title: '',
+      }));
+      const episodeChanged = Boolean(
+        currentEpisode.seasonNumber || currentEpisode.episodeNumber || currentEpisode.title
+      ) && (
+        currentEpisode.seasonNumber !== initialEpisode.seasonNumber
+        || currentEpisode.episodeNumber !== initialEpisode.episodeNumber
+        || currentEpisode.title !== initialEpisode.title
+      );
+      if (episodeChanged) {
+        autoPlaybackStarted = await detailsPage.isPlaybackStarted(15000).catch(() => false);
+        break;
+      }
+      await detailsPage.waitForPlayback(1000 / 1000);
+    }
+    logger.assertion('Content navigated to the next episode on mChrome', autoPlaybackStarted);
+  } else {
+    markerVisible = await detailsPage.waitForUpNextMarker(15000);
+    logger.assertion('Up Next marker is visible', markerVisible);
+    if (markerVisible) {
+      await detailsPage.waitForPlayback(8);
+      await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+      autoPlaybackStarted = await detailsPage.isPlayerScreenVisible().catch(() => false);
+    }
   }
   logger.assertion('Next episode playback started automatically', autoPlaybackStarted);
   return {

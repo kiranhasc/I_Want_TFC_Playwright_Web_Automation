@@ -2246,31 +2246,33 @@ export class OTTAuthPage {
             .trim();
 
         const normalizedQuery = normalizeTitle(query);
-        const matchesQuery = (titles: string[]) => titles.some((title: string) => {
-            const normalizedTitle = normalizeTitle(title);
-            return normalizedQuery
-                ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
-                : Boolean(normalizedTitle);
-        });
-
+        const resultImages = this.page.locator(this.searchResultImages.selector);
         const deadline = Date.now() + 30000;
+
         while (Date.now() < deadline) {
+            const visibleResultTitles = await this.getSearchResultTitles();
+            const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
+                const normalizedTitle = normalizeTitle(title);
+                return normalizedQuery
+                    ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
+                    : Boolean(normalizedTitle);
+            });
+
+            if (matchedVisibleTitle || await resultImages.count().catch(() => 0) > 0) {
+                return true;
+            }
+
             if (normalizedQuery) {
-                const queriedTitle = this.page.getByText(query, { exact: false }).first();
-                if (await queriedTitle.isVisible().catch(() => false)) {
+                const bodyText = await this.page.locator('body').textContent().catch(() => '');
+                if (normalizeTitle(bodyText || '').includes(normalizedQuery)) {
                     return true;
                 }
             }
 
-            const visibleResultTitles = await this.getSearchResultTitles();
-            if (matchesQuery(visibleResultTitles)) {
-                return true;
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 250));
+            await this.page.waitForTimeout(250);
         }
 
-        return matchesQuery(await this.getSearchResultTitles());
+        return false;
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {

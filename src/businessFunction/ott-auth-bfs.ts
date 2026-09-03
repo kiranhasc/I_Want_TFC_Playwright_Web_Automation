@@ -3838,6 +3838,7 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     return {
         isMobileErrorDisplayed: isErrorDisplayed,
         errorMessage,
+        
     };
 }
 

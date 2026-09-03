@@ -2239,7 +2239,6 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
-        await this.page.waitForTimeout(2500);
         const normalizeTitle = (value: string) => String(value || '')
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, ' ')
@@ -2247,31 +2246,31 @@ export class OTTAuthPage {
             .trim();
 
         const normalizedQuery = normalizeTitle(query);
-        const visibleResultTitles = await this.getSearchResultTitles();
-        const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
+        const matchesQuery = (titles: string[]) => titles.some((title: string) => {
             const normalizedTitle = normalizeTitle(title);
             return normalizedQuery
                 ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
                 : Boolean(normalizedTitle);
         });
 
-        if (matchedVisibleTitle) {
-            return true;
+        const deadline = Date.now() + 30000;
+        while (Date.now() < deadline) {
+            if (normalizedQuery) {
+                const queriedTitle = this.page.getByText(query, { exact: false }).first();
+                if (await queriedTitle.isVisible().catch(() => false)) {
+                    return true;
+                }
+            }
+
+            const visibleResultTitles = await this.getSearchResultTitles();
+            if (matchesQuery(visibleResultTitles)) {
+                return true;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 250));
         }
 
-        const resultImages = this.page.locator(this.searchResultImages.selector);
-        const imageCount = await resultImages.count().catch(() => 0);
-        if (imageCount > 0) {
-            return true;
-        }
-
-        if (!normalizedQuery) {
-            return false;
-        }
-
-        const bodyText = await this.page.locator('body').textContent().catch(() => '');
-        const normalizedBodyText = normalizeTitle(bodyText || '');
-        return normalizedBodyText.includes(normalizedQuery);
+        return matchesQuery(await this.getSearchResultTitles());
     }
 
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {

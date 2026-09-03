@@ -2339,13 +2339,8 @@ export async function verifyUpNextBingeMarkerFlow(page: any, input?: OpenContent
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickEpisodeOne();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-  await detailsPage.waitForMobileAdPlayback();
-  await detailsPage.waitForPlayback(3);
-  await detailsPage.hoverPlaybackScreen();
-  await detailsPage.dragSeekBarToPosition(0.99);
-  await detailsPage.waitForMobileAdPlayback();
-  await detailsPage.waitForPlayback(2);
-  const upNextMarkerVisible = await detailsPage.waitForUpNextMarker();
+  await detailsPage.hoverOnPlaybackScreen();
+  const upNextMarkerVisible = await detailsPage.seekToEndAndWaitForUpNextMarker(15000);
   logger.assertion('Up Next binge marker visible at the end of playback', upNextMarkerVisible);
   return {
     isLoggedIn,
@@ -3123,11 +3118,17 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
  const parentalPin = input?.parentalPin;
  
   logger.step('Starting subtitle persistence verification flow');
+  const gql = GraphQLHelper.getInstance(page);
+  const collectionWait = gql.waitForOperation(
+    input?.graphqlQueryName ?? 'Collection',
+    60000,
+    true,
+    true
+  );
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  const gql = GraphQLHelper.getInstance(page);
   if (!query) {
-    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+    const collectionResponse = await collectionWait;
     const parser = new CollectionParser(collectionResponse as any);
     const rails = parser.getRails();
     const isMChrome = process.env.BROWSER === 'mchrome';
@@ -3171,6 +3172,7 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   logger.assertion('Details page visible after opening search result', detailsVisible);
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  await detailsPage.waitForPlayerReady();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(3);
   await detailsPage.tapPlaybackScreen();
@@ -3178,6 +3180,7 @@ export async function verifySubtitlePersistenceFlow(page: any, input?: OpenConte
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   await detailsPage.clickNextEpisodeButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+  await detailsPage.waitForPlayerReady();
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(1);
   await detailsPage.tapPlaybackScreen();
@@ -3306,10 +3309,8 @@ export async function verifySubtitleSynchronizationFlow(page: any, input?: OpenC
     const assetWithSubtitles = parser.findAsset((asset: any) => {
       const hasSubtitles = Array.isArray(asset.subtitleLanguages) && asset.subtitleLanguages.length >= 1;
       if (!isMChrome) {
-        // Existing web functionality
         return hasSubtitles;
       }
-      // mchrome: require subtitles + free content
       const labels = asset.labels ?? [];
       const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
       const monetType =

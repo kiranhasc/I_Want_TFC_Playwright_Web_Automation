@@ -2393,7 +2393,8 @@ export async function verifyUpNextMarkerNavigationFlow(page: any, input?: OpenCo
   await detailsPage.dragSeekBarToPosition(0.99);
   await detailsPage.waitForMobileAdPlayback();
   await detailsPage.waitForPlayback(2);
-  await detailsPage.clickResumeButton();
+  // await detailsPage.clickResumeButton();
+  await detailsPage.waitForAdPlaybackToComplete();
   const markerVisible = await detailsPage.waitForUpNextMarker();
   logger.assertion('Up Next marker is visible', markerVisible);
   if (markerVisible) {

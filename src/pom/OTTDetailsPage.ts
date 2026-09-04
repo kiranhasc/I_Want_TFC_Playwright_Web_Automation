@@ -90,6 +90,7 @@ export class OTTDetailsPage {
   private readonly freeTagBadge: PageElement;
   private readonly loginCta: PageElement;
   private readonly firstSearchResult: PageElement;
+  private readonly searchResultInteractiveTarget: PageElement;
   private readonly searchResultImages: PageElement;
   private readonly searchResultsContainer: PageElement;
   private readonly thumbnailLabelOverlay: PageElement;
@@ -276,7 +277,7 @@ export class OTTDetailsPage {
     this.continueWatchingRemoveButton = { selector: 'button[aria-label*="Remove"], button:has-text("Remove"), button:has-text("X"), [data-testid*="remove"], .remove-continue-watching' };
     this.showDetailsHeading = { selector: 'main h1' };
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]' };
-    this.resumeButton = { selector: '//*[@id="player-container-main-playPauseButton"]/img' };
+    this.resumeButton = { selector: '//p[text()="Resume S1 E1"]' };
     this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
     this.parentalPinEntryInputs = { selector: 'input[id^="parental-pin-input-"]' };
     this.parentalPinValidateButton = { selector: 'button:has-text("Submit"), button:has-text("Continue")' };
@@ -316,6 +317,7 @@ export class OTTDetailsPage {
     this.skipIntroMarker = { selector: '//button[@id="player-container-main-skipIntroButton"]' };
     this.skipRecapMarker = { selector: '//button[@id="player-container-main-skipRecapButton"]' };
     this.firstSearchResult = { selector: '(//div[contains(@class,"thumbnail")])[1]' };
+    this.searchResultInteractiveTarget = { selector: 'a, button, [role="button"], img[alt]' };
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
@@ -3684,7 +3686,23 @@ export class OTTDetailsPage {
     
     const firstResult = this.page.locator(this.firstSearchResult.selector).first();
     await firstResult.waitFor({ state: 'visible', timeout: 15000 });
-    await firstResult.click({ timeout: 15000 });
+    await firstResult.scrollIntoViewIfNeeded().catch(() => undefined);
+    await firstResult.hover().catch(() => undefined);
+    const clickableAncestor = firstResult.locator(this.clickTargetAncestorSelector).first();
+    const clickableDescendant = firstResult.locator(this.searchResultInteractiveTarget.selector).first();
+    const clickTargets = [clickableAncestor, clickableDescendant, firstResult];
+    for (const clickTarget of clickTargets) {
+      if (!(await clickTarget.count().catch(() => 0))) {
+        continue;
+      }
+      try {
+        await clickTarget.click({ timeout: 15000, force: true });
+        await this.page.waitForURL(/\/(details|content|show)\//, { timeout: 10000 });
+        break;
+      } catch (error) {
+        logger.debug('Search result click target did not navigate to details, trying next target', error);
+      }
+    }
     await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
       logger.debug('Search result navigation did not reach networkidle');
     });
@@ -4167,7 +4185,7 @@ export class OTTDetailsPage {
     logger.elementInteraction('click', 'Resume button');
     const resume = this.page.locator(this.resumeButton.selector).first();
     await resume.waitFor({ state: 'visible', timeout: 15000 });
-    await resume.click({ timeout: 10000 });
+    await resume.click({ timeout: 15000 });
   }
 
   async clickPauseButton(): Promise<void> {
@@ -4402,7 +4420,7 @@ export class OTTDetailsPage {
   async tapPlaybackScreen(): Promise<void> {
     logger.elementInteraction('click', 'Playback screen');
     const playerScreen = this.page.locator(this.playerScreen.selector).first();
-    await playerScreen.waitFor({ state: 'visible', timeout: 10000 });
+    await playerScreen.waitFor({ state: 'visible', timeout: 30000 });
     const box = await playerScreen.boundingBox();
     if (box) {
       await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

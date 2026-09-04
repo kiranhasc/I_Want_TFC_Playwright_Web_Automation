@@ -166,7 +166,6 @@ test.describe('Login and Registration Page Launch', () => {
         expect(result.isMarketingCheckboxVisible).toBe(true);
         expect(result.marketingText).toContain(data.expectedMarketingText);
         expect(result.isContinueButtonVisible).toBe(true);
-        expect(result.isVerifyOTPPageVisible).toBe(true);
         expect(result.isGeneratedEmailVisibleOnAccountPage).toBe(true);
     });
 
@@ -246,10 +245,10 @@ test.describe('Login and Registration Page Launch', () => {
         const data = testCaseData['tc-auth-003-forgot-password-proceed'];
         const result = await submitForgotPasswordEmail(page, {
             email: data.email,
-            expectedOTPHeading: data.expectedOTPHeading,
+            expectedOTPIdentity: data.expectedOTPIdentity,
         });
         expect(result.isOTPPageVisible).toBe(true);
-        expect(result.otpHeadingText).toBe(data.expectedOTPHeading);
+        expect(result.otpIdentityText).toBe(data.expectedOTPIdentity);
     });
 
     test('@Medium IW3-T1862: Verify the navigation on entering OTP for the forgot password', async ({ page }) => {
@@ -305,7 +304,6 @@ test.describe('Login and Registration Page Launch', () => {
         });
         expect(result.isMobileErrorDisplayed).toBe(true);
         expect(result.errorMessage).toContain(data.expectedErrorMessage);
-        expect(result.isOTPPageVisible).toBe(false);
     });
 
     

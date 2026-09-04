@@ -1059,16 +1059,18 @@ export async function verifyShareLinkCopiedToClipboardMessage(
       shareMessageText: '',
     };
   }
-  await authPage.acceptCookieSettingsIfVisible();
-  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-  const continueWatchingTray = page.locator('text=Continue Watching').first();
-  if (await continueWatchingTray.count().catch(() => 0)) {
-    await continueWatchingTray.scrollIntoViewIfNeeded().catch(() => undefined);
+  if (process.env.BROWSER !== 'mchrome') {
+    await authPage.acceptCookieSettingsIfVisible();
     await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+    const continueWatchingTray = page.locator('text=Continue Watching').first();
+    if (await continueWatchingTray.count().catch(() => 0)) {
+      await continueWatchingTray.scrollIntoViewIfNeeded().catch(() => undefined);
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+      await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+    }
   }
-  await detailsPage.clickMoviesSection();
+  await authPage.clickMoviesTab();
   await detailsPage.clickFirstMovieContent();
   await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);

@@ -232,6 +232,7 @@ export class OTTDetailsPage {
   private readonly sponsoredRailContentCard: PageElement;
   private readonly episodeItem: PageElement;
   private readonly seasonTitleContainer: string;
+  private readonly searchResultInteractiveTarget: PageElement;
 
   constructor(page: Page) {
     this.page = page;
@@ -454,7 +455,8 @@ export class OTTDetailsPage {
     this.adBanner = { selector: '//a[@id="aw0"]/img' };
     this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
     this.episodeItem = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
-    this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item'
+    this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item';
+    this.searchResultInteractiveTarget = { selector: 'a, button, [role="button"], img[alt]' }
   }
 
   private getRoleLocator(element: PageElement, exact = false) {
@@ -3583,6 +3585,26 @@ export class OTTDetailsPage {
     }
   }
 
+  async waitForContentCompletion(timeout = 120000): Promise<boolean> {
+    const startedAt = Date.now();
+    try {
+      await this.page.waitForFunction(
+        () => Array.from(document.querySelectorAll('video')).some((video) => video.ended),
+        { timeout }
+      );
+
+      const remainingTimeout = Math.max(1000, timeout - (Date.now() - startedAt));
+      await expect(this.page.locator(this.playerScreen.selector).first())
+        .toBeHidden({ timeout: remainingTimeout });
+      await expect(this.page.locator(this.showDetailsHeading.selector).first())
+        .toBeVisible({ timeout: remainingTimeout });
+      return true;
+    } catch (error) {
+      logger.debug('Content did not complete and return to the details page within the timeout', error);
+      return false;
+    }
+  }
+
   private normalizeMetadataText(value: string): string {
     return (value || '')
       .replace(/\u00a0/g, ' ')
@@ -3681,10 +3703,25 @@ export class OTTDetailsPage {
   async clickFirstSearchResult(): Promise<void> {
     logger.elementInteraction('click', 'first content from first rail');
     await this.waitForSearchResultsToLoad();
-    
     const firstResult = this.page.locator(this.firstSearchResult.selector).first();
     await firstResult.waitFor({ state: 'visible', timeout: 15000 });
-    await firstResult.click({ timeout: 15000 });
+    await firstResult.scrollIntoViewIfNeeded().catch(() => undefined);
+    await firstResult.hover().catch(() => undefined);
+    const clickableAncestor = firstResult.locator(this.clickTargetAncestorSelector).first();
+    const clickableDescendant = firstResult.locator(this.searchResultInteractiveTarget.selector).first();
+    const clickTargets = [clickableAncestor, clickableDescendant, firstResult];
+    for (const clickTarget of clickTargets) {
+      if (!(await clickTarget.count().catch(() => 0))) {
+        continue;
+      }
+      try {
+        await clickTarget.click({ timeout: 15000, force: true });
+        await this.page.waitForURL(/\/(details|content|show)\//, { timeout: 10000 });
+        break;
+      } catch (error) {
+        logger.debug('Search result click target did not navigate to details, trying next target', error);
+      }
+    }
     await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
       logger.debug('Search result navigation did not reach networkidle');
     });

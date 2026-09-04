@@ -1770,8 +1770,8 @@ export async function verifyMoviePlaybackReturnsToDetailsFlow(page: any, input?:
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.dragSeekBarToPosition(1.0);
   await detailsPage.waitForMobileAdPlayback();
-  const postDetailsVisible = await detailsPage.isShowDetailsPageVisible();
-  const playbackCompleted = postDetailsVisible;
+  const playbackCompleted = await detailsPage.waitForContentCompletion();
+  const postDetailsVisible = playbackCompleted && await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page visible after playback completion', postDetailsVisible);
   return {
     isLoggedIn,

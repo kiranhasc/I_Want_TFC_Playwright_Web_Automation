@@ -190,7 +190,7 @@ export class OTTAuthPage {
         this.verifyOTPIdentity = { role: 'heading', text: 'Verify your identity', selector: '//h1[text()="Verify your identity"]' };
         this.errorMessage = { selector: '//p[text()="Your login credentials are incorrect"]' };
         this.emailInvalidMessage = { selector: 'p:has-text("Invalid email address")' };
-        this.emailErrorMessage = { selector: '//p[text()="Please enter a valid email to continue."]' };
+        this.emailErrorMessage = { selector: '//p[text()="Invalid email address"]' };
         this.welcomeHeading = { selector: 'h1:has-text("Welcome to iWant"), :text("Welcome to iWant")' };
         this.welcomeSubheading = { selector: 'text=/Home of Filipino/' };
         this.loginWithFacebookButton = { selector: 'button:has-text("Login with Facebook")' };

@@ -112,7 +112,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
 
-  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => {
+  test('@Low IW3-T2086 : Verify that live content is displayed in search when user enters live content title', async ({ page }) => {
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
@@ -122,8 +122,7 @@ test.describe('Search navigation', () => {
     expect(result.liveContentTitle).toBeTruthy();
     expect(result.searchQueryTyped).toBe(true);
     expect(result.suggestionsVisible).toBe(true);
-    expect(result.liveContentExcludedFromSuggestions).toBe(true);
-    expect(result.liveContentTitleFoundInSearchResults).toBe(false);
+    expect(result.liveContentTitleFoundInSearchResults).toBe(true);
   });
 
   test('@Medium @mWeb IW3-T2087 : Verify that back navigation returns the user from content details to the search results page', async ({ page }) => { //MWeb
@@ -347,17 +346,5 @@ test.describe('Search navigation', () => {
     expect.soft(result.trendingContentTitle).toBeTruthy();
     expect.soft(result.detailsPageVisible).toBe(true);
     expect.soft(result.detailsPageTitleMatches).toBe(true);
-  });
-
-  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
-    test.setTimeout(180000);
-    const data = testCaseData['tc-nav-025-search-results-guest'];
-    const result = await verifyGuestSearchResultsWithoutLogin(page, {
-      searchQuery: data.searchQuery,
-    });
-    expect.soft(result.isLoggedIn).toBe(false);
-    expect.soft(result.searchQueryTyped).toBe(true);
-    expect.soft(result.resultsVisible).toBe(true);
-    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 })

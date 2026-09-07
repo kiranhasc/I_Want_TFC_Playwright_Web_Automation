@@ -233,7 +233,6 @@ export class OTTDetailsPage {
   private readonly sponsoredRailContentCard: PageElement;
   private readonly episodeItem: PageElement;
   private readonly seasonTitleContainer: string;
-  private readonly searchResultInteractiveTarget: PageElement;
 
   constructor(page: Page) {
     this.page = page;

@@ -2244,11 +2244,11 @@ export class OTTAuthPage {
             .replace(/[^a-z0-9]+/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-
+ 
         const normalizedQuery = normalizeTitle(query);
         const resultImages = this.page.locator(this.searchResultImages.selector);
         const deadline = Date.now() + 30000;
-
+ 
         while (Date.now() < deadline) {
             const visibleResultTitles = await this.getSearchResultTitles();
             const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
@@ -2257,24 +2257,23 @@ export class OTTAuthPage {
                     ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
                     : Boolean(normalizedTitle);
             });
-
+ 
             if (matchedVisibleTitle || await resultImages.count().catch(() => 0) > 0) {
                 return true;
             }
-
+ 
             if (normalizedQuery) {
                 const bodyText = await this.page.locator('body').textContent().catch(() => '');
                 if (normalizeTitle(bodyText || '').includes(normalizedQuery)) {
                     return true;
                 }
             }
-
+ 
             await this.page.waitForTimeout(250);
         }
-
+ 
         return false;
     }
-
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
         logger.elementInteraction('verify', 'search auto-suggestions');
         try {

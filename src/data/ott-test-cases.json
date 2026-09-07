@@ -1190,11 +1190,11 @@
     },
     "tc-auth-031-top-10-tag-on-search": {
         "mode": "valid",
-        "searchQuery": "Alibi"
+        "searchQuery": "Someone, Someday"
     },
     "tc-auth-032-top-10-tag-on-watchlist": {
         "mode": "valid",
-        "searchQuery": "Alibi"
+        "searchQuery": "Someone, Someday"
     },
     "tc-auth-033-related-content-trays-outside-ph": {
         "mode": "valid"

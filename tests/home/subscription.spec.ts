@@ -43,6 +43,7 @@ test.describe('Premium content subscription', () => {
     expect(result.gateMessage).toContain(data.expectedMessage);
     expect(result.maybeLaterVisible).toBeTruthy();
     expect(result.subscribeToWatchVisible).toBeTruthy();
+    expect(result.subscribeToWatchClicked).toBeTruthy();
   });
 
   test('@High @mWeb IW3-T2032: Verify that "Subscribe to watch" CTA is displayed for premium carousel contents for free user', async ({ page }) => {

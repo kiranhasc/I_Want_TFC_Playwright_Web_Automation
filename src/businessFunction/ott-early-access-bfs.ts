@@ -112,7 +112,8 @@ export async function verifyEarlyAccessTag(page: any, input: VerifyEarlyAccessIn
 export async function verifyEarlyAccessUpgradePromptMessage(page: any, input: VerifyEarlyAccessUpgradePromptInput): Promise<VerifyEarlyAccessUpgradePromptOutput> {
     const earlyAccessPage = new OTTEarlyAccessPage(page);
     const detailsPage = new OTTDetailsPage(page);
-    const parentalPin = (input?.parentalPin).trim();
+   const parentalPin = input?.parentalPin;
+ 
     const gql = GraphQLHelper.getInstance(page);
     const isMobileWeb = process.env.BROWSER === 'mchrome';
     
@@ -260,7 +261,8 @@ export async function verifyEarlyAccessNotInContinueWatchingAfterPlayback(page: 
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     const playbackPage = new OTTPlaybackPage(page);
-    const parentalPin = (input?.parentalPin).trim();
+   const parentalPin = input?.parentalPin;
+ 
     const gql = GraphQLHelper.getInstance(page);
     logger.step('Logging in before verifying the Early Access Continue Watching scenario');
     const login = await loginToOTT(page, { mode: input.mode });

@@ -810,7 +810,6 @@ export class OTTAuthPage {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
-
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;
@@ -1260,7 +1259,7 @@ export class OTTAuthPage {
             await this.clickMobileMainMenu();
         }
         logger.elementInteraction('click', 'GMA tab');
-        await this.page.waitForTimeout(1500);
+        await this.page.waitForTimeout(2000);
         await this.pageUtils.safeClick(this.gmaTab);
     }
 
@@ -1315,7 +1314,7 @@ export class OTTAuthPage {
         return false;
     }
 
-     async isContinueWatchingRailVisible(): Promise<boolean> {
+    async isContinueWatchingRailVisible(): Promise<boolean> {
         try {
             const locator = this.page.locator(this.continueWatchingRail.selector).first();
             for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -1819,7 +1818,7 @@ export class OTTAuthPage {
             return (await locator.textContent()) || '';
         }
     }
-
+    
     async getIWantOriginalsRailCardCount(): Promise<number> {
         if (process.env.BROWSER === 'mchrome') {
             const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
@@ -2239,41 +2238,41 @@ export class OTTAuthPage {
     }
 
     async isSearchResultsVisible(query: string = ''): Promise<boolean> {
-        await this.page.waitForTimeout(2500);
         const normalizeTitle = (value: string) => String(value || '')
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-
+ 
         const normalizedQuery = normalizeTitle(query);
-        const visibleResultTitles = await this.getSearchResultTitles();
-        const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
-            const normalizedTitle = normalizeTitle(title);
-            return normalizedQuery
-                ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
-                : Boolean(normalizedTitle);
-        });
-
-        if (matchedVisibleTitle) {
-            return true;
-        }
-
         const resultImages = this.page.locator(this.searchResultImages.selector);
-        const imageCount = await resultImages.count().catch(() => 0);
-        if (imageCount > 0) {
-            return true;
+        const deadline = Date.now() + 30000;
+ 
+        while (Date.now() < deadline) {
+            const visibleResultTitles = await this.getSearchResultTitles();
+            const matchedVisibleTitle = visibleResultTitles.some((title: string) => {
+                const normalizedTitle = normalizeTitle(title);
+                return normalizedQuery
+                    ? normalizedTitle.includes(normalizedQuery) || normalizedQuery.includes(normalizedTitle)
+                    : Boolean(normalizedTitle);
+            });
+ 
+            if (matchedVisibleTitle || await resultImages.count().catch(() => 0) > 0) {
+                return true;
+            }
+ 
+            if (normalizedQuery) {
+                const bodyText = await this.page.locator('body').textContent().catch(() => '');
+                if (normalizeTitle(bodyText || '').includes(normalizedQuery)) {
+                    return true;
+                }
+            }
+ 
+            await this.page.waitForTimeout(250);
         }
-
-        if (!normalizedQuery) {
-            return false;
-        }
-
-        const bodyText = await this.page.locator('body').textContent().catch(() => '');
-        const normalizedBodyText = normalizeTitle(bodyText || '');
-        return normalizedBodyText.includes(normalizedQuery);
+ 
+        return false;
     }
-
     async isSearchAutoSuggestionsVisible(partialQuery: string = ''): Promise<boolean> {
         logger.elementInteraction('verify', 'search auto-suggestions');
         try {

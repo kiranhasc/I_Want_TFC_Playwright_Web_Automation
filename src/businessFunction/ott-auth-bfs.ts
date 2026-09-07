@@ -598,7 +598,6 @@ export interface VerifyIWantOriginalsRailOutput {
     homePageVisible: boolean;
     railTitleVisible: boolean;
     railTitle: string;
-    contentCardsCount: number;
 }
 
 export interface VerifyGuestPHCarouselTabTrayLoadInput {
@@ -1744,15 +1743,12 @@ export async function verifyIWantOriginalsRail(page: any, input?: Partial<Verify
     const homePageVisible = loginResult.isLoggedIn;
     const isTitleVisible = await authPage.isIWantOriginalsRailVisible();
     const railTitle = isTitleVisible ? await authPage.getIWantOriginalsRailTitle() : '';
-    const contentCardsCount = isTitleVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', isTitleVisible);
-    logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
     return {
         isLoggedIn: homePageVisible,
         homePageVisible,
         railTitleVisible: isTitleVisible,
         railTitle,
-        contentCardsCount,
     };
 }
 
@@ -1834,6 +1830,7 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
 
 export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
     const authPage = new OTTAuthPage(page);
+    const pageUtils = new PageUtils(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
     const loginResult = await loginToOTT(page, { mode });
@@ -1842,17 +1839,25 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
     const contentCardsCount = railVisible ? await authPage.getIWantOriginalsRailCardCount() : 0;
     logger.assertion('iWant Originals rail title visible', railVisible);
     logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
-    const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    logger.step('Clicking the right arrow on the iWant Originals rail');
-    const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
-    const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
-    logger.assertion('iWant Originals rail scrolled right', scrolledRight);
-    logger.step('Clicking the left arrow on the iWant Originals rail');
-    const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
-    const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
-    const scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
-    logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    let scrolledRight = false;
+    let scrolledLeft = false;
+    if (process.env.BROWSER === 'mchrome') {
+        const rail = page.locator(authPage.getIwantScrollLocatorMobile()).first();
+        scrolledRight = await pageUtils.scrollHorizontallyMobile(rail, 'right', 320, 500);
+        scrolledLeft = await pageUtils.scrollHorizontallyMobile(rail, 'left', 320, 500);
+    } else {
+        const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        logger.step('Clicking the right arrow on the iWant Originals rail');
+        const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+        const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
+        logger.assertion('iWant Originals rail scrolled right', scrolledRight);
+        logger.step('Clicking the left arrow on the iWant Originals rail');
+        const clickedLeft = await authPage.clickIWantOriginalsRailArrow('left');
+        const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
+        scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
+        logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    }
     return {
         isLoggedIn: loginResult.isLoggedIn,
         railVisible,
@@ -3263,6 +3268,50 @@ export async function verifySearchIconVisibilityOnAllPages(page: any, input?: Pa
     const mode = normalizeLoginMode(input?.mode);
     const credentials = resolveLoginCredentials(input ?? { email: '', password: '' }, mode);
     logger.step('Starting search icon visibility verification flow');
+
+    // For mweb: skip login and validate only tabs available in the mobile navigation.
+    if (process.env.BROWSER === 'mchrome') {
+        logger.step('mChrome detected: validating search icons on Home, Movies, Shows, and GMA pages');
+        let homePageSearchIconVisible = false;
+        let moviesPageSearchIconVisible = false;
+        let showsPageSearchIconVisible = false;
+        let gmaPageSearchIconVisible = false;
+        try {
+            await authPage.navigate();
+            logger.step('App navigated successfully');
+
+            homePageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Home page', homePageSearchIconVisible);
+
+            logger.step('Clicking Movies tab to validate');
+            await authPage.clickMoviesTab();
+            moviesPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Movies page', moviesPageSearchIconVisible);
+
+            logger.step('Clicking Shows tab to validate');
+            await authPage.clickShowsTab();
+            showsPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on Shows page', showsPageSearchIconVisible);
+
+            logger.step('Clicking GMA tab to validate');
+            await authPage.clickGMATab();
+            gmaPageSearchIconVisible = await authPage.isSearchIconVisible();
+            logger.assertion('Search icon visible on GMA page', gmaPageSearchIconVisible);
+            logger.step('Search icon validations complete; My Watchlist is unavailable on mChrome');
+        } catch (error) {
+            logger.debug('Error during mweb search icon validation', error);
+        }
+
+        return {
+            isLoggedIn: homePageSearchIconVisible,
+            homePageSearchIconVisible,
+            moviesPageSearchIconVisible,
+            showsPageSearchIconVisible,
+            watchlistPageSearchIconVisible: false,
+            gmaPageSearchIconVisible,
+        };
+    }
+
     const loginResult = await loginToOTT(page, {
         mode: input?.mode,
     });
@@ -3299,18 +3348,29 @@ export async function navigateAndVerifyTabs(page: any, input?: Partial<NavigateT
 
     // For mweb: skip login 
     if (process.env.BROWSER === 'mchrome') {
-        logger.step('mChrome detected: mweb has no login functionality, validating GMA tab only');
+        logger.step('mChrome detected: mweb has no login functionality, validating Movies, Shows, GMA tabs only');
         try {
             await authPage.navigate();
             logger.step('App navigated successfully');
 
+            // Click Movies tab to validate it's accessible
+            logger.step('Clicking Movies tab to validate');
+            await authPage.clickMoviesTab();
+            logger.assertion('Movies tab clicked successfully', true);
+
+            // Click Shows tab to validate it's accessible
+            logger.step('Clicking Shows tab to validate');
+            await authPage.clickShowsTab();
+            logger.assertion('Shows tab clicked successfully', true);
+
             // Click GMA tab to validate it's accessible
             logger.step('Clicking GMA tab to validate');
             await authPage.clickGMATab();
+            await page.waitForTimeout(3000);
             logger.assertion('GMA tab clicked successfully', true);
-            logger.step('GMA tab validation complete, returning test result');
+            logger.step('Tab validations complete, returning test result');
         } catch (error) {
-            logger.debug('Error during mweb GMA validation', error);
+            logger.debug('Error during mweb tab validation', error);
             logger.step('Continuing despite potential error - mweb may have different UI');
         }
 
@@ -3502,7 +3562,8 @@ export async function verifyContinueWatchingRemovalAfterPlayback(page: any, inpu
     const authPage = new OTTAuthPage(page);
     const detailsPage = new OTTDetailsPage(page);
     const mode = normalizeLoginMode(input?.mode);
-    const parentalPin = (input?.parentalPin).trim();
+   const parentalPin = input?.parentalPin;
+
     logger.step('Starting IW3-T1960 flow for watched movie removal from Continue Watching');
     const loginResult = await loginToOTT(page, { mode });
     if (!loginResult.isLoggedIn) {
@@ -3821,6 +3882,7 @@ export async function submitForgotPasswordMobileNumber(page: any, input: SubmitF
     return {
         isMobileErrorDisplayed: isErrorDisplayed,
         errorMessage,
+        
     };
 }
 

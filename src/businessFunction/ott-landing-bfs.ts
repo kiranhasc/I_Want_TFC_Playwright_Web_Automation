@@ -1081,7 +1081,7 @@ export async function verifySponsoredRailVisibility(
   await authPage.clickHomeTab();
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await landingPage.scrollTillSponsoredRail(15);
+  await landingPage.scrollTillSponsoredRail(10);
   homeTabSponsoredRailVisible = await landingPage.isSponsoredRailVisible();
   logger.assertion('Sponsored Rail visible on Home tab', homeTabSponsoredRailVisible);
   const sponsoredRailVisible = homeTabSponsoredRailVisible;

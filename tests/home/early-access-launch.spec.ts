@@ -3,7 +3,7 @@ import { verifyEarlyAccessTag, verifyEarlyAccessUpgradePromptMessage, verifyEarl
 import testCaseData from '../../src/data/ott-test-cases.json';
 
 test.describe('Early Access Tag', () => {
-    test('@High IW3-T3667: Verify Early Access tag is shown on On Air content thumbnail', async ({ page }) => {
+    test('@High @mWeb IW3-T3667: Verify Early Access tag is shown on On Air content thumbnail', async ({ page }) => {
         test.setTimeout(90000)
         const data = testCaseData['tc-discovery-001-early-access'];
         const result = await verifyEarlyAccessTag(page, { mode: data.mode, graphqlQueryName: data.graphqlQueryName, labelText: data.labelText, earlyAccessAttributeValue: data.earlyAccessAttributeValue });
@@ -12,7 +12,7 @@ test.describe('Early Access Tag', () => {
         expect(result.labelVisible).toBe(true);
     });
 
-    test ('@High IW3-T3672: Verify the Early Access upgrade prompt message for free or basic users', async ({ page }) => {
+    test ('@High @mWeb IW3-T3672: Verify the Early Access upgrade prompt message for free or basic users', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-discovery-002-early-access-upgrade-prompt'];
         const result = await verifyEarlyAccessUpgradePromptMessage(page, {
@@ -43,7 +43,7 @@ test.describe('Early Access Tag', () => {
         expect(result.maybeLaterVisible).toBe(true);
     });
 
-    test ('@High IW3-T3670: Verify the popup displayed when free or basic users tap on Early Access content', async ({ page }) => {
+    test ('@High @mWeb IW3-T3670: Verify the popup displayed when free or basic users tap on Early Access content', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-discovery-003-early-access-popup'];
         const result = await verifyEarlyAccessUpgradePromptMessage(page, {
@@ -67,7 +67,7 @@ test.describe('Early Access Tag', () => {
         expect(result.upgradeCtaVisible).toBe(true);
     });
 
-    test('@High IW3-T3675: Verify Early Access tag is shown on the episode thumbnail inside the content details screen', async ({ page }) => {
+    test('@High @mWeb IW3-T3675: Verify Early Access tag is shown on the episode thumbnail inside the content details screen', async ({ page }) => {
         test.setTimeout(50000)
         const data = testCaseData['tc-discovery-004-early-access-episode-tag'];
         const result = await verifyEarlyAccessEpisodeTag(page, {
@@ -80,7 +80,7 @@ test.describe('Early Access Tag', () => {
         expect(result.foundInGraphQL).toBe(true);
         expect(result.labelVisible).toBe(true);
     });
-    test('@High IW3-T3679: Verify Early Access content with the tag is not displayed on the Continue Watching tray after partial playback', async ({ page }) => {
+    test('@High @mWeb IW3-T3679: Verify Early Access content with the tag is not displayed on the Continue Watching tray after partial playback', async ({ page }) => {
         test.setTimeout(180000)
         const data = testCaseData['tc-discovery-005-early-access-continue-watching'];
         const result = await verifyEarlyAccessNotInContinueWatchingAfterPlayback(page, {

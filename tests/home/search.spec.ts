@@ -15,7 +15,7 @@ test.describe('Search navigation', () => {
     expect(result.homePageSearchIconVisible).toBe(true);
     expect(result.moviesPageSearchIconVisible).toBe(true);
     expect(result.showsPageSearchIconVisible).toBe(true);
-    // expect(result.watchlistPageSearchIconVisible).toBe(true);
+    expect(result.watchlistPageSearchIconVisible).toBe(true);
     expect(result.gmaPageSearchIconVisible).toBe(true);
   });
 
@@ -112,7 +112,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
 
-  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => { //MWeb
+  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => {
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
@@ -178,7 +178,7 @@ test.describe('Search navigation', () => {
     expect(result.genreResultsVisible).toBe(true);
   });
 
-  test('@Medium @mWeb IW3-T2066 : Verify if subscribed users can play premium content from search results', async ({ page }) => { //MWeb
+  test('@Medium IW3-T2066 : Verify if subscribed users can play premium content from search results', async ({ page }) => {
     test.setTimeout(120000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-008-premium-playback'];
     const result = await playPremiumContentFromSearch(page, {
@@ -187,7 +187,7 @@ test.describe('Search navigation', () => {
       parentalPin: data?.pin,
     });
     expect.soft(result.isLoggedIn).toBe(true);
-    expect.soft(result.searchQueryTyped).toBe(true)
+    expect.soft(result.searchQueryTyped).toBe(true);
     expect.soft(result.searchResultsVisible).toBe(true);
     expect.soft(result.detailsVisible).toBe(true);
     expect.soft(result.playerVisible).toBe(true);
@@ -217,7 +217,6 @@ test.describe('Search navigation', () => {
       mode: data?.mode,
       graphqlQueryName: data?.graphqlQueryName,
     });
-    await page.setDefaultTimeout(2500);
     expect.soft(result.isLoggedIn).toBe(true);
     expect.soft(result.labelsChecked.length).toBeGreaterThan(0);
     expect.soft(result.matchedLabelCount).toBeGreaterThan(0);
@@ -348,5 +347,17 @@ test.describe('Search navigation', () => {
     expect.soft(result.trendingContentTitle).toBeTruthy();
     expect.soft(result.detailsPageVisible).toBe(true);
     expect.soft(result.detailsPageTitleMatches).toBe(true);
+  });
+
+  test('@Low IW3-T2080 : Verify search results load even without login to iWantTFC application', async ({ page }) => {
+    test.setTimeout(180000);
+    const data = testCaseData['tc-nav-025-search-results-guest'];
+    const result = await verifyGuestSearchResultsWithoutLogin(page, {
+      searchQuery: data.searchQuery,
+    });
+    expect.soft(result.isLoggedIn).toBe(false);
+    expect.soft(result.searchQueryTyped).toBe(true);
+    expect.soft(result.resultsVisible).toBe(true);
+    expect.soft(result.resultTitles.length).toBeGreaterThan(0);
   });
 })

@@ -1400,7 +1400,7 @@ async function resolveQueryFromCollectionGraphQL(page: any, graphqlQueryName: st
     logger.info(`Resolved collection search query from GraphQL asset: ${title}`);
     return title;
   } catch (error) {
-    logger.warn('Unable to resolve query from Collection GraphQL response', error);
+    logger.warn(`Unable to resolve query from Collection GraphQL response`, error);
     return undefined;
   }
 }
@@ -4392,14 +4392,12 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   await detailsPage.hoverPlaybackScreen();
   const skipRecapVisible = await detailsPage.isSkipRecapMarkerVisible();
   await detailsPage.tapPlaybackScreen();
-  await page.waitForTimeout(4000);
   const recapPauseAdVisible = await detailsPage.isPauseAdMidBannerVisible();
-  await detailsPage.waitForPlayback(2);
-  const skipRecapNotVisible = await detailsPage.isSkipRecapMarkerVisible();
   await page.waitForTimeout(2000);
   await detailsPage.clickReturnToContentText();
   await detailsPage.tapPlaybackScreen();
   await page.waitForTimeout(4000);
+  const skipRecapNotVisible = !(await detailsPage.isSkipRecapMarkerVisible());
   await detailsPage.clickSkipRecapButton();
   await page.waitForTimeout(2000);
   await detailsPage.hoverPlaybackScreen();
@@ -4427,7 +4425,7 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
   const subtitleMenuHiddenAfterPause = await detailsPage.isSubtitleMarkerVisible();
   logger.assertion('Skip recap marker is visible before the pause-ad interaction', skipRecapVisible);
   logger.assertion('Pause ad is visible before asserting that playback controls are dismissed', recapPauseAdVisible);
-  logger.assertion('Skip recap marker is not visible after the pause-ad interaction', !skipRecapNotVisible);
+  logger.assertion('Skip recap marker is not visible after the pause-ad interaction', skipRecapNotVisible);
   logger.assertion('Skip intro marker is visible after skipping recap', skipIntroVisible);
   logger.assertion('Skip intro pause ad is visible after the pause-ad interaction', skipIntroPauseAdVisible);
   logger.assertion('Skip intro marker is not visible after the pause-ad interaction', !skipIntroNotVisible);
@@ -4438,11 +4436,11 @@ export async function verifyPauseAdControlsDismissedFlow(page: any, input?: Veri
     isLoggedIn,
     recapPauseAdVisible,
     skipRecapVisible,
+    skipRecapNotVisible,
     skipIntroVisible,
     subtitlePauseAdVisible,
     subtitleVisible,
     subtitleMenuHiddenAfterPause,
-    skipRecapNotVisible,
     skipIntroNotVisible,
     skipIntroPauseAdVisible,
   };

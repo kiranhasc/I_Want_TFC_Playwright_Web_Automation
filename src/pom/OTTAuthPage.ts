@@ -810,7 +810,6 @@ export class OTTAuthPage {
         if (process.env.BROWSER === 'mchrome') {
             await this.clickMobileMainMenu();
         }
-
         // Try clicking the Movies tab and ensure the navigation/route change happens.
         const maxAttempts = 3;
         let lastErr: any = null;

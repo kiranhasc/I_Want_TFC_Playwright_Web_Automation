@@ -323,7 +323,7 @@ export class OTTDetailsPage {
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
     this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
-    this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
+    // this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
     this.progressBarIndicator = { selector: "//div[@class='player-progress-indicator']" };
     this.playbackTime = { selector: '[data-testid="player-time"], .player-time, [class*="time-display"], [class*="timeDisplay"], [class*="current-time"], [class*="playback-time"]' };
@@ -635,8 +635,7 @@ export class OTTDetailsPage {
       }
     }
   }
-
-
+  
   async clickShowContentRail(): Promise<void> {
     logger.elementInteraction('click', 'first rail content thumbnail');
     const candidateSelectors = [
@@ -1495,6 +1494,7 @@ export class OTTDetailsPage {
       const lastEpisode = episodeItems.last();
       await lastEpisode.scrollIntoViewIfNeeded().catch(() => undefined);
       await this.page.waitForTimeout(300).catch(() => undefined);
+      // 1) prefer descendant anchor/button click via DOM
       try {
         const clickable = lastEpisode.locator('a, button, [role="button"]').first();
         if ((await clickable.count().catch(() => 0)) > 0) {
@@ -1509,6 +1509,7 @@ export class OTTDetailsPage {
       } catch (err) {
         logger.debug('clickLastEpisodeFromEpisodesList: failed to click descendant anchor/button', err);
       }
+      // 2) try clicking thumbnail image via DOM
       try {
         const img = lastEpisode.locator('img[alt]').first();
         if ((await img.count().catch(() => 0)) > 0) {
@@ -1523,6 +1524,7 @@ export class OTTDetailsPage {
       } catch (err) {
         logger.debug('clickLastEpisodeFromEpisodesList: failed to click thumbnail image', err);
       }
+      // 3) final DOM fallback: click the episode container itself via evaluate
       try {
         const h = await lastEpisode.elementHandle().catch(() => null);
         if (h) {
@@ -4524,6 +4526,28 @@ export class OTTDetailsPage {
       return false;
     }
   }
+
+  // async clickUpNextMarker(): Promise<boolean> {
+  //   logger.elementInteraction('click', 'Up Next marker');
+  //   const candidateSelectors = [
+  //     this.upNextMarker.selector,
+  //     this.nextEpisodeButton.selector,
+  //     'button:has-text("Next Episode"), button:has-text("Next episode"), button:has-text("Next"), [aria-label*="next episode"], [aria-label*="up next"], text=/up next|next episode|watch next/i',
+  //   ];
+
+  //   for (const selector of candidateSelectors) {
+  //     const marker = this.page.locator(selector).first();
+  //     try {
+  //       await marker.waitFor({ state: 'visible', timeout: 5000 });
+  //       await marker.click({ timeout: 10000 });
+  //       return true;
+  //     } catch {
+  //       // Continue to the next selector.
+  //     }
+  //   }
+
+  //   return false;
+  // }
 
   async isNextEpisodeButtonVisible(): Promise<boolean> {
     const nextEpisodeButton = this.page.locator(this.nextEpisodeButton.selector).first();

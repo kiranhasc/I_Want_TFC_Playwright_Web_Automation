@@ -90,6 +90,7 @@ export class OTTDetailsPage {
   private readonly freeTagBadge: PageElement;
   private readonly loginCta: PageElement;
   private readonly firstSearchResult: PageElement;
+  private readonly searchResultInteractiveTarget: PageElement;
   private readonly searchResultImages: PageElement;
   private readonly searchResultsContainer: PageElement;
   private readonly thumbnailLabelOverlay: PageElement;
@@ -456,7 +457,6 @@ export class OTTDetailsPage {
     this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
     this.episodeItem = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
     this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item';
-    this.searchResultInteractiveTarget = { selector: 'a, button, [role="button"], img[alt]' }
   }
 
   private getRoleLocator(element: PageElement, exact = false) {

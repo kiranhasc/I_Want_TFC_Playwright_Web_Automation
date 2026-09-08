@@ -90,7 +90,6 @@ export class OTTDetailsPage {
   private readonly freeTagBadge: PageElement;
   private readonly loginCta: PageElement;
   private readonly firstSearchResult: PageElement;
-  private readonly searchResultInteractiveTarget: PageElement;
   private readonly searchResultImages: PageElement;
   private readonly searchResultsContainer: PageElement;
   private readonly thumbnailLabelOverlay: PageElement;

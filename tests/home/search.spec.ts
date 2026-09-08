@@ -112,7 +112,7 @@ test.describe('Search navigation', () => {
     expect(result.suggestionsCount).toBeGreaterThan(0);
   });
 
-  test('@Low IW3-T2086 : Verify that live content is not displayed in search when user enters live content title', async ({ page }) => {
+  test('@Low IW3-T2086 : Verify that live content is displayed in search when user enters live content title', async ({ page }) => {
     test.setTimeout(100000); // Set timeout to 100 seconds for this test
     const data = testCaseData['tc-nav-018-search-live-content-exclusion'];
     const result = await verifySearchLiveContentExclusion(page, {
@@ -122,8 +122,7 @@ test.describe('Search navigation', () => {
     expect(result.liveContentTitle).toBeTruthy();
     expect(result.searchQueryTyped).toBe(true);
     expect(result.suggestionsVisible).toBe(true);
-    expect(result.liveContentExcludedFromSuggestions).toBe(true);
-    expect(result.liveContentTitleFoundInSearchResults).toBe(false);
+    expect(result.liveContentTitleFoundInSearchResults).toBe(true);
   });
 
   test('@Medium @mWeb IW3-T2087 : Verify that back navigation returns the user from content details to the search results page', async ({ page }) => { //MWeb

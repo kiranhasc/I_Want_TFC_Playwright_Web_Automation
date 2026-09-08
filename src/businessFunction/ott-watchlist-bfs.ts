@@ -221,6 +221,7 @@ export interface PlayContentFromWatchlistInput {
   email?: string;
   password?: string;
   parentalPin?: string;
+  seekPercent?: number;
 }
 
 export interface PlayContentFromWatchlistOutput {
@@ -376,6 +377,7 @@ export async function playContentFromWatchlist(
     mode: input?.mode,
   });
   const parentalPin = input?.parentalPin;
+  const seekPercent = input?.seekPercent;
   const isLoggedIn = loginResult.isLoggedIn;
   logger.assertion('User is logged in before playing content from watchlist', isLoggedIn);
 
@@ -391,33 +393,71 @@ export async function playContentFromWatchlist(
 
   await page.waitForTimeout(4000);
   await searchAndOpenFreeContent(page);
-  const watchlistContentTitle = await detailsPage.assertContentTitleFromTitleImageLocator();
+  await detailsPage.assertContentTitleFromTitleImageLocator();
   await detailsPage.ensureWatchlistIsAddable();
   await detailsPage.clickWatchlistIcon();
   await authPage.clickMyWatchlistTab();
   await page.waitForTimeout(4000);
-  await detailsPage.clickFirstSearchResult();
+  const watchlistContentTitle = await detailsPage.getFirstContentTitle();
+  await detailsPage.clickFirstContentInWatchlist();
   const contentOpened = await detailsPage.isShowDetailsPageVisible();
   logger.assertion('Content details page opened from watchlist', contentOpened);
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   logger.assertion('Player screen visible after playing content from watchlist', playerVisible);
-  await page.waitForTimeout(120000);
-  await detailsPage.hoverPlaybackControls();
+  logger.step('Waiting for the initial playback ad to complete');
+  await detailsPage.waitForAdPlaybackToComplete();
+  await detailsPage.waitForPlayerReady();
+  await detailsPage.hoverPlaybackControls().catch(() => undefined);
+  const seekRequested = typeof seekPercent === 'number';
+  if (seekRequested) {
+    await detailsPage.dragSeekBarToPosition(seekPercent).catch(() => undefined);
+    logger.step('Waiting for the seek-triggered playback ad to complete');
+    await detailsPage.waitForAdPlaybackToComplete();
+    await detailsPage.waitForPlayerReady();
+    await detailsPage.hoverPlaybackControls().catch(() => undefined);
+  }
   let playerTitleVisible = false;
   let playerTitleMatches = false;
   try {
-    const normalizedWatchlistTitle = watchlistContentTitle.trim().toLowerCase();
-    playerTitleVisible = await detailsPage.isPlayerContentTitleVisibleInPlayer(normalizedWatchlistTitle);
-    playerTitleMatches = playerTitleVisible;
+    const normalizeTitle = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase();
+    const normalizedWatchlistTitle = normalizeTitle(watchlistContentTitle);
+    const readPlayerTitle = async (): Promise<string> => {
+      const alertText = await page.getByRole('alert').first().textContent().catch(() => '');
+      if (alertText?.trim()) {
+        return alertText || '';
+      }
+
+      const pageTitle = await page.title().catch(() => '');
+      if (pageTitle.trim()) {
+        return pageTitle;
+      }
+
+      for (const frame of page.frames()) {
+        const frameText = await frame.locator('body').textContent().catch(() => '');
+        if (frameText?.trim()) {
+          return frameText || '';
+        }
+      }
+      return '';
+    };
+
+    const deadline = Date.now() + 30000;
+    while (Date.now() < deadline && !playerTitleVisible) {
+      const playerTitle = await readPlayerTitle();
+      playerTitleVisible = Boolean(playerTitle);
+      playerTitleMatches = playerTitleVisible
+        && normalizeTitle(playerTitle).includes(normalizedWatchlistTitle);
+      if (!playerTitleVisible) {
+        await page.waitForTimeout(500);
+      }
+    }
     logger.assertion('Player title is visible after clicking play', playerTitleVisible);
     logger.assertion('Player title matches the watchlist content title', playerTitleMatches);
   } catch (error) {
     logger.debug('Player title assertion failed', error);
   }
-
-  await page.waitForTimeout(5000);
   return {
     isLoggedIn: true,
     contentOpened,
@@ -1033,6 +1073,7 @@ export async function removeContentFromWatchlistFromSearchPageStep(
   await detailsPage.clickFirstContentInWatchlist();
   await page.waitForTimeout(2000);
   const removeToastText = await detailsPage.removeFromWatchlistAndGetToast();
+  await page.waitForTimeout(2000);
   const removedFromWatchlist = removeToastText.toLowerCase().includes('removed');
   logger.assertion('Removed from Watchlist toast displayed', removedFromWatchlist);
 

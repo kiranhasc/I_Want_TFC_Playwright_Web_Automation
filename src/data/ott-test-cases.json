@@ -498,7 +498,8 @@
     },
     "tc-watch-010-play-content-from-watchlist": {
         "mode": "freeUser",
-        "pin": "1234"
+        "pin": "1234",
+        "seekPercent": 0.8
     },
     "tc-watch-002-metadata-validation": {
         "mode": "valid",

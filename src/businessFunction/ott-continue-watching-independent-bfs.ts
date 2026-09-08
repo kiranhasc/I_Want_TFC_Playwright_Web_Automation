@@ -5,7 +5,6 @@ import { Page } from '@playwright/test';
 import { loginWithTVProvider } from './ott-auth-bfs';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
 import { CollectionParser } from '../utils/graphql/parsers/collection-parser';
-import { AssetParser, AssetResponse } from '../utils/graphql/parsers/asset-parser';
 
 export interface ContinueWatchingIndependentInput {
     mode?: string;
@@ -94,7 +93,6 @@ export async function verifyContinueWatchingPlaybackIndependent(
     page: Page,
     input?: ContinueWatchingIndependentInput
 ): Promise<ContinueWatchingIndependentOutput> {
-    const details = new OTTDetailsPage(page);
     logger.step('Independent Continue Watching playback validation (single-return)');
 
     const result: ContinueWatchingIndependentOutput = {
@@ -109,6 +107,7 @@ export async function verifyContinueWatchingPlaybackIndependent(
     try {
         const gql = GraphQLHelper.getInstance(page);
         const authPage = new OTTAuthPage(page);
+        const detailsPage = new OTTDetailsPage(page);
 
         const normalizeTitle = (value: string): string => value.trim().replace(/\s+/g, ' ').toLowerCase();
         const isGenericEpisodeLabel = (value: string): boolean => {
@@ -138,6 +137,53 @@ export async function verifyContinueWatchingPlaybackIndependent(
                 return titles;
             }
             return titles;
+        };
+        const getPlaybackState = async (): Promise<{ currentTime: number; duration: number; paused: boolean } | null> => {
+            for (const frame of page.frames()) {
+                const state = await frame.evaluate(() => {
+                    const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
+                    const video = videos
+                        .filter(candidate => candidate.readyState >= 2 && candidate.duration > 0)
+                        .sort((left, right) => Number(right.currentTime > 0) - Number(left.currentTime > 0))[0];
+                    return video
+                        ? { currentTime: video.currentTime, duration: video.duration, paused: video.paused }
+                        : null;
+                }).catch(() => null);
+                if (state) {
+                    return state;
+                }
+            }
+            return null;
+        };
+        const waitForPlaybackState = async (timeoutMs: number): Promise<{ currentTime: number; duration: number; paused: boolean } | null> => {
+            const deadline = Date.now() + timeoutMs;
+            while (Date.now() < deadline) {
+                const state = await getPlaybackState();
+                if (state && (state.currentTime > 0 || !state.paused)) {
+                    return state;
+                }
+                await page.waitForTimeout(500);
+            }
+            return getPlaybackState();
+        };
+        const seekActiveVideo = async (percent: number): Promise<void> => {
+            for (const frame of page.frames()) {
+                const updated = await frame.evaluate((targetPercent) => {
+                    const video = Array.from(document.querySelectorAll('video'))
+                        .find(candidate => Number.isFinite((candidate as HTMLVideoElement).duration)
+                            && (candidate as HTMLVideoElement).duration > 0) as HTMLVideoElement | undefined;
+                    if (!video) {
+                        return false;
+                    }
+                    video.currentTime = Math.min(video.duration * targetPercent, video.duration - 1);
+                    video.dispatchEvent(new Event('timeupdate'));
+                    video.dispatchEvent(new Event('seeked'));
+                    return true;
+                }, percent).catch(() => false);
+                if (updated) {
+                    return;
+                }
+            }
         };
         if (input?.providerName) {
             await loginWithTVProvider(page, { providerName: input.providerName, mode: input.mode });
@@ -194,46 +240,50 @@ export async function verifyContinueWatchingPlaybackIndependent(
             result.reason = 'Search results not visible for selected movie';
             return result;
         }
-        const detailsPage = new OTTDetailsPage(page);
         await detailsPage.clickFirstSearchResult();
-        const assetOperationName = input?.assetQueryName || 'Asset';
-        logger.step(`Waiting for GraphQL operation: ${assetOperationName}`);
-        const assetResponse = await gql.waitForOperation<AssetResponse>(assetOperationName, 60000, true, true);
-        const assetParser = new AssetParser(assetResponse);
-        const assetTitleFromQuery = assetParser.getAssetTitle();
-        const assetResponseData = assetResponse.response.data.asset;
-        const assetQueryId = assetResponseData?.id;
-        const assetQueryEpisodeId = assetResponseData?.tvShowDetails?.defaultEpisode?.id;
-        logger.info(`Asset query returned id: ${assetQueryId}`);
-        result.assetQueryTitle = assetTitleFromQuery;
-        logger.info(`Asset query title: ${result.assetQueryTitle}`);
         const detailsVisible = await detailsPage.isShowDetailsPageVisible();
         if (!detailsVisible) {
             result.reason = 'Movie details page not visible after search';
             return result;
         }
-        const detailTitleVisible = await detailsPage.isPlayerFirstContentTitleVisible(result.selectedContentName).catch(() => false);
-        result.itemFound = detailTitleVisible;
-        if (!detailTitleVisible) {
+        await page.waitForLoadState('domcontentloaded').catch(() => undefined);
+        await page.waitForTimeout(1500);
+        const detailsHeading = await detailsPage.getShowDetailsHeadingText();
+        const normalizedSelectedTitle = normalizeTitle(result.selectedContentName);
+        const normalizedDetailsHeading = normalizeTitle(detailsHeading);
+        result.itemFound = normalizedDetailsHeading.includes(normalizedSelectedTitle)
+            || normalizedSelectedTitle.includes(normalizedDetailsHeading);
+        if (!result.itemFound) {
             logger.warn('Selected movie title not visible on details page');
         }
 
+        logger.step(`Starting playback for selected content: ${result.selectedContentName}`);
         await detailsPage.clickPlayButton();
-        await page.waitForTimeout(10000);
-
-        const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
+        let playerVisible = await detailsPage.waitForPlayerReady(15000);
+        if (!playerVisible) {
+            await detailsPage.clickPlayVideoOverlayButton();
+            playerVisible = await detailsPage.waitForPlayerReady(15000);
+        }
         result.playerVisible = playerVisible;
         if (!playerVisible) {
-            result.reason = 'Player screen not visible after starting playback';
+            result.reason = 'Player screen not visible after clicking play for selected content';
             return result;
         }
-        await detailsPage.waitForPlayback(60);
-        await detailsPage.hoverPlaybackControls()
-        await detailsPage.dragSeekBarToPosition(0.8)
-        await page.waitForTimeout(18000);
-        const currentPlaybackTime = await detailsPage.getPlaybackTimeText().catch(() => '');
+        const playbackStarted = await waitForPlaybackState(30000);
+        if (!playbackStarted) {
+            result.reason = 'Playback did not start for selected content';
+            return result;
+        }
+        await detailsPage.hoverPlaybackControls().catch(() => undefined);
+        await detailsPage.dragSeekBarToPosition(0.8).catch(() => undefined);
+        await seekActiveVideo(0.8);
+        await page.waitForTimeout(2000);
+        const playbackState = await getPlaybackState();
+        const currentPlaybackTime = await detailsPage.getPlaybackTimeText().catch(() => '')
+            || (playbackState ? `${Math.floor(playbackState.currentTime / 60)}:${String(Math.floor(playbackState.currentTime % 60)).padStart(2, '0')}` : '');
         result.forwardedTime = currentPlaybackTime;
-        result.progressObserved = !!currentPlaybackTime && currentPlaybackTime !== '0:00';
+        result.progressObserved = Boolean(playbackState && playbackState.currentTime > 0)
+            || (!!currentPlaybackTime && currentPlaybackTime !== '0:00');
         logger.step('Returning to Home and scrolling to the Continue Watching tray');
         await authPage.navigateHome();
         await page.waitForTimeout(4000);
@@ -244,7 +294,6 @@ export async function verifyContinueWatchingPlaybackIndependent(
         }
         const itemVisible = await authPage.isContinueWatchingItemVisible(result.selectedContentName);
         const trayItems = await authPage.getContinueWatchingTrayItemDetails();
-        const normalizedSelectedTitle = normalizeTitle(result.selectedContentName);
         const selectedTrayItem = trayItems.find((item) => normalizeTitle(item.title).includes(normalizedSelectedTitle));
         const trayProgressVisible = selectedTrayItem?.hasProgress ?? false;
         result.progressObserved = result.progressObserved && itemVisible && trayProgressVisible;

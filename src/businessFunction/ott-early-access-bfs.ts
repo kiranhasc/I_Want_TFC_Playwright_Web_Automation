@@ -449,6 +449,7 @@ export async function verifyEarlyAccessPlaybackFlowFromGraphQL(page: any, input?
     }
     await detailsPage.clickFirstSearchResult();
     await detailsPage.isShowDetailsPageVisible();
+    await gql.waitForOperation('TvShowEpisodes', 15000, false).catch(() => undefined);
     const earlyAccessTagVisible = await earlyAccessPage.scrollUntilEarlyAccessTagVisible();
     logger.assertion('Early Access tag visible on episode thumbnail', earlyAccessTagVisible);
     const episodeClicked = earlyAccessTagVisible

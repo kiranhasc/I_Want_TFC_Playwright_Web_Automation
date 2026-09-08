@@ -26,7 +26,7 @@ export class OTTLandingPage {
     this.firstThumbnail = { selector: 'img.title-image, [data-testid*="content-card"], .thumbnail' };
     this.gptBannerAdLocator = { selector: 'xpath=//div[contains(@id,"gpt-banner-ad-10")]' };
     this.googleAdsIframeLocator = { selector: "//div[contains(@id, 'gpt-banner-ad')][.//iframe[contains(@id, 'google_ads')]]" };
-    this.top10ShowsTrayLocator = { selector: 'section, div' };
+    this.top10ShowsTrayLocator = { selector: '//div[contains(@class,"scrollable-list") and contains(@class,"horizontal-scroll")][.//img[starts-with(@alt,"Top")]]' };
     this.top10FirstImageLocator = { selector: 'xpath=(.//div[contains(@class,\'flex items-end justify-end\')]//img[contains(@class,\'title-image\')])[1]' };
     this.searchInputLocator = { selector: 'input[placeholder*="Search"], input[type="search"], [placeholder*="Search"], [aria-label*="Search"], [title*="Search"], [data-testid*="search"]' };
     this.top10BadgeLocator = { selector: "//img[@alt='top_10']" };
@@ -46,8 +46,9 @@ export class OTTLandingPage {
     logger.elementInteraction('click', 'first visible content in Top 10 Shows tray');
     await this.scrollTillTop10Rail();
     await this.page.waitForTimeout(3000);
-    const tray = this.page.locator(this.top10ShowsTrayLocator.selector).filter({ has: this.page.getByText(/Top 10 Shows/i) }).first();
+    const tray = this.page.locator(this.top10ShowsTrayLocator.selector).first();
     const firstImage = tray.locator(this.top10FirstImageLocator.selector);
+    await firstImage.first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
     if (!(await firstImage.count())) {
       return '';
     }
@@ -57,9 +58,8 @@ export class OTTLandingPage {
     await this.page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
     await this.page.waitForTimeout(5000);
     const detailsPage = new OTTDetailsPage(this.page);
-    await detailsPage.clickWatchlistIcon().catch(() => undefined);
-    await this.page.waitForTimeout(2000);
-    return await detailsPage.validateAddedToWatchlistPopup().catch(() => '');
+    await detailsPage.ensureWatchlistIsAddable();
+    return await detailsPage.addToWatchlistAndGetToast().catch(() => '');
   }
 
   async searchForContent(query: string): Promise<void> {

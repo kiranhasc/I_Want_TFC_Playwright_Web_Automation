@@ -292,10 +292,7 @@ export class OTTEarlyAccessPage {
     async scrollUntilEarlyAccessTagVisible(maxScrolls: number = 20): Promise<boolean> {
         try {
             const tagCandidates = this.page.locator(this.earlyAccessBadgeSelector.selector ?? '');
-            const count = await tagCandidates.count().catch(() => 0);
-            if (!count) {
-                return false;
-            }
+        await tagCandidates.first().waitFor({ state: 'attached', timeout: 15000 }).catch(() => undefined);
 
             for (let scroll = 0; scroll < maxScrolls; scroll += 1) {
                 const count = await tagCandidates.count().catch(() => 0);

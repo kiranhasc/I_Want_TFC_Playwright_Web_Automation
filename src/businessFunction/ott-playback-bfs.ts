@@ -887,6 +887,7 @@ export interface VerifyPremiumContentGateOutput {
   gateMessage: string;
   maybeLaterVisible: boolean;
   subscribeToWatchVisible: boolean;
+  subscribeToWatchClicked: boolean;
 }
 
 export interface VerifySubscribeToWatchCarouselMessageInput {
@@ -1807,7 +1808,7 @@ export async function verifyPlaybackResumeFlow(page: any, input?: OpenContentAnd
   await detailsPage.waitForPlayback(10);
   const initialPlayed = true;
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.clickResumeButton();
+  await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(1);
   const resumed = true;
   const contentTitleVisibleAfterResume = await detailsPage.isPlayerContentTitleVisible(input?.expectedTitle);
@@ -6113,17 +6114,37 @@ export async function playFreeAsset(page: any, input?: PlayFreeAssetInput): Prom
 
 export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumContentGateInput): Promise<VerifyPremiumContentGateOutput> {
   const playbackPage = new OTTPlaybackPage(page);
+  const detailsPage = new OTTDetailsPage(page);
   const mode = input?.mode;
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
   logger.step('Starting premium content gate validation flow');
   logger.assertion('Free user loaded the home screen for premium content gate check', isLoggedIn);
+
   const premiumContentSelected = await playbackPage.clickFirstPremiumContentCard();
   logger.assertion('Premium content card selected', premiumContentSelected);
+
+  const detailsVisible = await detailsPage.isContentDetailsPageVisible().catch(() => false);
+  const movieSubscribeVisible = detailsVisible ? await detailsPage.isMovieSubscribeToWatchTextVisible().catch(() => false) : false;
+
+  if (movieSubscribeVisible) {
+    logger.assertion('Movie premium details page CTA visible', true);
+    const subscribeToWatchClicked = await detailsPage.clickSubscribeToWatchCta();
+    return {
+      playAttempted: true,
+      premiumGateDisplayed: true,
+      gateMessage: 'Subscribe to watch',
+      maybeLaterVisible: false,
+      subscribeToWatchVisible: true,
+      subscribeToWatchClicked,
+    };
+  }
+
   const laterEpisodeSelected = await playbackPage.clickLaterEpisodeFromPremiumContent();
   logger.assertion('Later episode selected for premium content', laterEpisodeSelected);
   const playAttempted = laterEpisodeSelected;
   logger.assertion('Attempted playback on premium content', playAttempted);
+
   const premiumGateDisplayed = await playbackPage.isPremiumContentGateVisible();
   const gateMessage = premiumGateDisplayed ? await playbackPage.getPremiumGateMessageText() : '';
   const maybeLaterVisible = await playbackPage.isMaybeLaterVisible();
@@ -6137,6 +6158,7 @@ export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumC
     gateMessage,
     maybeLaterVisible,
     subscribeToWatchVisible,
+    subscribeToWatchClicked: false,
   };
 }
 

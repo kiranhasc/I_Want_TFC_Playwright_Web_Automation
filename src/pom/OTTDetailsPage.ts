@@ -62,6 +62,7 @@ export class OTTDetailsPage {
   private readonly premiumCrownIcon: PageElement;
   private readonly subscribeToWatchCta: PageElement;
   private readonly subscribeToWatchCtaButton: PageElement;
+  private readonly subscribeToWatchTextLabel: PageElement;
   private readonly subscribeToWatchCtaBlocker: PageElement;
   private readonly subscriptionInstructionPrompt: PageElement;
   private readonly upgradePlanButton: PageElement;
@@ -233,6 +234,7 @@ export class OTTDetailsPage {
   private readonly sponsoredRailContentCard: PageElement;
   private readonly episodeItem: PageElement;
   private readonly seasonTitleContainer: string;
+  
 
   constructor(page: Page) {
     this.page = page;
@@ -286,7 +288,8 @@ export class OTTDetailsPage {
     this.premiumTagIcon = { selector: 'img[alt="tag"], [aria-label="tag"], [data-testid*="tag"], img[title="tag"]' };
     this.premiumCrownIcon = { selector: '(//div[contains(@class,"monetization-logo")])[1]' };
     this.subscribeToWatchCta = { selector: '//*[@id="subscribe_to_watch"]/div' };
-    this.subscribeToWatchCtaButton = { selector: '#play div' };
+    this.subscribeToWatchCtaButton = { selector: '#play div:has(p:has-text("Subscribe to watch"))' };
+    this.subscribeToWatchTextLabel = { selector: 'p:has-text("Subscribe to watch")' };
     this.subscribeToWatchCtaBlocker = { selector: '#subscribe_to_watch div' };
     this.subscriptionInstructionPrompt = { selector: 'text=/A valid subscription is required to view this content|Please subscribe or renew your plan|Subscribe to watch/i' };
     this.upgradePlanButton = { role: 'button', text: 'Upgrade Plan', selector: 'button:has-text("Upgrade Plan"), a:has-text("Upgrade Plan")' };
@@ -1552,11 +1555,20 @@ export class OTTDetailsPage {
         return false;
       }
       const episodeItem = episodeItems.nth(index);
+      const beforeUrl = this.page.url();
+      const beforeText = await this.page.locator('body').innerText().catch(() => '');
       await episodeItem.scrollIntoViewIfNeeded().catch(() => undefined);
       await episodeItem.click({ timeout: 20000, force: true }).catch(() => undefined);
-      await this.page.waitForLoadState('networkidle').catch(() => undefined);
+      await this.page.waitForLoadState('domcontentloaded', { timeout: 20000 }).catch(() => undefined);
+      await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
       await this.page.waitForTimeout(3000);
-      return true;
+      const afterUrl = this.page.url();
+      const detailsVisible = await this.isContentDetailsPageVisible().catch(() => false);
+      const headingText = await this.getShowDetailsHeadingText().catch(() => '');
+      const routeChanged = afterUrl !== beforeUrl && /(\/details\/|\/content\/|\/show\/)/i.test(afterUrl);
+      const bodyText = await this.page.locator('body').innerText().catch(() => '');
+      const pageChanged = routeChanged || detailsVisible || Boolean(headingText) || bodyText !== beforeText;
+      return pageChanged;
     } catch (err) {
       logger.debug(`clickEpisodeAtIndex failed for index ${index}`, err);
       return false;
@@ -2428,9 +2440,29 @@ export class OTTDetailsPage {
 
   async isSubscribeToWatchCtaVisible(): Promise<boolean> {
     try {
-      const locator = this.page.locator(this.subscribeToWatchCtaButton.selector).first();
-      await locator.waitFor({ state: 'visible', timeout: 15000 });
-      return true;
+      const selectors = [
+        this.subscribeToWatchCtaButton.selector,
+        this.subscribeToWatchTextLabel.selector,
+      ].filter(Boolean) as string[];
+      for (const selector of selectors) {
+        const locator = this.page.locator(selector).first();
+        if (await locator.count().catch(() => 0)) {
+          const visible = await locator.isVisible().catch(() => false);
+          if (visible) {
+            return true;
+          }
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  async isMovieSubscribeToWatchTextVisible(): Promise<boolean> {
+    try {
+      const locator = this.page.locator(this.subscribeToWatchTextLabel.selector).first();
+      return await locator.isVisible().catch(() => false);
     } catch {
       return false;
     }
@@ -2693,14 +2725,17 @@ export class OTTDetailsPage {
     }
   }
 
-  async clickSubscribeToWatchCta(): Promise<void> {
+  async clickSubscribeToWatchCta(): Promise<boolean> {
     logger.elementInteraction('click', 'subscribe to watch CTA');
     try {
-      const locator = this.page.locator(this.subscribeToWatchCtaButton.selector ?? '').first();
+      const locator = this.page.locator(this.subscribeToWatchCtaButton.selector).first();
       await locator.waitFor({ state: 'visible', timeout: 15000 });
+      await locator.scrollIntoViewIfNeeded();
       await locator.click({ timeout: 15000 });
+      return true;
     } catch (error) {
       logger.debug('Subscribe to watch CTA click failed', error);
+      return false;
     }
   }
 

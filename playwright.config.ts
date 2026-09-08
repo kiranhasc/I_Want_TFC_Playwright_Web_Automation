@@ -58,6 +58,7 @@ const baseProjects: BaseProject[] = [
     name: 'account',
     testDir: 'tests/home',
     testMatch: [
+      '**/account_and_settings.spec.ts',
       '**/account-subscriptions-profile.spec.ts',
       '**/create-account-ui.spec.ts',
       '**/parential-pin.spec.ts',

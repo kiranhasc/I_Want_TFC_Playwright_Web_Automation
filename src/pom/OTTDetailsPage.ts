@@ -460,7 +460,6 @@ export class OTTDetailsPage {
     this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
     this.episodeItem = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
     this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item';
-    this.searchResultInteractiveTarget = { selector: 'a, button, [role="button"], img[alt]' }
   }
 
   private getRoleLocator(element: PageElement, exact = false) {
@@ -4845,7 +4844,7 @@ export class OTTDetailsPage {
   async waitForAdPlaybackToComplete(maxSeconds: number = 90, startupGraceSeconds: number = 8): Promise<number> {
     const startedAt = Date.now();
     const adTag = this.page.locator(this.adTag.selector).first();
-    const adFrame = this.page.locator('main iframe, iframe[title*="ad" i], iframe[name*="ad" i]').first();
+    const adFrame = this.page.locator('iframe[title*="ad" i], iframe[name*="ad" i], iframe[src*="ad" i]').first();
     const adText = this.page.getByText(/Ad\s+\d+\s+of\s+\d+|Ad:\s*\(/i).first();
 
     try {

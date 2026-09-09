@@ -16,7 +16,7 @@ test.describe('Watchlist management', () => {
     expect(result.contentOpened).toBe(true);
     expect(result.playerVisible).toBe(true);
     expect(result.playerTitleVisible).toBe(true);
-    expect(result.playerTitleMatches).toBe(false);
+    expect(result.playerTitleMatches).toBe(true);
   });
   
   test('@Medium @mWeb IW3-T2047: Verify Add to Watchlist option is not displayed for Live content', async ({ page }) => {

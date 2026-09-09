@@ -637,10 +637,19 @@ export async function verifyIWantOriginalsPreviewOnDetailsPage(
       previewPlaybackStarted: false,
     };
   }
-  logger.step('Hovering over the first iWant Originals content card');
-  await authPage.hoverIWantOriginalsFirstCardCentered();
-  logger.step('Clicking the selected content card to open the content details page');
-  await authPage.clickFirstIWantOriginalsCard();
+  const hoverResult = await authPage.hoverIWantOriginalsFirstCardCentered();
+  logger.assertion('First iWant Originals content card hovered', hoverResult.hovered);
+  logger.step('Clicking the first iWant Originals content card to open its details page');
+  const cardClicked = await authPage.clickFirstIWantOriginalsCard();
+  logger.assertion('iWant Originals content card navigated to details', cardClicked);
+  if (!cardClicked) {
+    return {
+      isLoggedIn: true,
+      isDetailsPageVisible: false,
+      previewVideoVisible: false,
+      previewPlaybackStarted: false,
+    };
+  }
   await page.waitForURL(/\/details\//, { timeout: 20000 }).catch(() => undefined);
   await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
@@ -1481,7 +1490,7 @@ const parentalPin = input?.parentalPin;
     await page.waitForTimeout(4000);
     await detailsPage.waitTillAdsEnd();
     await detailsPage.hoverPlaybackScreen();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
     await detailsPage.clickNextEpisodeButton();
     await detailsPage.handleParentalPinFlow(undefined, parentalPin);
     await page.waitForTimeout(4000);

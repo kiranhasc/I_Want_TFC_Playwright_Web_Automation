@@ -8,6 +8,8 @@ import { verifyIWantOriginalsPreviewOnDetailsPage } from '../../src/businessFunc
 import testData from '../../src/data/ott-test-cases.json';
 
 test.describe('iWant Originals Rail', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test('@medium @mWeb IW3-T5810: Verify iWant Originals Rail displayed on the Home page', async ({ page }) => {
         const data = testData['tc-home-001-iwant-originals-rail'];
         const result = await verifyIWantOriginalsRail(page, {

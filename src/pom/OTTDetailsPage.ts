@@ -324,7 +324,7 @@ export class OTTDetailsPage {
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
-    this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
+    this.seekBar = { selector: '//div[contains(@class,"player-progress-and-time-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
     this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
@@ -1300,28 +1300,30 @@ export class OTTDetailsPage {
 
   private matchesSeasonSelection(text: string, requestedSeason?: string): boolean {
     if (!requestedSeason) return true;
-    const normalizedText = this.normalizeSelectionToken(text);
-    const normalizedRequestedSeason = this.normalizeSelectionToken(requestedSeason);
-    if (!normalizedRequestedSeason) return true;
-    if (normalizedText.includes(normalizedRequestedSeason)) {
-      return true;
+    const requestedSeasonNumber = Number((requestedSeason.match(/(\d+)/)?.[1] || ''));
+    if (!Number.isFinite(requestedSeasonNumber)) {
+      return false;
     }
     const seasonMatch = text.match(/S(?:eason\s*)?(\d+)/i);
-    const requestedSeasonMatch = requestedSeason.match(/(\d+)/);
-    return Boolean(seasonMatch?.[1] && requestedSeasonMatch?.[1] && seasonMatch[1] === requestedSeasonMatch[1]);
+    const candidateSeasonNumber = seasonMatch ? Number(seasonMatch[1]) : NaN;
+    if (!Number.isFinite(candidateSeasonNumber)) {
+      return this.normalizeSelectionToken(text).includes(this.normalizeSelectionToken(requestedSeason));
+    }
+    return candidateSeasonNumber === requestedSeasonNumber;
   }
 
   private matchesEpisodeSelection(text: string, requestedEpisode?: string): boolean {
     if (!requestedEpisode) return true;
-    const normalizedText = this.normalizeSelectionToken(text);
-    const normalizedRequestedEpisode = this.normalizeSelectionToken(requestedEpisode);
-    if (!normalizedRequestedEpisode) return true;
-    if (normalizedText.includes(normalizedRequestedEpisode)) {
-      return true;
+    const requestedEpisodeNumber = Number((requestedEpisode.match(/(\d+)/)?.[1] || ''));
+    if (!Number.isFinite(requestedEpisodeNumber)) {
+      return false;
     }
     const episodeMatch = text.match(/E(\d+)/i);
-    const requestedEpisodeMatch = requestedEpisode.match(/(\d+)/);
-    return Boolean(episodeMatch?.[1] && requestedEpisodeMatch?.[1] && episodeMatch[1] === requestedEpisodeMatch[1]);
+    const candidateEpisodeNumber = episodeMatch ? Number(episodeMatch[1]) : NaN;
+    if (!Number.isFinite(candidateEpisodeNumber)) {
+      return this.normalizeSelectionToken(text).includes(this.normalizeSelectionToken(requestedEpisode));
+    }
+    return candidateEpisodeNumber === requestedEpisodeNumber;
   }
 
   async selectEpisodeBySeasonAndEpisode(
@@ -2910,16 +2912,27 @@ export class OTTDetailsPage {
 
   async isContentDetailsPageVisible(): Promise<boolean> {
     try {
-      await this.page.waitForURL(/\/details\//, { timeout: 20000 });
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
+      const currentUrl = this.page.url();
+      const hasDetailsRoute = /(\/details\/|\/content\/|\/show\/)/i.test(currentUrl);
       const headingLocator = this.page.locator(this.contentDetailsHeading.selector).first();
-      if (await headingLocator.count().catch(() => 0)) {
-        return await headingLocator.isVisible().catch(() => false);
+      const headingVisible = await headingLocator.count().catch(() => 0)
+        ? await headingLocator.isVisible().catch(() => false)
+        : false;
+      if (headingVisible) {
+        return true;
       }
       const metadataLocator = this.page.locator(this.contentMetadata.selector).first();
-      if (await metadataLocator.count().catch(() => 0)) {
-        return await metadataLocator.isVisible().catch(() => false);
+      const metadataVisible = await metadataLocator.count().catch(() => 0)
+        ? await metadataLocator.isVisible().catch(() => false)
+        : false;
+      if (metadataVisible) {
+        return true;
       }
-      return this.page.url().includes('/details/') || this.page.url().includes('/content/') || this.page.url().includes('/show/');
+      if (hasDetailsRoute) {
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }
@@ -4973,19 +4986,21 @@ export class OTTDetailsPage {
 
   async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
-    await seekBar.waitFor({ state: 'visible', timeout: 315000 }).catch(() => undefined);
+    await seekBar.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
     const box = await seekBar.boundingBox().catch(() => null);
-    const clampedPercent = Math.min(Math.max(targetPercent, 0.02), 0.99);
-    if (box) {
-      const startX = box.x + box.width * 0.1;
-      const startY = box.y + box.height / 2;
-      const endX = box.x + box.width * clampedPercent;
-      const endY = startY;
-      await this.page.mouse.move(startX, startY);
-      await this.page.mouse.down();
-      await this.page.mouse.move(endX, endY, { steps: 20 });
-      await this.page.mouse.up();
+    if (!box || this.page.isClosed()) {
+      logger.debug('Seek bar was not available; skipping seek interaction');
+      return;
     }
+    const clampedPercent = Math.min(Math.max(targetPercent, 0.02), 0.99);
+    const startX = box.x + box.width * 0.1;
+    const startY = box.y + box.height / 2;
+    const endX = box.x + box.width * clampedPercent;
+    const endY = startY;
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(endX, endY, { steps: 20 });
+    await this.page.mouse.up();
     const videoUpdated = await this.page.evaluate(({ percent }) => {
       const video = document.querySelector('video') as HTMLVideoElement | null;
       if (!video || Number.isNaN(video.duration) || video.duration <= 0) {
@@ -5000,7 +5015,7 @@ export class OTTDetailsPage {
       }
       return true;
     }, { percent: clampedPercent });
-    if (!videoUpdated && box) {
+    if (!videoUpdated) {
       await seekBar.click({ position: { x: Math.max(4, Math.round(box.width * clampedPercent)), y: Math.max(4, Math.round(box.height / 2)) } });
     }
     await this.page.waitForTimeout(1500);

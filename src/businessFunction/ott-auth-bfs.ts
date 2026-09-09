@@ -1,7 +1,6 @@
 import { OTTAuthPage } from '../pom/OTTAuthPage';
 import { OTTSettingsPage } from '../pom/OTTSettingsPage';
 import { OTTDetailsPage } from '../pom/OTTDetailsPage';
-import { PageUtils } from '../utils/page-utils';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config-manager';
 import { GraphQLHelper } from '../utils/graphql/graphql-helper';
@@ -1830,7 +1829,6 @@ export async function verifyIWantOriginalsHoverPreview(page: any, input?: Partia
 
 export async function verifyIWantOriginalsRailScrollability(page: any, input?: Partial<VerifyIWantOriginalsRailScrollabilityInput>): Promise<VerifyIWantOriginalsRailScrollabilityOutput> {
     const authPage = new OTTAuthPage(page);
-    const pageUtils = new PageUtils(page);
     const mode = normalizeLoginMode(input?.mode);
     logger.step(`Starting ${mode} iWant Originals rail scrollability verification flow`);
     const loginResult = await loginToOTT(page, { mode });
@@ -1841,9 +1839,13 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
     logger.assertion('iWant Originals rail contains content cards', contentCardsCount > 0);
     let scrolledRight = false;
     let scrolledLeft = false;
+
+    if (railVisible && contentCardsCount > 0) {
+        const rightArrowVisible = await authPage.hoverIWantOriginalsCardAndRevealArrow('right');
+        logger.assertion('Right navigation arrow appears after hovering iWant Originals content', rightArrowVisible);
         const initialCardX = await authPage.getIWantOriginalsRailFirstCardX();
         logger.step('Clicking the right arrow on the iWant Originals rail');
-        const clickedRight = await authPage.clickIWantOriginalsRailArrow('right');
+        const clickedRight = rightArrowVisible && await authPage.clickIWantOriginalsRailArrow('right');
         const afterRightCardX = await authPage.getIWantOriginalsRailFirstCardX();
         scrolledRight = clickedRight && afterRightCardX < initialCardX - 5;
         logger.assertion('iWant Originals rail scrolled right', scrolledRight);
@@ -1852,6 +1854,7 @@ export async function verifyIWantOriginalsRailScrollability(page: any, input?: P
         const afterLeftCardX = await authPage.getIWantOriginalsRailFirstCardX();
         scrolledLeft = clickedLeft && afterLeftCardX > afterRightCardX + 5;
         logger.assertion('iWant Originals rail scrolled left', scrolledLeft);
+    }
     return {
         isLoggedIn: loginResult.isLoggedIn,
         railVisible,

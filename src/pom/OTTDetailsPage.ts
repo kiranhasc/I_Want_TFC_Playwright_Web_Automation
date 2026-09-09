@@ -270,7 +270,7 @@ export class OTTDetailsPage {
     this.episodeTitle = { selector: '[data-testid="episode-title"], .episode-title, h2:has-text("Episode")' };
     this.playbackContentTitle = { selector: '[data-testid="player-title"], .player-title, .video-title, .content-title, .player-header h1, h1' };
     this.playbackEpisodeTitle = { selector: '[data-testid="episode-title"], .episode-title, .player-episode, h2:has-text("Episode"), text=/Episode\\s+\\d+/i' };
-    this.playbackTitleParagraph = { selector: "//p[contains(@class,'text-start')]" };
+    this.playbackTitleParagraph = { selector: "//div[contains(@class,'player-title')]" };
     this.playerForwardButton = { selector: 'button[aria-label*="Forward"], button[aria-label*="forward"], [data-testid*="forward"], button:has-text("Forward"), button:has-text(">>"), button:has-text(">")' };
     this.playerBackArrowButton = { selector: 'button[aria-label*="Back"], button[aria-label*="back"], [data-testid*="back"], button:has-text("Back"), button:has-text("←"), button:has-text("<")' };
     this.continueWatchingTray = { selector: 'text=Continue Watching, [data-testid*="continue-watching"], .continue-watching, .cw-tray' };
@@ -1686,8 +1686,15 @@ export class OTTDetailsPage {
   async clickWatchlistIcon(): Promise<void> {
     logger.elementInteraction('click', 'watchlist icon');
     const activeCard = this.page.locator(this.firstSearchResult.selector).first();
-    const addIcon = this.getScopedWatchlistIcon(activeCard, 'add');
-    const removeIcon = this.getScopedWatchlistIcon(activeCard, 'remove');
+    let addIcon = this.getScopedWatchlistIcon(activeCard, 'add');
+    let removeIcon = this.getScopedWatchlistIcon(activeCard, 'remove');
+
+    // Details pages render the watchlist control outside the search-result card.
+    if (!(await addIcon.isVisible().catch(() => false)) && !(await removeIcon.isVisible().catch(() => false))) {
+      const detailsWatchlist = this.page.locator(this.addToWatchlistButtonIcon.selector).first();
+      addIcon = detailsWatchlist.locator(this.addToWatchlistButton.selector).first();
+      removeIcon = detailsWatchlist.locator(this.removeFromWatchlistButton.selector).first();
+    }
 
     if (await removeIcon.isVisible().catch(() => false)) {
       await removeIcon.scrollIntoViewIfNeeded().catch(() => undefined);

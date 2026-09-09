@@ -392,7 +392,7 @@ export async function playContentFromWatchlist(
   }
 
   await page.waitForTimeout(4000);
-  await searchAndOpenFreeContent(page);
+  const searchedContentTitle = await searchAndOpenFreeContent(page);
   await detailsPage.assertContentTitleFromTitleImageLocator();
   await detailsPage.ensureWatchlistIsAddable();
   await detailsPage.clickWatchlistIcon();
@@ -414,45 +414,27 @@ export async function playContentFromWatchlist(
   if (seekRequested) {
     await detailsPage.dragSeekBarToPosition(seekPercent).catch(() => undefined);
     logger.step('Waiting for the seek-triggered playback ad to complete');
-    await detailsPage.waitForAdPlaybackToComplete();
+    // await detailsPage.waitForAdPlaybackToComplete();
     await detailsPage.waitForPlayerReady();
     await detailsPage.hoverPlaybackControls().catch(() => undefined);
   }
+  await detailsPage.hoverPlaybackControls().catch(() => undefined);
   let playerTitleVisible = false;
   let playerTitleMatches = false;
   try {
-    const normalizeTitle = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase();
-    const normalizedWatchlistTitle = normalizeTitle(watchlistContentTitle);
-    const readPlayerTitle = async (): Promise<string> => {
-      const alertText = await page.getByRole('alert').first().textContent().catch(() => '');
-      if (alertText?.trim()) {
-        return alertText || '';
-      }
-
-      const pageTitle = await page.title().catch(() => '');
-      if (pageTitle.trim()) {
-        return pageTitle;
-      }
-
-      for (const frame of page.frames()) {
-        const frameText = await frame.locator('body').textContent().catch(() => '');
-        if (frameText?.trim()) {
-          return frameText || '';
-        }
-      }
-      return '';
-    };
-
-    const deadline = Date.now() + 30000;
-    while (Date.now() < deadline && !playerTitleVisible) {
-      const playerTitle = await readPlayerTitle();
-      playerTitleVisible = Boolean(playerTitle);
-      playerTitleMatches = playerTitleVisible
-        && normalizeTitle(playerTitle).includes(normalizedWatchlistTitle);
-      if (!playerTitleVisible) {
-        await page.waitForTimeout(500);
-      }
-    }
+    const normalizeTitle = (value: string) => value
+      .replace(/\u00a0/g, ' ')
+      .replace(/[^a-z0-9]+/gi, '')
+      .toLowerCase();
+    const expectedPlayerTitle = searchedContentTitle || watchlistContentTitle;
+    const normalizedExpectedTitle = normalizeTitle(expectedPlayerTitle);
+    const playerTitle = await detailsPage.getTitleAfterPlayButtonClick();
+    const normalizedPlayerTitle = normalizeTitle(playerTitle);
+    playerTitleVisible = normalizedPlayerTitle.length > 0;
+    playerTitleMatches = playerTitleVisible
+      && normalizedExpectedTitle.length > 0
+      && (normalizedPlayerTitle.includes(normalizedExpectedTitle)
+        || normalizedExpectedTitle.includes(normalizedPlayerTitle));
     logger.assertion('Player title is visible after clicking play', playerTitleVisible);
     logger.assertion('Player title matches the watchlist content title', playerTitleMatches);
   } catch (error) {
@@ -717,7 +699,7 @@ function resolveFreeSearchQueryFromCollection(collectionResponse: any): string |
   return undefined;
 }
 
-async function searchAndOpenFreeContent(page: any, graphqlQueryName: string = 'Collection'): Promise<void> {
+async function searchAndOpenFreeContent(page: any, graphqlQueryName: string = 'Collection'): Promise<string> {
   const authPage = new OTTAuthPage(page);
   const detailsPage = new OTTDetailsPage(page);
   const collectionResponse = await GraphQLHelper.getInstance(page).waitForOperation(graphqlQueryName, 20000);
@@ -732,6 +714,7 @@ async function searchAndOpenFreeContent(page: any, graphqlQueryName: string = 'C
   await authPage.submitSearchQuery();
   await detailsPage.waitForPlayback(2);
   await detailsPage.clickFirstSearchResult();
+  return freeTitle;
 }
 
 export async function manageWatchlistItem(

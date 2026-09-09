@@ -1349,6 +1349,22 @@ export class OTTAuthPage {
         return heading.locator(this.railAncestorSelector.selector).first();
     }
 
+    private getIWantOriginalsHeadingLocator(): Locator {
+        const desktopHeading = this.page
+            .locator(':visible')
+            .filter({ hasText: new RegExp(`^${this.iWantOriginalsRailName}$`) })
+            .first();
+        const mobileHeading = this.page
+            .locator(':visible')
+            .filter({ hasText: new RegExp(`^${this.iWantOriginalsRailNameMobile}$`) })
+            .first();
+        return process.env.BROWSER === 'mchrome' ? mobileHeading.or(desktopHeading).first() : desktopHeading.or(mobileHeading).first();
+    }
+
+    private getIWantOriginalsRailContainer(heading: Locator): Locator {
+        return heading.locator('xpath=ancestor::div[contains(@class, "rail")][1]').first();
+    }
+
     private getContinueWatchingArrowLocator(direction: 'left' | 'right') {
         const positionClass = direction === 'right' ? 'right-0' : 'left-0';
         const selector = `xpath=ancestor::div[contains(@class, "rail")][1]//div[contains(@class, "pointer-events-auto") and contains(@class, "absolute") and contains(@class, "bottom-[15rem]") and contains(@class, "${positionClass}") and contains(@class, "z-10")]//img[@alt="arrow-right"]`;
@@ -1789,66 +1805,38 @@ export class OTTAuthPage {
 
     async isIWantOriginalsRailVisible(): Promise<boolean> {
         try {
-            if (process.env.BROWSER === 'mchrome') {
-                const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
-                await locator.waitFor({ state: 'visible', timeout: 15000 });
-                await locator.scrollIntoViewIfNeeded();
-                return true;
-            } else {
-                const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-                await locator.waitFor({ state: 'visible', timeout: 15000 });
-                await locator.scrollIntoViewIfNeeded();
-                return true;
-            }
+            const locator = this.getIWantOriginalsHeadingLocator();
+            await locator.waitFor({ state: 'visible', timeout: 15000 });
+            await locator.scrollIntoViewIfNeeded();
+            return true;
         } catch {
             return false;
         }
     }
 
     async getIWantOriginalsRailTitle(): Promise<string> {
-        if (process.env.BROWSER === 'mchrome') {
-            const locator = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
-            await locator.waitFor({ state: 'visible', timeout: 15000 });
-            await locator.scrollIntoViewIfNeeded();
-            return (await locator.textContent()) || '';
-        } else {
-            const locator = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-            await locator.waitFor({ state: 'visible', timeout: 15000 });
-            await locator.scrollIntoViewIfNeeded();
-            return (await locator.textContent()) || '';
-        }
+        const locator = this.getIWantOriginalsHeadingLocator();
+        await locator.waitFor({ state: 'visible', timeout: 15000 });
+        await locator.scrollIntoViewIfNeeded();
+        return (await locator.textContent()) || '';
     }
     
     async getIWantOriginalsRailCardCount(): Promise<number> {
-        if (process.env.BROWSER === 'mchrome') {
-            const heading = this.page.getByText(this.iWantOriginalsRailNameMobile, { exact: true }).first();
-            await heading.waitFor({ state: 'visible', timeout: 15000 });
-            await heading.scrollIntoViewIfNeeded();
-            const rail = this.getRailContainerFromHeading(heading);
-            if (!await rail.count()) {
-                return 0;
-            }
-            await rail.scrollIntoViewIfNeeded();
-            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
-        } else {
-            const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-            await heading.waitFor({ state: 'visible', timeout: 15000 });
-            await heading.scrollIntoViewIfNeeded();
-            const rail = this.getRailContainerFromHeading(heading);
-            if (!await rail.count()) {
-                return 0;
-            }
-            await rail.scrollIntoViewIfNeeded();
-            return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
-        }
+        const heading = this.getIWantOriginalsHeadingLocator();
+        await heading.waitFor({ state: 'visible', timeout: 15000 });
+        await heading.scrollIntoViewIfNeeded();
+        const rail = this.getIWantOriginalsRailContainer(heading);
+        if (!await rail.count()) return 0;
+        await rail.scrollIntoViewIfNeeded();
+        return await rail.locator(this.iWantOriginalsCardSelector.selector).count();
     }
 
     async ensureIWantOriginalsRailInView(timeout: number = 30000): Promise<boolean> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
+        const heading = this.getIWantOriginalsHeadingLocator();
         try {
             await heading.waitFor({ state: 'visible', timeout });
             await heading.scrollIntoViewIfNeeded();
-            const rail = this.getRailContainerFromHeading(heading);
+            const rail = this.getIWantOriginalsRailContainer(heading);
             if (!await rail.count()) return false;
             await rail.scrollIntoViewIfNeeded();
             await rail.waitFor({ state: 'visible', timeout });
@@ -1859,8 +1847,8 @@ export class OTTAuthPage {
     }
 
     private async getFirstVisibleIWantOriginalsCard(): Promise<Locator | null> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = this.getRailContainerFromHeading(heading);
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         if (!await rail.count()) return null;
 
         const cardImage = rail.locator(this.iWantOriginalsCardSelector.selector).first();
@@ -1899,9 +1887,20 @@ export class OTTAuthPage {
         return { visible: true, hovered: true };
     }
 
+    async hoverIWantOriginalsCardAndRevealArrow(direction: 'left' | 'right' = 'right'): Promise<boolean> {
+        const hoverResult = await this.hoverIWantOriginalsFirstCardCentered();
+        if (!hoverResult.hovered) return false;
+
+        const arrow = await this.getIWantOriginalsArrowLocator(direction).catch(() => null);
+        if (!arrow) return false;
+
+        await arrow.waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined);
+        return await arrow.isVisible().catch(() => false);
+    }
+
     async isIWantOriginalsFirstCardVisible(): Promise<boolean> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = this.getRailContainerFromHeading(heading);
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         if (!await rail.count()) return false;
         const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
         return (await cards.count()) > 0;
@@ -1911,24 +1910,41 @@ export class OTTAuthPage {
         const card = await this.getFirstVisibleIWantOriginalsCard();
         if (!card) return false;
         await card.scrollIntoViewIfNeeded();
-        const target = await this.getIWantOriginalsCardInteractionTarget(card);
-        if (!target) return false;
-        await this.page.mouse.move(target.x, target.y);
-        await this.page.waitForTimeout(400);
+        const clickableAncestor = card.locator('xpath=ancestor::*[self::a or self::button or @role="link" or @role="button" or contains(@class, "cursor-pointer") or contains(@class, "group")][1]').first();
+        const cardContainer = await clickableAncestor.count().catch(() => 0) > 0 ? clickableAncestor : card;
+        await cardContainer.hover().catch(() => undefined);
+        await this.page.waitForTimeout(500);
+        const overlay = cardContainer.locator('xpath=.//div[contains(@class,"absolute") and contains(@class,"left-0") and contains(@class,"top-0") and contains(@class,"z-10") and contains(@class,"h-full") and contains(@class,"w-full")]').first();
+        const target = await overlay.count().catch(() => 0) > 0 ? overlay : cardContainer;
+        await target.waitFor({ state: 'visible', timeout: 15000 });
         logger.elementInteraction('click', 'first iWant Originals content card');
         try {
-            await this.page.mouse.dblclick(target.x, target.y, { delay: 100 });
+            await target.click({ force: true, timeout: 20000 });
         } catch {
-            await card.dblclick({ force: true, timeout: 20000 }).catch(() => undefined);
+            const elementHandle = await target.elementHandle();
+            if (!elementHandle) return false;
+            await elementHandle.evaluate((element: HTMLElement) => element.click()).catch(() => undefined);
         }
         await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
-        return true;
+        if (/\/(details|content|show)\//i.test(this.page.url())) return true;
+
+        const detailsHeading = this.page.locator('main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]').first();
+        if (await detailsHeading.isVisible().catch(() => false)) return true;
+
+        const fallbackTarget = card.locator('xpath=ancestor::div[contains(@class, "relative") or contains(@class, "thumbnail")][1]').first();
+        if (await fallbackTarget.count().catch(() => 0)) {
+            await cardContainer.click({ force: true, timeout: 10000 }).catch(() => undefined);
+            await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+            return /\/(details|content|show)\//i.test(this.page.url())
+                || await detailsHeading.isVisible().catch(() => false);
+        }
+        return false;
     }
 
     private getIWantOriginalsArrowLocator(direction: 'left' | 'right') {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = heading.locator(this.railAncestorSelector.selector).first();
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         // Generic arrow candidates: images/icons/buttons commonly used for rails (configurable)
         const candidateSelector = this.iWantOriginalsArrowCandidateSelector.selector;
         const candidates = rail.locator(candidateSelector);
@@ -1963,15 +1979,15 @@ export class OTTAuthPage {
     }
 
     async getIWantOriginalsRailScrollLeft(): Promise<number> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = this.getRailContainerFromHeading(heading);
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         await rail.waitFor({ state: 'visible', timeout: 15000 });
         return await rail.evaluate((element: HTMLElement) => element.scrollLeft as number).catch(() => 0);
     }
 
     async getIWantOriginalsRailFirstCardX(): Promise<number> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = this.getRailContainerFromHeading(heading);
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         await rail.waitFor({ state: 'visible', timeout: 15000 });
         const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
         if (!await cards.count()) {
@@ -1983,8 +1999,8 @@ export class OTTAuthPage {
     }
 
     async clickIWantOriginalsRailArrow(direction: 'left' | 'right'): Promise<boolean> {
-        const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-        const rail = this.getRailContainerFromHeading(heading);
+        const heading = this.getIWantOriginalsHeadingLocator();
+        const rail = this.getIWantOriginalsRailContainer(heading);
         if (!await rail.count()) {
             return false;
         }
@@ -2078,16 +2094,12 @@ export class OTTAuthPage {
     }
     async hoverIWantOriginalsFirstCardAndDetectPreview(timeout: number = 20000): Promise<boolean> {
         try {
-            const heading = this.page.getByText(this.iWantOriginalsRailName, { exact: true }).first();
-            await heading.waitFor({ state: 'visible', timeout: 15000 });
-            await heading.scrollIntoViewIfNeeded();
-            const rail = this.getRailContainerFromHeading(heading);
-            if (!await rail.count()) return false;
-            const cards = rail.locator(this.iWantOriginalsCardSelector.selector);
-            if (!await cards.count()) return false;
-            const firstCard = cards.first();
+            const firstCard = await this.getFirstVisibleIWantOriginalsCard();
+            if (!firstCard) return false;
             await firstCard.scrollIntoViewIfNeeded();
-            await firstCard.hover({ timeout }).catch(() => undefined);
+            const target = await this.getIWantOriginalsCardInteractionTarget(firstCard);
+            if (!target) return false;
+            await this.page.mouse.move(target.x, target.y);
             // give the preview some time to start
             await this.page.waitForTimeout(1500);
 

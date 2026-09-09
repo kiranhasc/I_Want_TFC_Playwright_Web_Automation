@@ -1897,38 +1897,37 @@ export class OTTAuthPage {
     }
 
     async clickFirstIWantOriginalsCard(): Promise<boolean> {
-        const card = await this.getFirstVisibleIWantOriginalsCard();
-        if (!card) return false;
-        await card.scrollIntoViewIfNeeded();
-        const clickableAncestor = card.locator('xpath=ancestor::*[self::a or self::button or @role="link" or @role="button" or contains(@class, "cursor-pointer") or contains(@class, "group")][1]').first();
-        const cardContainer = await clickableAncestor.count().catch(() => 0) > 0 ? clickableAncestor : card;
-        await cardContainer.hover().catch(() => undefined);
-        await this.page.waitForTimeout(500);
-        const overlay = cardContainer.locator('xpath=.//div[contains(@class,"absolute") and contains(@class,"left-0") and contains(@class,"top-0") and contains(@class,"z-10") and contains(@class,"h-full") and contains(@class,"w-full")]').first();
-        const target = await overlay.count().catch(() => 0) > 0 ? overlay : cardContainer;
-        await target.waitFor({ state: 'visible', timeout: 15000 });
+        await this.ensureIWantOriginalsRailInView(15000);
         logger.elementInteraction('click', 'first iWant Originals content card');
-        try {
-            await target.click({ force: true, timeout: 20000 });
-        } catch {
-            const elementHandle = await target.elementHandle();
-            if (!elementHandle) return false;
-            await elementHandle.evaluate((element: HTMLElement) => element.click()).catch(() => undefined);
+        let clicked = false;
+        for (let attempt = 0; attempt < 2 && !clicked; attempt += 1) {
+            const card = await this.getFirstVisibleIWantOriginalsCard();
+            if (!card) return false;
+            try {
+                await card.scrollIntoViewIfNeeded();
+                const semanticAncestor = card.locator('xpath=ancestor::*[self::a or self::button or @role="link" or @role="button"][1]').first();
+                const clickableAncestor = card.locator('xpath=ancestor::*[contains(@class, "cursor-pointer") or contains(@class, "group")][1]').first();
+                const target = await semanticAncestor.count().catch(() => 0) > 0
+                    ? semanticAncestor
+                    : await clickableAncestor.count().catch(() => 0) > 0
+                        ? clickableAncestor
+                        : card;
+                await target.waitFor({ state: 'visible', timeout: 15000 });
+                await target.click({ force: true, timeout: 20000 });
+                clicked = true;
+            } catch (error) {
+                logger.debug(`First iWant Originals card was replaced during click attempt ${attempt + 1}`, error);
+                await this.page.waitForTimeout(500);
+            }
         }
+        if (!clicked) return false;
         await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
         await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+        await this.page.waitForURL(/\/(details|content|show)\//i, { timeout: 20000 }).catch(() => undefined);
         if (/\/(details|content|show)\//i.test(this.page.url())) return true;
 
         const detailsHeading = this.page.locator('main h1, [data-testid*="content-title"], [data-testid*="details-title"], [class*="content-title"]').first();
         if (await detailsHeading.isVisible().catch(() => false)) return true;
-
-        const fallbackTarget = card.locator('xpath=ancestor::div[contains(@class, "relative") or contains(@class, "thumbnail")][1]').first();
-        if (await fallbackTarget.count().catch(() => 0)) {
-            await cardContainer.click({ force: true, timeout: 10000 }).catch(() => undefined);
-            await this.page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
-            return /\/(details|content|show)\//i.test(this.page.url())
-                || await detailsHeading.isVisible().catch(() => false);
-        }
         return false;
     }
 

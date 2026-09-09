@@ -3490,7 +3490,7 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   await detailsPage.waitForPlayback(5);
   const playerVisible = await detailsPage.isPlayerScreenVisible();
   const adVisible = await detailsPage.isAdTagVisible();
-  await detailsPage.waitForPlayback(90);
+  await detailsPage.waitTillAdsEnd();
   logger.assertion('Player screen visible for pre-roll ad flow', playerVisible);
   logger.assertion('Ad visible before main content starts', adVisible);
   return {

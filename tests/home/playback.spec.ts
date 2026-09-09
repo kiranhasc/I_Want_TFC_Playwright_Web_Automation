@@ -183,6 +183,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleSelectionFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
       parentalPin: data.pin,
     });
 

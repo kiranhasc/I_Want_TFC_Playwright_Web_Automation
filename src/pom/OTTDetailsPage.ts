@@ -324,7 +324,7 @@ export class OTTDetailsPage {
     this.thumbnailLabelOverlay = { selector: '//div[@class="thumbnail-label absolute bottom-0 left-[50%] translate-x-[-50%] z-10"]' };
     this.playButton = { selector: '#play div' };
     this.playerScreen = { selector: '//*[@id="player-container-main"]/div[4]' };
-    this.seekBar = { selector: '//div[contains(@class,"player-progress-container")]' };
+    this.seekBar = { selector: '//div[contains(@class,"player-progress-and-time-container")]' };
     this.minimizeButton = { selector: '//*[@id="player-container-main-fullscreenButton"]/img' };
     this.playerVideoControls = { selector: "//div[contains(@class,'player-video-controls')]" };
     this.progressBarContainer = { selector: "//div[contains(@class,'player-progress-container')]" };
@@ -4972,19 +4972,21 @@ export class OTTDetailsPage {
 
   async dragSeekBarToPosition(targetPercent: number): Promise<void> {
     const seekBar = this.page.locator(this.seekBar.selector).first();
-    await seekBar.waitFor({ state: 'visible', timeout: 315000 }).catch(() => undefined);
+    await seekBar.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
     const box = await seekBar.boundingBox().catch(() => null);
-    const clampedPercent = Math.min(Math.max(targetPercent, 0.02), 0.99);
-    if (box) {
-      const startX = box.x + box.width * 0.1;
-      const startY = box.y + box.height / 2;
-      const endX = box.x + box.width * clampedPercent;
-      const endY = startY;
-      await this.page.mouse.move(startX, startY);
-      await this.page.mouse.down();
-      await this.page.mouse.move(endX, endY, { steps: 20 });
-      await this.page.mouse.up();
+    if (!box || this.page.isClosed()) {
+      logger.debug('Seek bar was not available; skipping seek interaction');
+      return;
     }
+    const clampedPercent = Math.min(Math.max(targetPercent, 0.02), 0.99);
+    const startX = box.x + box.width * 0.1;
+    const startY = box.y + box.height / 2;
+    const endX = box.x + box.width * clampedPercent;
+    const endY = startY;
+    await this.page.mouse.move(startX, startY);
+    await this.page.mouse.down();
+    await this.page.mouse.move(endX, endY, { steps: 20 });
+    await this.page.mouse.up();
     const videoUpdated = await this.page.evaluate(({ percent }) => {
       const video = document.querySelector('video') as HTMLVideoElement | null;
       if (!video || Number.isNaN(video.duration) || video.duration <= 0) {
@@ -4999,7 +5001,7 @@ export class OTTDetailsPage {
       }
       return true;
     }, { percent: clampedPercent });
-    if (!videoUpdated && box) {
+    if (!videoUpdated) {
       await seekBar.click({ position: { x: Math.max(4, Math.round(box.width * clampedPercent)), y: Math.max(4, Math.round(box.height / 2)) } });
     }
     await this.page.waitForTimeout(1500);

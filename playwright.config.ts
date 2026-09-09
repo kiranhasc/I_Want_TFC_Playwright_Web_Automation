@@ -35,14 +35,15 @@ const browserConfig = {
   },
 };
 
-// Which browsers every "cross-browser" project should run on
-// If BROWSER env var is set, use only that browser; otherwise use default cross-browsers
+// Which browsers every "cross-browser" project should run on.
+// If BROWSER env var is set, use only that browser; otherwise use the default
+// cross-browser set, including Safari support that was present in the earlier config.
 const getBrowsers = () => {
   const envBrowser = process.env.BROWSER;
   if (envBrowser) {
     return [envBrowser] as const;
   }
-  return ['chrome', 'edge'] as const;
+  return ['chrome', 'edge', 'safari'] as const;
 };
 
 const CROSS_BROWSERS = getBrowsers();

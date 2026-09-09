@@ -336,7 +336,7 @@ export class OTTDetailsPage {
     this.liveChannelTile = { selector: 'a, button, [role="button"], [data-testid*="content"], [data-testid*="card"]' };
     this.rewindButton = { selector: 'xpath=//*[@id="player-container-main-rewindButton"]/img' };
     this.forwardButton = { selector: 'xpath=//*[@id="player-container-main-forwardButton"]/img' };
-    this.subtitleButton = { selector: 'xpath=//*[@id="player-container-main-subtitleButton"]/img' };
+    this.subtitleButton = { selector: '//button[@id="player-container-main-subtitleButton"]' };
     this.subtitleLanguageOption = { selector: 'text=/English\\(Philippines\\)/i' };
     this.subtitleOffOption = { selector: 'text=/\\bOff\\b/i' };
     this.subtitleDisplayIndicator = { selector: 'xpath=//*[@id="player-container-main"]/div[6]/div' };
@@ -460,6 +460,7 @@ export class OTTDetailsPage {
     this.mobileMainMenu = { selector: '//nav//div[contains(@class, "mobile-main-menu")]' };
     this.episodeItem = { selector: 'xpath=//*[@class="episodes-list"]/div/div' };
     this.seasonTitleContainer = 'h3.season-title, .season-title, [data-testid*="season"], .season-item';
+    this.volumeButton = {selector:'//div[@class="player-volume-container"]'}
   }
 
   private getRoleLocator(element: PageElement, exact = false) {

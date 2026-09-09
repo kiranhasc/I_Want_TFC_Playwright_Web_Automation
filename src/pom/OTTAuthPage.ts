@@ -223,7 +223,7 @@ export class OTTAuthPage {
         this.homePageRailTagSelector = { selector: 'div.thumbnail-label.absolute.top-0.right-0.z-10' };
         this.homePageRailThumbnailSelector = { selector: 'img[alt]:not([alt="arrow-right"])' };
         this.continueWatchingTrayTitle = { text: 'Continue Watching', selector: 'text=Continue Watching' };
-        this.continueWatchingTrayContainer = { selector: 'text=Continue Watching >> xpath=following-sibling::*' };
+        this.continueWatchingTrayContainer = { selector: 'xpath=../following-sibling::*[1]' };
         this.continueWatchingTrayItem = { selector: 'text=Continue Watching >> xpath=following-sibling::* >> img' };
         this.continueWatchingTrayThumbnail = { selector: 'img' };
         this.continueWatchingTrayProgressIndicator = { selector: '[class*=progress], [aria-label*=progress], [data-testid*=progress], [class*=resume]' };
@@ -1481,22 +1481,17 @@ export class OTTAuthPage {
 
     async isContinueWatchingItemVisible(title: string): Promise<boolean> {
         const section = this.getContinueWatchingRailLocator();
-        if (!await section.count()) {
-            return false;
-        }
-        const normalizedTitle = title.toLowerCase();
-        const items = section.locator(this.continueWatchingImageWithAlt.selector).filter({ hasNotText: '' });
-        const count = await items.count().catch(() => 0);
-        for (let index = 0; index < count; index += 1) {
-            const item = items.nth(index);
-            const alt = ((await item.getAttribute('alt')) || '').toLowerCase();
-            if (alt.includes(normalizedTitle)) {
-                return await item.isVisible().catch(() => false);
+        const cards = section.locator(this.continueWatchingCard.selector);
+        const normalizedTitle = this.normalizeTitle(title);
+        const cardCount = await cards.count().catch(() => 0);
+        for (let index = 0; index < cardCount; index += 1) {
+            const card = cards.nth(index);
+            const cardTitle = this.normalizeTitle(await card.getAttribute('alt').catch(() => ''));
+            if (cardTitle && (cardTitle.includes(normalizedTitle) || normalizedTitle.includes(cardTitle))) {
+                return await card.isVisible().catch(() => false);
             }
         }
-        const candidate = section.locator(`img[alt*="${title}"]`).first();
-        logger.info("Candidate, ", candidate)
-        return await candidate.isVisible().catch(() => false);
+        return false;
     }
 
     async isContinueWatchingItemVisibleWithTag(title: string, tagAlt: string): Promise<{ visible: boolean; hasTag: boolean }> {
@@ -1604,59 +1599,54 @@ export class OTTAuthPage {
     }
 
     async waitForContinueWatchingItemToAppear(searchTerm: string, timeoutMs: number = 30000): Promise<boolean> {
+        if (!this.continueWatchingListenerRegistered) {
+            await this.registerContinueWatchingListener();
+        }
         const deadline = Date.now() + timeoutMs;
         while (Date.now() < deadline) {
-            await this.ensureContinueWatchingTrayInView(15000);
-            const trayItemTitles = await this.getContinueWatchingTrayItemTitles();
-            const matchedTitle = await Promise.all(
-                trayItemTitles.map((title) => this.matchesContinueWatchingTitle(title, searchTerm))
-            );
-            if (matchedTitle.some(Boolean)) {
-                return true;
+            if (this.page.isClosed()) {
+                return false;
             }
-            await this.page.waitForTimeout(2000);
+            try {
+                const graphQlItems = await this.getContinueWatchingGraphQLItems();
+                const graphQlMatches = await Promise.all(graphQlItems.map((item) =>
+                    Promise.all([
+                        this.matchesContinueWatchingTitle(item.title, searchTerm),
+                        this.matchesContinueWatchingTitle(item.showInfo?.title ?? '', searchTerm),
+                    ]).then(([titleMatch, showMatch]) => titleMatch || showMatch)
+                ));
+                if (graphQlMatches.some(Boolean)) {
+                    return true;
+                }
+                const trayItemTitles = await this.getContinueWatchingTrayItemTitles();
+                if ((await Promise.all(
+                    trayItemTitles.map((title) => this.matchesContinueWatchingTitle(title, searchTerm))
+                )).some(Boolean)) {
+                    return true;
+                }
+            } catch {
+                return false;
+            }
+            const remaining = Math.min(500, Math.max(0, deadline - Date.now()));
+            if (remaining > 0) {
+                await this.page.waitForTimeout(remaining).catch(() => undefined);
+            }
         }
         return false;
     }
 
     async getContinueWatchingTrayItemTitles(): Promise<string[]> {
         const traySection = await this.getContinueWatchingTraySection();
-        const titleCandidates = await traySection.evaluate((section: HTMLElement) => {
-            const values = new Set<string>();
-            const walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT, null);
-            let node: Node | null;
-            while ((node = walker.nextNode())) {
-                const text = node.textContent?.replace(/\s+/g, ' ').trim();
-                if (text && text.length > 1) {
-                    values.add(text);
-                }
-            }
-            this.page.evaluate((selector) => {
-                const section = document.querySelector('...');
-                const values = new Set<string>();
-
-                section?.querySelectorAll(selector).forEach((element) => {
-                    const value = (
-                        element.getAttribute('alt') ||
-                        element.getAttribute('aria-label') ||
-                        element.getAttribute('title') ||
-                        ''
-                    ).replace(/\s+/g, ' ').trim();
-
-                    if (value) values.add(value);
-                });
-
-                return [...values];
-            }, this.continueWatchingContent.selector); // or the string directly
-            return Array.from(values).filter((value) => value.length > 1);
-        }).catch(() => [] as string[]);
-
-        if (titleCandidates.length) {
-            return titleCandidates;
-        }
-
-        const imageTitles = await traySection.locator(this.continueWatchingImageWithAlt.selector).evaluateAll((images) => images.map((img) => (img.getAttribute('alt') || '').trim())).catch(() => [] as string[]);
-        return imageTitles.filter(Boolean);
+        const imageTitles = await traySection
+            .locator(this.continueWatchingImageWithAlt.selector)
+            .evaluateAll((elements) => elements.map((element) => (
+                element.getAttribute('alt') ||
+                element.getAttribute('aria-label') ||
+                element.getAttribute('title') ||
+                ''
+            ).replace(/\s+/g, ' ').trim()).filter(Boolean))
+            .catch(() => [] as string[]);
+        return imageTitles;
     }
 
     async getContinueWatchingProgressBarPercentage(contentTitle?: string): Promise<number> {

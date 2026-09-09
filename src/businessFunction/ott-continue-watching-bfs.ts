@@ -1776,30 +1776,27 @@ export async function verifyContinueWatchingTrayForNewUserAfterFivePercentPlayba
   }
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(5000);
+  const playerReady = await detailsPage.waitForPlayerReady(30000);
+  logger.assertion('Movie player became ready before seeking', playerReady);
+  const hovered = await detailsPage.hoverPlaybackControls();
+  const seekBarVisible = await detailsPage.isSeekBarVisible().catch(() => false);
+  logger.assertion('Movie player seek bar is visible before seeking', seekBarVisible);
   await detailsPage.dragSeekBarToPosition(0.05);
   await page.waitForTimeout(5000);
   await detailsPage.clickBackButton();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
+  await authPage.registerContinueWatchingListener();
   await authPage.clickHomeTab();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await authPage.refreshPage();
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
   await page.waitForTimeout(5000);
   const trayVisible = await authPage.isContinueWatchingTrayTitleVisible();
-  let contentAppearsInTray = false;
-  try {
-    const cwOp = await gql.waitForOperationMatching<AssetResponse>((res) => Boolean(res.response?.data?.asset?.title), 10000, true);
-    const cwParser = new ContinueWatchingParser(cwOp as any);
-    contentAppearsInTray = Boolean(cwParser.getItemByTitle(detailPageTitle));
-  } catch (err) {
-    const traySection = await authPage.getContinueWatchingTraySection();
-    const trayItemTitles = await traySection.locator('img[alt]').evaluateAll((images) => images.map((img) => (img.getAttribute('alt') || '').trim())).catch(() => [] as string[]);
-    contentAppearsInTray = trayItemTitles.some((title) => title.toLowerCase().includes(detailPageTitle.toLowerCase()));
-  }
+  const contentAppearsInTray = trayVisible
+    ? await authPage.waitForContinueWatchingItemToAppear(detailPageTitle, 10000)
+    : false;
   logger.assertion('Continue Watching tray visible after 5% playback', trayVisible);
   logger.assertion('Partially watched content appears in tray', contentAppearsInTray);
   return {
@@ -1822,20 +1819,6 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
  
   logger.step(`Starting less-than-5% playback verification flow`);
   const loginResult = await loginToOTT(page, { mode });
-  let searchTerm = '';
-  try {
-    const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
-    if (collectionOp && collectionOp.response) {
-      const parser = new CollectionParser(collectionOp as any);
-      searchTerm = parser.getPreferredAssetTitle([/movies/i, 'movies', /shows/i, 'shows']) || '';
-      if (!searchTerm) {
-        const titles = parser.getPreferredRailTitles([/movies/i, 'movies', /shows/i, 'shows'], 1);
-        searchTerm = titles && titles.length ? titles[0] : '';
-      }
-    }
-  } catch (err) {
-    logger.debug('Failed to obtain collection data for search term derivation', err);
-  }
   if (!loginResult.isLoggedIn) {
     return {
       isValid: false,
@@ -1843,6 +1826,20 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
       contentAppearsInTray: false,
       reason: 'Login was not successful before the playback flow started',
     };
+  }
+  let searchTerm = '';
+  try {
+    const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
+    if (collectionOp?.response) {
+      const parser = new CollectionParser(collectionOp as any);
+      searchTerm = parser.getPreferredAssetTitle([/movies/i, 'movies', /shows/i, 'shows']) || '';
+      if (!searchTerm) {
+        const titles = parser.getPreferredRailTitles([/movies/i, 'movies', /shows/i, 'shows'], 1);
+        searchTerm = titles?.[0] || '';
+      }
+    }
+  } catch (err) {
+    logger.debug('Failed to obtain collection data for search term derivation', err);
   }
   if (!searchTerm) {
     return {
@@ -1857,21 +1854,23 @@ export async function verifyContinueWatchingTrayForNewUserAfterLessThanFivePerce
   await authPage.enterSearchQuery(searchTerm);
   await authPage.submitSearchQuery();
   await page.waitForTimeout(5000);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await detailsPage.clickFirstSearchResult();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await detailsPage.clickPlayButton();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-  await detailsPage.hoverPlaybackScreen();
+  const playerReady = await detailsPage.waitForPlayerReady(30000);
+  logger.assertion('Player became ready before less-than-5% seek', playerReady);
+  await detailsPage.hoverPlaybackControls();
+  const seekBarVisible = await detailsPage.isSeekBarVisible().catch(() => false);
+  logger.assertion('Seek bar is visible before less-than-5% seek', seekBarVisible);
   await detailsPage.dragSeekBarToPosition(0.02);
-  await detailsPage.hoverPlaybackScreen();
+  await detailsPage.hoverPlaybackControls();
   await detailsPage.clickBackButton();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   await authPage.clickHomeTab();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await authPage.refreshPage();
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
@@ -1901,21 +1900,7 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
   const parentalPin = input?.parentalPin?.trim();
   logger.step('Starting 50% playback verification flow for Continue Watching tray');
   const loginResult = await loginToOTT(page, { mode });
-  const gql = GraphQLHelper.getInstance(page);
   let searchTerm = '';
-  try {
-    const collectionOp = await gql.waitForOperation('Collection', 20000).catch(() => null);
-    if (collectionOp && collectionOp.response) {
-      const parser = new CollectionParser(collectionOp as any);
-      searchTerm = parser.getPreferredAssetTitle([/movies/i, 'movies']) || '';
-      if (!searchTerm) {
-        const titles = parser.getPreferredRailTitles([/movies/i, 'movies'], 1);
-        searchTerm = titles && titles.length ? titles[0] : '';
-      }
-    }
-  } catch (err) {
-    logger.debug('Failed to obtain collection data for movie selection', err);
-  }
   if (!loginResult.isLoggedIn) {
     return {
       isValid: false,
@@ -1924,41 +1909,41 @@ export async function verifyContinueWatchingTrayAfterFiftyPercentPlayback(
       reason: 'Login was not successful before the playback flow started',
     };
   }
-  if (!searchTerm) {
+  await authPage.waitForContinueWatchingTrayToBeReady();
+  await authPage.clickMoviesTab();
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
+  const selectedMovieTitle = await detailsPage.clickFirstMovieContent();
+  if (!selectedMovieTitle) {
     return {
       isValid: false,
       trayVisible: false,
       contentAppearsInTray: false,
-      reason: 'Could not determine a movie title from Collection GraphQL for the 50% playback validation',
+      reason: 'No movie content was available to open from the Movies tab',
     };
   }
-  await authPage.waitForContinueWatchingTrayToBeReady();
-  await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(searchTerm);
-  await authPage.submitSearchQuery();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(3000);
-  await detailsPage.clickFirstSearchResult();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(3000);
+  searchTerm = selectedMovieTitle.trim();
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  const playerReady = await detailsPage.waitForPlayerReady(30000);
+  logger.assertion('Movie player became ready before 50% seek', playerReady);
   await detailsPage.hoverPlaybackControls();
+  const seekBarVisible = await detailsPage.isSeekBarVisible().catch(() => false);
+  logger.assertion('Seek bar is visible before 50% seek', seekBarVisible);
   await detailsPage.dragSeekBarToPosition(0.50);
   await detailsPage.hoverPlaybackControls();
   await detailsPage.clickBackButton();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
   await authPage.clickHomeTab();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => undefined);
   await authPage.refreshPage();
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
   await page.waitForTimeout(5000);
   const trayVisible = await authPage.isContinueWatchingTrayTitleVisible();
-  const trayItemTitles = await authPage.getContinueWatchingTrayItemTitles();
-  const contentAppearsInTray = trayItemTitles.some((title) => title.toLowerCase().includes(searchTerm.toLowerCase()));
+  const contentAppearsInTray = trayVisible
+    ? await authPage.isContinueWatchingItemVisible(searchTerm)
+    : false;
   const progressBarPercentage = await authPage.getContinueWatchingProgressBarPercentage(searchTerm);
   const progressPercentageValid = progressBarPercentage > 0 && Math.abs(progressBarPercentage - 50) <= 2;
   logger.assertion('Continue Watching tray visible after 50% playback', trayVisible);

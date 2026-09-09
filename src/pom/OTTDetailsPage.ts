@@ -1299,28 +1299,30 @@ export class OTTDetailsPage {
 
   private matchesSeasonSelection(text: string, requestedSeason?: string): boolean {
     if (!requestedSeason) return true;
-    const normalizedText = this.normalizeSelectionToken(text);
-    const normalizedRequestedSeason = this.normalizeSelectionToken(requestedSeason);
-    if (!normalizedRequestedSeason) return true;
-    if (normalizedText.includes(normalizedRequestedSeason)) {
-      return true;
+    const requestedSeasonNumber = Number((requestedSeason.match(/(\d+)/)?.[1] || ''));
+    if (!Number.isFinite(requestedSeasonNumber)) {
+      return false;
     }
     const seasonMatch = text.match(/S(?:eason\s*)?(\d+)/i);
-    const requestedSeasonMatch = requestedSeason.match(/(\d+)/);
-    return Boolean(seasonMatch?.[1] && requestedSeasonMatch?.[1] && seasonMatch[1] === requestedSeasonMatch[1]);
+    const candidateSeasonNumber = seasonMatch ? Number(seasonMatch[1]) : NaN;
+    if (!Number.isFinite(candidateSeasonNumber)) {
+      return this.normalizeSelectionToken(text).includes(this.normalizeSelectionToken(requestedSeason));
+    }
+    return candidateSeasonNumber === requestedSeasonNumber;
   }
 
   private matchesEpisodeSelection(text: string, requestedEpisode?: string): boolean {
     if (!requestedEpisode) return true;
-    const normalizedText = this.normalizeSelectionToken(text);
-    const normalizedRequestedEpisode = this.normalizeSelectionToken(requestedEpisode);
-    if (!normalizedRequestedEpisode) return true;
-    if (normalizedText.includes(normalizedRequestedEpisode)) {
-      return true;
+    const requestedEpisodeNumber = Number((requestedEpisode.match(/(\d+)/)?.[1] || ''));
+    if (!Number.isFinite(requestedEpisodeNumber)) {
+      return false;
     }
     const episodeMatch = text.match(/E(\d+)/i);
-    const requestedEpisodeMatch = requestedEpisode.match(/(\d+)/);
-    return Boolean(episodeMatch?.[1] && requestedEpisodeMatch?.[1] && episodeMatch[1] === requestedEpisodeMatch[1]);
+    const candidateEpisodeNumber = episodeMatch ? Number(episodeMatch[1]) : NaN;
+    if (!Number.isFinite(candidateEpisodeNumber)) {
+      return this.normalizeSelectionToken(text).includes(this.normalizeSelectionToken(requestedEpisode));
+    }
+    return candidateEpisodeNumber === requestedEpisodeNumber;
   }
 
   async selectEpisodeBySeasonAndEpisode(
@@ -2909,16 +2911,27 @@ export class OTTDetailsPage {
 
   async isContentDetailsPageVisible(): Promise<boolean> {
     try {
-      await this.page.waitForURL(/\/details\//, { timeout: 20000 });
+      await this.page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => undefined);
+      const currentUrl = this.page.url();
+      const hasDetailsRoute = /(\/details\/|\/content\/|\/show\/)/i.test(currentUrl);
       const headingLocator = this.page.locator(this.contentDetailsHeading.selector).first();
-      if (await headingLocator.count().catch(() => 0)) {
-        return await headingLocator.isVisible().catch(() => false);
+      const headingVisible = await headingLocator.count().catch(() => 0)
+        ? await headingLocator.isVisible().catch(() => false)
+        : false;
+      if (headingVisible) {
+        return true;
       }
       const metadataLocator = this.page.locator(this.contentMetadata.selector).first();
-      if (await metadataLocator.count().catch(() => 0)) {
-        return await metadataLocator.isVisible().catch(() => false);
+      const metadataVisible = await metadataLocator.count().catch(() => 0)
+        ? await metadataLocator.isVisible().catch(() => false)
+        : false;
+      if (metadataVisible) {
+        return true;
       }
-      return this.page.url().includes('/details/') || this.page.url().includes('/content/') || this.page.url().includes('/show/');
+      if (hasDetailsRoute) {
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }

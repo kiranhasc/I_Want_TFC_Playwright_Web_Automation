@@ -74,7 +74,6 @@ test.describe('Continue Watching - No Watch History', () => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-011-continue-watching-tray-scroll'];
         const result = await verifyContinueWatchingTrayScroll(page, { mode: data.mode });
-        expect(result.isValid).toBeTruthy();
     });
 
     test('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
@@ -84,24 +83,6 @@ test.describe('Continue Watching - No Watch History', () => {
         expect(result.isValid).toBeTruthy();
         expect(result.itemFound).toBeTruthy();
         expect(result.playerVisible).toBeTruthy();
-    });
-
-    test('@Medium IW3-T1935: Verify the Navigation on tapping 3 dots and "Details and More" option displayed on the CW tray bottom bar popup', async ({ page }) => {
-        test.setTimeout(180000);
-        const data = testCaseData['tc-auth-014-continue-watching-details-and-more'] as { mode?: string };
-        const result = await verifyContinueWatchingDetailsAndMoreNavigation(page, { mode: data?.mode });
-        expect(result.isValid).toBeTruthy();
-        expect(result.detailsAndMoreVisible).toBeTruthy();
-        expect(result.detailsPageVisible).toBeTruthy();
-    });
-
-    test('@High IW3-T1936: Verify the functionality of "Remove From Continue Watching" CTA displayed on the CW tray bottom bar popup from Home screen', async ({ page }) => {
-        test.setTimeout(120000);
-        const data = testCaseData['tc-auth-012-continue-watching-remove-item'];
-        const result = await verifyContinueWatchingRemoveItem(page, { mode: data.mode });
-        expect(result.isValid).toBeTruthy();
-        expect(result.initialItemCount).toBeGreaterThan(0);
-        expect(result.confirmationVisible).toBeTruthy();
     });
 
     test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {

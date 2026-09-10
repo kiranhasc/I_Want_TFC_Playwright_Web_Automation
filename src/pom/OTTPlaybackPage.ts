@@ -59,7 +59,7 @@ export class OTTPlaybackPage {
         this.contentCard = { selector: 'a[href*="/player/"], [data-testid*="content"], [data-testid*="card"], .thumbnail, .poster, [class*="poster"], [class*="thumbnail"]' };
         this.playButton = { text: 'Play', selector: 'button:has-text("Play"), a:has-text("Play"), [aria-label*="Play"]' };
         this.subscribeButton = { text: 'Subscribe', selector: 'button:has-text("Subscribe"), a:has-text("Subscribe"), [aria-label*="Subscribe"]' };
-        this.playerContainer = { selector: 'video, [data-testid*="player"], [class*="player"], [id*="player"]' };
+        this.playerContainer = { selector: '//div[@class="player-video-controls"]' };
         this.videoElement = { selector: 'video' };
         this.premiumGateMessage = { selector: 'h2', text: 'A valid subscription is required to view this content. Please subscribe or renew your plan.' };
         this.maybeLaterButton = { text: 'Maybe Later', selector: 'text=Maybe Later' };

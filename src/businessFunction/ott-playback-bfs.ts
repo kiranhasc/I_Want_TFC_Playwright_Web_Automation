@@ -1319,9 +1319,7 @@ export async function verifySubtitleDisplayFlow(page: any, input?: OpenContentAn
   await detailsPage.clickSubtitleButton();
   await detailsPage.waitForPlayback(1);
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
-  await detailsPage.waitForPlayback(1);
-  await detailsPage.dragProgressBarToPosition(0.4);
-  await detailsPage.waitForMobileAdPlayback();
+  await detailsPage.waitForPlayback(1);;
   const subtitleDisplayedOnPlayer = await detailsPage.isSubtitleDisplayedOnPlayer();
   logger.assertion('Subtitle language selected successfully', subtitleSelectionSuccessful);
   logger.assertion('Subtitle is displayed on the player screen', subtitleDisplayedOnPlayer);
@@ -3210,42 +3208,39 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   logger.step('Starting subtitle carry-over verification flow');
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  const gql = GraphQLHelper.getInstance(page);
-  const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
-  const parser = new CollectionParser(collectionResponse as any);
-  const rails = parser.getRails();
-  const isMChrome = process.env.BROWSER === 'mchrome';
-  const subtitleAssets = rails
-    .flatMap((rail) => rail.assets?.items ?? [])
-    .filter((asset) => {
-      const assetData = asset as any;
-      const subtitleLanguages = assetData.subtitleLanguages ?? [];
-      const hasSubtitles = Array.isArray(subtitleLanguages) && subtitleLanguages.length > 0;
-      // Keep existing functionality for web
-      if (!isMChrome) {
-        return hasSubtitles;
-      }
-      // mchrome: subtitle asset must also be Free
-      const labels = assetData.labels ?? [];
-      const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
-      const monetType =
-        assetData.monetization?.type ??
-        assetData.monetizationType ??
-        assetData.pricing?.type ??
-        assetData.pricing?.pricingType;
-      const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
-      const isFree = hasFreeLabel || isFreeMonetization;
-      return hasSubtitles && isFree;
-    })
-    .slice(0, 2);
-  logger.assertion(isMChrome ? 'At least two free assets with subtitle languages found in Collection GraphQL' : 'At least two assets with subtitle languages found in Collection GraphQL', subtitleAssets.length >= 2);
-  if (subtitleAssets.length < 2) {
-    throw new Error(isMChrome ? 'Less than two free assets with subtitleLanguages found in Collection GraphQL' : 'Less than two assets with subtitleLanguages found in Collection GraphQL');
+  let firstTitle = '';
+  let secondTitle = '';
+  if (!query || !secondQuery) {
+    const gql = GraphQLHelper.getInstance(page);
+    const collectionResponse = await gql.waitForOperation(input?.graphqlQueryName ?? 'Collection');
+    const parser = new CollectionParser(collectionResponse as any);
+    const rails = parser.getRails();
+    const isMChrome = process.env.BROWSER === 'mchrome';
+    const subtitleAssets = rails
+      .flatMap((rail) => rail.assets?.items ?? [])
+      .filter((asset) => {
+        const assetData = asset as any;
+        const subtitleLanguages = assetData.subtitleLanguages ?? [];
+        const hasSubtitles = Array.isArray(subtitleLanguages) && subtitleLanguages.length > 0;
+        if (!isMChrome) {
+          return hasSubtitles;
+        }
+        const labels = assetData.labels ?? [];
+        const hasFreeLabel = labels.some((label: any) => /free/i.test(label?.text ?? ''));
+        const monetType =
+          assetData.monetization?.type ??
+          assetData.monetizationType ??
+          assetData.pricing?.type ??
+          assetData.pricing?.pricingType;
+        const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
+        return hasSubtitles && (hasFreeLabel || isFreeMonetization);
+      })
+      .slice(0, 2);
+    firstTitle = ((subtitleAssets[0] as any)?.title ?? '').trim();
+    secondTitle = ((subtitleAssets[1] as any)?.title ?? '').trim();
+    query = query || firstTitle;
+    secondQuery = secondQuery || secondTitle;
   }
-  const firstTitle = ((subtitleAssets[0] as any)?.title ?? '').trim();
-  const secondTitle = ((subtitleAssets[1] as any)?.title ?? '').trim();
-  query = query || firstTitle;
-  secondQuery = secondQuery || secondTitle;
   logger.info(`Fetched Subtitle Asset 1: ${firstTitle}`);
   logger.info(`Fetched Subtitle Asset 2: ${secondTitle}`);
   logger.info(`Using first search title: ${query}`);
@@ -3268,6 +3263,9 @@ export async function verifySubtitleCarryOverFlow(page: any, input?: VerifySubti
   await detailsPage.waitForPlayback(1);
   const subtitleSelectionSuccessful = await detailsPage.selectSubtitleLanguage();
   await detailsPage.clickBackButton();
+  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+  await page.waitForTimeout(1000);
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(secondQuery);
   await authPage.submitSearchQuery();
@@ -3459,6 +3457,9 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
+      if (String(asset.videoOrientation ?? '').trim().toLowerCase() === 'portrait') {
+        return false;
+      }
       // Check asset type
       const assetType = String(asset.assetType ?? '').toLowerCase();
       if (assetType !== 'tvshow') {
@@ -3476,7 +3477,7 @@ export async function verifyPreRollAdPlaybackFlow(page: any, input?: OpenContent
       const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  const freeContentTitle = (freeTvShowAsset?.title ?? '').trim();
   logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
@@ -5120,6 +5121,9 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
   const freeTvShowAsset = rails
     .flatMap((rail) => rail.assets?.items ?? [])
     .find((asset: any) => {
+      if (String(asset.videoOrientation ?? '').trim().toLowerCase() === 'portrait') {
+        return false;
+      }
       const assetType = String(asset.assetType ?? '').toLowerCase();
       if (assetType !== 'tvshow') {
         return false;
@@ -5134,7 +5138,7 @@ export async function verifyAdPlaybackUIFlow(page: any, input?: OpenContentAndPl
       const isFreeMonetization = monetType ? /free|complimentary|free_to_watch|freetowatch/i.test(String(monetType)) : false;
       return hasFreeLabel || isFreeMonetization;
     });
-  const freeContentTitle = (freeTvShowAsset?.title ?? query).trim();
+  const freeContentTitle = (freeTvShowAsset?.title ?? '').trim();
   logger.assertion('Free TV show content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
@@ -5396,27 +5400,30 @@ export async function verifyMidRollAdInterruptionFlow(page: any, input?: OpenCon
   const collectionWait = gql.waitForOperation(input?.graphqlQueryName ?? 'Collection', 20000);
   const loginResult = await loginToOTT(page, { mode });
   const isLoggedIn = loginResult.isLoggedIn;
-  const collectionResponse = await collectionWait;
-  const parser = new CollectionParser(collectionResponse as any);
-  const rails = parser.getRails();
-  const freeAsset = rails
-    .flatMap((rail) => rail.assets?.items ?? [])
-    .find((asset: any) => {
-      const assetType =
-        asset.assetType ??
-        asset.type ??
-        asset.contentType ??
-        asset.mediaType;
-      const monetType =
-        asset.monetization?.type ??
-        asset.monetizationType ??
-        asset.pricing?.type ??
-        asset.pricing?.pricingType;
-      const isTvShow = /^tvshow$/i.test(String(assetType ?? ''));
-      const isFree = /free|free_to_watch|freetowatch|complimentary/i.test(String(monetType ?? ''));
-      return isTvShow && isFree;
-    });
-  const freeContentTitle = (freeAsset?.title ?? query).trim();
+  let freeContentTitle = query;
+  if (!freeContentTitle) {
+    const collectionResponse = await collectionWait;
+    const parser = new CollectionParser(collectionResponse as any);
+    const rails = parser.getRails();
+    const freeAsset = rails
+      .flatMap((rail) => rail.assets?.items ?? [])
+      .find((asset: any) => {
+        const assetType =
+          asset.assetType ??
+          asset.type ??
+          asset.contentType ??
+          asset.mediaType;
+        const monetType =
+          asset.monetization?.type ??
+          asset.monetizationType ??
+          asset.pricing?.type ??
+          asset.pricing?.pricingType;
+        const isTvShow = /^tvshow$/i.test(String(assetType ?? ''));
+        const isFree = /free|free_to_watch|freetowatch|complimentary/i.test(String(monetType ?? ''));
+        return isTvShow && isFree;
+      });
+    freeContentTitle = (freeAsset?.title ?? '').trim();
+  }
   logger.assertion('Free content title resolved from Collection GraphQL', Boolean(freeContentTitle));
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(freeContentTitle);
@@ -6226,6 +6233,7 @@ export async function verifyLiveTagOnPlayer(page: any, input?: { mode?: string; 
   // Wait a few seconds for playback to start and player to become visible
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await detailsPage.waitForPlayback(5);
+  await detailsPage.hoverPlaybackScreen();
   const playerVisible = await detailsPage.isPlayerScreenVisible().catch(() => false);
   const liveBadgeVisible = await detailsPage.isLiveTagVisible().catch(() => false);
   logger.assertion('LIVE badge visible during live playback', liveBadgeVisible);

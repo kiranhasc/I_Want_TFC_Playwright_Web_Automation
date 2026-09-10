@@ -219,6 +219,8 @@ export interface ContentUpdatedInContinueWatchingOutput {
   isValid: boolean;
   contentRemainsInTray: boolean;
   progressBarVisible: boolean;
+  contentTitleMatches: boolean;
+  sameContentMatches: boolean;
   selectedContentName: string;
   playerTimerBeforeExit: string;
   trayVisible: boolean;
@@ -2627,7 +2629,7 @@ export async function verifyContentUpdatedInContinueWatchingTray(
  const parentalPin = input?.parentalPin;
  
   const seekMinutes = input?.seekMinutes ?? 1;
-  const loginResult = await loginToOTT(page, { mode });
+  const loginResult = await loginToOTT(page, { mode, reuseSession: false });
   const isLoggedIn = loginResult.isLoggedIn;
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   let trayTitleVisible = await authPage.isContinueWatchingTrayTitleVisible();
@@ -2652,6 +2654,8 @@ export async function verifyContentUpdatedInContinueWatchingTray(
       isValid: false,
       contentRemainsInTray: false,
       progressBarVisible: false,
+      contentTitleMatches: false,
+      sameContentMatches: false,
       selectedContentName: '',
       playerTimerBeforeExit: '',
       trayVisible: false,
@@ -2668,6 +2672,8 @@ export async function verifyContentUpdatedInContinueWatchingTray(
       isValid: false,
       contentRemainsInTray: false,
       progressBarVisible: false,
+      contentTitleMatches: false,
+      sameContentMatches: false,
       selectedContentName: '',
       playerTimerBeforeExit: '',
       trayVisible: true,
@@ -2676,11 +2682,18 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   }
   const firstItem = trayItems.first();
   await firstItem.scrollIntoViewIfNeeded();
-  const selectedContentName = ((await firstItem.getAttribute('alt')) || '').trim();
-  logger.step(`Selected content from CW tray: "${selectedContentName}"`);
+  const trayContentName = ((await firstItem.getAttribute('alt')) || '').trim();
+  logger.step(`Selected content from CW tray: "${trayContentName}"`);
   await firstItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
+  const detailsContentName = (await detailsPage.getShowDetailsHeadingText().catch(() => '')).trim();
+  const selectedContentName = detailsContentName || trayContentName;
+  const contentTitleMatches = Boolean(
+    trayContentName && selectedContentName
+      && (trayContentName.toLowerCase().includes(selectedContentName.toLowerCase())
+        || selectedContentName.toLowerCase().includes(trayContentName.toLowerCase()))
+  );
   await detailsPage.clickResumeAction().catch(() => undefined);
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -2699,40 +2712,49 @@ export async function verifyContentUpdatedInContinueWatchingTray(
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(3000);
   await authPage.ensureContinueWatchingTrayInView();
-  const traySectionSecond = await authPage.getContinueWatchingTraySection();
-  const reloadedItems = traySectionSecond.locator(cardSelector);
-  const reloadedCount = await reloadedItems.count().catch(() => 0);
-  let sameContentItem: any = null;
-  for (let i = 0; i < reloadedCount; i++) {
-    const candidate = reloadedItems.nth(i);
-    const alt = ((await candidate.getAttribute('alt')) || '').trim();
-    if (alt && selectedContentName && alt.toLowerCase().includes(selectedContentName.toLowerCase())) {
-      sameContentItem = candidate;
-      break;
+  const secondOpenVisible = await authPage.isContinueWatchingItemVisible(selectedContentName).catch(() => false)
+    || Boolean(await authPage.getContinueWatchingTrayItemCount().catch(() => 0));
+  let sameContentMatches = false;
+  if (secondOpenVisible) {
+    const secondTraySection = await authPage.getContinueWatchingTraySection();
+    const secondTrayItems = secondTraySection.locator(cardSelector);
+    const secondCount = await secondTrayItems.count().catch(() => 0);
+    let secondCandidate: any = null;
+    for (let index = 0; index < secondCount; index += 1) {
+      const candidate = secondTrayItems.nth(index);
+      const candidateAlt = ((await candidate.getAttribute('alt')) || '').trim();
+      const candidateAncestor = candidate.locator('xpath=ancestor::div[contains(@class,"relative") or contains(@class,"card") or contains(@class,"cursor-pointer") or contains(@class,"group")][1]').first();
+      const candidateText = `${candidateAlt} ${(await candidateAncestor.textContent().catch(() => ''))}`.toLowerCase();
+      if (candidateText.includes(selectedContentName.toLowerCase()) || candidateAlt.toLowerCase() === trayContentName.toLowerCase()) {
+        secondCandidate = candidate;
+        break;
+      }
+    }
+    secondCandidate ??= secondCount > 0 ? secondTrayItems.first() : null;
+    if (secondCandidate) {
+      await secondCandidate.scrollIntoViewIfNeeded();
+      await secondCandidate.click({ force: true, timeout: 30000 }).catch(() => undefined);
+      await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await page.waitForTimeout(3000);
+      const secondDetailsContentName = (await detailsPage.getShowDetailsHeadingText().catch(() => '')).trim();
+      sameContentMatches = Boolean(
+        secondDetailsContentName && selectedContentName
+          && secondDetailsContentName.toLowerCase() === selectedContentName.toLowerCase()
+      );
+      await detailsPage.clickResumeAction().catch(() => undefined);
+      await detailsPage.handleParentalPinFlow(undefined, parentalPin);
+      await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await page.waitForTimeout(3000);
+      await detailsPage.hoverPlaybackControls().catch(() => undefined);
+      await detailsPage.clickBackButton().catch(() => undefined);
+      await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await page.waitForTimeout(3000);
+      await authPage.clickHomeTab();
+      await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+      await page.waitForTimeout(3000);
+      await authPage.ensureContinueWatchingTrayInView();
     }
   }
-  if (!sameContentItem && reloadedCount > 0) {
-    sameContentItem = reloadedItems.first();
-  }
-  if (sameContentItem) {
-    await sameContentItem.scrollIntoViewIfNeeded();
-    await sameContentItem.click({ force: true, timeout: 30000 }).catch(() => undefined);
-    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-    await page.waitForTimeout(3000);
-    await detailsPage.clickResumeAction().catch(() => undefined);
-    await detailsPage.handleParentalPinFlow(undefined, parentalPin);
-    await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-    await page.waitForTimeout(3000);
-  }
-  await detailsPage.hoverPlaybackControls().catch(() => undefined);
-  await page.waitForTimeout(500);
-  await detailsPage.clickBackButton().catch(() => undefined);
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(3000);
-  await authPage.clickHomeTab();
-  await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
-  await page.waitForTimeout(3000);
-  await authPage.ensureContinueWatchingTrayInView();
   const trayVisible = await authPage.isContinueWatchingTrayTitleVisible();
   const contentRemainsInTray = selectedContentName
     ? await authPage.isContinueWatchingItemVisible(selectedContentName)
@@ -2747,12 +2769,14 @@ export async function verifyContentUpdatedInContinueWatchingTray(
     `Progress bar percentage extracted: ${progressBarPercentage}%`,
     progressBarVisible
   );
-  const isValid = trayVisible && contentRemainsInTray && progressBarVisible;
+  const isValid = trayVisible && contentTitleMatches && sameContentMatches && contentRemainsInTray && progressBarVisible;
   logger.assertion('Content updated in CW tray after partial watch', isValid);
   return {
     isValid,
     contentRemainsInTray,
     progressBarVisible,
+    contentTitleMatches,
+    sameContentMatches,
     selectedContentName,
     playerTimerBeforeExit,
     trayVisible,
@@ -2809,14 +2833,32 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   await authPage.enterSearchQuery(selectedContentName);
   await authPage.submitSearchQuery();
   await page.waitForTimeout(5000);
-  await detailsPage.clickFirstSearchResult();
+  const initialDetailsNavigation = await detailsPage.clickSearchResultByTitle(selectedContentName);
+  if (!initialDetailsNavigation) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `Could not navigate to the details page for selected show "${selectedContentName}" before playback`,
+    };
+  }
   const selectedEpisode = await detailsPage.selectEpisodeBySeasonAndEpisode(input?.season, input?.episodeName);
   logger.info('Selected episode metadata for playback', selectedEpisode);
+  if (!selectedEpisode.selected) {
+    return {
+      isValid: false,
+      detailsPageVisible: true,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `Could not select ${input?.season || 'default season'} ${input?.episodeName || 'default episode'} for "${selectedContentName}"`,
+    };
+  }
   await detailsPage.clickPlayButton();
   await detailsPage.handleParentalPinFlow(undefined, parentalPin);
   await page.waitForTimeout(4000);
-  await detailsPage.dragSeekBarByMinutes(1);
-  await page.waitForTimeout(5000);
+  await detailsPage.dragSeekBarToPosition(0.40);
+  await page.waitForTimeout(10000);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickBackButton();
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
@@ -2827,7 +2869,7 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
   await authPage.waitForContinueWatchingTrayToBeReady();
   await authPage.ensureContinueWatchingTrayInView();
   const traySection = await authPage.getContinueWatchingTraySection();
-  const trayCards = traySection.locator('img[alt]:not([alt="arrow-right"])');
+  const trayCards = traySection.locator(authPage.getContinueWatchingCardSelector());
   const cardCount = await trayCards.count().catch(() => 0);
   if (!cardCount) {
     return {
@@ -2838,15 +2880,53 @@ export async function verifyResumeToPlayAfterRemovingFromContinueWatching(
       reason: 'No Continue Watching cards were available to validate the removal regression flow',
     };
   }
-  await trayCards.first().hover({ timeout: 30000 }).catch(() => undefined);
-  const removeResult = await authPage.removeFirstContinueWatchingItem();
+  const selectedContentInTray = await authPage.isContinueWatchingItemVisible(selectedContentName).catch(() => false);
+  if (!selectedContentInTray) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `Selected series "${selectedContentName}" was not found in the Continue Watching tray after playback`,
+    };
+  }
+  const hoverTargetAlt = selectedEpisode.title || 'Recruit';
+  const hoveredContinueWatchingItem = await authPage.hoverContinueWatchingItemByImageAlt(hoverTargetAlt).catch(() => false);
+  if (!hoveredContinueWatchingItem) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `Could not hover Continue Watching item with image alt "${hoverTargetAlt}"`,
+    };
+  }
+  const removeResult = await authPage.removeFirstContinueWatchingItem(selectedContentName);
+  if (!removeResult.clicked) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `Could not click the Continue Watching remove control for "${selectedContentName}"`,
+    };
+  }
   await authPage.refreshPage();
   await page.waitForTimeout(4000);
   await authPage.clickSearchBar();
   await authPage.enterSearchQuery(selectedContentName);
   await authPage.submitSearchQuery();
   await page.waitForTimeout(4000);
-  await detailsPage.clickFirstSearchResult();
+  const finalDetailsNavigation = await detailsPage.clickSearchResultByTitle(selectedContentName);
+  if (!finalDetailsNavigation) {
+    return {
+      isValid: false,
+      detailsPageVisible: false,
+      playActionVisible: false,
+      defaultEpisodeRetained: false,
+      reason: `After Continue Watching removal, search did not navigate to the details page for "${selectedContentName}"`,
+    };
+  }
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
   await page.waitForTimeout(5000);
   const detailsPageVisible = await detailsPage.isContentDetailsPageVisible().catch(() => false);

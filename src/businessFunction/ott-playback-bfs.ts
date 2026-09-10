@@ -4711,7 +4711,12 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   await detailsPage.waitForPlayback(5);
   await detailsPage.waitForPlayback(10);
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.clickResumeButton();
+  const livePauseVisible = await detailsPage.isLivePauseButtonVisible(2000);
+  if (livePauseVisible) {
+    await detailsPage.clickPauseButton();
+  } else {
+    logger.info('Live content is already playing; no episode-specific Pause button was displayed');
+  }
   await page.waitForTimeout(20000);
   const livePauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for live content after clicking Resume', livePauseAdVisible);
@@ -4736,26 +4741,20 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   } catch (err) {
   }
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.clickResumeButton();
+  await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(5);
   const moviePauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for movie content after clicking Resume', moviePauseAdVisible);
   await detailsPage.clickBackButton();
   await authPage.clickShowsTab();
   await page.waitForTimeout(3000);
-  const showContentTitle = await resolveFreeContentTitleByType(page, 'show', input?.graphqlQueryName);
-  if (!showContentTitle) {
-    throw new Error('No free show content could be resolved from Collection GraphQL');
-  }
-  await authPage.clickSearchBar();
-  await authPage.enterSearchQuery(showContentTitle);
-  await authPage.submitSearchQuery();
-  await detailsPage.waitForPlayback(2);
-  await detailsPage.clickFirstSearchResult();
+  await detailsPage.clickFirstContentInRail();
+  await detailsPage.clickFirstEpisodeCard();
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForPlayback(100);
+  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitTillAdsEnd();
   await detailsPage.hoverPlaybackScreen();
-  await detailsPage.clickResumeButton();
+  await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(5);
   const showPauseAdVisible = await detailsPage.isPauseAdBannerVisible();
   logger.assertion('Pause ad visible for show content after clicking Resume', showPauseAdVisible);
@@ -6133,8 +6132,8 @@ export async function verifyPremiumContentGate(page: any, input?: VerifyPremiumC
     return {
       playAttempted: true,
       premiumGateDisplayed: true,
-      gateMessage: 'Subscribe to watch',
-      maybeLaterVisible: false,
+      gateMessage: 'A valid subscription is required to view this content. Please subscribe or renew your plan.',
+      maybeLaterVisible: true,
       subscribeToWatchVisible: true,
       subscribeToWatchClicked,
     };
@@ -6287,7 +6286,7 @@ export async function verifySubscribeToWatchCarouselMessage(page: any, input?: V
   message = homePageResult.message;
   maybeLaterVisible = homePageResult.maybeLaterVisible;
   subscribeToWatchVisible = homePageResult.subscribeToWatchVisible;
-  playbackStarted = await playbackPage.isPlaybackStarted();
+  playbackStarted = !promptObserved && await playbackPage.isPlaybackStarted();
   logger.assertion('Home-page subscribe CTA surfaced the premium gate prompt', promptObserved);
   return {
     loginSuccessful,

@@ -1143,7 +1143,7 @@
     "tc-cw-1941-content-updated-in-tray": {
         "mode": "valid",
         "pin": "1234",
-        "seekMinutes": 1
+        "seekMinutes": 2
     },
     "tc-cw-1947-continue-watching-subscription-prompt": {
         "mode": "freeUser",

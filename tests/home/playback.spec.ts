@@ -336,7 +336,7 @@ test.describe('Play Back', () => {
     const data = testData['tc-sub-011-pre-roll-ad'] as Record<string, any>;
     const result = await verifyMidRollAdInterruptionFlow(page, {
       mode: data.mode,
-      graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
       parentalPin: data.pin,
     });
 
@@ -448,6 +448,8 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleCarryOverFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
+      secondQuery: data.secondQuery,
       parentalPin: data.pin,
     });
 
@@ -461,6 +463,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleDefaultOffFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
       parentalPin: data.pin,
     });
 
@@ -474,6 +477,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleDisplayFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
       parentalPin: data.pin,
     });
 
@@ -487,6 +491,7 @@ test.describe('Play Back', () => {
     const result = await verifySubtitleSynchronizationFlow(page, {
       mode: data.mode,
       graphqlQueryName: data.graphqlQueryName,
+      query: data.query,
       parentalPin: data.pin,
     });
 

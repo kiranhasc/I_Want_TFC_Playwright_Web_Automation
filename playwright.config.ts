@@ -159,6 +159,7 @@ export default defineConfig({
         ? `dashboard/data/reports/${dashboardRunId}.json`
         : 'test-results/results.json',
     }],
+    ['./src/reporters/test-suite-summary-reporter.ts'],
     ['./dashboard/reporter/dashboard-reporter.js'],
   ],
 

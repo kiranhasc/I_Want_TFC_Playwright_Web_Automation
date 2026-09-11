@@ -4751,9 +4751,11 @@ export async function verifyPauseAdAppearsOnPlayerScreenFlow(page: any, input?: 
   await page.waitForTimeout(3000);
   await detailsPage.clickFirstContentInRail();
   await detailsPage.clickFirstEpisodeCard();
+  await detailsPage.waitForPlayerReady(20000);
   await detailsPage.clickPlayButton();
-  await detailsPage.waitForPlayback(5);
+  await detailsPage.waitForPlayback(4);
   await detailsPage.waitTillAdsEnd();
+  await detailsPage.waitForPlayerReady(20000);
   await detailsPage.hoverPlaybackScreen();
   await detailsPage.clickPauseButton();
   await detailsPage.waitForPlayback(5);

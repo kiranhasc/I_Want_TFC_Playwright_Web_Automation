@@ -73,7 +73,7 @@ export class OTTPlaybackPage {
         this.watchlistNavLink = { text: 'My Watchlist', selector: 'text=/My Watchlist|Watchlist/i' };
         this.watchlistContentItem = { selector: 'a[href*="/player/"], a[href*="/detail"], [data-testid*="watchlist"], [class*="watchlist"] a, [class*="poster"], [class*="thumbnail"]' };
         this.watchlistPlayButton = { selector: 'button:has-text("Play"), button:has-text("Resume"), a:has-text("Play"), a:has-text("Resume"), [aria-label*="Play"], [aria-label*="Resume"]' };
-        this.paidContentBadge = { selector: 'img[alt*="paid"], [alt*="paid"], [data-testid*="paid"], img[alt="tag"], img[aria-label="tag"], img[title="tag"]' };
+        this.paidContentBadge = { selector: '//img[@alt="tag"]' };
         this.subscribePromptText = { selector: 'text=/Subscribe to watch|Subscribe to Watch/i' };
         this.seekBar = { selector: '.player-progress-indicator' };
         this.titleSelector = { selector: '[data-testid="player-title"], .player-title, .video-title, .player-header h1, h1' };
@@ -329,12 +329,13 @@ export class OTTPlaybackPage {
     async tryHomePageContentForSubscribeCTA(): Promise<{ found: boolean; message: string; maybeLaterVisible: boolean; subscribeToWatchVisible: boolean; premiumGateVisible: boolean }> {
         const isMobile = process.env.BROWSER === 'mchrome';
         const initialNetworkWaitTime = isMobile ? 30000 : 20000;
-        const interactionWaitTime = isMobile ? 15000 : 10000;    
+        const interactionWaitTime = isMobile ? 1500 : 1000;
         
         logger.step('Waiting for carousel content to load');
-        await this.pageUtils.waitForNetworkIdle(initialNetworkWaitTime).catch(() => logger.debug('Initial network idle timeout'));
-        
         const paidIndicators = this.page.locator(this.paidContentBadge.selector);
+        await paidIndicators.first().waitFor({ state: 'visible', timeout: initialNetworkWaitTime })
+            .catch(() => logger.debug('Paid carousel indicator did not become visible before timeout'));
+        logger.debug('Finished waiting for the paid carousel indicator');
         const paidCount = await paidIndicators.count().catch(() => 0);
         
         if (paidCount === 0) {
@@ -369,11 +370,15 @@ export class OTTPlaybackPage {
                 } else {
                     await paidIndicator.click({ timeout: 5000, force: true }).catch(() => undefined);
                 }
-                await this.page.waitForTimeout(2000);
-                await this.pageUtils.waitForNetworkIdle(interactionWaitTime).catch(() => logger.debug('Network idle after click timeout'));
-                const premiumGateVisible = await this.isPremiumContentGateVisible().catch(() => false);
-                const maybeLaterVisible = await this.isMaybeLaterVisible().catch(() => false);
-                const subscribeToWatchVisible = await this.isSubscribeToWatchVisible().catch(() => false);
+                await this.page.waitForTimeout(1000);
+                await this.page.waitForTimeout(interactionWaitTime);
+                const bodyText = await this.page.locator('body').innerText().catch(() => '');
+                const premiumGateVisible = bodyText.toLowerCase().includes('a valid subscription is required to view this content')
+                    || await this.page.locator(this.premiumGateMessage.selector).first().isVisible({ timeout: 1000 }).catch(() => false);
+                const maybeLaterVisible = bodyText.toLowerCase().includes('maybe later')
+                    || await this.page.locator(this.maybeLaterButton.selector).first().isVisible({ timeout: 1000 }).catch(() => false);
+                const subscribeToWatchVisible = bodyText.toLowerCase().includes('subscribe to watch')
+                    || await this.page.locator(this.subscribeToWatchButton.selector).first().isVisible({ timeout: 1000 }).catch(() => false);
                 let message = '';
                 if (subscribeToWatchVisible) {
                     message = 'Subscribe to watch';
@@ -384,7 +389,7 @@ export class OTTPlaybackPage {
                 }
                 
                 if (premiumGateVisible || maybeLaterVisible || subscribeToWatchVisible) {
-                    logger.debug(`Found premium gate on item ${index}: premium=${premiumGateVisible}, maybeLater=${maybeLaterVisible}, subscribe=${subscribeToWatchVisible}, message="${message}"`);
+                    logger.info(`Found subscription prompt on carousel item ${index}: premium=${premiumGateVisible}, maybeLater=${maybeLaterVisible}, subscribe=${subscribeToWatchVisible}`);
                     return {
                         found: true,
                         message,

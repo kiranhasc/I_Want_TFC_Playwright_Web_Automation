@@ -652,7 +652,7 @@
     "tc-sub-011-pre-roll-ad": {
         "mode": "freeUser",
         "pin": "1234",
-        "graphqlQueryName": "Collection"
+        "query": "Unmarried Wife"
     },
     "tc-sub-037-ad-label-visible": {
         "mode": "freeUser",
@@ -884,7 +884,8 @@
         "mode": "valid",
         "pin": "1234",
         "graphqlQueryName": "Collection",
-        "query": "Someone, Someday"
+        "query": "Someone, Someday",
+        "secondQuery": "Sigabo"
     },
     "tc-sub-020-subtitle-next-episode": {
         "mode": "valid",
@@ -894,22 +895,27 @@
     "tc-sub-021-subtitle-carry-over": {
         "mode": "valid",
         "pin": "1234",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "query": "Someone, Someday",
+        "secondQuery": "Sigabo"
     },
     "tc-sub-022-subtitle-default-off": {
         "mode": "valid",
         "pin": "1234",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "query": "Someone, Someday"
     },
     "tc-sub-023-subtitle-display": {
         "mode": "valid",
         "pin": "1234",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "query": "Someone, Someday"
     },
     "tc-sub-024-subtitle-synchronization": {
         "mode": "valid",
         "pin": "1234",
-        "graphqlQueryName": "Collection"
+        "graphqlQueryName": "Collection",
+        "query": "Someone, Someday"
     },
     "tc-sub-034-seekbar-preview": {
         "mode": "valid",
@@ -1137,7 +1143,7 @@
     "tc-cw-1941-content-updated-in-tray": {
         "mode": "valid",
         "pin": "1234",
-        "seekMinutes": 1
+        "seekMinutes": 2
     },
     "tc-cw-1947-continue-watching-subscription-prompt": {
         "mode": "freeUser",

@@ -74,6 +74,7 @@ test.describe('Continue Watching - No Watch History', () => {
         test.setTimeout(120000);
         const data = testCaseData['tc-auth-011-continue-watching-tray-scroll'];
         const result = await verifyContinueWatchingTrayScroll(page, { mode: data.mode });
+        expect(result.isValid).toBeTruthy();
     });
 
     test('@High IW3-T1934: Verify the content playback from the Continue Watching tray', async ({ page }) => {
@@ -87,10 +88,10 @@ test.describe('Continue Watching - No Watch History', () => {
 
     test('@High IW3-T1937: Verify that "Resume" CTA turns to "Play" and the default season/episode are retained after removing content from Continue Watching', async ({ page }) => {
         test.setTimeout(180000);
-        const data = testCaseData['tc-auth-030-continue-watching-resume-to-play-after-removal'] as { mode?: string; Pin?: string; season?: string; episodeName?: string };
+        const data = testCaseData['tc-auth-030-continue-watching-resume-to-play-after-removal'] as { mode?: string; pin?: string; Pin?: string; season?: string; episodeName?: string };
         const result = await verifyResumeToPlayAfterRemovingFromContinueWatching(page, {
             mode: data?.mode,
-            parentalPin: data?.Pin,
+            parentalPin: data?.Pin ?? data?.pin,
             season: data?.season,
             episodeName: data?.episodeName,
         });
@@ -102,11 +103,14 @@ test.describe('Continue Watching - No Watch History', () => {
 
     test('@Medium IW3-T1941: Verify that the content is updated in the Continue Watching (CW) tray when the user partially watches it', async ({ page }) => {
         test.setTimeout(120000);
-        const data = testCaseData['tc-cw-1941-content-updated-in-tray'] as { mode?: string; Pin?: string; seekMinutes?: number };
-        const result = await verifyContentUpdatedInContinueWatchingTray(page, { mode: data?.mode, parentalPin: data?.Pin, seekMinutes: data?.seekMinutes });
-        expect(result.isValid).toBeTruthy();
-        expect(result.trayVisible).toBeTruthy();
-        expect(result.contentRemainsInTray).toBeTruthy();
+        const data = testCaseData['tc-cw-1941-content-updated-in-tray'] as { mode?: string; pin?: string; Pin?: string; seekMinutes?: number };
+        const result = await verifyContentUpdatedInContinueWatchingTray(page, { mode: data?.mode, parentalPin: data?.Pin ?? data?.pin, seekMinutes: data?.seekMinutes });
+        expect(result.isValid).toBe(true);
+        expect(result.trayVisible).toBe(true);
+        expect(result.contentTitleMatches).toBe(true);
+        expect(result.sameContentMatches).toBe(true);
+        expect(result.contentRemainsInTray).toBe(true);
+        expect(result.progressBarVisible).toBe(true);
     });
 
     test('@Medium IW3-T1942: Verify that Ad gets played for the free user on resuming the content', async ({ page }) => {

@@ -21,6 +21,7 @@ export interface InvalidLoginInput {
     mobileNumber?: string;
     mode?: string;
     networkConnection?: string
+    reuseSession?: boolean;
 }
 
 export interface TVProviderLoginInput {
@@ -1508,7 +1509,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         const mode = normalizeLoginMode(input?.mode);
         const storageFile = modeToFile[mode];
         const storagePath = storageFile ? path.join(authDir, storageFile) : null;
-        if (storagePath && fs.existsSync(storagePath)) {
+        if (input?.reuseSession !== false && storagePath && fs.existsSync(storagePath)) {
             const age = Date.now() - fs.statSync(storagePath).mtimeMs;
             if (age < MAX_AGE_MS) {
                 logger.step(`Reusing saved ${mode} session from storageState`);
@@ -1568,7 +1569,7 @@ export async function loginToOTT(page: any, input?: Partial<InvalidLoginInput>):
         await authPage.waitForLoadingToDisappear();
         const homeVisible = await authPage.isHomeTabVisible();
         logger.assertion('Home tab visible after login', homeVisible);
-        if (homeVisible && storagePath) {
+        if (homeVisible && storagePath && input?.reuseSession !== false) {
             await page.context().storageState({ path: storagePath });
             logger.step(`Saved ${mode} session to storageState`);
         }

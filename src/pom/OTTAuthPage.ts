@@ -1342,7 +1342,12 @@ export class OTTAuthPage {
     }
 
     private getContinueWatchingRailLocator() {
-        return this.getContinueWatchingTitleLocator().locator(this.railAncestorSelector.selector).first();
+        const title = this.getContinueWatchingTitleLocator();
+        const scrollableRail = title.locator(this.railAncestorSelector.selector).first();
+        const headingContainer = title
+            .locator('xpath=ancestor::div[.//p[normalize-space()="Continue Watching"]][1]')
+            .first();
+        return scrollableRail.or(headingContainer).first();
     }
 
     private getRailContainerFromHeading(heading: Locator) {
@@ -1427,18 +1432,61 @@ export class OTTAuthPage {
         return this.getContinueWatchingRailLocator();
     }
 
-    async removeFirstContinueWatchingItem(): Promise<{ clicked: boolean; confirmationVisible: boolean }> {
+    async hoverContinueWatchingItemByImageAlt(imageAlt: string): Promise<boolean> {
+        const section = this.getContinueWatchingRailLocator();
+        const normalizedAlt = (imageAlt || '').trim();
+        if (!await section.count() || !normalizedAlt) {
+            return false;
+        }
+        const escapedAlt = normalizedAlt.replace(/'/g, "&apos;");
+        const image = section.locator(`xpath=.//img[@alt='${escapedAlt}']`).first();
+        if (!await image.count()) {
+            return false;
+        }
+        const cardContainer = image.locator(this.continueWatchingCardAncestor.selector).first();
+        const hoverTarget = await cardContainer.count().catch(() => 0) ? cardContainer : image;
+        await hoverTarget.scrollIntoViewIfNeeded().catch(() => undefined);
+        await hoverTarget.hover({ timeout: 20000 });
+        await this.page.waitForTimeout(2000);
+        return await hoverTarget.isVisible().catch(() => false);
+    }
+
+    async removeFirstContinueWatchingItem(targetTitle?: string): Promise<{ clicked: boolean; confirmationVisible: boolean }> {
         const section = this.getContinueWatchingRailLocator();
         if (!await section.count()) {
             return { clicked: false, confirmationVisible: false };
         }
-        const card = section.locator(this.continueWatchingCard.selector).first();
+        const cards = section.locator(this.continueWatchingCard.selector);
+        let card = cards.first();
+        if (targetTitle) {
+            const normalizedTargetTitle = this.normalizeTitle(targetTitle);
+            const cardCount = await cards.count().catch(() => 0);
+            for (let index = 0; index < cardCount; index += 1) {
+                const candidate = cards.nth(index);
+                const candidateAncestor = candidate.locator(this.continueWatchingCardAncestor.selector).first();
+                const candidateText = this.normalizeTitle([
+                    await candidate.getAttribute('alt').catch(() => ''),
+                    await candidate.getAttribute('aria-label').catch(() => ''),
+                    await candidateAncestor.textContent().catch(() => ''),
+                    await candidateAncestor.getAttribute('data-title').catch(() => ''),
+                    await candidateAncestor.getAttribute('data-testid').catch(() => ''),
+                ].filter(Boolean).join(' '));
+                if (candidateText.includes(normalizedTargetTitle) || normalizedTargetTitle.includes(candidateText)) {
+                    card = candidate;
+                    break;
+                }
+            }
+        }
         if (!await card.count()) {
             return { clicked: false, confirmationVisible: false };
         }
-        await card.hover({ timeout: 20000 }).catch(() => undefined);
+        const cardContainer = card.locator(this.continueWatchingCardAncestor.selector).first();
+        const hoverTarget = await cardContainer.count().catch(() => 0) ? cardContainer : card;
+        await hoverTarget.scrollIntoViewIfNeeded().catch(() => undefined);
+        await hoverTarget.hover({ timeout: 20000 });
         await this.page.waitForTimeout(2000);
-        const removeButton = section.locator(this.continueWatchingRemoveButton.selector).first();
+        const removeButtonScope = await cardContainer.count().catch(() => 0) ? cardContainer : section;
+        const removeButton = removeButtonScope.locator('xpath=.//img[@alt="remove-from-cw"]').first();
         await removeButton.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
         const buttonVisible = await removeButton.isVisible().catch(() => false);
         if (!buttonVisible) {
@@ -1502,8 +1550,15 @@ export class OTTAuthPage {
         const cardCount = await cards.count().catch(() => 0);
         for (let index = 0; index < cardCount; index += 1) {
             const card = cards.nth(index);
-            const cardTitle = this.normalizeTitle(await card.getAttribute('alt').catch(() => ''));
-            if (cardTitle && (cardTitle.includes(normalizedTitle) || normalizedTitle.includes(cardTitle))) {
+                const cardAncestor = card.locator(this.continueWatchingCardAncestor.selector).first();
+                const cardTitle = this.normalizeTitle([
+                    await card.getAttribute('alt').catch(() => ''),
+                    await card.getAttribute('aria-label').catch(() => ''),
+                    await cardAncestor.textContent().catch(() => ''),
+                    await cardAncestor.getAttribute('data-title').catch(() => ''),
+                    await cardAncestor.getAttribute('data-testid').catch(() => ''),
+                ].filter(Boolean).join(' '));
+                if (cardTitle && (cardTitle.includes(normalizedTitle) || normalizedTitle.includes(cardTitle))) {
                 return await card.isVisible().catch(() => false);
             }
         }
@@ -2140,7 +2195,9 @@ export class OTTAuthPage {
         logger.elementInteraction('press', 'Enter key');
         await this.page.keyboard.press('Enter');
         await this.waitForLoadingToDisappear(20000);
-        await this.page.waitForLoadState('networkidle').catch(() => undefined);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
+            logger.debug('Search submission did not reach networkidle; continuing with rendered results');
+        });
     }
 
     async getSearchBarValue(): Promise<string> {

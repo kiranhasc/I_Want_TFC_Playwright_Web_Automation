@@ -53,6 +53,7 @@ export class OTTDetailsPage {
   private readonly showDetailsHeading: PageElement;
   private readonly contentMetadata: PageElement;
   private readonly resumeButton: PageElement;
+  private readonly livePauseButton: PageElement;
   private readonly parentalPinPlaybackPrompt: PageElement;
   private readonly parentalPinEntryInputs: PageElement;
   private readonly parentalPinValidateButton: PageElement;
@@ -280,6 +281,7 @@ export class OTTDetailsPage {
     this.showDetailsHeading = { selector: 'main h1' };
     this.contentMetadata = { selector: '[class*="metadata relative flex items"]' };
     this.resumeButton = { selector: '//p[text()="Resume S1 E1"]' };
+    this.livePauseButton ={ selector : '//img[@alt="Pause"]'};
     this.parentalPinPlaybackPrompt = { selector: 'text=/Enter the PIN to Access/i' };
     this.parentalPinEntryInputs = { selector: 'input[id^="parental-pin-input-"]' };
     this.parentalPinValidateButton = { selector: 'button:has-text("Submit"), button:has-text("Continue")' };
@@ -288,7 +290,7 @@ export class OTTDetailsPage {
     this.premiumTagIcon = { selector: 'img[alt="tag"], [aria-label="tag"], [data-testid*="tag"], img[title="tag"]' };
     this.premiumCrownIcon = { selector: '(//div[contains(@class,"monetization-logo")])[1]' };
     this.subscribeToWatchCta = { selector: '//*[@id="subscribe_to_watch"]/div' };
-    this.subscribeToWatchCtaButton = { selector: '#play div:has(p:has-text("Subscribe to watch"))' };
+    this.subscribeToWatchCtaButton = { selector: '//p[text()="Subscribe to watch"]' };
     this.subscribeToWatchTextLabel = { selector: 'p:has-text("Subscribe to watch")' };
     this.subscribeToWatchCtaBlocker = { selector: '#subscribe_to_watch div' };
     this.subscriptionInstructionPrompt = { selector: 'text=/A valid subscription is required to view this content|Please subscribe or renew your plan|Subscribe to watch/i' };
@@ -1388,6 +1390,36 @@ export class OTTDetailsPage {
         logger.debug('Episode selection click failed', error);
       }
     }
+
+    const requestedSeasonNumber = trimmedSeason.match(/(\d+)/)?.[1];
+    const requestedEpisodeNumber = trimmedEpisode.match(/(\d+)/)?.[1];
+    if (requestedSeasonNumber && requestedEpisodeNumber) {
+      const episodeToken = `S${requestedSeasonNumber} E${requestedEpisodeNumber}`;
+      const metadataLabel = this.page.getByText(new RegExp(`^${episodeToken}$`, 'i')).first();
+      if (await metadataLabel.count().catch(() => 0)) {
+        try {
+          await metadataLabel.scrollIntoViewIfNeeded();
+          await metadataLabel.click({ timeout: 15000, force: true });
+          await this.page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => undefined);
+          await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => undefined);
+          await this.page.waitForTimeout(3000).catch(() => undefined);
+          this.lastSelectedEpisodeMetadata = {
+            seasonNumber: `S${requestedSeasonNumber}`,
+            episodeNumber: `E${requestedEpisodeNumber}`,
+            title: '',
+          };
+          return {
+            selected: true,
+            seasonNumber: this.lastSelectedEpisodeMetadata.seasonNumber,
+            episodeNumber: this.lastSelectedEpisodeMetadata.episodeNumber,
+            title: this.lastSelectedEpisodeMetadata.title,
+          };
+        } catch (error) {
+          logger.debug(`Exact episode metadata fallback click failed for ${episodeToken}`, error);
+        }
+      }
+    }
+
     return {
       selected: false,
       seasonNumber: '',
@@ -1397,6 +1429,7 @@ export class OTTDetailsPage {
   }
 
   async getEpisodeItemCount(): Promise<number> {
+
     try {
       const items = await this.getEpisodeItemLocator();
       return await items.count().catch(() => 0);
@@ -3750,11 +3783,11 @@ export class OTTDetailsPage {
     logger.step('Waiting for search results to load');
     try {
       await this.page.locator(this.firstSearchResult.selector).first()
-        .waitFor({ state: 'visible', timeout: 30000 });
+          .waitFor({ state: 'visible', timeout: 10000 });
     } catch (error) {
-      logger.warn('First search result was not visible within the initial timeout; checking the results container', error);
+        logger.warn('First search result was not visible within 10 seconds; checking the results container', error);
       await this.page.locator(this.searchResultsContainer.selector!).first()
-        .waitFor({ state: 'visible', timeout: 10000 });
+          .waitFor({ state: 'visible', timeout: 5000 });
     }
   }
   
@@ -3762,7 +3795,8 @@ export class OTTDetailsPage {
     logger.elementInteraction('click', 'first content from first rail');
     await this.waitForSearchResultsToLoad();
     const firstResult = this.page.locator(this.firstSearchResult.selector).first();
-    await firstResult.waitFor({ state: 'visible', timeout: 15000 });
+    logger.info(`Search result candidates found: ${await firstResult.count().catch(() => 0)}`);
+    await firstResult.waitFor({ state: 'visible', timeout: 10000 });
     await firstResult.scrollIntoViewIfNeeded().catch(() => undefined);
     await firstResult.hover().catch(() => undefined);
     const clickableAncestor = firstResult.locator(this.clickTargetAncestorSelector).first();
@@ -3783,6 +3817,45 @@ export class OTTDetailsPage {
     await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
       logger.debug('Search result navigation did not reach networkidle');
     });
+  }
+
+  async clickSearchResultByTitle(title: string): Promise<boolean> {
+    logger.elementInteraction('click', `search result ${title}`);
+    await this.waitForSearchResultsToLoad();
+    const normalizedTitle = (title || '').trim().toLowerCase();
+    if (!normalizedTitle) return false;
+
+    const candidates = this.page.locator('img[alt], [data-testid*="title"], [class*="title"], h2, h3');
+    const candidateCount = await candidates.count().catch(() => 0);
+    for (let index = 0; index < candidateCount; index += 1) {
+      const candidate = candidates.nth(index);
+      const candidateText = (
+        (await candidate.getAttribute('alt').catch(() => '')) ||
+        (await candidate.textContent().catch(() => '')) ||
+        ''
+      ).replace(/\s+/g, ' ').trim().toLowerCase();
+      if (candidateText !== normalizedTitle) continue;
+
+      const clickTargets = [
+        candidate.locator(this.clickTargetAncestorSelector).first(),
+        candidate.locator(this.searchResultInteractiveTarget.selector).first(),
+        candidate,
+      ];
+      for (const clickTarget of clickTargets) {
+        if (!(await clickTarget.count().catch(() => 0))) continue;
+        try {
+          await clickTarget.click({ timeout: 15000, force: true });
+          await this.page.waitForURL(/\/(details|content|show)\//, { timeout: 15000 });
+          await this.page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined);
+          return true;
+        } catch (error) {
+          logger.debug('Title-matched search result did not navigate to details, trying next target', error);
+        }
+      }
+    }
+
+    logger.debug(`Search result not found or did not navigate for title: ${title}`);
+    return false;
   }
 
   async openFirstContentWithPreview(): Promise<void> {
@@ -4187,10 +4260,19 @@ export class OTTDetailsPage {
     });
   }
 
-  async isResumeButtonVisible(): Promise<boolean> {
+  async isResumeButtonVisible(timeout: number = 15000): Promise<boolean> {
     try {
       const resume = this.page.locator(this.resumeButton.selector).first();
-      await resume.waitFor({ state: 'visible', timeout: 15000 });
+      await resume.waitFor({ state: 'visible', timeout });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  async isLivePauseButtonVisible(timeout: number = 15000): Promise<boolean> {
+    try {
+      const pause = this.page.locator(this.livePauseButton.selector).first();
+      await pause.waitFor({ state: 'visible', timeout });
       return true;
     } catch {
       return false;
